@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Receipt, Camera, Loader2, CheckCircle2, AlertCircle, Trash2, Download } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { useExpenses } from '../../hooks/useExpenses';
-import type { ExtractedExpense } from './expenseAI';
+
 
 export const ExpenseTracker: React.FC = () => {
-    const { expenses, loading, addExpense } = useExpenses();
+    const { expenses, addExpense } = useExpenses();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const totalConfirmed = expenses

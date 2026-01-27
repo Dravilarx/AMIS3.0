@@ -11,32 +11,9 @@ import {
     BarChart2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { Project, BPMTask } from '../../types/core';
+import type { BPMTask } from '../../types/core';
 
-const MOCK_PROJECTS: Project[] = [
-    {
-        id: 'PRJ-001',
-        name: 'Implementación PACS Sede Norte',
-        holdingId: 'HOLD-01',
-        managerId: 'USR-01',
-        status: 'active',
-        progress: 65,
-        privacyLevel: 'confidential',
-        startDate: '2026-01-01',
-        tags: ['Infraestructura', 'PACS']
-    },
-    {
-        id: 'PRJ-002',
-        name: 'Renovación Contratos Resomag',
-        holdingId: 'HOLD-01',
-        managerId: 'USR-02',
-        status: 'on-hold',
-        progress: 20,
-        privacyLevel: 'private',
-        startDate: '2026-01-15',
-        tags: ['Legal', 'Contracts']
-    }
-];
+// MOCK_PROJECTS eliminado
 
 const MOCK_TASKS: BPMTask[] = [
     {

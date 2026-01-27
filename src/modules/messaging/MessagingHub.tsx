@@ -14,7 +14,7 @@ import { cn } from '../../lib/utils';
 import { useMessaging } from '../../hooks/useMessaging';
 
 export const MessagingHub: React.FC = () => {
-    const { messages, channels, loading, sendMessage } = useMessaging();
+    const { messages, channels } = useMessaging();
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [input, setInput] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);

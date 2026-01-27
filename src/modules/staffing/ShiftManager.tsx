@@ -1,48 +1,9 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, User, AlertCircle, ShieldCheck, Filter } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { Shift, ShiftStatus } from '../../types/shifts';
+import type { ShiftStatus } from '../../types/shifts';
 
-const MOCK_SHIFTS: Shift[] = [
-    {
-        id: 'SFT-001',
-        professionalId: 'P-001',
-        professionalName: 'Dr. Roberto Agrawall',
-        date: '2026-01-26',
-        startTime: '08:00',
-        endTime: '14:00',
-        location: 'Sede Providencia',
-        sedeCity: 'Santiago',
-        status: 'presente',
-        checkIn: '07:55',
-        geofenceValid: true
-    },
-    {
-        id: 'SFT-002',
-        professionalId: 'P-002',
-        professionalName: 'Dra. María Paz',
-        date: '2026-01-26',
-        startTime: '08:00',
-        endTime: '20:00',
-        location: 'Sede Antofagasta',
-        sedeCity: 'Antofagasta',
-        status: 'finalizado',
-        checkIn: '08:02',
-        checkOut: '20:05',
-        geofenceValid: true
-    },
-    {
-        id: 'SFT-003',
-        professionalId: 'P-003',
-        professionalName: 'Lic. Jean Phillipe',
-        date: '2026-01-26',
-        startTime: '14:00',
-        endTime: '22:00',
-        location: 'Sede Providencia',
-        sedeCity: 'Santiago',
-        status: 'programado'
-    }
-];
+// MOCK_SHIFTS eliminado
 
 import { useShifts } from '../../hooks/useShifts';
 import { CheckCircle2, LogOut, Loader2 } from 'lucide-react';

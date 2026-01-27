@@ -1,6 +1,6 @@
 import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, LogOut, Lightbulb, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useAuth, UserRole } from '../hooks/useAuth';
+import { useAuth, type UserRole } from '../hooks/useAuth';
 
 interface SidebarItemProps {
     icon: React.ElementType;

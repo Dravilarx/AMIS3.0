@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, FileText, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
 import { parseTenderPDF } from './tenderAI';
 import { fileToBase64 } from '../../utils/fileUtils';
 import { useTenders } from '../../hooks/useTenders';

@@ -5,7 +5,7 @@ import type { AgrawallLevel } from '../../types/audit';
 import { useAudit } from '../../hooks/useAudit';
 
 export const AuditorDashboard: React.FC = () => {
-    const { audits, loading } = useAudit();
+    const { audits } = useAudit();
     const [selectedAudit, setSelectedAudit] = useState<any>(null);
 
     const getLevelColor = (level: AgrawallLevel) => {

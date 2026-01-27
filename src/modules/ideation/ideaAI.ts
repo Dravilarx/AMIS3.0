@@ -15,7 +15,7 @@ export interface IdeaAnalysisResult {
     conclusions: string[];
 }
 
-export const analyzeBrainstormingDocument = async (fileName: string, contentBase64: string): Promise<IdeaAnalysisResult> => {
+export const analyzeBrainstormingDocument = async (_fileName: string, contentBase64: string): Promise<IdeaAnalysisResult> => {
     const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
 
     const prompt = `

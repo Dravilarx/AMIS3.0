@@ -51,7 +51,7 @@ export const DashboardModule: React.FC = () => {
     const activeProjects = projects.filter(p => p.status === 'active').length;
     const totalStaff = professionals.length;
     const highRiskTenders = tenders.filter(t => t.riesgoSLA.escala > 6).length;
-    const totalAILogins = 1240; // Mocked for now
+    // totalAILogins eliminado
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">

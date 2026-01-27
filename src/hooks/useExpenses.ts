@@ -17,7 +17,7 @@ export const useExpenses = () => {
 
     const fetchExpenses = async () => {
         try {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('expenses')
                 .select('*')
                 .order('date', { ascending: false });

@@ -3,6 +3,7 @@ import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, Lis
 import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
 import { useProfessionals } from '../../hooks/useProfessionals';
+import type { Professional } from '../../types/core';
 import type { Tender } from '../../types/tenders';
 
 // Mock temporal de licitaciones hasta que conectemos el módulo de Tenders

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { analyzeBrainstormingDocument, IdeaAnalysisResult } from '../modules/ideation/ideaAI';
+import { analyzeBrainstormingDocument } from '../modules/ideation/ideaAI';
 import { fileToBase64 } from '../utils/fileUtils';
 
 export const useIdeas = () => {
@@ -39,7 +39,7 @@ export const useIdeas = () => {
             // 3. Subir archivo a Storage
             const fileExt = file.name.split('.').pop();
             const filePath = `brainstorming/${Math.random()}.${fileExt}`;
-            const { data: uploadData } = await supabase.storage
+            await supabase.storage
                 .from('documents')
                 .upload(filePath, file);
 

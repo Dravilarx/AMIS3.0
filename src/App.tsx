@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Layout } from './components/Layout'
-import { TrendingUp, Users, ShieldAlert, Cpu } from 'lucide-react'
-import { cn } from './lib/utils'
+import { DashboardModule } from './modules/dashboard/DashboardModule'
 import { TenderDashboard } from './modules/tenders/TenderDashboard'
 import { ProfessionalMatrix } from './modules/staffing/ProfessionalMatrix'
 import { ExpenseTracker } from './modules/logistics/ExpenseTracker'

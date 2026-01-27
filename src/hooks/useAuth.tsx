@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
 export type UserRole = 'ARCHITECT' | 'COORDINATOR' | 'AUDITOR';
 
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     const setRole = (role: UserRole) => {
-        setUser(prev => prev ? { ...prev, role } : null);
+        setUser(prev => ({ ...prev, role }));
     };
 
     const hasPermission = (permission: string) => {
