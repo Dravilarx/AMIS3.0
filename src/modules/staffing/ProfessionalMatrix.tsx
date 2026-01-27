@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List } from 'lucide-react';
+import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { Professional } from '../../types/core';
 import { useCapacityPlanning } from './useCapacityPlanning';
+import { useProfessionals } from '../../hooks/useProfessionals';
 import type { Tender } from '../../types/tenders';
 
-// Mock de licitaciones activas para el cálculo de capacidad
+// Mock temporal de licitaciones hasta que conectemos el módulo de Tenders
 const MOCK_ACTIVE_TENDERS: Tender[] = [
     {
         id: 'TEN-001',
@@ -18,67 +18,62 @@ const MOCK_ACTIVE_TENDERS: Tender[] = [
     }
 ];
 
-// Mock de profesionales para la matriz
-const MOCK_PROFESSIONALS: Professional[] = [
-    {
-        id: 'PROF-001',
-        name: 'Dr. Alejandro Vargas',
-        email: 'a.vargas@boreal.cl',
-        nationalId: '12.345.678-9',
-        role: 'Radiólogo',
-        status: 'active',
-        residence: { city: 'Santiago', region: 'RM' },
-        competencies: ['RM Próstata', 'TC Coronario', 'Telemedicina'],
-        contracts: [{ company: 'Boreal', amount: 3500000, type: 'Planta' }]
-    },
-    {
-        id: 'PROF-002',
-        name: 'Dra. María Paz',
-        email: 'm.ruiz@amis.cl', // Keeping original email as it was not specified in the instruction to change
-        nationalId: '15.444.333-2',
-        role: 'TENS',
-        status: 'active',
-        residence: { city: 'Viña del Mar', region: 'V' },
-        competencies: ['Dermatología', 'Ecografía'],
-        contracts: [{ company: 'Amis', amount: 2800000, type: 'Honorarios' }]
-    },
-    {
-        id: 'PROF-003',
-        name: 'Dr. Roberto Méndez',
-        email: 'r.mendez@soran.cl',
-        nationalId: '10.222.111-0',
-        role: 'Radiólogo',
-        status: 'inhabilitado',
-        registrationExpiry: '2026-01-20',
-        residence: { city: 'Concepción', region: 'VIII' },
-        competencies: ['RM Cerebral', 'Urgencias'],
-        contracts: [{ company: 'Soran', amount: 4200000, type: 'Planta' }]
-    },
-    {
-        id: 'PROF-004',
-        name: 'Dra. Elena Castro',
-        email: 'e.castro@vitalmedica.cl',
-        nationalId: '18.999.888-7',
-        role: 'Radiólogo',
-        status: 'active',
-        residence: { city: 'Santiago', region: 'RM' },
-        competencies: ['Gestión Salud', 'Informes Críticos'],
-        contracts: [{ company: 'Vitalmédica', amount: 3100000, type: 'Planta' }]
-    }
-];
+import { ProfessionalModal } from './ProfessionalModal';
 
 const CURRENT_SEDE_CITY = 'Santiago';
 
 export const ProfessionalMatrix: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentProfessional, setCurrentProfessional] = useState<Professional | null>(null);
 
-    const { utilizationRate, capacityGap, isOverloaded } = useCapacityPlanning(MOCK_PROFESSIONALS, MOCK_ACTIVE_TENDERS);
+    // Conexión real a Supabase
+    const { professionals, loading, error, addProfessional, updateProfessional } = useProfessionals();
 
-    const filteredProfessionals = MOCK_PROFESSIONALS.filter(p =>
+    const { utilizationRate, capacityGap, isOverloaded } = useCapacityPlanning(professionals, MOCK_ACTIVE_TENDERS);
+
+    const handleEdit = (prof: Professional) => {
+        setCurrentProfessional(prof);
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (data: Omit<Professional, 'id'>) => {
+        if (currentProfessional) {
+            return await updateProfessional(currentProfessional.id, data);
+        } else {
+            return await addProfessional(data);
+        }
+    };
+
+    const filteredProfessionals = professionals.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.competencies.some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                <p className="text-white/40 animate-pulse">Sincronizando con Holding Portezuelo...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="card-premium border-red-500/20 bg-red-500/5 text-center py-12">
+                <p className="text-red-400 font-bold mb-2">Error de Conexión</p>
+                <p className="text-white/40 text-sm mb-6">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm"
+                >
+                    Reintentar conexión
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -140,7 +135,13 @@ export const ProfessionalMatrix: React.FC = () => {
                             <List className="w-4 h-4" />
                         </button>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-white/90 rounded-lg transition-all font-medium text-sm">
+                    <button
+                        onClick={() => {
+                            setCurrentProfessional(null);
+                            setIsModalOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-white/90 rounded-lg transition-all font-medium text-sm"
+                    >
                         <Plus className="w-4 h-4" />
                         <span>Añadir Profesional</span>
                     </button>
@@ -152,10 +153,14 @@ export const ProfessionalMatrix: React.FC = () => {
                 viewMode === 'grid' ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"
             )}>
                 {filteredProfessionals.map((prof) => (
-                    <div key={prof.id} className={cn(
-                        "card-premium group hover:border-blue-500/30 transition-all duration-300",
-                        viewMode === 'list' && "flex flex-row items-center gap-8 py-4"
-                    )}>
+                    <div
+                        key={prof.id}
+                        onClick={() => handleEdit(prof)}
+                        className={cn(
+                            "card-premium group hover:border-blue-500/30 transition-all duration-300 cursor-pointer",
+                            viewMode === 'list' && "flex flex-row items-center gap-8 py-4"
+                        )}
+                    >
                         <div className={cn(
                             "flex flex-col",
                             viewMode === 'list' ? "flex-1" : "space-y-4"
@@ -165,9 +170,11 @@ export const ProfessionalMatrix: React.FC = () => {
                                     {prof.name[0]}
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
-                                    <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase tracking-wider">
-                                        {prof.contracts[0].company}
-                                    </span>
+                                    {prof.contracts?.[0] && (
+                                        <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase tracking-wider">
+                                            {prof.contracts[0].company}
+                                        </span>
+                                    )}
                                     {prof.residence.city !== CURRENT_SEDE_CITY && (
                                         <span className="text-[8px] font-black text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
                                             REQUIERE TRASLADO
@@ -197,7 +204,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-white/60">
                                         <Briefcase className="w-3 h-3 text-white/20" />
-                                        <span>{prof.contracts.length} Contrato(s)</span>
+                                        <span>{prof.contracts?.length || 0} Contrato(s)</span>
                                     </div>
                                 </div>
 
@@ -219,6 +226,16 @@ export const ProfessionalMatrix: React.FC = () => {
                     </div>
                 ))}
             </div>
+
+            <ProfessionalModal
+                isOpen={isModalOpen}
+                initialData={currentProfessional}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setCurrentProfessional(null);
+                }}
+                onSave={handleSave}
+            />
         </div>
     );
 };

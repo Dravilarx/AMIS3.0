@@ -8,7 +8,7 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey || 'placeholder-key');
 
-export const getGeminiModel = (modelName = 'gemini-1.5-flash') => {
+export const getGeminiModel = (modelName = 'gemini-3.0-flash') => {
     return genAI.getGenerativeModel({ model: modelName });
 };
 
@@ -22,7 +22,7 @@ export async function analyzeText(text: string, prompt: string) {
 
 // OCR Vision Utility
 export async function performOCR(imageAsBase64: string) {
-    const model = getGeminiModel('gemini-1.5-flash');
+    const model = getGeminiModel('gemini-3.0-flash');
     const result = await model.generateContent([
         'Extract all text from this receipt/invoice. Return it in JSON format with fields like amount, tax, date, merchant, and items.',
         {

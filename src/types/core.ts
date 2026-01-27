@@ -75,6 +75,7 @@ export interface Project {
     startDate: string;
     endDate?: string;
     tags: string[];
+    tenderId?: string; // Vinculación opcional con licitaciones
 }
 
 export interface BPMTask {

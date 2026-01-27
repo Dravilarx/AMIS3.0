@@ -1,59 +1,31 @@
 import React, { useState } from 'react';
 import { Receipt, Camera, Loader2, CheckCircle2, AlertCircle, Trash2, Download } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
+import { useExpenses } from '../../hooks/useExpenses';
 import type { ExtractedExpense } from './expenseAI';
 
-interface ExpenseItem extends ExtractedExpense {
-    id: string;
-    status: 'pending' | 'verified' | 'rejected';
-}
-
-const MOCK_EXPENSES: ExpenseItem[] = [
-    {
-        id: 'EXP-001',
-        vendor: 'Hotel Diego de Almagro',
-        date: '2026-01-20',
-        amount: 145000,
-        currency: 'CLP',
-        category: 'Alojamiento',
-        status: 'verified',
-        taxId: '76.123.456-7'
-    },
-    {
-        id: 'EXP-002',
-        vendor: 'Restaurante El Galeón',
-        date: '2026-01-21',
-        amount: 28500,
-        currency: 'CLP',
-        category: 'Alimentación',
-        status: 'pending',
-        taxId: '77.987.654-K'
-    }
-];
-
 export const ExpenseTracker: React.FC = () => {
-    const [expenses, setExpenses] = useState<ExpenseItem[]>(MOCK_EXPENSES);
+    const { expenses, loading, addExpense } = useExpenses();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const totalConfirmed = expenses
         .filter(e => e.status === 'verified')
         .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const handleMockUpload = () => {
+    const handleMockUpload = async () => {
         setIsProcessing(true);
         // Simulamos el delay de Gemini Vision
-        setTimeout(() => {
-            const newExpense: ExpenseItem = {
-                id: `EXP-${Date.now()}`,
+        setTimeout(async () => {
+            const newExpense = {
                 vendor: 'LATAM Airlines',
                 date: new Date().toISOString().split('T')[0],
                 amount: 320000,
                 currency: 'CLP',
                 category: 'Transporte',
-                status: 'pending',
-                taxId: '90.555.444-3'
+                status: 'pending' as const,
+                tax_id: '90.555.444-3'
             };
-            setExpenses([newExpense, ...expenses]);
+            await addExpense(newExpense);
             setIsProcessing(false);
         }, 2000);
     };
@@ -120,7 +92,7 @@ export const ExpenseTracker: React.FC = () => {
                             <tr key={expense.id} className="hover:bg-white/[0.02] transition-colors group">
                                 <td className="px-6 py-4">
                                     <p className="font-bold text-white/90">{expense.vendor}</p>
-                                    <p className="text-[10px] text-white/30 uppercase tracking-tighter">RUT: {expense.taxId}</p>
+                                    <p className="text-[10px] text-white/30 uppercase tracking-tighter">RUT: {expense.tax_id}</p>
                                 </td>
                                 <td className="px-6 py-4 text-white/60 font-medium">
                                     {expense.date}

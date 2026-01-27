@@ -1,52 +1,12 @@
 import React, { useState } from 'react';
 import { Shield, AlertTriangle, Info, Filter, Search, BarChart3, ArrowUpRight, FileText } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { ClinicalAudit, AgrawallLevel } from '../../types/audit';
-
-const MOCK_AUDITS: ClinicalAudit[] = [
-    {
-        id: 'ADT-001',
-        patientName: 'Eduardo Frei',
-        examType: 'TC Tórax',
-        date: '2026-01-26',
-        professionalId: 'P-001',
-        professionalName: 'Dr. Roberto Agrawall',
-        reportContent: 'Hallazgos compatibles con neumotórax apical derecho de aproximadamente 20%... requiere drenaje inmediato.',
-        agrawallScore: 4,
-        aiClassificationReason: 'Identificación de neumotórax que requiere intervención quirúrgica inmediata.',
-        status: 'pending',
-        findings: ['Neumotórax 20%', 'Colapso pulmonar parcial']
-    },
-    {
-        id: 'ADT-002',
-        patientName: 'Michelle Bachelet',
-        examType: 'RM Cerebro',
-        date: '2026-01-26',
-        professionalId: 'P-002',
-        professionalName: 'Dra. María Paz',
-        reportContent: 'Parénquima cerebral de morfología y señal conservada. No se observan colecciones ni sangrado.',
-        agrawallScore: 1,
-        aiClassificationReason: 'Estudio completamente normal.',
-        status: 'reviewed',
-        findings: ['Normal']
-    },
-    {
-        id: 'ADT-003',
-        patientName: 'Sebastián Piñera',
-        examType: 'TC Abdomen',
-        date: '2026-01-25',
-        professionalId: 'P-003',
-        professionalName: 'Dr. Jean Phillipe',
-        reportContent: 'Imagen focal hipodensa en segmento IVb de 5mm, inespecífica, probablemente quiste simple.',
-        agrawallScore: 2,
-        aiClassificationReason: 'Hallazgo incidental inespecífico sin sospecha de malignidad inmediata.',
-        status: 'reviewed',
-        findings: ['Quiste hepático simple']
-    }
-];
+import type { AgrawallLevel } from '../../types/audit';
+import { useAudit } from '../../hooks/useAudit';
 
 export const AuditorDashboard: React.FC = () => {
-    const [selectedAudit, setSelectedAudit] = useState<ClinicalAudit | null>(null);
+    const { audits, loading } = useAudit();
+    const [selectedAudit, setSelectedAudit] = useState<any>(null);
 
     const getLevelColor = (level: AgrawallLevel) => {
         switch (level) {
@@ -102,7 +62,7 @@ export const AuditorDashboard: React.FC = () => {
                     </div>
 
                     <div className="grid gap-3">
-                        {MOCK_AUDITS.map((audit) => (
+                        {audits.map((audit) => (
                             <div
                                 key={audit.id}
                                 onClick={() => setSelectedAudit(audit)}
@@ -115,12 +75,12 @@ export const AuditorDashboard: React.FC = () => {
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border text-lg font-black", getLevelColor(audit.agrawallScore))}>
-                                            {audit.agrawallScore}
+                                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border text-lg font-black", getLevelColor(audit.score))}>
+                                            {audit.score}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-white/90">{audit.patientName}</h4>
-                                            <p className="text-xs text-white/40">{audit.examType} • {audit.date}</p>
+                                            <h4 className="font-bold text-white/90">{audit.patient_name || 'Paciente del Proyecto'}</h4>
+                                            <p className="text-xs text-white/40">{audit.projects?.name} • {new Date(audit.created_at).toLocaleDateString()}</p>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
@@ -148,22 +108,22 @@ export const AuditorDashboard: React.FC = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-xl font-bold">{selectedAudit.patientName}</h3>
-                                <p className="text-sm text-white/40 mb-4">{selectedAudit.examType}</p>
+                                <h3 className="text-xl font-bold">{selectedAudit.patient_name || 'Análisis de Proyecto'}</h3>
+                                <p className="text-sm text-white/40 mb-4">{selectedAudit.projects?.name}</p>
 
-                                <div className={cn("p-4 rounded-xl border mb-6", getLevelColor(selectedAudit.agrawallScore))}>
+                                <div className={cn("p-4 rounded-xl border mb-6", getLevelColor(selectedAudit.score))}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <BarChart3 className="w-4 h-4" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Escala Agrawall Nivel {selectedAudit.agrawallScore}</span>
+                                        <span className="text-xs font-black uppercase tracking-widest">Escala Agrawall Nivel {selectedAudit.score}</span>
                                     </div>
-                                    <p className="text-sm leading-relaxed">{selectedAudit.aiClassificationReason}</p>
+                                    <p className="text-sm leading-relaxed">{selectedAudit.compliance_details?.aiClassificationReason || 'Cumplimiento analizado por IA'}</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
                                         <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-2">Hallazgos Extraídos (IA)</p>
                                         <div className="flex flex-wrap gap-2">
-                                            {selectedAudit.findings.map((f, i) => (
+                                            {(selectedAudit.anomalies || []).map((f: string, i: number) => (
                                                 <span key={i} className="text-[11px] px-2 py-1 bg-white/5 border border-white/10 rounded text-white/70">
                                                     {f}
                                                 </span>

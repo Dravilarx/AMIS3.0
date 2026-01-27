@@ -11,7 +11,7 @@ export interface AgrawallAnalysis {
  * Clasificador de Informes Médicos basado en la Escala de Agrawall (1-4).
  */
 export async function analyzeClinicalReport(reportText: string): Promise<AgrawallAnalysis> {
-    const model = getGeminiModel('gemini-1.5-flash');
+    const model = getGeminiModel();
 
     const prompt = `
     Eres un experto en auditoría clínica de Holding Portezuelo. 

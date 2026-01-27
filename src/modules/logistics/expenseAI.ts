@@ -14,7 +14,7 @@ export interface ExtractedExpense {
  * Utiliza Gemini Vision para extraer datos de boletas y facturas de gastos.
  */
 export async function parseExpenseImage(imageBase64: string): Promise<ExtractedExpense> {
-    const model = getGeminiModel('gemini-1.5-flash');
+    const model = getGeminiModel();
 
     const prompt = `
     Analiza esta imagen de una boleta, factura o recibo de gasto.

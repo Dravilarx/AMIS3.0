@@ -11,7 +11,7 @@ export interface SmartMessageRequest {
  * Mezcla lógica médica (instrucción del examen) con logística de la sede.
  */
 export async function generatePrepInstructions(req: SmartMessageRequest): Promise<string> {
-    const model = getGeminiModel('gemini-1.5-flash');
+    const model = getGeminiModel();
 
     const prompt = `
     Eres el asistente inteligente de AMIS 3.0 para Holding Portezuelo.

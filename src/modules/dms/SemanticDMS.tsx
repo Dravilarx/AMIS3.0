@@ -6,39 +6,42 @@ import {
     FileDown,
     ShieldCheck,
     Loader2,
-    Lock
+    Lock,
+    AlertCircle
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { Document } from '../../types/communication';
 import { searchDocumentsSemantically } from './semanticSearch';
-
-const MOCK_DOCS: Document[] = [
-    {
-        id: 'd1', title: 'Manual de Procedimientos Quirúrgicos', type: 'pdf',
-        category: 'clinical', contentSummary: 'Protocolos detallados para cirugías menores y mayores en red Providencia.',
-        url: '#', createdAt: '2024-01-10', signed: true
-    },
-    {
-        id: 'd2', title: 'Contrato Marco Holding Portezuelo 2024', type: 'pdf',
-        category: 'legal', contentSummary: 'Acuerdo legal principal con entidades mutuales y prestadores de salud.',
-        url: '#', createdAt: '2023-12-15', signed: true
-    },
-    {
-        id: 'd3', title: 'Guía de Logística y Traslados', type: 'doc',
-        category: 'logistics', contentSummary: 'Instrucciones para la coordinación de traslados de especialistas entre ciudades.',
-        url: '#', createdAt: '2024-01-05'
-    },
-    {
-        id: 'd4', title: 'Protocolo de Seguridad del Paciente', type: 'pdf',
-        category: 'clinical', contentSummary: 'Normativas de seguridad, identificación y prevención de caídas.',
-        url: '#', createdAt: '2024-01-20', signed: true
-    },
-];
+import { useDocuments } from '../../hooks/useDocuments';
 
 export const SemanticDMS: React.FC = () => {
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [relevantIds, setRelevantIds] = useState<string[] | null>(null);
+
+    // Conexión real a Supabase
+    const { documents, loading, error, uploadDocument } = useDocuments();
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const { success, error } = await uploadDocument(file, {
+                title: file.name,
+                category: 'legal',
+                type: 'pdf'
+            });
+            if (success) {
+                alert('Documento subido y procesado por el Expediente IA');
+            } else {
+                alert('Error al subir: ' + error);
+            }
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,7 +52,7 @@ export const SemanticDMS: React.FC = () => {
 
         setIsSearching(true);
         try {
-            const ids = await searchDocumentsSemantically(query, MOCK_DOCS);
+            const ids = await searchDocumentsSemantically(query, documents);
             setRelevantIds(ids);
         } catch (err) {
             console.error(err);
@@ -59,8 +62,33 @@ export const SemanticDMS: React.FC = () => {
     };
 
     const filteredDocs = relevantIds
-        ? MOCK_DOCS.filter(d => relevantIds.includes(d.id))
-        : MOCK_DOCS;
+        ? documents.filter(d => relevantIds.includes(d.id))
+        : documents;
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                <p className="text-white/40 text-sm font-mono animate-pulse">Indexando repositorio documental...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="card-premium border-red-500/20 bg-red-500/5 p-12 text-center">
+                <AlertCircle className="w-12 h-12 text-red-500/40 mx-auto mb-4" />
+                <p className="text-red-400 font-bold mb-2">Fallo en la Red Documental</p>
+                <p className="text-white/40 text-xs mb-6 font-mono">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-2 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-all text-xs uppercase tracking-widest font-bold"
+                >
+                    Reiniciar Sincronización
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -70,23 +98,34 @@ export const SemanticDMS: React.FC = () => {
                     <p className="text-xs text-white/40 font-mono">Semantic Search & Digital Assets Management</p>
                 </div>
 
-                <form onSubmit={handleSearch} className="relative group w-full md:w-96">
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Busca por concepto (ej: 'seguridad del paciente' o 'acuerdos legales')..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-all shadow-2xl"
-                    />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-blue-400" />
-                    <button
-                        type="submit"
-                        disabled={isSearching}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600/20 hover:bg-blue-600/40 rounded-lg transition-all"
-                    >
-                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <Sparkles className="w-4 h-4 text-blue-400" />}
-                    </button>
-                </form>
+                <div className="flex items-center gap-3">
+                    <label className={cn(
+                        "flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest",
+                        uploading && "opacity-50 pointer-events-none"
+                    )}>
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <FileDown className="w-4 h-4 text-blue-400" />}
+                        <span>Subir Expediente</span>
+                        <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx" />
+                    </label>
+
+                    <form onSubmit={handleSearch} className="relative group w-full md:w-96">
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Busca por concepto (ej: 'seguridad del paciente' o 'acuerdos legales')..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-12 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-all shadow-2xl"
+                        />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-blue-400" />
+                        <button
+                            type="submit"
+                            disabled={isSearching}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600/20 hover:bg-blue-600/40 rounded-lg transition-all"
+                        >
+                            {isSearching ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <Sparkles className="w-4 h-4 text-blue-400" />}
+                        </button>
+                    </form>
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -111,7 +150,7 @@ export const SemanticDMS: React.FC = () => {
                         </div>
 
                         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-                            <span className="text-[9px] font-mono text-white/20 uppercase">{doc.category} ● {doc.createdAt}</span>
+                            <span className="text-[9px] font-mono text-white/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
                             {doc.signed ? (
                                 <div className="flex items-center gap-1">
                                     <ShieldCheck className="w-3 h-3 text-emerald-500" />
