@@ -36,7 +36,7 @@ export interface Contract {
     company: HoldingCompany;
     /** Monto total o mensual del contrato */
     amount: number;
-    /** Tipo de contrato (e.g., Honorarios, Planta, Externo) */
+    /** Tipo de contrato (e.g., Contrato indefinido, Boleta honorarios empresa) */
     type: string;
 }
 
@@ -46,15 +46,31 @@ export interface Contract {
 export interface Professional {
     id: string;
     name: string;
+    lastName: string;
     email: string;
     nationalId: string; // RUT
-    role: 'Radiólogo' | 'TENS' | 'Secretaria' | 'Enfermero';
+    nationality: string;
+    birthDate: string;
+    joiningDate: string;
+    phone: string;
+    role: 'Médico' | 'Tecnólogo Médico' | 'Administración' | 'Ejecutivo' | 'TENS' | 'Enfermera' | 'Ingeniero' | 'Radiólogo' | 'Secretaria';
     status: 'active' | 'inhabilitado' | 'suspendido';
-    registrationExpiry?: string; // SISO / Malpraxis
+    registrationExpiry?: string;
+
+    /** Datos para personal de salud */
+    university?: string;
+    registrationNumber?: string;
+    specialty?: string;
+    subSpecialty?: string;
+    team?: string;
+    username?: string;
+    signatureType?: string;
+
     /** Lugar de residencia para logística de turnos */
     residence: {
         city: string;
         region: string;
+        country: string;
     };
     /** Lista de competencias validadas (Matriz de Competencias) */
     competencies: string[]; // Atomic tags: "RM Próstata", "TC Coronario"
@@ -82,9 +98,10 @@ export interface BPMTask {
     id: string;
     projectId: string;
     title: string;
-    assignedTo: string; // User ID
+    assignedTo: string; // User ID or Professional ID
     status: 'pending' | 'in-progress' | 'completed' | 'blocked';
     priority: 'low' | 'medium' | 'high' | 'critical';
     dueDate: string;
     aiSummary?: string;
+    attachments?: { name: string; url: string; type: string }[];
 }

@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Message, Channel } from '../types/communication';
 
+const MOCK_CHANNELS: Channel[] = [
+    { id: 'CH-001', name: 'General', type: 'text', updatedAt: new Date().toISOString(), isEphemeral: false },
+    { id: 'CH-002', name: 'Licitaciones Críticas', type: 'project', updatedAt: new Date().toISOString(), isEphemeral: false },
+    { id: 'CH-003', name: 'Guardia 24h', type: 'shift', updatedAt: new Date().toISOString(), isEphemeral: true }
+];
+
+const MOCK_MESSAGES: Record<string, Message[]> = {
+    'CH-001': [
+        { id: 'MSG-001', senderId: 'AI', senderName: 'Agrawall AI', content: 'Bienvenido al ecosistema AMIS 3.0. ¿En qué puedo ayudarte hoy?', timestamp: new Date().toISOString(), type: 'text' }
+    ]
+};
+
 export const useMessaging = (channelId?: string) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [channels, setChannels] = useState<Channel[]>([]);
@@ -9,14 +21,20 @@ export const useMessaging = (channelId?: string) => {
 
     // Cargar canales
     const fetchChannels = async () => {
-        const { data } = await supabase.from('channels').select('*');
-        if (data) setChannels(data.map(c => ({
-            id: c.id,
-            name: c.name,
-            type: c.type as any,
-            updatedAt: c.created_at,
-            isEphemeral: c.is_ephemeral
-        })));
+        try {
+            const { data, error } = await supabase.from('channels').select('*');
+            if (error) throw error;
+            if (data) setChannels(data.map(c => ({
+                id: c.id,
+                name: c.name,
+                type: c.type as any,
+                updatedAt: c.created_at,
+                isEphemeral: c.is_ephemeral
+            })));
+        } catch (err) {
+            console.error('Error fetching channels, using mock:', err);
+            setChannels(MOCK_CHANNELS);
+        }
     };
 
     // Cargar mensajes y suscribirse
@@ -25,22 +43,30 @@ export const useMessaging = (channelId?: string) => {
         if (!channelId) return;
 
         const fetchMessages = async () => {
-            setLoading(true);
-            const { data } = await supabase
-                .from('messages')
-                .select('*')
-                .eq('channel_id', channelId)
-                .order('created_at', { ascending: true });
+            try {
+                setLoading(true);
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .eq('channel_id', channelId)
+                    .order('created_at', { ascending: true });
 
-            if (data) setMessages(data.map(m => ({
-                id: m.id,
-                senderId: m.sender_id,
-                senderName: m.sender_name,
-                content: m.content,
-                timestamp: m.created_at,
-                type: m.type as any
-            })));
-            setLoading(false);
+                if (error) throw error;
+
+                if (data) setMessages(data.map(m => ({
+                    id: m.id,
+                    senderId: m.sender_id,
+                    senderName: m.sender_name,
+                    content: m.content,
+                    timestamp: m.created_at,
+                    type: m.type as any
+                })));
+            } catch (err) {
+                console.error('Error fetching messages, using mock:', err);
+                setMessages(MOCK_MESSAGES[channelId] || []);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchMessages();

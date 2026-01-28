@@ -14,6 +14,8 @@ export interface ClinicalProcedure {
         findings?: string;
         inventoryUsed: { item: string; quantity: number }[];
         messagingInstructions?: string;
+        comments?: string;
+        attachments?: { name: string; url: string; type: string }[];
     }
 }
 

@@ -167,9 +167,8 @@ export const TenderDashboard: React.FC = () => {
 
                 {/* Columna Lateral - Decisión (Semáforo) */}
                 <div className="space-y-6">
-                    {/* Alerta IA de Riesgo Crítico */}
                     {activeTender.riesgoSLA.escala > 7 && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-2xl animate-pulse flex items-start gap-4 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-2xl flex items-start gap-4 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
                             <div className="p-2 bg-red-500 rounded-lg shadow-lg">
                                 <ShieldAlert className="w-5 h-5 text-white" />
                             </div>
@@ -185,7 +184,7 @@ export const TenderDashboard: React.FC = () => {
                         getStatusColor()
                     )}>
                         <div className="relative mb-6">
-                            <StatusIcon className="w-20 h-20 animate-pulse" />
+                            <StatusIcon className="w-20 h-20" />
                             <div className="absolute -inset-4 bg-current opacity-10 blur-2xl rounded-full" />
                         </div>
                         <h4 className="text-[9px] uppercase tracking-[0.4em] font-black mb-2 opacity-60">Decisión Estratégica</h4>

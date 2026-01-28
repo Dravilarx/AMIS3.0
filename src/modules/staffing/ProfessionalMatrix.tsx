@@ -192,10 +192,12 @@ export const ProfessionalMatrix: React.FC = () => {
                             <div className={viewMode === 'list' ? "flex flex-row items-center gap-8" : "space-y-4"}>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                        <h4 className="font-bold text-lg group-hover:text-blue-400 transition-colors">{prof.name}</h4>
+                                        <h4 className="font-bold text-lg group-hover:text-blue-400 transition-colors">
+                                            {prof.name} {prof.lastName}
+                                        </h4>
                                         <span className="text-[10px] text-white/20 font-mono">{prof.nationalId}</span>
                                     </div>
-                                    <p className="text-white/40 text-xs mb-4">{prof.email}</p>
+                                    <p className="text-white/40 text-xs mb-4">{prof.role} • {prof.email}</p>
                                 </div>
 
                                 <div className={cn("space-y-2", viewMode === 'list' && "flex flex-row items-center gap-8 mb-4")}>
@@ -205,7 +207,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-white/60">
                                         <Briefcase className="w-3 h-3 text-white/20" />
-                                        <span>{prof.contracts?.length || 0} Contrato(s)</span>
+                                        <span>{prof.contracts?.length || 0} Contrato(s) • {prof.team || 'Sin Equipo'}</span>
                                     </div>
                                 </div>
 
@@ -231,6 +233,7 @@ export const ProfessionalMatrix: React.FC = () => {
             <ProfessionalModal
                 isOpen={isModalOpen}
                 initialData={currentProfessional}
+                existingProfessionals={professionals}
                 onClose={() => {
                     setIsModalOpen(false);
                     setCurrentProfessional(null);

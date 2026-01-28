@@ -14,11 +14,20 @@ interface ProductionMix {
 export const useTenderScoring = (tender: Tender, staffCapacity: number) => {
 
     // 1. Puntaje de Riesgo (Escala 0-8)
-    // Basado en riesgoSLA.escala ya definido en el tipo
-    const riskScore = tender.riesgoSLA.escala;
+    const riskScore = tender?.riesgoSLA?.escala ?? 0;
 
     // 2. Margen Real Proyectado
     const scoring = useMemo(() => {
+        if (!tender?.volumen || !tender?.economia) {
+            return {
+                ingresosProyectados: 0,
+                totalCostproyectado: 0,
+                realMargin: 0,
+                decision: 'REVISAR' as const,
+                isOverCapacity: false
+            };
+        }
+
         const { total, urgencia, ambulante, hospitalizado } = tender.volumen;
         const { precioUnitarioHabil, precioUnitarioUrgencia } = tender.economia;
 
@@ -63,7 +72,7 @@ export const useTenderScoring = (tender: Tender, staffCapacity: number) => {
             decision,
             isOverCapacity: exceedsCapacity
         };
-    }, [tender, staffCapacity]);
+    }, [tender, staffCapacity, riskScore]);
 
     return {
         riskScore,

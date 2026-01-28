@@ -51,12 +51,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         <div className="flex h-screen bg-black text-white">
             {/* Sidebar */}
             <aside className="w-64 border-r border-white/5 p-4 flex flex-col bg-[#050505]">
-                <div className="flex items-center gap-2 mb-8 px-2">
-                    <div className="w-10 h-10 rounded bg-gradient-to-tr from-blue-600 to-indigo-400 shadow-xl shadow-blue-500/20 flex items-center justify-center font-black italic">
+                <div
+                    className="flex items-center gap-2 mb-8 px-2 cursor-pointer group"
+                    onClick={() => onNavigate('dashboard')}
+                >
+                    <div className="w-10 h-10 rounded bg-gradient-to-tr from-blue-600 to-indigo-400 shadow-xl shadow-blue-500/20 flex items-center justify-center font-black italic group-hover:scale-110 transition-transform">
                         A
                     </div>
                     <div>
-                        <h1 className="text-lg font-black tracking-tighter leading-none">AMIS 3.0</h1>
+                        <h1 className="text-lg font-black tracking-tighter leading-none group-hover:text-blue-400 transition-colors">AMIS 3.0</h1>
                         <p className="text-[8px] uppercase tracking-[0.2em] text-white/30 font-mono mt-1">UVC Engine v3</p>
                     </div>
                 </div>
@@ -82,8 +85,20 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <SidebarItem icon={Bell} label="Notificaciones" />
-                        <SidebarItem icon={LogOut} label="Cerrar Sesión" />
+                        <SidebarItem
+                            icon={Bell}
+                            label="Notificaciones"
+                            onClick={() => alert('Próximamente: Centro de Notificaciones Portezuelo')}
+                        />
+                        <SidebarItem
+                            icon={LogOut}
+                            label="Cerrar Sesión"
+                            onClick={() => {
+                                if (confirm('¿Está seguro que desea cerrar sesión?')) {
+                                    window.location.reload();
+                                }
+                            }}
+                        />
                     </div>
                 </div>
             </aside>
@@ -125,7 +140,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             />
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="p-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all relative">
+                            <button
+                                onClick={() => alert('Próximamente: Centro de Notificaciones Portezuelo')}
+                                className="p-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all relative"
+                            >
                                 <Bell className="w-4 h-4 text-white/40" />
                                 <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-black shadow-sm" />
                             </button>
