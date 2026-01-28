@@ -4,14 +4,13 @@ import {
     Layers,
     User,
     Clock,
-    AlertCircle,
     Plus,
     Paperclip,
     FileText,
     Sparkles,
     Loader2
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+
 import type { BPMTask, Professional, Project } from '../../types/core';
 
 interface BPMTaskModalProps {

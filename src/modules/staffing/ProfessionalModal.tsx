@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, CreditCard, Briefcase, MapPin, GraduationCap, Plus, Trash2, Loader2, Layers } from 'lucide-react';
+import { X, User, Briefcase, GraduationCap, Plus, Trash2, Loader2, Layers } from 'lucide-react';
 
 import type { Professional, HoldingCompany } from '../../types/core';
 
@@ -99,7 +99,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
         }
     }, [initialData, isOpen]);
 
-    const [newCompetency, setNewCompetency] = useState('');
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAcademicExpanded, setIsAcademicExpanded] = useState(false);
 
@@ -117,12 +117,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
         }
     };
 
-    const addCompetency = () => {
-        if (newCompetency && !formData.competencies.includes(newCompetency)) {
-            setFormData({ ...formData, competencies: [...formData.competencies, newCompetency] });
-            setNewCompetency('');
-        }
-    };
+
 
     const addContract = () => {
         setFormData({

@@ -9,7 +9,6 @@ import {
     MapPin,
     Clock,
     Search,
-    Filter,
     Plus,
     MessageSquare,
     Paperclip,

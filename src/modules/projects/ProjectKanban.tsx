@@ -8,7 +8,6 @@ import {
     Paperclip,
     User,
     ChevronRight,
-    Sparkles,
     Plus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';

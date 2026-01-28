@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, MapPin, ClipboardList, Loader2, Save, FileText } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import type { ClinicalProcedure } from '../../types/clinical';
+import { type ClinicalProcedure } from '../../types/clinical';
 
 interface ClinicalProcedureModalProps {
     isOpen: boolean;

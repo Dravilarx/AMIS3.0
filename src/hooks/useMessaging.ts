@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Message, Channel } from '../types/communication';
 
+
 const MOCK_CHANNELS: Channel[] = [
-    { id: 'CH-001', name: 'General', type: 'text', updatedAt: new Date().toISOString(), isEphemeral: false },
+    { id: 'CH-001', name: 'General', type: 'project', updatedAt: new Date().toISOString(), isEphemeral: false },
     { id: 'CH-002', name: 'Licitaciones Críticas', type: 'project', updatedAt: new Date().toISOString(), isEphemeral: false },
     { id: 'CH-003', name: 'Guardia 24h', type: 'shift', updatedAt: new Date().toISOString(), isEphemeral: true }
 ];
