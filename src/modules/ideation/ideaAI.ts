@@ -39,7 +39,7 @@ export interface IdeaAnalysisResult {
     };
 }
 
-export const analyzeBrainstormingContent = async (title: string, content: string, isBase64 = false): Promise<IdeaAnalysisResult> => {
+export const analyzeBrainstormingContent = async (title: string, content: string, format: 'pdf' | 'text' = 'text'): Promise<IdeaAnalysisResult> => {
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     const prompt = `
@@ -88,7 +88,7 @@ export const analyzeBrainstormingContent = async (title: string, content: string
     `;
 
     let result;
-    if (isBase64) {
+    if (format === 'pdf') {
         result = await model.generateContent([
             prompt,
             {
@@ -109,7 +109,7 @@ export const analyzeBrainstormingContent = async (title: string, content: string
     return JSON.parse(jsonString);
 };
 
-// Alias para mantener compatibilidad si es necesario, pero usaremos la nueva función
+// Alias para mantener compatibilidad
 export const analyzeBrainstormingDocument = async (fileName: string, contentBase64: string): Promise<IdeaAnalysisResult> => {
-    return analyzeBrainstormingContent(fileName, contentBase64, true);
+    return analyzeBrainstormingContent(fileName, contentBase64, 'pdf');
 };

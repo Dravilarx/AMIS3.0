@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { analyzeBrainstormingContent } from '../modules/ideation/ideaAI';
-import { fileToBase64 } from '../utils/fileUtils';
+import { extractFileContent } from '../utils/fileUtils';
 
 export const useIdeas = () => {
     const [analyses, setAnalyses] = useState<any[]>([]);
@@ -29,22 +29,32 @@ export const useIdeas = () => {
         try {
             setLoading(true);
 
-            // 1. Convertir a base64 para la IA
-            const base64 = await fileToBase64(file);
+            // 1. Extraer contenido (PDF como base64, otros como texto)
+            const extraction = await extractFileContent(file);
 
             // 2. Análisis por Gemini 3.0
-            const analysis = await analyzeBrainstormingContent(file.name, base64, true);
+            const analysis = await analyzeBrainstormingContent(
+                file.name,
+                extraction.content,
+                extraction.format
+            );
 
-            // 3. Subir archivo a Storage
-            const fileExt = file.name.split('.').pop();
-            const filePath = `brainstorming/${Math.random()}.${fileExt}`;
-            await supabase.storage
-                .from('documents')
-                .upload(filePath, file);
+            // 3. Subir archivo a Storage (Vía opcional si falla no bloquea el análisis)
+            let publicUrl = null;
+            try {
+                const fileExt = file.name.split('.').pop();
+                const filePath = `brainstorming/${Math.random()}.${fileExt}`;
+                await supabase.storage
+                    .from('documents')
+                    .upload(filePath, file);
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('documents')
-                .getPublicUrl(filePath);
+                const { data: { publicUrl: url } } = supabase.storage
+                    .from('documents')
+                    .getPublicUrl(filePath);
+                publicUrl = url;
+            } catch (storageErr) {
+                console.warn('Storage upload failed, continuing with analysis save', storageErr);
+            }
 
             // 4. Guardar resultado estructurado en tabla
             const { error: dbError } = await supabase
@@ -53,7 +63,7 @@ export const useIdeas = () => {
                     title: analysis.title,
                     original_document_url: publicUrl,
                     executive_summary: analysis.strategicJustification,
-                    strategic_analysis: analysis, // Guardamos el objeto completo para mayor flexibilidad
+                    strategic_analysis: analysis,
                     status: 'completed'
                 }]);
 
@@ -74,7 +84,7 @@ export const useIdeas = () => {
             setLoading(true);
 
             // 1. Análisis por Gemini 3.0
-            const analysis = await analyzeBrainstormingContent(title, text, false);
+            const analysis = await analyzeBrainstormingContent(title, text, 'text');
 
             // 2. Guardar resultado estructurado en tabla
             const { error: dbError } = await supabase

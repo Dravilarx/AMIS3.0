@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Lightbulb, Sparkles, Target, BarChart3, AlertTriangle, CheckCircle2, FileText, Upload, Loader2, Radar, ShieldCheck, Clipboard, Zap, TrendingUp, Shield, Activity, Scale, Briefcase, Users, BrainCircuit } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Lightbulb, Sparkles, Target, BarChart3, AlertTriangle, CheckCircle2, FileText, Upload, Loader2, Radar, ShieldCheck, Clipboard, Zap, TrendingUp, Shield, Activity, Scale, Briefcase, Users, BrainCircuit, FileSpreadsheet, FileJson, MousePointer2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useIdeas } from '../../hooks/useIdeas';
 
@@ -10,11 +10,11 @@ export const IdeaAnalyst: React.FC = () => {
     const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
     const [pasteText, setPasteText] = useState('');
     const [ideaTitle, setIdeaTitle] = useState('');
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    const handleFileUpload = async (file: File) => {
         if (!file) return;
-
         setIsAnalyzing(true);
         const result = await processNewIdea(file);
         if (result.success) {
@@ -23,6 +23,28 @@ export const IdeaAnalyst: React.FC = () => {
             alert('Error en análisis: ' + result.error);
         }
         setIsAnalyzing(false);
+    };
+
+    const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) handleFileUpload(file);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) handleFileUpload(file);
     };
 
     const handleTextSubmit = async () => {
@@ -59,7 +81,6 @@ export const IdeaAnalyst: React.FC = () => {
     const getReportData = () => {
         if (!currentReport) return null;
 
-        // Handle both older and new formats
         return {
             title: currentReport.title || rawReport?.title || 'Sin Título',
             decision: currentReport.decision || 'PENDIENTE',
@@ -100,7 +121,7 @@ export const IdeaAnalyst: React.FC = () => {
                     <div>
                         <h1 className="text-3xl font-black text-white/90 tracking-tighter uppercase italic">Lluvia de Ideas AI</h1>
                         <p className="text-white/40 text-[10px] font-mono uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Radar className="w-3 h-3" /> AGRAWALL STRATEGIC ANALYST (v5.0)
+                            <Radar className="w-3 h-3" /> AGRAWALL STRATEGIC ANALYST (v6.0)
                         </p>
                     </div>
                 </div>
@@ -111,7 +132,7 @@ export const IdeaAnalyst: React.FC = () => {
                         className={cn("px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                             inputMode === 'file' ? "bg-white text-black" : "text-white/40 hover:text-white")}
                     >
-                        <Upload className="w-3 h-3 inline-block mr-2" /> Documento
+                        <MousePointer2 className="w-3 h-3 inline-block mr-2" /> Analizar Documento
                     </button>
                     <button
                         onClick={() => setInputMode('text')}
@@ -124,45 +145,77 @@ export const IdeaAnalyst: React.FC = () => {
             </header>
 
             {/* Input Section */}
-            {inputMode === 'text' ? (
-                <div className="card-premium p-6 space-y-4 bg-white/[0.02]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                            type="text"
-                            placeholder="TÍTULO DE LA IDEA / PROYECTO"
-                            value={ideaTitle}
-                            onChange={(e) => setIdeaTitle(e.target.value)}
-                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:outline-none focus:border-blue-500/50 uppercase tracking-widest"
+            <div className="card-premium p-6 space-y-4 bg-white/[0.02] relative">
+                {inputMode === 'text' ? (
+                    <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input
+                                type="text"
+                                placeholder="TÍTULO DE LA IDEA / PROYECTO"
+                                value={ideaTitle}
+                                onChange={(e) => setIdeaTitle(e.target.value)}
+                                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:outline-none focus:border-blue-500/50 uppercase tracking-widest"
+                            />
+                            <button
+                                onClick={handleTextSubmit}
+                                disabled={isAnalyzing || !ideaTitle || !pasteText}
+                                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl px-6 py-3 font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+                            >
+                                {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                                Ejecutar Análisis Estratégico
+                            </button>
+                        </div>
+                        <textarea
+                            placeholder="PEGA AQUÍ LOS DETALLES DE TU LLUVIA DE IDEAS..."
+                            value={pasteText}
+                            onChange={(e) => setPasteText(e.target.value)}
+                            className="w-full h-32 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500/50 resize-none font-mono"
                         />
-                        <button
-                            onClick={handleTextSubmit}
-                            disabled={isAnalyzing || !ideaTitle || !pasteText}
-                            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl px-6 py-3 font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
-                        >
-                            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                            Ejecutar Análisis Estratégico
-                        </button>
                     </div>
-                    <textarea
-                        placeholder="PEGA AQUÍ LOS DETALLES DE TU LLUVIA DE IDEAS..."
-                        value={pasteText}
-                        onChange={(e) => setPasteText(e.target.value)}
-                        className="w-full h-32 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500/50 resize-none font-mono"
-                    />
-                </div>
-            ) : (
-                <div className="card-premium p-6 flex items-center justify-center bg-white/[0.02] border-dashed border-white/10 relative overflow-hidden group">
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} accept=".pdf,.txt" disabled={isAnalyzing} />
-                    <div className="flex flex-col items-center gap-3">
-                        {isAnalyzing ? (
-                            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                        ) : (
-                            <Upload className="w-10 h-10 text-white/20 group-hover:text-blue-500/50 transition-colors" />
+                ) : (
+                    <div
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                        className={cn(
+                            "relative min-h-[160px] flex flex-col items-center justify-center border-2 border-dashed transition-all cursor-pointer rounded-2xl group",
+                            isDragging
+                                ? "bg-blue-600/10 border-blue-500 scale-[1.01] shadow-[0_0_40px_rgba(37,99,235,0.2)]"
+                                : "bg-white/[0.01] border-white/5 hover:border-white/20 hover:bg-white/[0.02]"
                         )}
-                        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">Cargar PDF o TXT para análisis</p>
+                    >
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={onFileChange}
+                            accept=".pdf,.txt,.docx,.doc,.xlsx,.xls,.csv"
+                            disabled={isAnalyzing}
+                        />
+
+                        <div className="flex flex-col items-center gap-4 text-center p-8">
+                            <div className={cn(
+                                "p-4 rounded-full transition-all duration-500",
+                                isDragging ? "bg-blue-600 text-white animate-bounce" : "bg-white/5 text-white/20 group-hover:text-blue-500 group-hover:bg-blue-500/10"
+                            )}>
+                                {isAnalyzing ? <Loader2 className="w-10 h-10 animate-spin" /> : <Upload className="w-10 h-10" />}
+                            </div>
+
+                            <div>
+                                <p className="text-white/80 font-black text-sm uppercase tracking-[0.2em]">
+                                    {isAnalyzing ? "Analizando Información..." : (isDragging ? "¡Suéltalo aquí!" : "Arrastra o selecciona un archivo")}
+                                </p>
+                                <div className="mt-3 flex items-center justify-center gap-4 text-[9px] font-mono uppercase tracking-[0.2em] text-white/30">
+                                    <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> PDF / DOCX</span>
+                                    <span className="flex items-center gap-1"><FileSpreadsheet className="w-3 h-3" /> EXCEL / CSV</span>
+                                    <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> TXT</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {!data ? (
                 <div className="py-20 flex flex-col items-center justify-center">
@@ -203,9 +256,9 @@ export const IdeaAnalyst: React.FC = () => {
                     </div>
 
                     {/* Main Content Areas */}
-                    <div className="lg:col-span-9 space-y-8">
+                    <div className="lg:col-span-9 space-y-8 animate-in slide-in-from-right-8 duration-700">
 
-                        {/* HEADER DE DECISIÓN (IMAGE 1 TOP) */}
+                        {/* HEADER DE DECISIÓN */}
                         <div className="card-premium p-6 flex flex-col md:flex-row items-center justify-between gap-6 bg-white/[0.03] border-white/10">
                             <div className="space-y-1">
                                 <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Decisión Estratégica</p>
