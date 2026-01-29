@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Lightbulb, Sparkles, Target, BarChart3, AlertTriangle, CheckCircle2, FileText, Upload, Loader2, Radar, ShieldCheck, Clipboard, Zap, TrendingUp, Shield, Activity, Scale, Briefcase, Users, BrainCircuit, FileSpreadsheet, FileJson, MousePointer2 } from 'lucide-react';
+import { Sparkles, Target, FileText, Upload, Loader2, Radar, Clipboard, Zap, TrendingUp, Activity, Scale, BrainCircuit, FileSpreadsheet, MousePointer2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useIdeas } from '../../hooks/useIdeas';
 

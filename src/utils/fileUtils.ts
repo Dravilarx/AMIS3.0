@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import mammoth from 'mammoth';
-import Papa from 'papaparse';
+
 
 export interface ExtractedFileContent {
     name: string;
