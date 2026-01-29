@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { analyzeBrainstormingDocument } from '../modules/ideation/ideaAI';
+import { analyzeBrainstormingContent } from '../modules/ideation/ideaAI';
 import { fileToBase64 } from '../utils/fileUtils';
 
 export const useIdeas = () => {
@@ -31,10 +31,9 @@ export const useIdeas = () => {
 
             // 1. Convertir a base64 para la IA
             const base64 = await fileToBase64(file);
-            const contentOnly = base64.split(',')[1];
 
-            // 2. Análisis por Gemini (Experto Analista)
-            const analysis = await analyzeBrainstormingDocument(file.name, contentOnly);
+            // 2. Análisis por Gemini 3.0
+            const analysis = await analyzeBrainstormingContent(file.name, base64, true);
 
             // 3. Subir archivo a Storage
             const fileExt = file.name.split('.').pop();
@@ -53,10 +52,8 @@ export const useIdeas = () => {
                 .insert([{
                     title: analysis.title,
                     original_document_url: publicUrl,
-                    executive_summary: analysis.executiveSummary,
-                    strategic_analysis: analysis.strategicAnalysis,
-                    risks_and_mitigation: { functionalGaps: analysis.functionalGaps },
-                    resource_projections: { kpis: analysis.kpis },
+                    executive_summary: analysis.strategicJustification,
+                    strategic_analysis: analysis, // Guardamos el objeto completo para mayor flexibilidad
                     status: 'completed'
                 }]);
 
@@ -72,9 +69,46 @@ export const useIdeas = () => {
         }
     };
 
+    const processTextIdea = async (title: string, text: string) => {
+        try {
+            setLoading(true);
+
+            // 1. Análisis por Gemini 3.0
+            const analysis = await analyzeBrainstormingContent(title, text, false);
+
+            // 2. Guardar resultado estructurado en tabla
+            const { error: dbError } = await supabase
+                .from('brainstorming_analysis')
+                .insert([{
+                    title: analysis.title,
+                    original_document_url: null,
+                    executive_summary: analysis.strategicJustification,
+                    strategic_analysis: analysis,
+                    status: 'completed'
+                }]);
+
+            if (dbError) throw dbError;
+
+            await fetchAnalyses();
+            return { success: true, analysis };
+        } catch (err: any) {
+            console.error('Error processing text idea:', err);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchAnalyses();
     }, []);
 
-    return { analyses, loading, error, processNewIdea, refresh: fetchAnalyses };
+    return {
+        analyses,
+        loading,
+        error,
+        processNewIdea,
+        processTextIdea,
+        refresh: fetchAnalyses
+    };
 };
