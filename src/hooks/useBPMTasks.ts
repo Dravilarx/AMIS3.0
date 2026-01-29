@@ -117,6 +117,7 @@ export const useBPMTasks = (projectId?: string) => {
             fetchTasks();
         } catch (err) {
             console.error('Error adding task, using optimistic update:', err);
+            return { success: true, error: err };
         }
         return { success: true };
     };
@@ -146,6 +147,7 @@ export const useBPMTasks = (projectId?: string) => {
             fetchTasks();
         } catch (err) {
             console.error('Error updating task, using optimistic update:', err);
+            return { success: true, error: err };
         }
         return { success: true };
     };
