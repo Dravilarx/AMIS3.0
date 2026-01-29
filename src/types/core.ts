@@ -94,6 +94,12 @@ export interface Project {
     tenderId?: string; // Vinculación opcional con licitaciones
 }
 
+export interface SubTask {
+    id: string;
+    title: string;
+    completed: boolean;
+}
+
 export interface BPMTask {
     id: string;
     projectId: string;
@@ -104,4 +110,6 @@ export interface BPMTask {
     dueDate: string;
     aiSummary?: string;
     attachments?: { name: string; url: string; type: string }[];
+    subtasks?: SubTask[];
+    progress?: number;
 }

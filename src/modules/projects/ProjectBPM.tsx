@@ -40,6 +40,16 @@ export const ProjectBPM: React.FC = () => {
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [selectedTask, setSelectedTask] = useState<BPMTask | null>(null);
     const [defaultTaskStatus, setDefaultTaskStatus] = useState<BPMTask['status'] | undefined>();
+    const [filterProjectId, setFilterProjectId] = useState<string | 'all'>('all');
+
+    const filteredTasks = filterProjectId === 'all'
+        ? tasks
+        : tasks.filter(t => t.projectId === filterProjectId);
+
+    const getProfessionalName = (id: string) => {
+        const prof = professionals.find(p => p.id === id);
+        return prof ? `${prof.name} ${prof.lastName}` : id;
+    };
 
     const handleProjectSave = async (data: Partial<Project>) => {
         if (selectedProject) {
@@ -143,27 +153,40 @@ export const ProjectBPM: React.FC = () => {
                 </div>
 
                 {activeTab === 'tasks' && (
-                    <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl">
-                        <button
-                            onClick={() => setTaskViewMode('kanban')}
-                            className={cn(
-                                "p-2 rounded-lg transition-all",
-                                taskViewMode === 'kanban' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
-                            )}
-                            title="Vista Kanban"
+                    <div className="flex items-center gap-3">
+                        <select
+                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/60 focus:border-blue-500/50 outline-none transition-all appearance-none"
+                            value={filterProjectId}
+                            onChange={(e) => setFilterProjectId(e.target.value)}
                         >
-                            <Layout className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setTaskViewMode('list')}
-                            className={cn(
-                                "p-2 rounded-lg transition-all",
-                                taskViewMode === 'list' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
-                            )}
-                            title="Vista Lista"
-                        >
-                            <ListIcon className="w-4 h-4" />
-                        </button>
+                            <option value="all" className="bg-neutral-900">Todos los Proyectos</option>
+                            {projects.map(p => (
+                                <option key={p.id} value={p.id} className="bg-neutral-900">{p.name}</option>
+                            ))}
+                        </select>
+
+                        <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl">
+                            <button
+                                onClick={() => setTaskViewMode('kanban')}
+                                className={cn(
+                                    "p-2 rounded-lg transition-all",
+                                    taskViewMode === 'kanban' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
+                                )}
+                                title="Vista Kanban"
+                            >
+                                <Layout className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setTaskViewMode('list')}
+                                className={cn(
+                                    "p-2 rounded-lg transition-all",
+                                    taskViewMode === 'list' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
+                                )}
+                                title="Vista Lista"
+                            >
+                                <ListIcon className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -173,11 +196,18 @@ export const ProjectBPM: React.FC = () => {
                     {activeTab === 'projects' ? (
                         <div className="grid gap-4">
                             {projects.map((project) => (
-                                <div key={project.id} className="card-premium group hover:border-blue-500/30 transition-all">
+                                <div
+                                    key={project.id}
+                                    onClick={() => {
+                                        setFilterProjectId(project.id);
+                                        setActiveTab('tasks');
+                                    }}
+                                    className="card-premium group hover:border-blue-500/30 transition-all cursor-pointer"
+                                >
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3">
-                                                <h4 className="text-lg font-black text-white/90 tracking-tight">{project.name}</h4>
+                                                <h4 className="text-lg font-black text-white/90 tracking-tight group-hover:text-blue-400 transition-colors">{project.name}</h4>
                                                 <span className={cn(
                                                     "flex items-center gap-1 text-[8px] px-2 py-0.5 rounded font-black uppercase tracking-widest border",
                                                     project.privacyLevel === 'confidential' ? 'text-red-400 border-red-500/20 bg-red-500/5' :
@@ -225,7 +255,12 @@ export const ProjectBPM: React.FC = () => {
                                         <div>
                                             <div className="flex justify-between text-[10px] mb-2">
                                                 <span className="text-white/30 uppercase font-black tracking-widest">Progreso de Ejecución</span>
-                                                <span className="font-black text-blue-400">{project.progress}%</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] text-white/20 font-mono">
+                                                        {tasks.filter(t => t.projectId === project.id && t.status === 'completed').length} / {tasks.filter(t => t.projectId === project.id).length} Tareas
+                                                    </span>
+                                                    <span className="font-black text-blue-400">{project.progress}%</span>
+                                                </div>
                                             </div>
                                             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
                                                 <div
@@ -256,7 +291,7 @@ export const ProjectBPM: React.FC = () => {
                     ) : (
                         taskViewMode === 'kanban' ? (
                             <ProjectKanban
-                                tasks={tasks}
+                                tasks={filteredTasks}
                                 professionals={professionals}
                                 onTaskUpdate={updateTask}
                                 onTaskClick={handleEditTask}
@@ -264,7 +299,7 @@ export const ProjectBPM: React.FC = () => {
                             />
                         ) : (
                             <div className="space-y-3">
-                                {tasks.map((task) => (
+                                {filteredTasks.map((task) => (
                                     <div
                                         key={task.id}
                                         onClick={() => handleEditTask(task)}
@@ -281,8 +316,15 @@ export const ProjectBPM: React.FC = () => {
                                                     <Layers className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h5 className="font-bold text-white/90">{task.title}</h5>
-                                                    <p className="text-xs text-white/40">Responsable: {task.assignedTo} | Vence: {task.dueDate}</p>
+                                                    <h5 className="font-bold text-white/90 group-hover:text-blue-400 transition-colors">{task.title}</h5>
+                                                    <p className="text-[10px] text-white/40 font-mono">
+                                                        Responsable: {getProfessionalName(task.assignedTo)} | Vence: {task.dueDate}
+                                                        {task.subtasks && task.subtasks.length > 0 && (
+                                                            <span className="ml-2 text-blue-400/60 font-black">
+                                                                [{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} SUBTAREAS]
+                                                            </span>
+                                                        )}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <span className={cn(
@@ -294,6 +336,17 @@ export const ProjectBPM: React.FC = () => {
                                                 {task.priority}
                                             </span>
                                         </div>
+
+                                        {task.progress !== undefined && task.progress > 0 && (
+                                            <div className="mt-3 px-14">
+                                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-blue-500/50 transition-all duration-700"
+                                                        style={{ width: `${task.progress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {task.aiSummary && (
                                             <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg">
@@ -307,7 +360,7 @@ export const ProjectBPM: React.FC = () => {
                                         )}
                                     </div>
                                 ))}
-                                {tasks.length === 0 && (
+                                {filteredTasks.length === 0 && (
                                     <div className="text-center py-24 bg-white/[0.02] rounded-3xl border-2 border-dashed border-white/5">
                                         <Layers className="w-12 h-12 text-white/10 mx-auto mb-4" />
                                         <p className="text-white/40 font-bold uppercase tracking-widest text-sm">No hay tareas pendientes</p>

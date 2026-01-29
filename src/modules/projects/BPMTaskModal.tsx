@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { cn } from '../../lib/utils';
 import {
     X,
     Layers,
@@ -8,10 +9,13 @@ import {
     Paperclip,
     FileText,
     Sparkles,
-    Loader2
+    Loader2,
+    CheckCircle2,
+    Circle,
+    Trash2
 } from 'lucide-react';
 
-import type { BPMTask, Professional, Project } from '../../types/core';
+import type { BPMTask, Professional, Project, SubTask } from '../../types/core';
 
 interface BPMTaskModalProps {
     isOpen: boolean;
@@ -55,8 +59,51 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
         priority: 'medium',
         dueDate: new Date().toISOString().split('T')[0],
         aiSummary: '',
-        attachments: []
+        attachments: [],
+        subtasks: [],
+        progress: 0
     });
+
+    const addSubTask = () => {
+        const newSubTask: SubTask = {
+            id: `ST-${Date.now()}`,
+            title: '',
+            completed: false
+        };
+        setFormData(prev => ({
+            ...prev,
+            subtasks: [...(prev.subtasks || []), newSubTask]
+        }));
+    };
+
+    const toggleSubTask = (id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            subtasks: prev.subtasks?.map(st =>
+                st.id === id ? { ...st, completed: !st.completed } : st
+            )
+        }));
+    };
+
+    const removeSubTask = (id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            subtasks: prev.subtasks?.filter(st => st.id !== id)
+        }));
+    };
+
+    const updateSubTaskTitle = (id: string, title: string) => {
+        setFormData(prev => ({
+            ...prev,
+            subtasks: prev.subtasks?.map(st =>
+                st.id === id ? { ...st, title } : st
+            )
+        }));
+    };
+
+    const completedCount = formData.subtasks?.filter(st => st.completed).length || 0;
+    const totalCount = formData.subtasks?.length || 0;
+    const currentProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
     useEffect(() => {
         if (initialData) {
@@ -184,6 +231,67 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
                                     value={formData.dueDate}
                                     onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
                                 />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-white/5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-[10px] uppercase font-black text-white/60 tracking-widest">Subtareas / Checklist</h3>
+                                    {totalCount > 0 && (
+                                        <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded-md font-mono">
+                                            {completedCount}/{totalCount} ({currentProgress}%)
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={addSubTask}
+                                    className="text-[9px] uppercase font-black text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                >
+                                    <Plus className="w-3 h-3" /> Nueva Subtarea
+                                </button>
+                            </div>
+
+                            <div className="space-y-2">
+                                {formData.subtasks?.map((st) => (
+                                    <div key={st.id} className="flex items-center gap-3 group">
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleSubTask(st.id)}
+                                            className={cn(
+                                                "transition-colors",
+                                                st.completed ? "text-emerald-500" : "text-white/20 hover:text-white/40"
+                                            )}
+                                        >
+                                            {st.completed ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                                        </button>
+                                        <input
+                                            placeholder="Detalle de la subtarea..."
+                                            className={cn(
+                                                "flex-1 bg-transparent border-none outline-none text-sm transition-all",
+                                                st.completed ? "text-white/20 line-through" : "text-white/80"
+                                            )}
+                                            value={st.title}
+                                            onChange={(e) => updateSubTaskTitle(st.id, e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeSubTask(st.id)}
+                                            className="p-1 text-white/0 group-hover:text-red-400/40 hover:text-red-400 transition-all"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {totalCount > 0 && (
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mt-2">
+                                        <div
+                                            className="h-full bg-emerald-500 transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                            style={{ width: `${currentProgress}%` }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -123,14 +123,35 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                             </p>
                                         </div>
                                     )}
+
+                                    {task.progress !== undefined && task.progress > 0 && (
+                                        <div className="space-y-1 pt-1">
+                                            <div className="flex items-center justify-between text-[8px] font-mono text-white/30">
+                                                <span className="uppercase tracking-tighter">Progreso Tarea</span>
+                                                <span>{task.progress}%</span>
+                                            </div>
+                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-blue-500/50 transition-all duration-700"
+                                                    style={{ width: `${task.progress}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                         {task.attachments && task.attachments.length > 0 && (
                                             <div className="flex items-center gap-1 text-[9px] text-white/20">
-                                                <Paperclip className="w-3 h-3" />
+                                                <Paperclip className="w-3 h-3 text-white/10" />
                                                 <span>{task.attachments.length}</span>
+                                            </div>
+                                        )}
+                                        {task.subtasks && task.subtasks.length > 0 && (
+                                            <div className="flex items-center gap-1 text-[9px] text-white/20">
+                                                <CheckCircle2 className="w-3 h-3 text-white/10" />
+                                                <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}</span>
                                             </div>
                                         )}
                                     </div>
