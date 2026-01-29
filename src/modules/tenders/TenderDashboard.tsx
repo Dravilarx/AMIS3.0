@@ -57,8 +57,15 @@ export const TenderDashboard: React.FC = () => {
     );
 
     if (!activeTender) return (
-        <div className="p-12 text-center card-premium border-white/5">
+        <div className="p-12 text-center card-premium border-white/5 space-y-4">
             <p className="text-white/40 italic">No hay licitaciones registradas en el sistema.</p>
+            <button
+                onClick={() => setIsParserOpen(true)}
+                className="mx-auto flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-white/90 rounded-xl transition-all font-black text-xs uppercase tracking-widest shadow-xl"
+            >
+                <Sparkles className="w-5 h-5" />
+                <span>Cargar y Analizar Bases con IA</span>
+            </button>
         </div>
     );
 
@@ -97,10 +104,10 @@ export const TenderDashboard: React.FC = () => {
                     </select>
                     <button
                         onClick={() => setIsParserOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-white/90 rounded-lg transition-all font-bold text-xs uppercase tracking-tight shadow-xl"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg transition-all font-bold text-xs uppercase tracking-tight shadow-xl shadow-blue-500/20 border border-blue-400/30"
                     >
                         <Sparkles className="w-4 h-4" />
-                        <span>Analizar PDF con Gemini 3</span>
+                        <span>Analizar PDF con Agrawall AI</span>
                     </button>
                 </div>
             </div>

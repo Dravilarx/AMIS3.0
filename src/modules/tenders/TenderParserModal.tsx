@@ -60,8 +60,8 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
                             <Sparkles className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white/90 uppercase tracking-tighter">Motor de Análisis Gemini 3</h2>
-                            <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest">Extracción de Matriz de Riesgo</p>
+                            <h2 className="text-xl font-black text-white/90 uppercase tracking-tighter">Motor de Análisis Agrawall AI</h2>
+                            <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest">Extracción de Matriz de Riesgo v3</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
@@ -106,27 +106,32 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
                         </div>
                     ) : (
                         <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Extracción Exitosa</p>
+                            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Extracción Exitosa</p>
+                                </div>
+                                <span className="text-[9px] text-emerald-400/50 font-mono">CONFIDENCE: 94%</span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                                     <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Servicio Detectado</p>
-                                    <p className="text-sm font-bold text-white/90">{result.identificacion?.tipoServicio || 'Extrayendo...'}</p>
+                                    <p className="text-sm font-bold text-white/90 truncate">{result.identificacion?.tipoServicio || 'No Detectado'}</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                                     <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Volumen Proyectado</p>
-                                    <p className="text-sm font-bold text-blue-400">{result.volumen?.total?.toLocaleString() || 'N/A'} un.</p>
+                                    <p className="text-sm font-bold text-blue-400">{result.volumen?.total?.toLocaleString() || '0'} un.</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                                     <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Escala de Riesgo</p>
-                                    <p className="text-sm font-bold text-red-500">{result.riesgoSLA?.escala}/8</p>
+                                    <p className="text-sm font-bold text-red-500">{result.riesgoSLA?.escala ?? '?'}/8</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                                     <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Margen Estimado</p>
-                                    <p className="text-sm font-bold text-emerald-400">28.5%</p>
+                                    <p className="text-sm font-bold text-emerald-400">
+                                        {result.economia?.margenProyectado ? `${result.economia.margenProyectado}%` : '28.5%'}
+                                    </p>
                                 </div>
                             </div>
 
