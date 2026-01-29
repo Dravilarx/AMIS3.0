@@ -38,8 +38,13 @@ export async function analyzeClinicalReport(reportText: string): Promise<Agrawal
   `;
 
     try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
+        const text = result.response.text().trim();
         return JSON.parse(text) as AgrawallAnalysis;
     } catch (error) {
         console.error('Error analyzing Agrawall Scale:', error);

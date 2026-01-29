@@ -30,9 +30,10 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
             const base64 = await fileToBase64(file);
             const data = await parseTenderPDF(base64);
             setResult(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error parsing tender:', error);
-            alert('Error al procesar el PDF con Gemini. Inténtalo de nuevo.');
+            const errorMessage = error.message || 'Error desconocido';
+            alert(`Error al procesar el PDF: ${errorMessage}. Si estás en producción, verifica que VITE_GEMINI_API_KEY esté configurada.`);
         } finally {
             setParsing(false);
         }

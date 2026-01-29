@@ -2,8 +2,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!apiKey) {
-    console.warn('Gemini API key missing. Check your .env file.');
+if (!apiKey || apiKey === 'placeholder-key') {
+    console.error('🚨 Gemini API key missing! AI features will not work. Check VITE_GEMINI_API_KEY.');
+} else {
+    console.log('✅ Gemini API key detected.');
 }
 
 const genAI = new GoogleGenerativeAI(apiKey || 'placeholder-key');

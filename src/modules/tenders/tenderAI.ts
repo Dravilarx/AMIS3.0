@@ -31,15 +31,23 @@ export async function parseTenderPDF(pdfBase64: string): Promise<Partial<Tender>
   `;
 
     try {
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: pdfBase64,
-                    mimeType: 'application/pdf',
-                },
-            },
-        ]);
+        const result = await model.generateContent({
+            contents: [{
+                role: 'user',
+                parts: [
+                    { text: prompt },
+                    {
+                        inlineData: {
+                            data: pdfBase64,
+                            mimeType: 'application/pdf',
+                        },
+                    },
+                ],
+            }],
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
         const text = result.response.text();
 
         // Limpiar el texto para obtener solo el JSON
