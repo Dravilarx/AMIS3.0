@@ -25,5 +25,11 @@ export const useAudit = () => {
         return () => { supabase.removeChannel(sub); };
     }, []);
 
-    return { audits, loading, refresh: fetchAudits };
+    const addAudit = async (audit: any) => {
+        const { error } = await supabase.from('audit_reports').insert([audit]);
+        if (!error) fetchAudits();
+        return { success: !error, error };
+    };
+
+    return { audits, loading, addAudit, refresh: fetchAudits };
 };

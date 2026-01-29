@@ -3,10 +3,13 @@ import { Shield, AlertTriangle, Info, Filter, Search, BarChart3, ArrowUpRight, F
 import { cn } from '../../lib/utils';
 import type { AgrawallLevel } from '../../types/audit';
 import { useAudit } from '../../hooks/useAudit';
+import { Plus, Sparkles } from 'lucide-react';
+import { AuditParserModal } from './AuditParserModal';
 
 export const AuditorDashboard: React.FC = () => {
     const { audits } = useAudit();
     const [selectedAudit, setSelectedAudit] = useState<any>(null);
+    const [isParserOpen, setIsParserOpen] = useState(false);
 
     const getLevelColor = (level: AgrawallLevel) => {
         switch (level) {
@@ -27,22 +30,31 @@ export const AuditorDashboard: React.FC = () => {
                     <p className="text-white/40 text-sm italic">Análisis automático mediante Escala de Agrawall (Gemini AI)</p>
                 </div>
                 <div className="flex gap-4">
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[140px]">
+                    <button
+                        onClick={() => setIsParserOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl transition-all font-black text-xs uppercase tracking-tight shadow-lg shadow-emerald-500/20 border border-emerald-400/30"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Nueva Auditoría IA</span>
+                    </button>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[120px]">
                         <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Tasa Crítica</p>
                         <div className="flex items-center gap-2">
                             <span className="text-xl font-bold text-red-400">12.5%</span>
                             <AlertTriangle className="w-4 h-4 text-red-400/50" />
                         </div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[140px]">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[120px]">
                         <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Total Auditorías</p>
                         <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold">1,248</span>
+                            <span className="text-xl font-bold">{audits.length}</span>
                             <Shield className="w-4 h-4 text-blue-400/50" />
                         </div>
                     </div>
                 </div>
             </div>
+
+            <AuditParserModal isOpen={isParserOpen} onClose={() => setIsParserOpen(false)} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* List Side */}
@@ -152,12 +164,26 @@ export const AuditorDashboard: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-white/5 border border-dashed border-white/10 rounded-2xl p-8 text-center">
-                            <Info className="w-12 h-12 text-white/10 mb-4" />
-                            <h3 className="font-bold text-white/40">Seleccione una auditoría</h3>
-                            <p className="text-xs text-white/20 max-w-[200px] mt-2">
-                                Haga clic en un registro para ver el análisis detallado de la escala Agrawall.
-                            </p>
+                        <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-white/5 border border-dashed border-white/10 rounded-2xl p-8 text-center space-y-6">
+                            <div className="p-4 rounded-full bg-blue-500/10 border border-blue-500/20 animate-pulse">
+                                <Info className="w-8 h-8 text-blue-400/50" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white/90">Seleccione una auditoría</h3>
+                                <p className="text-xs text-white/40 max-w-[240px] mt-2 leading-relaxed">
+                                    Haga clic en un registro a la izquierda para ver el análisis detallado de la escala Agrawall.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-3 w-full max-w-[200px]">
+                                <p className="text-[9px] text-white/20 uppercase tracking-[0.2em] font-black">O también puedes</p>
+                                <button
+                                    onClick={() => setIsParserOpen(true)}
+                                    className="px-6 py-3 bg-white text-black hover:bg-white/90 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2"
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                    <span>Iniciar Análisis</span>
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
