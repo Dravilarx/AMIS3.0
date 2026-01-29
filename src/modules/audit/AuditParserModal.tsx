@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
 import { analyzeClinicalReport } from './agrawallAI';
 import { useAudit } from '../../hooks/useAudit';
 import { useProjects } from '../../hooks/useProjects';

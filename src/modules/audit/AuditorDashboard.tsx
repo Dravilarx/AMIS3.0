@@ -3,7 +3,7 @@ import { Shield, AlertTriangle, Info, Filter, Search, BarChart3, ArrowUpRight, F
 import { cn } from '../../lib/utils';
 import type { AgrawallLevel } from '../../types/audit';
 import { useAudit } from '../../hooks/useAudit';
-import { Plus, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { AuditParserModal } from './AuditParserModal';
 
 export const AuditorDashboard: React.FC = () => {
