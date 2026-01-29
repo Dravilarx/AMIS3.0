@@ -6,7 +6,7 @@ import type { Tender } from '../../types/tenders';
  * Utiliza Gemini para extraer datos estructurados de documentos de bases de licitación.
  */
 export async function parseTenderPDF(pdfBase64: string): Promise<Partial<Tender>> {
-    const model = getGeminiModel('gemini-1.5-flash');
+    const model = getGeminiModel('gemini-3.0-flash');
 
     const prompt = `
     Analiza este documento de bases de licitación y extrae la información para completar la Matriz de Riesgo AMIS 3.0.
