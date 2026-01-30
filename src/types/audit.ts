@@ -2,16 +2,24 @@ export type AgrawallLevel = 1 | 2 | 3 | 4;
 
 export interface ClinicalAudit {
     id: string;
-    patientName: string;
-    examType: string;
-    date: string;
-    professionalId: string;
-    professionalName: string;
+    patient_name: string;
+    project_id: string | null;
+    score: number;
     reportContent: string;
-    agrawallScore: AgrawallLevel;
-    aiClassificationReason: string;
-    status: 'pending' | 'reviewed' | 'escalated';
-    findings: string[];
+    anomalies: string[];
+    compliance_details: {
+        aiClassificationReason?: string;
+        fileName?: string;
+        patientId?: string;
+        institution?: string;
+        requestType?: string;
+        [key: string]: any;
+    };
+    status: 'pending' | 'reviewed' | 'escalated' | 'completed';
+    created_at: string;
+    projects?: {
+        name: string;
+    };
 }
 
 export interface AuditMetrics {

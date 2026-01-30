@@ -7,11 +7,20 @@ export const useAudit = () => {
 
     const fetchAudits = async () => {
         try {
-            const { data } = await supabase
+            console.log('[Audit] Cargando auditorías...');
+            const { data, error } = await supabase
                 .from('audit_reports')
                 .select('*, projects(name)')
                 .order('created_at', { ascending: false });
-            if (data) setAudits(data);
+
+            if (error) {
+                console.error('[Audit] Error al cargar:', error);
+            } else {
+                console.log('[Audit] Datos recibidos:', data?.length, 'registros');
+                if (data) setAudits(data);
+            }
+        } catch (err) {
+            console.error('[Audit] Error inesperado:', err);
         } finally {
             setLoading(false);
         }

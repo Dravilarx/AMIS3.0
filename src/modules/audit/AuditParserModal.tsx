@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
-import { analyzeClinicalReport } from './agrawallAI';
+import { X, Sparkles, Loader2, CheckCircle2, Upload, FileText } from 'lucide-react';
+import { analyzeClinicalReport, analyzeClinicalReportFromPDF } from './agrawallAI';
 import { useAudit } from '../../hooks/useAudit';
 import { useProjects } from '../../hooks/useProjects';
 
@@ -11,6 +11,7 @@ interface AuditParserModalProps {
 
 export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onClose }) => {
     const [reportText, setReportText] = useState('');
+    const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [patientName, setPatientName] = useState('');
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [analyzing, setAnalyzing] = useState(false);
@@ -20,11 +21,26 @@ export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onCl
 
     if (!isOpen) return null;
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type === 'application/pdf') {
+            setPdfFile(file);
+            setReportText(''); // Clear text if PDF is selected
+        } else {
+            alert('Por favor selecciona un archivo PDF válido');
+        }
+    };
+
     const handleAnalyze = async () => {
-        if (!reportText) return;
+        if (!reportText && !pdfFile) return;
         setAnalyzing(true);
         try {
-            const data = await analyzeClinicalReport(reportText);
+            let data;
+            if (pdfFile) {
+                data = await analyzeClinicalReportFromPDF(pdfFile);
+            } else {
+                data = await analyzeClinicalReport(reportText);
+            }
             setResult(data);
         } catch (error) {
             console.error('Error analyzing report:', error);
@@ -41,7 +57,7 @@ export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onCl
             patient_name: patientName || 'Paciente Anónimo',
             project_id: selectedProjectId || null,
             score: result.score,
-            reportContent: reportText,
+            reportContent: pdfFile ? `[PDF] ${pdfFile.name}` : reportText,
             anomalies: result.findings,
             compliance_details: {
                 aiClassificationReason: result.reasoning
@@ -55,6 +71,7 @@ export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onCl
             onClose();
             setResult(null);
             setReportText('');
+            setPdfFile(null);
             setPatientName('');
             setSelectedProjectId('');
         }
@@ -81,46 +98,65 @@ export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onCl
                 <div className="p-8">
                     {!result ? (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Paciente (Opcional)</label>
+                            {/* Upload PDF or Paste Text */}
+                            <div className="space-y-4">
+                                <div className="relative">
                                     <input
-                                        type="text"
-                                        value={patientName}
-                                        onChange={(e) => setPatientName(e.target.value)}
-                                        placeholder="Nombre del paciente..."
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500/50 transition-all font-mono"
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                        id="pdf-upload"
+                                    />
+                                    <label
+                                        htmlFor="pdf-upload"
+                                        className="flex flex-col items-center justify-center w-full h-40 bg-white/5 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:bg-white/10 hover:border-emerald-500/50 transition-all group"
+                                    >
+                                        {pdfFile ? (
+                                            <div className="flex flex-col items-center gap-3">
+                                                <FileText className="w-12 h-12 text-emerald-400" />
+                                                <div className="text-center">
+                                                    <p className="text-sm font-bold text-white/90">{pdfFile.name}</p>
+                                                    <p className="text-xs text-white/40 mt-1">Click para cambiar archivo</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Upload className="w-12 h-12 text-white/20 group-hover:text-emerald-400 transition-colors" />
+                                                <div className="text-center">
+                                                    <p className="text-sm font-bold text-white/70">Subir Informe PDF</p>
+                                                    <p className="text-xs text-white/40 mt-1">Click o arrastra un archivo PDF</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1 h-px bg-white/10"></div>
+                                    <span className="text-xs text-white/30 uppercase tracking-widest font-bold">O</span>
+                                    <div className="flex-1 h-px bg-white/10"></div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Pegar Texto del Informe</label>
+                                    <textarea
+                                        value={reportText}
+                                        onChange={(e) => {
+                                            setReportText(e.target.value);
+                                            if (e.target.value) setPdfFile(null); // Clear PDF if text is entered
+                                        }}
+                                        placeholder="Pegue aquí el contenido del informe clínico..."
+                                        disabled={!!pdfFile}
+                                        className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:border-emerald-500/50 transition-all resize-none font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Proyecto Relacionado</label>
-                                    <select
-                                        value={selectedProjectId}
-                                        onChange={(e) => setSelectedProjectId(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500/50 transition-all font-mono"
-                                    >
-                                        <option value="">Seleccionar Proyecto...</option>
-                                        {projects.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Informe Clínico / Hallazgos</label>
-                                <textarea
-                                    value={reportText}
-                                    onChange={(e) => setReportText(e.target.value)}
-                                    placeholder="Pegue aquí el informe clínico o los hallazgos a analizar..."
-                                    className="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:border-emerald-500/50 transition-all resize-none font-mono"
-                                />
                             </div>
 
                             <button
                                 onClick={handleAnalyze}
-                                disabled={!reportText || analyzing}
-                                className="w-full py-4 bg-white text-black rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white/90 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
+                                disabled={(!reportText && !pdfFile) || analyzing}
+                                className="w-full py-4 bg-white text-black rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
                             >
                                 {analyzing ? (
                                     <>
@@ -161,6 +197,36 @@ export const AuditParserModal: React.FC<AuditParserModalProps> = ({ isOpen, onCl
                                                 {f}
                                             </span>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Optional fields before saving */}
+                                <div className="pt-4 border-t border-white/5">
+                                    <p className="text-[9px] text-white/30 uppercase font-mono mb-3 tracking-widest">Información Adicional (Opcional)</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Paciente</label>
+                                            <input
+                                                type="text"
+                                                value={patientName}
+                                                onChange={(e) => setPatientName(e.target.value)}
+                                                placeholder="Nombre del paciente..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] text-white/40 uppercase font-black tracking-widest">Proyecto</label>
+                                            <select
+                                                value={selectedProjectId}
+                                                onChange={(e) => setSelectedProjectId(e.target.value)}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"
+                                            >
+                                                <option value="">Sin proyecto</option>
+                                                {projects.map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
