@@ -33,13 +33,22 @@ export const SemanticDMS: React.FC = () => {
                 category: 'legal',
                 type: 'pdf'
             });
+
             if (success) {
-                alert('Documento subido y procesado por el Expediente IA');
+                // Notificación de éxito (toast visual en lugar de alert)
+                console.log('✅ Documento subido exitosamente');
             } else {
-                alert('Error al subir: ' + error);
+                // Mostrar error específico
+                console.error('❌ Error al subir:', error);
+                alert(`Error: ${error}`); // Temporal: reemplazar con toast en el futuro
             }
+        } catch (err) {
+            console.error('❌ Error inesperado:', err);
+            alert('Error inesperado al subir el documento');
         } finally {
             setUploading(false);
+            // Limpiar el input para permitir subir el mismo archivo nuevamente
+            e.target.value = '';
         }
     };
 
@@ -104,8 +113,14 @@ export const SemanticDMS: React.FC = () => {
                         uploading && "opacity-50 pointer-events-none"
                     )}>
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <FileDown className="w-4 h-4 text-blue-400" />}
-                        <span>Subir Expediente</span>
-                        <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx" />
+                        <span>{uploading ? 'Subiendo...' : 'Subir Expediente'}</span>
+                        <input
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                            accept=".pdf,.doc,.docx,.txt"
+                            disabled={uploading}
+                        />
                     </label>
 
                     <form onSubmit={handleSearch} className="relative group w-full md:w-96">

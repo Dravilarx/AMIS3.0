@@ -64,6 +64,24 @@ export const useDocuments = () => {
 
     const uploadDocument = async (file: File, metadata: Partial<Document>) => {
         try {
+            // Validación de tipo de archivo
+            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+            if (!allowedTypes.includes(file.type)) {
+                return {
+                    success: false,
+                    error: `Tipo de archivo no permitido. Solo se aceptan: PDF, DOC, DOCX, TXT`
+                };
+            }
+
+            // Validación de tamaño (50 MB)
+            const maxSize = 50 * 1024 * 1024; // 50 MB en bytes
+            if (file.size > maxSize) {
+                return {
+                    success: false,
+                    error: `El archivo excede el límite de 50 MB (tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB)`
+                };
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
             const filePath = `expedientes/${fileName}`;
@@ -73,7 +91,10 @@ export const useDocuments = () => {
                 .from('documents')
                 .upload(filePath, file);
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('Storage upload error:', uploadError);
+                throw new Error(`Error al subir archivo: ${uploadError.message}`);
+            }
 
             // 2. Obtener URL pública
             const { data: { publicUrl } } = supabase.storage
@@ -92,13 +113,19 @@ export const useDocuments = () => {
                     signed: false
                 }]);
 
-            if (dbError) throw dbError;
+            if (dbError) {
+                console.error('Database insert error:', dbError);
+                throw new Error(`Error al registrar documento: ${dbError.message}`);
+            }
 
             await fetchDocuments();
             return { success: true };
         } catch (err: any) {
             console.error('Upload error:', err);
-            return { success: false, error: err.message };
+            return {
+                success: false,
+                error: err.message || 'Error desconocido al subir el documento'
+            };
         }
     };
 
