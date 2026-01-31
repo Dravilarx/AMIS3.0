@@ -1,0 +1,6 @@
+
+> amis3-0@0.0.0 build
+> tsc -b && vite build
+
+src/components/Layout.tsx(3,24): error TS6133: 'UserRole' is declared but its value is never read.
+src/modules/admin/AdminModule.tsx(5,1): error TS6133: 'AdminProfile' is declared but its value is never read.

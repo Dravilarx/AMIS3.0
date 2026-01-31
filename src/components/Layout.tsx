@@ -1,6 +1,6 @@
 import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, LogOut, Lightbulb, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useAuth, type UserRole } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 interface SidebarItemProps {
     icon: React.ElementType;
@@ -24,7 +24,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin';
     onNavigate: (view: any) => void;
 }
 

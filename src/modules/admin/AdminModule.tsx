@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Shield, ShieldAlert, UserPlus, Trash2, CheckCircle2, XCircle, ChevronRight, Lock } from 'lucide-react';
+import { Shield, ShieldAlert, UserPlus, Trash2, CheckCircle2, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useAdminProfiles, AdminProfile } from '../../hooks/useAdminProfiles';
-import { useAuth, UserRole, UserPermissions, ModulePermission } from '../../hooks/useAuth';
+import { useAdminProfiles } from '../../hooks/useAdminProfiles';
+import { useAuth } from '../../hooks/useAuth';
+import type { UserRole } from '../../hooks/useAuth';
 
 const MODULES = [
     { id: 'dashboard', name: 'Panel Principal' },
@@ -27,8 +28,8 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const AdminModule: React.FC = () => {
-    const { profiles, loading, updateProfile, deleteProfile } = useAdminProfiles();
-    const { user: currentUser } = useAuth();
+    const { profiles, updateProfile, deleteProfile } = useAdminProfiles();
+    const { user: _currentUser } = useAuth();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     const selectedProfile = profiles.find(p => p.id === selectedUserId);

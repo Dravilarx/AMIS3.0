@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { UserRole, UserPermissions } from './useAuth';
+import type { UserRole, UserPermissions } from './useAuth';
 
 export interface AdminProfile {
     id: string;
