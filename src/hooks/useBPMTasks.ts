@@ -38,7 +38,9 @@ export const useBPMTasks = (projectId?: string) => {
                 aiSummary: t.ai_summary,
                 attachments: t.attachments || [],
                 subtasks: t.subtasks || [],
-                progress: t.progress || 0
+                progress: t.progress || 0,
+                is_deleted: t.is_deleted,
+                archived_at: t.archived_at
             }));
 
             setTasks(mappedTasks);
@@ -121,15 +123,57 @@ export const useBPMTasks = (projectId?: string) => {
         return { success: true };
     };
 
-    const deleteTask = async (id: string) => {
-        const { error } = await supabase.from('bpm_tasks').delete().eq('id', id);
-        if (!error) fetchTasks();
-        return { success: !error, error };
+    const archiveTask = async (id: string) => {
+        try {
+            const { error: updateError } = await supabase
+                .from('bpm_tasks')
+                .update({ is_deleted: true, archived_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+            await fetchTasks();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error archiving task:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const duplicateTask = async (task: BPMTask) => {
+        try {
+            const { id, ...dataToClone } = task;
+            const newTask = {
+                ...dataToClone,
+                project_id: task.projectId, // Fix mapping
+                title: `${task.title} (Copia)`,
+                status: 'pending' as const,
+                progress: 0,
+                created_at: new Date().toISOString()
+            };
+
+            const { error } = await supabase.from('bpm_tasks').insert([newTask]);
+            if (error) throw error;
+
+            await fetchTasks();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error duplicating task:', err);
+            return { success: false, error: err.message };
+        }
     };
 
     useEffect(() => {
         fetchTasks();
     }, [projectId]);
 
-    return { tasks, loading, error, addTask, updateTask, deleteTask, refresh: fetchTasks };
+    return {
+        tasks: tasks.filter(t => !t.is_deleted),
+        loading,
+        error,
+        addTask,
+        updateTask,
+        deleteTask: archiveTask,
+        duplicateTask,
+        refresh: fetchTasks
+    };
 };

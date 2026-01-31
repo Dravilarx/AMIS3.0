@@ -30,7 +30,8 @@ export const useShifts = () => {
                 status: s.status as any,
                 checkIn: s.check_in?.substring(0, 5),
                 checkOut: s.check_out?.substring(0, 5),
-                geofenceValid: s.geofence_valid
+                geofenceValid: s.geofence_valid,
+                is_deleted: s.is_deleted
             }));
 
             setShifts(mappedShifts);
@@ -87,6 +88,47 @@ export const useShifts = () => {
         }
     };
 
+    const archiveShift = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('shifts')
+                .update({ is_deleted: true, archived_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (error) throw error;
+            await fetchShifts();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error archiving shift:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const duplicateShift = async (shift: Shift) => {
+        try {
+            const { id, ...dataToClone } = shift;
+            const newShiftData = {
+                professional_id: shift.professionalId,
+                professional_name: shift.professionalName,
+                date: shift.date,
+                start_time: shift.startTime,
+                end_time: shift.endTime,
+                location: shift.location,
+                sede_city: shift.sedeCity,
+                status: 'programado'
+            };
+
+            const { error } = await supabase.from('shifts').insert([newShiftData]);
+            if (error) throw error;
+
+            await fetchShifts();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error duplicating shift:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     useEffect(() => {
         fetchShifts();
 
@@ -103,5 +145,14 @@ export const useShifts = () => {
         };
     }, []);
 
-    return { shifts, loading, error, updateShiftStatus, addShift, refresh: fetchShifts };
+    return {
+        shifts: shifts.filter(s => !s.is_deleted),
+        loading,
+        error,
+        updateShiftStatus,
+        addShift,
+        archiveShift,
+        duplicateShift,
+        refresh: fetchShifts
+    };
 };

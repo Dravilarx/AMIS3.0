@@ -32,6 +32,9 @@ export interface Document {
     url: string;
     createdAt: string;
     signed?: boolean;
+    signedAt?: string;
+    signerName?: string;
+    signatureFingerprint?: string;
     visibility: 'community' | 'profile' | 'user';
     targetId?: string; // UID del usuario o ID del perfil
     projectId?: string;
@@ -42,6 +45,8 @@ export interface Document {
     isValidated?: boolean; // Validado por Agrawall AI
     aiObservation?: string; // Feedback de la IA
     expiryDate?: string; // Fecha de vencimiento para alertas
+    requestedSigners?: string[]; // Roles o UIDs permitidos para firmar
+    status?: 'draft' | 'pending' | 'signed' | 'rejected';
 }
 
 export interface DocumentRequirement {

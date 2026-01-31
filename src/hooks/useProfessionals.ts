@@ -53,7 +53,9 @@ export const useProfessionals = () => {
                     company: c.company,
                     amount: Number(c.amount),
                     type: c.type
-                }))
+                })),
+                is_deleted: p.is_deleted,
+                archived_at: p.archived_at
             })) as any;
 
             setProfessionals(mappedData);
@@ -198,9 +200,100 @@ export const useProfessionals = () => {
         }
     };
 
+    const archiveProfessional = async (id: string) => {
+        try {
+            setLoading(true);
+            const { error } = await supabase
+                .from('professionals')
+                .update({
+                    is_deleted: true,
+                    archived_at: new Date().toISOString(),
+                    status: 'inhabilitado'
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+            await fetchProfessionals();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error archiving professional:', err);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const duplicateProfessional = async (professional: Professional) => {
+        try {
+            setLoading(true);
+            const { id, contracts, ...dataToClone } = professional;
+
+            // 1. Insertar el clon del profesional (con nombre modificado)
+            const { data: profData, error: profError } = await supabase
+                .from('professionals')
+                .insert([{
+                    name: `${dataToClone.name} (Copia)`,
+                    last_name: dataToClone.lastName,
+                    email: `copy.${Date.now()}.${dataToClone.email}`,
+                    national_id: `COPY-${dataToClone.nationalId}`,
+                    nationality: dataToClone.nationality,
+                    birth_date: dataToClone.birthDate,
+                    joining_date: new Date().toISOString().split('T')[0],
+                    phone: dataToClone.phone,
+                    role: dataToClone.role,
+                    status: 'active',
+                    university: dataToClone.university,
+                    specialty: dataToClone.specialty,
+                    sub_specialty: dataToClone.subSpecialty,
+                    team: dataToClone.team,
+                    city: dataToClone.residence?.city,
+                    region: dataToClone.residence?.region,
+                    country: dataToClone.residence?.country,
+                    competencies: dataToClone.competencies
+                }])
+                .select()
+                .single();
+
+            if (profError) throw profError;
+
+            // 2. Insertar contratos clonados si existen
+            if (contracts && contracts.length > 0) {
+                const contractsToInsert = contracts.map(c => ({
+                    professional_id: profData.id,
+                    company: c.company,
+                    amount: c.amount,
+                    type: c.type
+                }));
+
+                const { error: contractsError } = await supabase
+                    .from('contracts')
+                    .insert(contractsToInsert);
+
+                if (contractsError) throw contractsError;
+            }
+
+            await fetchProfessionals();
+            return { success: true, data: profData };
+        } catch (err: any) {
+            console.error('Error duplicating professional:', err);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchProfessionals();
     }, []);
 
-    return { professionals, loading, error, refresh: fetchProfessionals, addProfessional, updateProfessional };
+    return {
+        professionals: professionals.filter(p => !p.is_deleted),
+        loading,
+        error,
+        refresh: fetchProfessionals,
+        addProfessional,
+        updateProfessional,
+        archiveProfessional,
+        duplicateProfessional
+    };
 };

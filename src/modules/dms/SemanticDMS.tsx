@@ -13,16 +13,22 @@ import {
     BarChart,
     Briefcase,
     CheckSquare,
-    Settings2
+    Settings2,
+    PenTool,
+    Copy,
+    Trash2
 } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { searchDocumentsSemantically } from './semanticSearch';
 import { useDocuments } from '../../hooks/useDocuments';
+import { useSignature } from '../../hooks/useSignature';
 import { useAuth } from '../../hooks/useAuth';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
+import { DigitalSignatureModal } from './DigitalSignatureModal';
+import type { Document } from '../../types/communication';
 
 
 export const SemanticDMS: React.FC = () => {
@@ -31,14 +37,25 @@ export const SemanticDMS: React.FC = () => {
     const [relevantIds, setRelevantIds] = useState<string[] | null>(null);
 
     // Conexión real a Supabase
-    const { documents, loading, error, uploadDocument, createNativeDocument } = useDocuments();
+    const {
+        documents,
+        loading,
+        error,
+        uploadDocument,
+        createNativeDocument,
+        archiveDocument,
+        duplicateDocument,
+        refresh
+    } = useDocuments();
 
     // Verificación de permisos
+    const { signNativeDocument, signPDFDocument } = useSignature();
     const { canPerform } = useAuth();
 
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [showEditor, setShowEditor] = useState(false);
+    const [signingDoc, setSigningDoc] = useState<Document | null>(null);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -158,9 +175,33 @@ export const SemanticDMS: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filteredDocs.map(doc => (
-                    <div key={doc.id} className="group bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/[0.07] hover:border-blue-500/30 transition-all flex flex-col gap-4 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <FileDown className="w-4 h-4 text-blue-400 cursor-pointer" />
+                    <div
+                        key={doc.id}
+                        onClick={() => window.open(doc.url, '_blank')}
+                        className="group bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/[0.07] hover:border-blue-500/30 transition-all flex flex-col gap-4 relative overflow-hidden cursor-pointer"
+                    >
+                        <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    duplicateDocument(doc);
+                                }}
+                                className="p-1.5 bg-white/5 hover:bg-blue-500/20 rounded-lg text-white/40 hover:text-blue-400 transition-all"
+                            >
+                                <Copy className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('¿Estás seguro de archivar este documento?')) {
+                                        archiveDocument(doc.id);
+                                    }
+                                }}
+                                className="p-1.5 bg-white/5 hover:bg-red-500/20 rounded-lg text-white/40 hover:text-red-400 transition-all"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                            <FileDown className="w-4 h-4 text-white/20 mt-1.5" />
                         </div>
 
                         <div className={cn(
@@ -196,18 +237,37 @@ export const SemanticDMS: React.FC = () => {
 
 
                         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-                            <span className="text-[9px] font-mono text-white/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
-                            {doc.signed ? (
-                                <div className="flex items-center gap-1">
-                                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                                    <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-tighter">Firmado</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-1">
-                                    <Lock className="w-3 h-3 text-white/20" />
-                                    <span className="text-[8px] text-white/20 font-bold uppercase tracking-tighter">Pendiente</span>
-                                </div>
-                            )}
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[9px] font-mono text-white/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
+                                {doc.signerName && (
+                                    <span className="text-[8px] text-white/30 italic">Por: {doc.signerName}</span>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSigningDoc(doc);
+                                }}
+                                className={cn(
+                                    "flex items-center gap-1 px-2 py-1 border rounded-md transition-all group/btn",
+                                    doc.signed
+                                        ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/10 text-emerald-500"
+                                        : "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400"
+                                )}
+                            >
+                                {doc.signed ? (
+                                    <>
+                                        <ShieldCheck className="w-2.5 h-2.5" />
+                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Añadir Firma</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <PenTool className="w-2.5 h-2.5 group-hover/btn:scale-110 transition-transform" />
+                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Firmar</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -236,6 +296,33 @@ export const SemanticDMS: React.FC = () => {
                     onSave={async (title, content) => {
                         const res = await createNativeDocument(title, content, { category: 'other' });
                         return res;
+                    }}
+                />
+            )}
+
+            {signingDoc && (
+                <DigitalSignatureModal
+                    documentTitle={signingDoc.title}
+                    documentUrl={signingDoc.url}
+                    isPdf={!signingDoc.url.endsWith('.html')}
+                    onClose={() => setSigningDoc(null)}
+                    onConfirm={async (name, style, position) => {
+                        // Determinar qué método usar basado en la URL/extensión
+                        const isNative = signingDoc.url.endsWith('.html');
+                        let result;
+
+                        if (isNative) {
+                            result = await signNativeDocument(signingDoc, name, style);
+                        } else {
+                            // Ahora pasamos la posición elegida visualmente
+                            result = await signPDFDocument(signingDoc, name, position);
+                        }
+
+                        if (result.success) {
+                            await refresh();
+                        } else {
+                            alert('Error al firmar: ' + result.error);
+                        }
                     }}
                 />
             )}

@@ -27,6 +27,9 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 url: d.url,
                 createdAt: d.created_at,
                 signed: d.signed,
+                signedAt: d.signed_at,
+                signerName: d.signer_name,
+                signatureFingerprint: d.signature_fingerprint,
                 visibility: d.visibility || 'community',
                 targetId: d.target_id,
                 projectId: d.project_id,
@@ -194,9 +197,79 @@ export const useDocuments = (_options?: { limit?: number }) => {
     };
 
 
+    const archiveDocument = async (id: string) => {
+        try {
+            const { error: updateError } = await supabase
+                .from('documents')
+                .update({ status: 'rejected', is_locked: true })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error archiving document:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const duplicateDocument = async (doc: Document) => {
+        try {
+            // 1. Clonar el archivo en Storage
+            const originalPath = doc.url.split('/storage/v1/object/public/documents/')[1].split('?')[0];
+            const fileExt = originalPath.split('.').pop();
+            const newPath = `expedientes/copy-${Date.now()}.${fileExt}`;
+
+            const { error: copyError } = await supabase.storage
+                .from('documents')
+                .copy(originalPath, newPath);
+
+            if (copyError) throw copyError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('documents')
+                .getPublicUrl(newPath);
+
+            // 2. Insertar nuevo registro con metadata clonada (Skill URMA)
+            const { error: insertError } = await supabase
+                .from('documents')
+                .insert([{
+                    title: `${doc.title} (Copia)`,
+                    type: doc.type,
+                    category: doc.category,
+                    content_summary: doc.contentSummary,
+                    url: publicUrl,
+                    signed: false, // Las copias nacen sin firmar por seguridad
+                    visibility: doc.visibility,
+                    target_id: doc.targetId,
+                    project_id: doc.projectId,
+                    task_id: doc.taskId,
+                    status: 'draft',
+                    requested_signers: doc.requestedSigners
+                }]);
+
+            if (insertError) throw insertError;
+
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error duplicating document:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     useEffect(() => {
         fetchDocuments();
     }, []);
 
-    return { documents, loading, error, refresh: fetchDocuments, uploadDocument, createNativeDocument };
+    return {
+        documents: documents.filter(d => d.status !== 'rejected'),
+        loading,
+        error,
+        refresh: fetchDocuments,
+        uploadDocument,
+        createNativeDocument,
+        archiveDocument,
+        duplicateDocument
+    };
 };

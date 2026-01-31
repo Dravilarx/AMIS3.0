@@ -10,7 +10,8 @@ import {
     Globe,
     Loader2,
     FileText,
-    Sparkles
+    Sparkles,
+    PenTool
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
@@ -39,6 +40,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     const [requirementId] = useState(prefill?.requirementId || '');
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [requestedSigners, setRequestedSigners] = useState<string[]>([]);
 
     // Listas para selectores
     const [projects, setProjects] = useState<{ id: string, name: string }[]>([]);
@@ -99,7 +101,9 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             type: file.type.includes('image') ? 'image' :
                 file.type.includes('video') ? 'video' :
                     file.type.includes('spreadsheet') ? 'excel' :
-                        file.name.endsWith('.md') ? 'markdown' : 'pdf'
+                        file.name.endsWith('.md') ? 'markdown' : 'pdf',
+            requestedSigners: requestedSigners.length > 0 ? requestedSigners : undefined,
+            status: requestedSigners.length > 0 ? 'pending' : 'draft'
         };
 
         const result = await onUpload(file, metadata);
@@ -284,6 +288,38 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* NUEVA SECCIÓN: SOLICITAR FIRMAS */}
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <PenTool className="w-4 h-4 text-emerald-400" />
+                            <h4 className="text-xs font-black text-white/60 uppercase tracking-widest">Flujo de Firmas</h4>
+                        </div>
+                        <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                            <label className="text-[10px] text-white/40 uppercase font-black tracking-widest block mb-3">Roles Requeridos para Firmar</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['ADM', 'MED', 'AUDITOR', 'ARCHITECT'].map(role => (
+                                    <button
+                                        key={role}
+                                        type="button"
+                                        onClick={() => {
+                                            setRequestedSigners(prev =>
+                                                prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+                                            )
+                                        }}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
+                                            requestedSigners.includes(role)
+                                                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                                                : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                                        )}
+                                    >
+                                        {role === 'ADM' ? 'Administrador' : role === 'MED' ? 'Médico' : role === 'AUDITOR' ? 'Auditor' : 'Arquitecto'}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>

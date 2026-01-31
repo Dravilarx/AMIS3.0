@@ -88,6 +88,10 @@ export interface Professional {
         assignedHRManagerId?: string; // ID del encargado de RRHH
         status: 'pending' | 'in_progress' | 'completed';
     };
+
+    /** Metadatos URMA */
+    is_deleted?: boolean;
+    archived_at?: string;
 }
 
 export type ProjectStatus = 'draft' | 'active' | 'on-hold' | 'completed' | 'archived';
@@ -104,6 +108,8 @@ export interface Project {
     endDate?: string;
     tags: string[];
     tenderId?: string; // Vinculación opcional con licitaciones
+    is_deleted?: boolean;
+    archived_at?: string;
 }
 
 export interface SubTask {
@@ -124,4 +130,6 @@ export interface BPMTask {
     attachments?: { name: string; url: string; type: string }[];
     subtasks?: SubTask[];
     progress?: number;
+    is_deleted?: boolean;
+    archived_at?: string;
 }

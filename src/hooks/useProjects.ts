@@ -29,7 +29,9 @@ export const useProjects = () => {
                 startDate: p.start_date,
                 endDate: p.end_date,
                 tags: p.tags || [],
-                tenderId: p.tender_id
+                tenderId: p.tender_id,
+                is_deleted: p.is_deleted,
+                archived_at: p.archived_at
             }));
 
             setProjects(mappedProjects);
@@ -75,9 +77,59 @@ export const useProjects = () => {
         return { success: !error, error };
     };
 
+    const archiveProject = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .update({ is_deleted: true, archived_at: new Date().toISOString(), status: 'archived' })
+                .eq('id', id);
+
+            if (error) throw error;
+            await fetchProjects();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error archiving project:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const duplicateProject = async (project: Project) => {
+        try {
+            // Clonar proyecto según URMA
+            const { id, ...dataToClone } = project;
+            const newProject = {
+                ...dataToClone,
+                name: `${project.name} (Copia)`,
+                status: 'draft' as const,
+                progress: 0,
+                start_date: new Date().toISOString().split('T')[0]
+            };
+
+            const { data, error } = await supabase.from('projects').insert([newProject]).select().single();
+            if (error) throw error;
+
+            // Opcional: Podríamos clonar tareas asociadas aquí si fuera necesario
+
+            await fetchProjects();
+            return { success: true, data };
+        } catch (err: any) {
+            console.error('Error duplicating project:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     useEffect(() => {
         fetchProjects();
     }, []);
 
-    return { projects, loading, error, addProject, updateProject, refresh: fetchProjects };
+    return {
+        projects: projects.filter(p => !p.is_deleted),
+        loading,
+        error,
+        addProject,
+        updateProject,
+        archiveProject,
+        duplicateProject,
+        refresh: fetchProjects
+    };
 };

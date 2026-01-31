@@ -13,6 +13,7 @@ export interface Shift {
     checkIn?: string;
     checkOut?: string;
     geofenceValid?: boolean;
+    is_deleted?: boolean;
 }
 
 export interface AttendanceAnalytics {
