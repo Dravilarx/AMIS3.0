@@ -1,18 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { format, addHours, startOfDay, parse, differenceInMinutes, isWithinInterval, setHours, setMinutes } from 'date-fns';
+import { format, addHours, parse, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, User, Search, Pin, Plus, MoreVertical, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Search, Plus, MoreVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Shift } from '../../types/shifts';
-import type { Professional } from '../../types/core';
 
 interface ShiftTimelineProps {
     shifts: Shift[];
-    professionals: Professional[];
     onAddShift: (date: string, startTime: string) => void;
 }
 
-export const ShiftTimeline: React.FC<ShiftTimelineProps> = ({ shifts, professionals, onAddShift }) => {
+export const ShiftTimeline: React.FC<ShiftTimelineProps> = ({ shifts, onAddShift }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
 

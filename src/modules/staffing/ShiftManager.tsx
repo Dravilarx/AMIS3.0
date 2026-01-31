@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, User, AlertCircle, ShieldCheck, Filter } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, AlertCircle, ShieldCheck } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { ShiftStatus } from '../../types/shifts';
 
@@ -235,7 +235,6 @@ export const ShiftManager: React.FC = () => {
                     <div className="lg:col-span-12">
                         <ShiftTimeline
                             shifts={shifts}
-                            professionals={professionals}
                             onAddShift={handleTimelineAdd}
                         />
                     </div>
