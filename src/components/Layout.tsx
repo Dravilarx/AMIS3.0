@@ -29,23 +29,23 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
-    const { user, setRole, hasPermission } = useAuth();
+    const { user, hasModuleAccess } = useAuth();
 
     const navItems = [
-        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, perm: 'view_dashboard' },
-        { id: 'tenders', name: 'Licitaciones', icon: FileText, perm: 'view_tenders' },
-        { id: 'staffing', name: 'RR.HH. 360', icon: Users, perm: 'manage_staffing' },
-        { id: 'shifts', name: 'Turnos', icon: Calendar, perm: 'manage_staffing' },
-        { id: 'logistics', name: 'Logística', icon: Truck, perm: 'all' },
-        { id: 'clinical', name: 'Procedimientos', icon: Stethoscope, perm: 'clinical_workflow' },
-        { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck, perm: 'audit_dashboard' },
-        { id: 'projects', name: 'BPM & Proyectos', icon: Layers, perm: 'all' },
-        { id: 'messaging', name: 'Mensajería', icon: MessageSquare, perm: 'messaging' },
-        { id: 'dms', name: 'Expediente IA', icon: FolderSearch, perm: 'all' },
-        { id: 'ideation', name: 'Lluvia de Ideas', icon: Lightbulb, perm: 'all' },
+        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+        { id: 'tenders', name: 'Licitaciones', icon: FileText },
+        { id: 'staffing', name: 'RR.HH. 360', icon: Users },
+        { id: 'shifts', name: 'Turnos', icon: Calendar },
+        { id: 'logistics', name: 'Logística', icon: Truck },
+        { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
+        { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
+        { id: 'projects', name: 'BPM & Proyectos', icon: Layers },
+        { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
+        { id: 'dms', name: 'Expediente IA', icon: FolderSearch },
+        { id: 'ideation', name: 'Lluvia de Ideas', icon: Lightbulb },
     ] as const;
 
-    const filteredNav = navItems.filter(item => hasPermission(item.perm));
+    const filteredNav = navItems.filter(item => hasModuleAccess(item.id));
 
     return (
         <div className="flex h-screen bg-black text-white">
@@ -74,6 +74,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             onClick={() => onNavigate(item.id)}
                         />
                     ))}
+
+                    {/* Sección de Administración */}
+                    {user?.permissions?.admin_access && (
+                        <div className="pt-4 mt-4 border-t border-white/5">
+                            <p className="text-[10px] uppercase font-black text-white/20 tracking-widest px-3 mb-2">Sistemas Centrales</p>
+                            <SidebarItem
+                                icon={ShieldCheck}
+                                label="Panel de Control"
+                                active={currentView === 'admin'}
+                                onClick={() => onNavigate('admin')}
+                            />
+                        </div>
+                    )}
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
@@ -112,22 +125,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             <h3 className="text-sm font-bold capitalize text-white/80">{currentView.replace(/_/g, ' ')}</h3>
                         </div>
                         <div className="h-6 w-px bg-white/10" />
-
-                        {/* Role Switcher for Demo */}
-                        <div className="flex items-center gap-2 p-1 bg-white/5 rounded-lg border border-white/10">
-                            {(['ARCHITECT', 'COORDINATOR', 'AUDITOR'] as UserRole[]).map((r) => (
-                                <button
-                                    key={r}
-                                    onClick={() => setRole(r)}
-                                    className={cn(
-                                        "px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all",
-                                        user?.role === r ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-white/20 hover:text-white/40"
-                                    )}
-                                >
-                                    {r}
-                                </button>
-                            ))}
-                        </div>
                     </div>
 
                     <div className="flex items-center gap-6">

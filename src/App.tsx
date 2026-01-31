@@ -12,9 +12,10 @@ import { MessagingHub } from './modules/messaging/MessagingHub'
 import { SemanticDMS } from './modules/dms/SemanticDMS'
 
 import { IdeaAnalyst } from './modules/ideation/IdeaAnalyst'
+import { AdminModule } from './modules/admin/AdminModule'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin'>('dashboard');
 
   const renderView = () => {
     switch (currentView) {
@@ -29,6 +30,7 @@ function App() {
       case 'messaging': return <MessagingHub />;
       case 'dms': return <SemanticDMS />;
       case 'ideation': return <IdeaAnalyst />;
+      case 'admin': return <AdminModule />;
       default: return <DashboardModule />;
     }
   };
