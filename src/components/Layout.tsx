@@ -32,16 +32,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const { user, hasModuleAccess } = useAuth();
 
     const navItems = [
-        { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+        { id: 'dashboard', name: 'Panel Principal', icon: LayoutDashboard },
         { id: 'tenders', name: 'Licitaciones', icon: FileText },
         { id: 'staffing', name: 'RR.HH. 360', icon: Users },
-        { id: 'shifts', name: 'Turnos', icon: Calendar },
+        { id: 'shifts', name: 'Turnos y Guardias', icon: Calendar },
         { id: 'logistics', name: 'Logística', icon: Truck },
-        { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
+        { id: 'clinical', name: 'Operación Clínica', icon: Stethoscope },
         { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
         { id: 'projects', name: 'BPM & Proyectos', icon: Layers },
         { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
-        { id: 'dms', name: 'Expediente IA', icon: FolderSearch },
+        { id: 'dms', name: 'Expediente Digital', icon: FolderSearch },
         { id: 'ideation', name: 'Lluvia de Ideas', icon: Lightbulb },
     ] as const;
 
@@ -94,7 +94,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                         <img src={user?.avatar} alt="Avatar" className="w-8 h-8 rounded-lg bg-white/5" />
                         <div className="overflow-hidden">
                             <p className="text-xs font-bold text-white/90 truncate">{user?.name}</p>
-                            <p className="text-[10px] text-blue-400 font-mono uppercase tracking-tighter">{user?.role}</p>
+                            <p className="text-[10px] text-blue-400 font-mono uppercase tracking-tighter">
+                                {user?.role === 'SUPER_ADMIN' ? 'ADMIN MAESTRO' :
+                                    user?.role === 'ADMIN' ? 'ADMINISTRADOR' :
+                                        user?.role === 'MANAGER' ? 'GERENTE' :
+                                            user?.role === 'OPERATOR' ? 'OPERADOR' : 'OBSERVADOR'}
+                            </p>
                         </div>
                     </div>
                     <div className="space-y-1">

@@ -5,18 +5,26 @@ import { useAdminProfiles, AdminProfile } from '../../hooks/useAdminProfiles';
 import { useAuth, UserRole, UserPermissions, ModulePermission } from '../../hooks/useAuth';
 
 const MODULES = [
-    { id: 'dashboard', name: 'Dashboard' },
+    { id: 'dashboard', name: 'Panel Principal' },
     { id: 'tenders', name: 'Licitaciones' },
     { id: 'staffing', name: 'RR.HH. 360' },
-    { id: 'shifts', name: 'Turnos' },
+    { id: 'shifts', name: 'Turnos y Guardias' },
     { id: 'logistics', name: 'Logística' },
-    { id: 'clinical', name: 'Procedimientos' },
+    { id: 'clinical', name: 'Operación Clínica' },
     { id: 'audit', name: 'Auditoría IA' },
     { id: 'projects', name: 'BPM & Proyectos' },
     { id: 'messaging', name: 'Mensajería' },
-    { id: 'dms', name: 'Expediente IA' },
+    { id: 'dms', name: 'Expediente Digital' },
     { id: 'ideation', name: 'Lluvia de Ideas' },
 ] as const;
+
+const ROLE_LABELS: Record<UserRole, string> = {
+    'SUPER_ADMIN': 'ADMIN MAESTRO',
+    'ADMIN': 'ADMINISTRADOR',
+    'MANAGER': 'GERENTE',
+    'OPERATOR': 'OPERADOR',
+    'VIEWER': 'OBSERVADOR'
+};
 
 export const AdminModule: React.FC = () => {
     const { profiles, loading, updateProfile, deleteProfile } = useAdminProfiles();
@@ -88,7 +96,7 @@ export const AdminModule: React.FC = () => {
                                         profile.role === 'SUPER_ADMIN' ? "bg-amber-500/10 text-amber-500" :
                                             profile.role === 'ADMIN' ? "bg-blue-500/10 text-blue-500" : "bg-white/10 text-white/40"
                                     )}>
-                                        {profile.role}
+                                        {ROLE_LABELS[profile.role]}
                                     </span>
                                 </div>
                             </div>
@@ -143,7 +151,7 @@ export const AdminModule: React.FC = () => {
                                                 selectedProfile.email === 'marcelo.avila@amis.global' && "opacity-50 cursor-not-allowed"
                                             )}
                                         >
-                                            {role}
+                                            {ROLE_LABELS[role]}
                                         </button>
                                     ))}
                                 </div>
