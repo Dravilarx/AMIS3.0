@@ -51,31 +51,18 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             try {
                 const { data: projData, error: projErr } = await supabase.from('projects').select('id, name').limit(10);
                 if (projErr) console.warn("[DMS Modal] Error proyectos:", projErr);
-                if (projData && projData.length > 0) {
+                if (projData) {
                     setProjects(projData);
-                } else {
-                    // Fallback para pruebas sin datos
-                    setProjects([{ id: 'p1', name: 'Proyecto de Prueba Alpha' }]);
                 }
 
                 const { data: taskData } = await supabase.from('bpm_tasks').select('id, title').limit(10);
-                if (taskData && taskData.length > 0) {
+                if (taskData) {
                     setTasks(taskData);
-                } else {
-                    setTasks([
-                        { id: 't1', title: 'Revisión técnica de infraestructura' },
-                        { id: 't2', title: 'Auditoría de Higiene' }
-                    ]);
                 }
 
                 const { data: profData } = await supabase.from('profiles').select('id, full_name, role').limit(10);
-                if (profData && profData.length > 0) {
+                if (profData) {
                     setProfiles(profData);
-                } else {
-                    setProfiles([
-                        { id: 'u1', full_name: 'Marcelo Avila', role: 'AUDITOR' },
-                        { id: 'u2', full_name: 'Dr. Rodrigo Soto', role: 'MED' }
-                    ]);
                 }
             } catch (err) {
                 console.error("[DMS Modal] Crash en fetchMetadata:", err);
