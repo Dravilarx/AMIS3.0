@@ -4,7 +4,6 @@ import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
 import { useProfessionals } from '../../hooks/useProfessionals';
 import type { Professional } from '../../types/core';
-import type { Tender } from '../../types/tenders';
 
 import { useTenders } from '../../hooks/useTenders';
 

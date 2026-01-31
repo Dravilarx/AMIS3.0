@@ -31,7 +31,7 @@ export const useBPMTasks = (projectId?: string) => {
                 id: t.id,
                 projectId: t.project_id,
                 title: t.title,
-                assigned_to: t.assigned_to,
+                assignedTo: t.assigned_to,
                 status: t.status,
                 priority: t.priority,
                 dueDate: t.due_date,

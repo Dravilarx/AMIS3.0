@@ -91,5 +91,5 @@ export const useTenders = () => {
         fetchTenders();
     }, []);
 
-    return { tenders, loading, error, addTender };
+    return { tenders, loading, error, addTender, sendHighRiskAlert };
 };
