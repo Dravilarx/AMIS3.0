@@ -21,11 +21,11 @@ export const useShifts = () => {
             const mappedShifts: Shift[] = (data || []).map(s => ({
                 id: s.id,
                 professionalId: s.professional_id,
-                professionalName: s.professional_name,
+                professionalName: s.professional_name || 'Sin Nombre',
                 date: s.date,
-                startTime: s.start_time.substring(0, 5),
-                endTime: s.end_time.substring(0, 5),
-                location: s.location,
+                startTime: (s.start_time || '00:00').substring(0, 5),
+                endTime: (s.end_time || '00:00').substring(0, 5),
+                location: s.location || 'Sede General',
                 sedeCity: s.sede_city || '',
                 status: s.status as any,
                 checkIn: s.check_in?.substring(0, 5),
@@ -59,6 +59,34 @@ export const useShifts = () => {
         return { success: !error, error };
     };
 
+    const addShift = async (newShift: Omit<Shift, 'id' | 'status'>) => {
+        try {
+            setLoading(true);
+            const { error: supabaseError } = await supabase
+                .from('shifts')
+                .insert([{
+                    professional_id: newShift.professionalId,
+                    professional_name: newShift.professionalName,
+                    date: newShift.date,
+                    start_time: newShift.startTime,
+                    end_time: newShift.endTime,
+                    location: newShift.location,
+                    sede_city: newShift.sedeCity,
+                    status: 'programado'
+                }]);
+
+            if (supabaseError) throw supabaseError;
+
+            await fetchShifts();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error adding shift:', err);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchShifts();
 
@@ -75,5 +103,5 @@ export const useShifts = () => {
         };
     }, []);
 
-    return { shifts, loading, error, updateShiftStatus, refresh: fetchShifts };
+    return { shifts, loading, error, updateShiftStatus, addShift, refresh: fetchShifts };
 };

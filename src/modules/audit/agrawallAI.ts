@@ -1,6 +1,5 @@
 import { getGeminiModel } from '../../lib/gemini';
 import type { AgrawallLevel } from '../../types/audit';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface AgrawallAnalysis {
     score: AgrawallLevel;
@@ -65,8 +64,6 @@ export async function analyzeClinicalReportFromPDF(pdfFile: File): Promise<Agraw
     if (!apiKey) {
         throw new Error('Gemini API key not configured');
     }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
 
     try {
         // Convert File to base64

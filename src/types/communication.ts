@@ -19,10 +19,31 @@ export interface Channel {
 export interface Document {
     id: string;
     title: string;
-    type: 'pdf' | 'doc' | 'image';
-    category: 'clinical' | 'legal' | 'logistics';
+    type: 'pdf' | 'doc' | 'excel' | 'markdown' | 'image' | 'video';
+    category: 'clinical' | 'legal' | 'logistics' | 'commercial' | 'hr' | 'academic' | 'other';
     contentSummary: string; // Used for semantic search (M9)
     url: string;
     createdAt: string;
     signed?: boolean;
+    visibility: 'community' | 'profile' | 'user';
+    targetId?: string; // UID del usuario o ID del perfil
+    projectId?: string;
+    taskId?: string;
+    requirementId?: string; // ID del requerimiento de la batería que satisface
 }
+
+export interface DocumentRequirement {
+    id: string;
+    label: string;
+    description?: string;
+    isRequired: boolean;
+    category: Document['category'];
+}
+
+export interface DocumentBattery {
+    id: string;
+    name: string;
+    description: string;
+    requirements: DocumentRequirement[];
+}
+

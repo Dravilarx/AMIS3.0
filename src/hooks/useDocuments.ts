@@ -11,7 +11,8 @@ const MOCK_DOCUMENTS: Document[] = [
         contentSummary: 'Condiciones generales de prestación de servicios para el Holding Portezuelo.',
         url: '#',
         createdAt: new Date().toISOString(),
-        signed: true
+        signed: true,
+        visibility: 'community'
     },
     {
         id: 'DOC-002',
@@ -21,11 +22,12 @@ const MOCK_DOCUMENTS: Document[] = [
         contentSummary: 'Guía clínica para la atención remota de pacientes críticos.',
         url: '#',
         createdAt: new Date().toISOString(),
-        signed: false
+        signed: false,
+        visibility: 'community'
     }
 ];
 
-export const useDocuments = () => {
+export const useDocuments = (_options?: { limit?: number }) => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -49,14 +51,18 @@ export const useDocuments = () => {
                 contentSummary: d.content_summary,
                 url: d.url,
                 createdAt: d.created_at,
-                signed: d.signed
+                signed: d.signed,
+                visibility: d.visibility || 'community',
+                targetId: d.target_id,
+                projectId: d.project_id,
+                taskId: d.task_id,
+                requirementId: d.requirement_id
             }));
 
             setDocuments(mappedData);
         } catch (err: any) {
             console.error('Error fetching documents, using mock data:', err);
             setDocuments(MOCK_DOCUMENTS);
-            // setError(err.message);
         } finally {
             setLoading(false);
         }
@@ -64,21 +70,33 @@ export const useDocuments = () => {
 
     const uploadDocument = async (file: File, metadata: Partial<Document>) => {
         try {
-            // Validación de tipo de archivo
-            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+            // Validación de tipos extendida
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+                'text/markdown',
+                'text/plain',
+                'image/jpeg',
+                'image/png',
+                'video/mp4',
+                'video/quicktime'
+            ];
+
             if (!allowedTypes.includes(file.type)) {
                 return {
                     success: false,
-                    error: `Tipo de archivo no permitido. Solo se aceptan: PDF, DOC, DOCX, TXT`
+                    error: `Tipo de archivo no permitido: ${file.type}. Formatos aceptados: PDF, Word, Excel, Markdown, Imágenes (JPG/PNG) y Vídeos (MP4/MOV)`
                 };
             }
 
-            // Validación de tamaño (50 MB)
-            const maxSize = 50 * 1024 * 1024; // 50 MB en bytes
+            const maxSize = 100 * 1024 * 1024; // Aumentado a 100 MB para vídeos
             if (file.size > maxSize) {
                 return {
                     success: false,
-                    error: `El archivo excede el límite de 50 MB (tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB)`
+                    error: `El archivo excede el límite de 100 MB`
                 };
             }
 
@@ -86,37 +104,33 @@ export const useDocuments = () => {
             const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
             const filePath = `expedientes/${fileName}`;
 
-            // 1. Subir a Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from('documents')
                 .upload(filePath, file);
 
-            if (uploadError) {
-                console.error('Storage upload error:', uploadError);
-                throw new Error(`Error al subir archivo: ${uploadError.message}`);
-            }
+            if (uploadError) throw new Error(`Error al subir archivo: ${uploadError.message}`);
 
-            // 2. Obtener URL pública
             const { data: { publicUrl } } = supabase.storage
                 .from('documents')
                 .getPublicUrl(filePath);
 
-            // 3. Crear registro en DB
             const { error: dbError } = await supabase
                 .from('documents')
                 .insert([{
                     title: metadata.title || file.name,
-                    type: metadata.type || 'pdf',
-                    category: metadata.category || 'legal',
+                    type: metadata.type || (file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'pdf'),
+                    category: metadata.category || 'other',
                     content_summary: 'Procesando por Agrawall AI...',
                     url: publicUrl,
-                    signed: false
+                    signed: false,
+                    visibility: metadata.visibility || 'community',
+                    target_id: metadata.targetId,
+                    project_id: metadata.projectId,
+                    task_id: metadata.taskId,
+                    requirement_id: metadata.requirementId
                 }]);
 
-            if (dbError) {
-                console.error('Database insert error:', dbError);
-                throw new Error(`Error al registrar documento: ${dbError.message}`);
-            }
+            if (dbError) throw new Error(`Error al registrar documento: ${dbError.message}`);
 
             await fetchDocuments();
             return { success: true };
@@ -124,10 +138,11 @@ export const useDocuments = () => {
             console.error('Upload error:', err);
             return {
                 success: false,
-                error: err.message || 'Error desconocido al subir el documento'
+                error: err.message || 'Error desconocido'
             };
         }
     };
+
 
     useEffect(() => {
         fetchDocuments();

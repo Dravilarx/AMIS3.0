@@ -7,11 +7,21 @@ import {
     ShieldCheck,
     Loader2,
     Lock,
-    AlertCircle
+    AlertCircle,
+    Image as ImageIcon,
+    Video,
+    BarChart,
+    Briefcase,
+    CheckSquare,
+    Settings2
 } from 'lucide-react';
+
 import { cn } from '../../lib/utils';
 import { searchDocumentsSemantically } from './semanticSearch';
 import { useDocuments } from '../../hooks/useDocuments';
+import { DocumentUploadModal } from './DocumentUploadModal';
+import { BatteryConfigModal } from './BatteryConfigModal';
+
 
 export const SemanticDMS: React.FC = () => {
     const [query, setQuery] = useState('');
@@ -20,37 +30,9 @@ export const SemanticDMS: React.FC = () => {
 
     // Conexión real a Supabase
     const { documents, loading, error, uploadDocument } = useDocuments();
-    const [uploading, setUploading] = useState(false);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setUploading(true);
-        try {
-            const { success, error } = await uploadDocument(file, {
-                title: file.name,
-                category: 'legal',
-                type: 'pdf'
-            });
-
-            if (success) {
-                // Notificación de éxito (toast visual en lugar de alert)
-                console.log('✅ Documento subido exitosamente');
-            } else {
-                // Mostrar error específico
-                console.error('❌ Error al subir:', error);
-                alert(`Error: ${error}`); // Temporal: reemplazar con toast en el futuro
-            }
-        } catch (err) {
-            console.error('❌ Error inesperado:', err);
-            alert('Error inesperado al subir el documento');
-        } finally {
-            setUploading(false);
-            // Limpiar el input para permitir subir el mismo archivo nuevamente
-            e.target.value = '';
-        }
-    };
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [showConfigModal, setShowConfigModal] = useState(false);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,9 +52,19 @@ export const SemanticDMS: React.FC = () => {
         }
     };
 
+    const getFileIcon = (type: string) => {
+        switch (type) {
+            case 'image': return <ImageIcon className="w-6 h-6" />;
+            case 'video': return <Video className="w-6 h-6" />;
+            case 'excel': return <BarChart className="w-6 h-6" />;
+            default: return <FileText className="w-6 h-6" />;
+        }
+    };
+
     const filteredDocs = relevantIds
         ? documents.filter(d => relevantIds.includes(d.id))
         : documents;
+
 
     if (loading) {
         return (
@@ -108,20 +100,22 @@ export const SemanticDMS: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <label className={cn(
-                        "flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest",
-                        uploading && "opacity-50 pointer-events-none"
-                    )}>
-                        {uploading ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <FileDown className="w-4 h-4 text-blue-400" />}
-                        <span>{uploading ? 'Subiendo...' : 'Subir Expediente'}</span>
-                        <input
-                            type="file"
-                            className="hidden"
-                            onChange={handleFileUpload}
-                            accept=".pdf,.doc,.docx,.txt"
-                            disabled={uploading}
-                        />
-                    </label>
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+                    >
+                        <FileDown className="w-4 h-4 text-blue-400" />
+                        <span>Subir Expediente</span>
+                    </button>
+
+                    <button
+                        onClick={() => setShowConfigModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+                        title="Configurar Baterías de Requerimientos"
+                    >
+                        <Settings2 className="w-4 h-4 text-amber-400" />
+                        <span>Configurar Baterías</span>
+                    </button>
 
                     <form onSubmit={handleSearch} className="relative group w-full md:w-96">
                         <input
@@ -154,15 +148,33 @@ export const SemanticDMS: React.FC = () => {
                             "w-12 h-12 rounded-xl flex items-center justify-center border",
                             doc.category === 'clinical' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
                                 doc.category === 'legal' ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                                    "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                                    doc.category === 'commercial' ? "bg-purple-500/10 border-purple-500/20 text-purple-400" :
+                                        "bg-orange-500/10 border-orange-500/20 text-orange-400"
                         )}>
-                            <FileText className="w-6 h-6" />
+                            {getFileIcon(doc.type)}
                         </div>
 
-                        <div>
+
+                        <div className="flex flex-col flex-1">
                             <h4 className="font-bold text-sm text-white/90 leading-tight mb-1">{doc.title}</h4>
                             <p className="text-[10px] text-white/40 line-clamp-2 italic">{doc.contentSummary}</p>
+
+                            {(doc.projectId || doc.taskId) && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {doc.projectId && (
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[8px] text-blue-400 font-bold uppercase">
+                                            <Briefcase className="w-2.5 h-2.5" /> PROYECTO
+                                        </div>
+                                    )}
+                                    {doc.taskId && (
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/10 border border-orange-500/20 rounded text-[8px] text-orange-400 font-bold uppercase">
+                                            <CheckSquare className="w-2.5 h-2.5" /> TAREA
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
+
 
                         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                             <span className="text-[9px] font-mono text-white/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
@@ -187,6 +199,17 @@ export const SemanticDMS: React.FC = () => {
                     <Search className="w-12 h-12 text-white/5 mx-auto mb-4" />
                     <p className="text-white/40 text-sm italic">No se encontraron documentos relevantes para "{query}"</p>
                 </div>
+            )}
+            {showUploadModal && (
+                <DocumentUploadModal
+                    onClose={() => setShowUploadModal(false)}
+                    onUpload={uploadDocument}
+                />
+            )}
+            {showConfigModal && (
+                <BatteryConfigModal
+                    onClose={() => setShowConfigModal(false)}
+                />
             )}
         </div>
     );

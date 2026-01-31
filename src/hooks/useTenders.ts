@@ -83,7 +83,7 @@ export const useTenders = () => {
                 }
             }));
 
-            setTenders(mappedTenders);
+            setTenders(mappedTenders.length > 0 ? mappedTenders : MOCK_TENDERS);
 
             // ANALÍTICA DE RIESGO AUTOMÁTICA
             mappedTenders.forEach(t => {
