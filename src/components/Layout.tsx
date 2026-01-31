@@ -41,7 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
         { id: 'projects', name: 'BPM & Proyectos', icon: Layers },
         { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
-        { id: 'dms', name: 'Expediente Digital', icon: FolderSearch },
+        { id: 'dms', name: 'Documentos', icon: FolderSearch },
         { id: 'ideation', name: 'Lluvia de Ideas', icon: Lightbulb },
     ] as const;
 

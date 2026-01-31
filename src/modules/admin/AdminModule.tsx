@@ -15,7 +15,7 @@ const MODULES = [
     { id: 'audit', name: 'Auditoría IA' },
     { id: 'projects', name: 'BPM & Proyectos' },
     { id: 'messaging', name: 'Mensajería' },
-    { id: 'dms', name: 'Expediente Digital' },
+    { id: 'dms', name: 'Documentos' },
     { id: 'ideation', name: 'Lluvia de Ideas' },
 ] as const;
 

@@ -22,6 +22,7 @@ import { useDocuments } from '../../hooks/useDocuments';
 import { useAuth } from '../../hooks/useAuth';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
+import { NativeDocumentEditor } from './NativeDocumentEditor';
 
 
 export const SemanticDMS: React.FC = () => {
@@ -30,13 +31,14 @@ export const SemanticDMS: React.FC = () => {
     const [relevantIds, setRelevantIds] = useState<string[] | null>(null);
 
     // Conexión real a Supabase
-    const { documents, loading, error, uploadDocument } = useDocuments();
+    const { documents, loading, error, uploadDocument, createNativeDocument } = useDocuments();
 
     // Verificación de permisos
     const { canPerform } = useAuth();
 
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
+    const [showEditor, setShowEditor] = useState(false);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,19 +101,28 @@ export const SemanticDMS: React.FC = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-white/90 tracking-tighter uppercase">DMS Inteligente</h2>
-                    <p className="text-xs text-white/40 font-mono">Semantic Search & Digital Assets Management</p>
+                    <h2 className="text-2xl font-black text-white/90 tracking-tighter uppercase">Documentos</h2>
+                    <p className="text-xs text-white/40 font-mono">Repositorio Inteligente de Activos Digitales</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {canPerform('dms', 'create') && (
-                        <button
-                            onClick={() => setShowUploadModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
-                        >
-                            <FileDown className="w-4 h-4 text-blue-400" />
-                            <span>Subir Expediente</span>
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setShowEditor(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 border border-blue-500/20 rounded-xl cursor-pointer hover:bg-blue-600/20 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap text-blue-400"
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                <span>Crear Documento</span>
+                            </button>
+                            <button
+                                onClick={() => setShowUploadModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+                            >
+                                <FileDown className="w-4 h-4 text-white/40" />
+                                <span>Subir Documentos</span>
+                            </button>
+                        </>
                     )}
 
                     {canPerform('dms', 'update') && (
@@ -217,6 +228,15 @@ export const SemanticDMS: React.FC = () => {
             {showConfigModal && (
                 <BatteryConfigModal
                     onClose={() => setShowConfigModal(false)}
+                />
+            )}
+            {showEditor && (
+                <NativeDocumentEditor
+                    onClose={() => setShowEditor(false)}
+                    onSave={async (title, content) => {
+                        const res = await createNativeDocument(title, content, { category: 'other' });
+                        return res;
+                    }}
                 />
             )}
         </div>

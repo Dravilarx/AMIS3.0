@@ -5,6 +5,13 @@ export interface Message {
     content: string;
     timestamp: string;
     type: 'text' | 'image' | 'file';
+    parentId?: string; // Para hilos
+    replyTo?: {
+        id: string;
+        senderName: string;
+        content: string;
+    };
+    isSaved?: boolean; // Para mensajes destacados/guardados
 }
 
 export interface Channel {

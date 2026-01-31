@@ -141,9 +141,62 @@ export const useDocuments = (_options?: { limit?: number }) => {
     };
 
 
+    const createNativeDocument = async (title: string, content: string, metadata: Partial<Document>) => {
+        try {
+            // Restauramos a .html para que el navegador lo renderice correctamente
+            const fileExt = 'html';
+            const fileName = `${Math.random().toString(36).substring(7)}-${Date.now()}.${fileExt}`;
+            const filePath = `expedientes/${fileName}`;
+            const blob = new Blob([content], { type: 'text/html' });
+
+            const { error: uploadError } = await supabase.storage
+                .from('documents')
+                .upload(filePath, blob, {
+                    contentType: 'text/html',
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Error de Almacenamiento (RLS/MIME): ${uploadError.message}`);
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('documents')
+                .getPublicUrl(filePath);
+
+            const { error: dbError } = await supabase
+                .from('documents')
+                .insert([{
+                    title,
+                    type: 'pdf', // Clasificación visual como documento formal
+                    category: metadata.category || 'other',
+                    content_summary: content.substring(0, 300).replace(/<[^>]*>?/gm, '') || 'Documento nativo creado en la plataforma.',
+                    url: publicUrl,
+                    signed: false,
+                    visibility: metadata.visibility || 'community',
+                    target_id: metadata.targetId,
+                    project_id: metadata.projectId,
+                    task_id: metadata.taskId,
+                    requirement_id: metadata.requirementId,
+                    is_locked: !!metadata.requirementId,
+                    is_validated: true,
+                    ai_observation: 'Documento nativo generado internamente en AMIS 3.0',
+                    expiry_date: null
+                }]);
+
+            if (dbError) throw new Error(`Error al registrar en base de datos: ${dbError.message}`);
+
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Create native error:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+
     useEffect(() => {
         fetchDocuments();
     }, []);
 
-    return { documents, loading, error, refresh: fetchDocuments, uploadDocument };
+    return { documents, loading, error, refresh: fetchDocuments, uploadDocument, createNativeDocument };
 };

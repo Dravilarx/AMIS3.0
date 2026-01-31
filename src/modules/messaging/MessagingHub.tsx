@@ -16,7 +16,12 @@ import {
     User as UserIcon,
     X,
     Check,
-    Trash2
+    Trash2,
+    Reply,
+    Bookmark,
+    BookmarkCheck,
+    CornerDownRight,
+    Search
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useMessaging } from '../../hooks/useMessaging';
@@ -25,18 +30,21 @@ import { useProfessionals } from '../../hooks/useProfessionals';
 
 export const MessagingHub: React.FC = () => {
     const { user } = useAuth();
-    const { messages, channels, createChannel, deleteChannel } = useMessaging();
+    const { messages, channels, createChannel, deleteChannel, deleteMessage, toggleSaveMessage, sendMessage: rawSendMessage } = useMessaging();
     const { professionals } = useProfessionals();
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [input, setInput] = useState('');
     const [tab, setTab] = useState<'channels' | 'people'>('channels');
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const [isCreatingChannel, setIsCreatingChannel] = useState(false);
     const [isCreatingGroup, setIsCreatingGroup] = useState(false);
     const [newName, setNewName] = useState('');
     const [isEphemeral, setIsEphemeral] = useState(false);
     const [duration, setDuration] = useState('24h');
+    const [replyToMessage, setReplyToMessage] = useState<any | null>(null);
+    const [selectedProfessionals, setSelectedProfessionals] = useState<string[]>([]);
 
     // Seleccionar primer canal por defecto
     useEffect(() => {
@@ -53,20 +61,53 @@ export const MessagingHub: React.FC = () => {
     }, [messages]);
 
     const activeChannel = channels.find(c => c.id === activeChannelId);
-    const { messages: channelMessages, loading: messagesLoading, sendMessage: sendToChannel } = useMessaging(activeChannelId || undefined);
+    const {
+        messages: channelMessages,
+        loading: messagesLoading,
+        sendMessage: sendToChannel,
+        deleteMessage: removeMessage,
+        toggleSaveMessage: saveMessage
+    } = useMessaging(activeChannelId || undefined);
+
+    const handleSelectPerson = async (p: any) => {
+        // Encontrar o crear un canal directo con la persona
+        const personName = `${p.name} ${p.lastName}`;
+        const existingChannel = channels.find(c => c.type === 'direct' && c.name === personName);
+
+        if (existingChannel) {
+            setActiveChannelId(existingChannel.id);
+        } else {
+            const id = await createChannel(personName, 'direct');
+            if (id) setActiveChannelId(id);
+        }
+    };
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || !activeChannelId) return;
 
-        // Lógica de IA: Si el mensaje empieza con @ai o estamos en un canal de IA
-        if (input.toLowerCase().startsWith('@ai')) {
-            // Aquí podríamos disparar un evento para Agrawall AI
-        }
+        const options = replyToMessage ? {
+            replyTo: {
+                id: replyToMessage.id,
+                senderName: replyToMessage.senderName,
+                content: replyToMessage.content
+            }
+        } : undefined;
 
-        await sendToChannel(input);
+        await sendToChannel(input, 'text', options);
         setInput('');
+        setReplyToMessage(null);
     };
+
+    const handleCancelReply = () => {
+        setReplyToMessage(null);
+    };
+
+    useEffect(() => {
+        if (replyToMessage) {
+            inputRef.current?.focus();
+        }
+    }, [replyToMessage]);
 
     const handleAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -80,14 +121,21 @@ export const MessagingHub: React.FC = () => {
     const handleCreate = async () => {
         if (!newName.trim()) return;
         const type = isCreatingChannel ? 'project' : 'group';
-        const id = await createChannel(newName, type, isEphemeral);
+        const id = await createChannel(newName, type, isEphemeral, selectedProfessionals);
         if (id) {
             setActiveChannelId(id);
             setNewName('');
             setIsEphemeral(false);
             setIsCreatingChannel(false);
             setIsCreatingGroup(false);
+            setSelectedProfessionals([]);
         }
+    };
+
+    const toggleProfessionalSelection = (id: string) => {
+        setSelectedProfessionals(prev =>
+            prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+        );
     };
 
     return (
@@ -217,16 +265,33 @@ export const MessagingHub: React.FC = () => {
                             {professionals.map(p => (
                                 <div
                                     key={p.id}
-                                    className="p-3 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/5 cursor-pointer transition-all flex items-center gap-3"
+                                    onClick={() => handleSelectPerson(p)}
+                                    className={cn(
+                                        "p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3",
+                                        activeChannel?.name === `${p.name} ${p.lastName}`
+                                            ? "bg-blue-500/10 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                                            : "bg-white/5 border-transparent hover:border-white/10"
+                                    )}
                                 >
                                     <div className="relative">
-                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-blue-500/30">
-                                            <UserIcon className="w-4 h-4 text-white/40" />
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-lg flex items-center justify-center border transition-all",
+                                            activeChannel?.name === `${p.name} ${p.lastName}`
+                                                ? "bg-blue-500/20 border-blue-500/30"
+                                                : "bg-white/5 border-white/10"
+                                        )}>
+                                            <UserIcon className={cn(
+                                                "w-4 h-4",
+                                                activeChannel?.name === `${p.name} ${p.lastName}` ? "text-blue-400" : "text-white/40"
+                                            )} />
                                         </div>
                                         <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#0A0A0B] rounded-full" />
                                     </div>
                                     <div>
-                                        <span className="text-sm font-bold text-white/80">{p.name} {p.lastName}</span>
+                                        <span className={cn(
+                                            "text-sm font-bold",
+                                            activeChannel?.name === `${p.name} ${p.lastName}` ? "text-white" : "text-white/80"
+                                        )}>{p.name} {p.lastName}</span>
                                         <p className="text-[9px] text-white/30 uppercase font-bold tracking-wider">{p.role}</p>
                                     </div>
                                 </div>
@@ -252,7 +317,8 @@ export const MessagingHub: React.FC = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-black text-white tracking-widest uppercase text-sm">
-                                        {activeChannelId === 'AI-HELPER' ? 'Agrawall AI Helper' : `#${activeChannel?.name}`}
+                                        {activeChannelId === 'AI-HELPER' ? 'Agrawall AI Helper' :
+                                            activeChannel?.type === 'direct' ? activeChannel.name : `#${activeChannel?.name}`}
                                     </h3>
                                     <div className="flex items-center gap-2">
                                         <p className="text-[10px] text-white/40 flex items-center gap-1 font-mono uppercase tracking-widest">
@@ -289,10 +355,11 @@ export const MessagingHub: React.FC = () => {
                                 <div
                                     key={m.id}
                                     className={cn(
-                                        "flex flex-col gap-1 max-w-[85%] animate-in slide-in-from-bottom-2 duration-300",
+                                        "flex flex-col gap-1 max-w-[85%] animate-in slide-in-from-bottom-2 duration-300 group/msg relative",
                                         m.senderId === user?.id ? "ml-auto items-end" : "items-start"
                                     )}
                                 >
+                                    {/* Cabecera del mensaje */}
                                     <div className="flex items-baseline gap-2 px-2">
                                         <span className={cn(
                                             "text-[10px] font-black tracking-tighter uppercase",
@@ -304,20 +371,91 @@ export const MessagingHub: React.FC = () => {
                                         <span className="text-[8px] text-white/20 font-mono">
                                             {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
+                                        {m.isSaved && <BookmarkCheck className="w-3 h-3 text-orange-400 fill-orange-400/20" />}
                                     </div>
-                                    <div className={cn(
-                                        "p-4 border text-sm leading-relaxed shadow-lg backdrop-blur-sm",
-                                        m.senderId === user?.id
-                                            ? "bg-blue-600/10 border-blue-500/20 rounded-3xl rounded-tr-none text-white/90"
-                                            : "bg-white/5 border-white/5 rounded-3xl rounded-tl-none text-white/80"
-                                    )}>
-                                        {m.content}
+
+                                    {/* Referencia a Respuesta */}
+                                    {m.replyTo && (
+                                        <div className={cn(
+                                            "mb-1 p-2 rounded-xl bg-white/5 border-l-2 border-blue-500/50 flex items-center gap-2 max-w-full overflow-hidden opacity-60 scale-95 origin-bottom",
+                                            m.senderId === user?.id ? "mr-4" : "ml-4"
+                                        )}>
+                                            <CornerDownRight className="w-3 h-3 text-blue-500 shrink-0" />
+                                            <div className="truncate text-[10px]">
+                                                <span className="font-bold text-blue-400">{m.replyTo.senderName}:</span> {m.replyTo.content}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Burbuja del mensaje */}
+                                    <div className="relative group/bubble">
+                                        <div className={cn(
+                                            "p-4 border text-sm leading-relaxed shadow-lg backdrop-blur-sm transition-all",
+                                            m.senderId === user?.id
+                                                ? "bg-blue-600/10 border-blue-500/20 rounded-3xl rounded-tr-none text-white/90"
+                                                : "bg-white/5 border-white/5 rounded-3xl rounded-tl-none text-white/80"
+                                        )}>
+                                            {m.content}
+                                        </div>
+
+                                        {/* Acciones Rápidas */}
+                                        <div className={cn(
+                                            "absolute top-0 opacity-0 group-hover/msg:opacity-100 transition-all flex items-center gap-1 bg-[#0A0A0B] border border-white/10 p-1 rounded-xl shadow-2xl z-10 scale-90 group-hover/msg:scale-100",
+                                            m.senderId === user?.id ? "right-full mr-2" : "left-full ml-2"
+                                        )}>
+                                            <button
+                                                onClick={() => setReplyToMessage(m)}
+                                                className="p-1.5 hover:bg-white/5 rounded-lg text-white/40 hover:text-blue-400 transition-colors"
+                                                title="Responder"
+                                            >
+                                                <Reply className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => saveMessage(m.id, !!m.isSaved)}
+                                                className={cn(
+                                                    "p-1.5 hover:bg-white/5 rounded-lg transition-colors",
+                                                    m.isSaved ? "text-orange-400" : "text-white/40 hover:text-orange-400"
+                                                )}
+                                                title={m.isSaved ? "Quitar de guardados" : "Guardar mensaje"}
+                                            >
+                                                <Bookmark className={cn("w-3.5 h-3.5", m.isSaved && "fill-current")} />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('¿Borrar mensaje?')) removeMessage(m.id);
+                                                }}
+                                                className="p-1.5 hover:bg-red-400/10 rounded-lg text-white/40 hover:text-red-400 transition-colors"
+                                                title="Eliminar"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
-                        <form onSubmit={handleSend} className="p-4 bg-black/40 border-t border-white/5 backdrop-blur-md">
+                        <form onSubmit={handleSend} className="p-4 bg-black/40 border-t border-white/5 backdrop-blur-md relative">
+                            {/* Visualizador de Respuesta en curso */}
+                            {replyToMessage && (
+                                <div className="absolute bottom-full left-0 right-0 p-3 bg-blue-500/10 backdrop-blur-xl border-t border-blue-500/20 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-300">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="w-1 h-8 bg-blue-500 rounded-full shrink-0" />
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Respondiendo a {replyToMessage.senderName}</span>
+                                            <p className="text-xs text-white/60 truncate italic">{replyToMessage.content}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelReply}
+                                        className="p-2 hover:bg-white/5 rounded-lg text-white/40 hover:text-white transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="relative group">
                                 <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                     <button
@@ -328,11 +466,14 @@ export const MessagingHub: React.FC = () => {
                                     </button>
                                 </div>
                                 <input
+                                    ref={inputRef}
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    placeholder={activeChannelId === 'AI-HELPER' ? "Pregúntale algo a Agrawall AI..." : "Escribe un mensaje para el equipo..."}
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-24 py-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all font-light placeholder:text-white/10"
+                                    placeholder={activeChannelId === 'AI-HELPER' ? "Pregúntale algo a Agrawall AI..." :
+                                        activeChannel?.type === 'direct' ? `Escribe un mensaje para ${activeChannel.name}...` :
+                                            "Escribe un mensaje para el equipo..."}
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-24 py-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all font-light placeholder:text-white/20"
                                 />
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                     <input
@@ -447,6 +588,42 @@ export const MessagingHub: React.FC = () => {
                                             >
                                                 {d === '24h' ? '24 Horas' : d === '7d' ? '7 Días' : '30 Días'}
                                             </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Selección de Colegas para Grupo */}
+                            {isCreatingGroup && (
+                                <div className="space-y-3">
+                                    <label className="text-[10px] uppercase font-black text-white/40 tracking-widest block">Seleccionar Colegas ({selectedProfessionals.length})</label>
+                                    <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1 pr-2">
+                                        {professionals.map(p => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => toggleProfessionalSelection(p.id)}
+                                                className={cn(
+                                                    "p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between group",
+                                                    selectedProfessionals.includes(p.id)
+                                                        ? "bg-blue-500/10 border-blue-500/30"
+                                                        : "bg-white/5 border-transparent hover:bg-white/10"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center border border-white/10">
+                                                        <UserIcon className="w-3 h-3 text-white/40" />
+                                                    </div>
+                                                    <span className="text-xs text-white/80">{p.name} {p.lastName}</span>
+                                                </div>
+                                                <div className={cn(
+                                                    "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
+                                                    selectedProfessionals.includes(p.id)
+                                                        ? "bg-blue-500 border-blue-500"
+                                                        : "border-white/10 group-hover:border-white/20"
+                                                )}>
+                                                    {selectedProfessionals.includes(p.id) && <Check className="w-2.5 h-2.5 text-white" />}
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>

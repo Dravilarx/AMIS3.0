@@ -67,7 +67,10 @@ export const useMessaging = (channelId?: string) => {
                         senderName: m.sender_name,
                         content: m.content,
                         timestamp: m.created_at,
-                        type: m.type as any
+                        type: m.type as any,
+                        parentId: m.parent_id,
+                        replyTo: m.reply_to,
+                        isSaved: m.is_saved
                     })));
                 } else {
                     // Si es un canal nuevo o vacío, podemos poner un mensaje de bienvenida de la IA localmente si es AI-HELPER
@@ -113,7 +116,10 @@ export const useMessaging = (channelId?: string) => {
                             senderName: newMessage.sender_name,
                             content: newMessage.content,
                             timestamp: newMessage.created_at,
-                            type: newMessage.type
+                            type: newMessage.type,
+                            parentId: newMessage.parent_id,
+                            replyTo: newMessage.reply_to,
+                            isSaved: newMessage.is_saved
                         }];
                     });
                 })
@@ -125,7 +131,7 @@ export const useMessaging = (channelId?: string) => {
         }
     }, [channelId]);
 
-    const sendMessage = async (content: string, type: Message['type'] = 'text') => {
+    const sendMessage = async (content: string, type: Message['type'] = 'text', options?: { parentId?: string, replyTo?: Message['replyTo'] }) => {
         if (!channelId || !user) return;
 
         // Optimistic UI for AI-HELPER
@@ -136,7 +142,8 @@ export const useMessaging = (channelId?: string) => {
                 senderName: user.name,
                 content,
                 timestamp: new Date().toISOString(),
-                type
+                type,
+                ...options
             };
             setMessages(prev => [...prev, userMsg]);
 
@@ -148,7 +155,8 @@ export const useMessaging = (channelId?: string) => {
                 senderName: 'Agrawall AI',
                 content: aiResponse,
                 timestamp: new Date().toISOString(),
-                type: 'text'
+                type: 'text',
+                parentId: options?.parentId
             };
             setMessages(prev => [...prev, aiMsg]);
             return;
@@ -159,13 +167,39 @@ export const useMessaging = (channelId?: string) => {
             sender_id: user.id,
             sender_name: user.name,
             content,
-            type
+            type,
+            parent_id: options?.parentId,
+            reply_to: options?.replyTo
         }]);
 
         if (error) console.error('Error sending message:', error);
     };
 
-    const createChannel = async (name: string, type: 'project' | 'shift' | 'direct' | 'group', isEphemeralValue: boolean = false) => {
+    const deleteMessage = async (id: string) => {
+        try {
+            const { error } = await supabase.from('messages').delete().eq('id', id);
+            if (error) throw error;
+            setMessages(prev => prev.filter(m => m.id !== id));
+        } catch (err) {
+            console.error('Error deleting message:', err);
+            // Fallback para modo demo
+            setMessages(prev => prev.filter(m => m.id !== id));
+        }
+    };
+
+    const toggleSaveMessage = async (id: string, currentStatus: boolean) => {
+        try {
+            const { error } = await supabase.from('messages').update({ is_saved: !currentStatus }).eq('id', id);
+            if (error) throw error;
+            setMessages(prev => prev.map(m => m.id === id ? { ...m, isSaved: !currentStatus } : m));
+        } catch (err) {
+            console.error('Error toggling save status:', err);
+            // Fallback para modo demo
+            setMessages(prev => prev.map(m => m.id === id ? { ...m, isSaved: !currentStatus } : m));
+        }
+    };
+
+    const createChannel = async (name: string, type: 'project' | 'shift' | 'direct' | 'group', isEphemeralValue: boolean = false, members?: string[]) => {
         if (!user) return;
         try {
             const { data, error } = await supabase.from('channels').insert([{
@@ -176,6 +210,8 @@ export const useMessaging = (channelId?: string) => {
             }]).select().single();
 
             if (data) {
+                // Si hay miembros, podrías insertarlos en una tabla channel_members si existiera.
+                // Por ahora, asumimos que el canal es visible para los involucrados.
                 await fetchChannels();
                 return data.id;
             }
@@ -207,7 +243,7 @@ export const useMessaging = (channelId?: string) => {
         }
     };
 
-    return { messages, channels, loading, sendMessage, fetchChannels, createChannel, deleteChannel };
+    return { messages, channels, loading, sendMessage, fetchChannels, createChannel, deleteChannel, deleteMessage, toggleSaveMessage };
 };
 
 
