@@ -8,37 +8,6 @@ const calculateProgress = (subtasks?: SubTask[]) => {
     return Math.round((completed / subtasks.length) * 100);
 };
 
-const MOCK_TASKS: BPMTask[] = [
-    {
-        id: 'TSK-101',
-        projectId: 'PRJ-001',
-        title: 'Validación de redundancia de red',
-        assignedTo: 'USR-01',
-        status: 'in-progress',
-        priority: 'high',
-        dueDate: '2026-01-28',
-        aiSummary: 'La latencia en el nodo 4 indica posible cuello de botella. Se sugiere escalamiento técnico.',
-        attachments: [{ name: 'Network_Map.pdf', url: '#', type: 'pdf' }],
-        subtasks: [
-            { id: 'ST-1', title: 'Verificar nodos críticos', completed: true },
-            { id: 'ST-2', title: 'Test de estrés 100GB', completed: false },
-            { id: 'ST-3', title: 'Actualizar firmware router', completed: false }
-        ],
-        progress: 33
-    },
-    {
-        id: 'TSK-102',
-        projectId: 'PRJ-001',
-        title: 'Migración base de datos DICOM',
-        assignedTo: 'USR-05',
-        status: 'pending',
-        priority: 'critical',
-        dueDate: '2026-02-01',
-        subtasks: [],
-        progress: 0
-    }
-];
-
 export const useBPMTasks = (projectId?: string) => {
     const [tasks, setTasks] = useState<BPMTask[]>([]);
     const [loading, setLoading] = useState(true);
@@ -62,7 +31,7 @@ export const useBPMTasks = (projectId?: string) => {
                 id: t.id,
                 projectId: t.project_id,
                 title: t.title,
-                assignedTo: t.assigned_to,
+                assigned_to: t.assigned_to,
                 status: t.status,
                 priority: t.priority,
                 dueDate: t.due_date,
@@ -74,9 +43,9 @@ export const useBPMTasks = (projectId?: string) => {
 
             setTasks(mappedTasks);
         } catch (err: any) {
-            console.error('Error fetching tasks, using mock data:', err);
-            const filteredMock = projectId ? MOCK_TASKS.filter(t => t.projectId === projectId) : MOCK_TASKS;
-            setTasks(filteredMock);
+            console.error('Error fetching tasks:', err);
+            setError(err.message);
+            setTasks([]);
         } finally {
             setLoading(false);
         }

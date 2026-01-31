@@ -30,6 +30,11 @@ export interface Document {
     projectId?: string;
     taskId?: string;
     requirementId?: string; // ID del requerimiento de la batería que satisface
+    /** Campos para Control de Inducción y Auditoría */
+    isLocked?: boolean; // Si es true, el usuario no puede borrarlo
+    isValidated?: boolean; // Validado por Agrawall AI
+    aiObservation?: string; // Feedback de la IA
+    expiryDate?: string; // Fecha de vencimiento para alertas
 }
 
 export interface DocumentRequirement {

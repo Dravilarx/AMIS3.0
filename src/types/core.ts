@@ -76,6 +76,18 @@ export interface Professional {
     competencies: string[]; // Atomic tags: "RM Próstata", "TC Coronario"
     /** Historial o contratos vigentes con el holding */
     contracts: Contract[];
+
+    /** Módulo de Inducción y Acreditación */
+    induction?: {
+        enabled: boolean;
+        startDate?: string;
+        endDate?: string;
+        hasReadAndAccepted: boolean;
+        acceptedAt?: string;
+        batteryId?: string;
+        assignedHRManagerId?: string; // ID del encargado de RRHH
+        status: 'pending' | 'in_progress' | 'completed';
+    };
 }
 
 export type ProjectStatus = 'draft' | 'active' | 'on-hold' | 'completed' | 'archived';

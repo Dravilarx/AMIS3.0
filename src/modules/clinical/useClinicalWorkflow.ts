@@ -42,9 +42,7 @@ export const useClinicalWorkflow = () => {
             setProcedures(mappedProcedures);
         } catch (err: any) {
             setError(err.message);
-            // Fallback for demo mode
-            console.log('Demo Mode: Using mock procedures');
-            setProcedures(MOCK_PROCEDURES);
+            setProcedures([]);
         } finally {
             setLoading(false);
         }
@@ -160,33 +158,3 @@ export const useClinicalWorkflow = () => {
     };
 };
 
-const MOCK_PROCEDURES: ClinicalProcedure[] = [
-    {
-        id: 'PROC-001',
-        patientName: 'Juan Pérez',
-        examType: 'TC de Tórax con Contraste',
-        currentStep: 'Admisión',
-        timestamp: '2026-01-26T14:30:00Z',
-        location: 'Sede Boreal - Providencia',
-        status: 'active',
-        details: {
-            admissionVerified: false,
-            preparationChecklist: [],
-            inventoryUsed: []
-        }
-    },
-    {
-        id: 'PROC-002',
-        patientName: 'Ana María Soto',
-        examType: 'RM de Rodilla',
-        currentStep: 'Preparación',
-        timestamp: '2026-01-26T14:15:00Z',
-        location: 'Sede Amis - Las Condes',
-        status: 'active',
-        details: {
-            admissionVerified: true,
-            preparationChecklist: ['Ayuno verificado', 'Signos vitales estables'],
-            inventoryUsed: []
-        }
-    }
-];

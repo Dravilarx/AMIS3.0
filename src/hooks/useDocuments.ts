@@ -2,31 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Document } from '../types/communication';
 
-const MOCK_DOCUMENTS: Document[] = [
-    {
-        id: 'DOC-001',
-        title: 'Contrato Marco Portezuelo 2026',
-        type: 'pdf',
-        category: 'legal',
-        contentSummary: 'Condiciones generales de prestación de servicios para el Holding Portezuelo.',
-        url: '#',
-        createdAt: new Date().toISOString(),
-        signed: true,
-        visibility: 'community'
-    },
-    {
-        id: 'DOC-002',
-        title: 'Protocolo Telemedicina v3',
-        type: 'pdf',
-        category: 'clinical',
-        contentSummary: 'Guía clínica para la atención remota de pacientes críticos.',
-        url: '#',
-        createdAt: new Date().toISOString(),
-        signed: false,
-        visibility: 'community'
-    }
-];
-
 export const useDocuments = (_options?: { limit?: number }) => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
@@ -56,13 +31,18 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 targetId: d.target_id,
                 projectId: d.project_id,
                 taskId: d.task_id,
-                requirementId: d.requirement_id
+                requirementId: d.requirement_id,
+                isLocked: d.is_locked,
+                isValidated: d.is_validated,
+                aiObservation: d.ai_observation,
+                expiryDate: d.expiry_date
             }));
 
             setDocuments(mappedData);
         } catch (err: any) {
-            console.error('Error fetching documents, using mock data:', err);
-            setDocuments(MOCK_DOCUMENTS);
+            console.error('Error fetching documents:', err);
+            setError(err.message);
+            setDocuments([]);
         } finally {
             setLoading(false);
         }
@@ -114,20 +94,37 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 .from('documents')
                 .getPublicUrl(filePath);
 
+            // Validación por IA si es un requerimiento de batería
+            let aiValidation = null;
+            if (metadata.requirementId) {
+                const { validateInductionDocument } = await import('../modules/hr/inductionAI');
+                // Intentamos obtener el nombre del profesional si es posible desde los metadatos o contexto
+                aiValidation = await validateInductionDocument(
+                    file,
+                    metadata.title || 'Documento',
+                    'Identidad en Verificación', // Placeholder si no viene
+                    metadata.targetId || 'N/A'
+                );
+            }
+
             const { error: dbError } = await supabase
                 .from('documents')
                 .insert([{
                     title: metadata.title || file.name,
                     type: metadata.type || (file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'pdf'),
                     category: metadata.category || 'other',
-                    content_summary: 'Procesando por Agrawall AI...',
+                    content_summary: aiValidation?.observation || 'Procesando por Agrawall AI...',
                     url: publicUrl,
                     signed: false,
                     visibility: metadata.visibility || 'community',
                     target_id: metadata.targetId,
                     project_id: metadata.projectId,
                     task_id: metadata.taskId,
-                    requirement_id: metadata.requirementId
+                    requirement_id: metadata.requirementId,
+                    is_locked: !!metadata.requirementId, // Bloqueo automático para acreditación
+                    is_validated: aiValidation?.isValid || false,
+                    ai_observation: aiValidation?.observation,
+                    expiry_date: aiValidation?.extractedExpiryDate
                 }]);
 
             if (dbError) throw new Error(`Error al registrar documento: ${dbError.message}`);

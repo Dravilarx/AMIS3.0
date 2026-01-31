@@ -6,18 +6,7 @@ import { useProfessionals } from '../../hooks/useProfessionals';
 import type { Professional } from '../../types/core';
 import type { Tender } from '../../types/tenders';
 
-// Mock temporal de licitaciones hasta que conectemos el módulo de Tenders
-const MOCK_ACTIVE_TENDERS: Tender[] = [
-    {
-        id: 'TEN-001',
-        volumen: { total: 1200, urgencia: 0, hospitalizado: 0, ambulante: 0 },
-        identificacion: { modalidad: '', tipoServicio: '', duracion: '' },
-        riesgoSLA: { escala: 5, impacto: '' },
-        multas: { caidaSistema: 0, errorDiagnostico: 0, confidencialidad: 0, topePorcentualContrato: 0 },
-        integracion: { dicom: false, hl7: false, risPacs: false, servidorOnPrem: false },
-        economia: { presupuestoTotal: 0, precioUnitarioHabil: 0, precioUnitarioUrgencia: 0, margenProyectado: 0 }
-    }
-];
+import { useTenders } from '../../hooks/useTenders';
 
 import { ProfessionalModal } from './ProfessionalModal';
 
@@ -29,10 +18,10 @@ export const ProfessionalMatrix: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProfessional, setCurrentProfessional] = useState<Professional | null>(null);
 
-    // Conexión real a Supabase
     const { professionals, loading, error, addProfessional, updateProfessional } = useProfessionals();
+    const { tenders } = useTenders();
 
-    const { utilizationRate, capacityGap, isOverloaded } = useCapacityPlanning(professionals, MOCK_ACTIVE_TENDERS);
+    const { utilizationRate, capacityGap, isOverloaded } = useCapacityPlanning(professionals, tenders);
 
     const handleEdit = (prof: Professional) => {
         setCurrentProfessional(prof);

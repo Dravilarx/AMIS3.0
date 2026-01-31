@@ -4,21 +4,6 @@ import { useAuth } from './useAuth';
 import { processChatWithAI } from '../services/messagingAI';
 import type { Message, Channel } from '../types/communication';
 
-const MOCK_CHANNELS: Channel[] = [
-    { id: 'CH-001', name: 'General', type: 'project', updatedAt: new Date().toISOString(), isEphemeral: false },
-    { id: 'CH-002', name: 'Licitaciones Críticas', type: 'project', updatedAt: new Date().toISOString(), isEphemeral: false },
-    { id: 'CH-003', name: 'Guardia 24h', type: 'shift', updatedAt: new Date().toISOString(), isEphemeral: true }
-];
-
-const MOCK_MESSAGES: Record<string, Message[]> = {
-    'CH-001': [
-        { id: 'MSG-001', senderId: 'AI', senderName: 'Agrawall AI', content: 'Bienvenido al ecosistema AMIS 3.0. ¿En qué puedo ayudarte hoy?', timestamp: new Date().toISOString(), type: 'text' }
-    ],
-    'AI-HELPER': [
-        { id: 'MSG-AI-0', senderId: 'AI', senderName: 'Agrawall AI', content: 'Hola. Soy tu asistente Agrawall AI. Puedo ayudarte a analizar informes, revisar licitaciones o gestionar turnos. ¿Qué necesitas?', timestamp: new Date().toISOString(), type: 'text' }
-    ]
-};
-
 export const useMessaging = (channelId?: string) => {
     const { user } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -30,7 +15,7 @@ export const useMessaging = (channelId?: string) => {
         try {
             const { data, error } = await supabase.from('channels').select('*');
             if (error) throw error;
-            if (data && data.length > 0) {
+            if (data) {
                 setChannels(data.map(c => ({
                     id: c.id,
                     name: c.name,
@@ -38,12 +23,10 @@ export const useMessaging = (channelId?: string) => {
                     updatedAt: c.created_at,
                     isEphemeral: c.is_ephemeral
                 })));
-            } else {
-                setChannels(MOCK_CHANNELS);
             }
         } catch (err) {
-            console.error('Error fetching channels, using mock:', err);
-            setChannels(MOCK_CHANNELS);
+            console.error('Error fetching channels:', err);
+            setChannels([]);
         }
     };
 
@@ -57,7 +40,14 @@ export const useMessaging = (channelId?: string) => {
                 setLoading(true);
 
                 if (channelId === 'AI-HELPER') {
-                    setMessages(MOCK_MESSAGES['AI-HELPER']);
+                    setMessages([{
+                        id: 'MSG-AI-WELCOME',
+                        senderId: 'AI',
+                        senderName: 'Agrawall AI',
+                        content: 'Hola. Soy tu asistente Agrawall AI. Estoy listo para usar datos reales de la base de datos.',
+                        timestamp: new Date().toISOString(),
+                        type: 'text'
+                    }]);
                     setLoading(false);
                     return;
                 }
@@ -80,11 +70,23 @@ export const useMessaging = (channelId?: string) => {
                         type: m.type as any
                     })));
                 } else {
-                    setMessages(MOCK_MESSAGES[channelId] || []);
+                    // Si es un canal nuevo o vacío, podemos poner un mensaje de bienvenida de la IA localmente si es AI-HELPER
+                    if (channelId === 'AI-HELPER') {
+                        setMessages([{
+                            id: 'MSG-AI-WELCOME',
+                            senderId: 'AI',
+                            senderName: 'Agrawall AI',
+                            content: 'Hola. Soy tu asistente Agrawall AI. Estoy listo para usar datos reales de la base de datos.',
+                            timestamp: new Date().toISOString(),
+                            type: 'text'
+                        }]);
+                    } else {
+                        setMessages([]);
+                    }
                 }
             } catch (err) {
-                console.error('Error fetching messages, using mock:', err, 'channel:', channelId);
-                setMessages(MOCK_MESSAGES[channelId] || []);
+                console.error('Error fetching messages:', err, 'channel:', channelId);
+                setMessages([]);
             } finally {
                 setLoading(false);
             }

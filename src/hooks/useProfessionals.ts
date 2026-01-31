@@ -2,49 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Professional } from '../types/core';
 
-const MOCK_PROFESSIONALS: Professional[] = [
-    {
-        id: 'PROF-001',
-        name: 'Alejandro',
-        lastName: 'Boreal',
-        email: 'a.boreal@portezuelo.cl',
-        nationalId: '12.345.678-9',
-        nationality: 'Chilena',
-        birthDate: '1980-05-15',
-        joiningDate: '2015-10-01',
-        phone: '+56912345678',
-        role: 'Radiólogo',
-        status: 'active',
-        residence: { city: 'Antofagasta', region: 'Antofagasta', country: 'Chile' },
-        university: 'Universidad de Antofagasta',
-        registrationNumber: 'MED-12345',
-        specialty: 'Radiología Diagóstica',
-        team: 'Médica Antofagasta',
-        competencies: ['RM Próstata', 'TC Coronario', 'PACS Admin'],
-        contracts: [{ company: 'Boreal', amount: 5000000, type: 'Contrato indefinido' }]
-    },
-    {
-        id: 'PROF-002',
-        name: 'Marina',
-        lastName: 'Vital',
-        email: 'm.vital@amis.cl',
-        nationalId: '15.987.654-3',
-        nationality: 'Chilena',
-        birthDate: '1990-08-20',
-        joiningDate: '2020-03-01',
-        phone: '+56987654321',
-        role: 'Enfermera',
-        status: 'active',
-        residence: { city: 'Santiago', region: 'Metropolitana', country: 'Chile' },
-        university: 'Universidad de Chile',
-        registrationNumber: 'ENF-54321',
-        specialty: 'Enfermería Clínica',
-        team: 'Enfermería Hospitalaria',
-        competencies: ['Punciones', 'Gestión de Contraste'],
-        contracts: [{ company: 'Amis', amount: 2500000, type: 'Boleta honorarios personales' }]
-    }
-];
-
 export const useProfessionals = () => {
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [loading, setLoading] = useState(true);
@@ -91,17 +48,19 @@ export const useProfessionals = () => {
                     country: p.country
                 },
                 competencies: p.competencies || [],
+                induction: p.induction,
                 contracts: (p.contracts || []).map((c: any) => ({
                     company: c.company,
                     amount: Number(c.amount),
                     type: c.type
                 }))
-            })) as any; // Cast potential for minor mismatch in draft
+            })) as any;
 
             setProfessionals(mappedData);
         } catch (err: any) {
-            console.error('Error fetching professionals, using mock data:', err);
-            setProfessionals(MOCK_PROFESSIONALS);
+            console.error('Error fetching professionals:', err);
+            setError(err.message);
+            setProfessionals([]);
         } finally {
             setLoading(false);
         }
@@ -133,10 +92,11 @@ export const useProfessionals = () => {
                     team: professional.team,
                     username: professional.username,
                     signature_type: professional.signatureType,
-                    city: professional.residence.city,
-                    region: professional.residence.region,
-                    country: professional.residence.country,
-                    competencies: professional.competencies
+                    city: professional.residence?.city,
+                    region: professional.residence?.region,
+                    country: professional.residence?.country,
+                    competencies: professional.competencies,
+                    induction: professional.induction
                 }])
                 .select()
                 .single();
@@ -195,10 +155,11 @@ export const useProfessionals = () => {
                     team: professional.team,
                     username: professional.username,
                     signature_type: professional.signatureType,
-                    city: professional.residence.city,
-                    region: professional.residence.region,
-                    country: professional.residence.country,
-                    competencies: professional.competencies
+                    city: professional.residence?.city,
+                    region: professional.residence?.region,
+                    country: professional.residence?.country,
+                    competencies: professional.competencies,
+                    induction: professional.induction
                 })
                 .eq('id', id);
 
