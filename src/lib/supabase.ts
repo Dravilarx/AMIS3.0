@@ -1,15 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Usamos valores temporales que no rompan la inicialización si las variables faltan
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Diagnóstico detallado para evitar pantalla negra en producción
+// Si faltan las variables, usamos un valor que no lance "Invalid URL" pero que indique el error en consola
+const safeUrl = supabaseUrl && supabaseUrl.startsWith('http') ? supabaseUrl : 'https://missing-url.supabase.co';
+const safeKey = supabaseAnonKey || 'missing-key';
+
 if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("🚨 CRITICAL: Supabase credentials missing!");
-    console.warn("Please check your Vercel Environment Variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set.");
+    console.error("🚨 CRITICAL: Credenciales de Supabase no encontradas en el entorno.");
 }
 
-export const supabase = createClient(
-    supabaseUrl || '',
-    supabaseAnonKey || ''
-);
+export const supabase = createClient(safeUrl, safeKey);
