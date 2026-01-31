@@ -104,7 +104,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE: Record<UserRole, UserPermissions> = {
         audit: { read: true, create: false, update: false, delete: false },
         projects: { read: true, create: false, update: false, delete: false },
         messaging: { read: true, create: false, update: false, delete: false },
-        dms: { read: true, create: false, update: false, delete: false },
+        dms: { read: true, create: true, update: false, delete: false }, // VIEWER puede cargar archivos
         ideation: { read: true, create: false, update: false, delete: false },
         admin_access: false
     }

@@ -19,6 +19,7 @@ import {
 import { cn } from '../../lib/utils';
 import { searchDocumentsSemantically } from './semanticSearch';
 import { useDocuments } from '../../hooks/useDocuments';
+import { useAuth } from '../../hooks/useAuth';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
 
@@ -30,6 +31,9 @@ export const SemanticDMS: React.FC = () => {
 
     // Conexión real a Supabase
     const { documents, loading, error, uploadDocument } = useDocuments();
+
+    // Verificación de permisos
+    const { canPerform } = useAuth();
 
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
@@ -100,22 +104,26 @@ export const SemanticDMS: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowUploadModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
-                    >
-                        <FileDown className="w-4 h-4 text-blue-400" />
-                        <span>Subir Expediente</span>
-                    </button>
+                    {canPerform('dms', 'create') && (
+                        <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+                        >
+                            <FileDown className="w-4 h-4 text-blue-400" />
+                            <span>Subir Expediente</span>
+                        </button>
+                    )}
 
-                    <button
-                        onClick={() => setShowConfigModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
-                        title="Configurar Baterías de Requerimientos"
-                    >
-                        <Settings2 className="w-4 h-4 text-amber-400" />
-                        <span>Configurar Baterías</span>
-                    </button>
+                    {canPerform('dms', 'update') && (
+                        <button
+                            onClick={() => setShowConfigModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+                            title="Configurar Baterías de Requerimientos"
+                        >
+                            <Settings2 className="w-4 h-4 text-amber-400" />
+                            <span>Configurar Baterías</span>
+                        </button>
+                    )}
 
                     <form onSubmit={handleSearch} className="relative group w-full md:w-96">
                         <input
