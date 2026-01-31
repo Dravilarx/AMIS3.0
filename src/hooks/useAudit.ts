@@ -10,7 +10,7 @@ export const useAudit = () => {
             console.log('[Audit] Cargando auditorías...');
             const { data, error } = await supabase
                 .from('audit_reports')
-                .select('*, projects(name)')
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {

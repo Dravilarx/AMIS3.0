@@ -16,7 +16,7 @@ export const useHRManagers = () => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, full_name, email, role')
+                .select('id, full_name, role')
                 .in('role', ['ADM', 'Manager', 'RRHH']);
 
             if (error) throw error;
@@ -25,7 +25,7 @@ export const useHRManagers = () => {
                 setManagers(data.map(m => ({
                     id: m.id,
                     fullName: m.full_name,
-                    email: m.email,
+                    email: '', // El email se maneja en auth.users, no en profiles por defecto
                     role: m.role
                 })));
             } else {
