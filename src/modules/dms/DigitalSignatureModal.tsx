@@ -44,28 +44,36 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const [isConfirming, setIsConfirming] = useState(false);
     const [isNavigating, setIsNavigating] = useState(true); // Nuevo: Modo navegación vs firma
 
-    // Estado para posicionamiento
-    const [pdfPos, setPdfPos] = useState<{ x: number, y: number } | null>(null);
+    // Estados de personalización (Fase 1)
+    const [signatureSize, setSignatureSize] = useState<'small' | 'medium' | 'large'>('medium');
+    const [signatureColor, setSignatureColor] = useState<'blue' | 'black' | 'gray'>('blue');
+
+    // Estado para posicionamiento múltiple
+    const [signatures, setSignatures] = useState<Array<{ x: number, y: number, id: string }>>([]);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const selectedFont = SIGNATURE_STYLES.find(s => s.id === selectedStyle)?.font || SIGNATURE_STYLES[0].font;
 
+    // Mapeo de tamaños y colores
+    const sizeMap = { small: 'text-3xl', medium: 'text-5xl', large: 'text-7xl' };
+    const colorMap = {
+        blue: 'text-blue-400',
+        black: 'text-white',
+        gray: 'text-gray-400'
+    };
+
     const handleConfirm = async () => {
-        if (isPdf && !pdfPos) {
+        if (isPdf && signatures.length === 0) {
             setStep(2);
             return;
         }
 
         setIsConfirming(true);
         try {
-            if (isPdf && pdfPos) {
-                await onConfirm(signerName, selectedStyle, {
-                    x: pdfPos.x,
-                    y: pdfPos.y,
-                    pageIndex: 0
-                });
+            if (isPdf && signatures.length > 0) {
+                await onConfirm(signerName, selectedStyle, signatures as any, signatureSize, signatureColor);
             } else {
-                await onConfirm(signerName, selectedStyle);
+                await onConfirm(signerName, selectedStyle, undefined, signatureSize, signatureColor);
             }
             onClose();
         } catch (err) {
@@ -79,17 +87,32 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
         if (!isPdf || step !== 2 || isNavigating || !containerRef.current) return;
 
         const rect = containerRef.current.getBoundingClientRect();
+        // Buscamos el elemento .doc-content para mayor precisión si existe
+        const docContent = containerRef.current.querySelector('.doc-content');
+        const targetRect = docContent ? docContent.getBoundingClientRect() : rect;
         const scrollTop = containerRef.current.scrollTop;
 
-        // Coordenadas locales al contenido scrolleado
-        const x = e.clientX - rect.left;
-        const y = (e.clientY - rect.top) + scrollTop;
+        // Coordenadas relativas al contenido del documento
+        const x = e.clientX - targetRect.left;
+        const y = (e.clientY - targetRect.top) + scrollTop;
 
-        // Calculamos el porcentaje (0-100) respecto al contenedor total
-        const xPercent = (x / rect.width) * 100;
-        const yPercent = (y / containerRef.current.scrollHeight) * 100;
+        // Calculamos el porcentaje (0-100) respecto al área real del documento
+        const xPercent = (x / targetRect.width) * 100;
+        const yPercent = (y / (docContent?.scrollHeight || containerRef.current.scrollHeight)) * 100;
 
-        setPdfPos({ x: xPercent, y: yPercent });
+        // Añadimos a la lista de firmas
+        const newSignature = {
+            id: Math.random().toString(36).substr(2, 9),
+            x: xPercent,
+            y: yPercent
+        };
+
+        setSignatures(prev => [...prev, newSignature]);
+    };
+
+    const removeSignature = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSignatures(prev => prev.filter(s => s.id !== id));
     };
 
     return (
@@ -164,9 +187,70 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                     ))}
                                 </div>
 
+                                {/* Controles de Personalización (Fase 1) */}
+                                <div className="space-y-4 mt-6">
+                                    {/* Selector de Tamaño */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-white/40 font-bold uppercase tracking-wider ml-1">Tamaño de Firma</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {(['small', 'medium', 'large'] as const).map((size) => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSignatureSize(size)}
+                                                    className={cn(
+                                                        "p-3 rounded-lg border transition-all flex flex-col items-center gap-1",
+                                                        signatureSize === size
+                                                            ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
+                                                            : "bg-white/5 border-white/10 hover:border-white/20 text-white/40"
+                                                    )}>
+                                                    <div className={cn(
+                                                        "font-bold transition-all",
+                                                        size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                                                    )}>Aa</div>
+                                                    <span className="text-[8px] uppercase font-bold">
+                                                        {size === 'small' ? 'Pequeña' : size === 'medium' ? 'Mediana' : 'Grande'}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Selector de Color */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-white/40 font-bold uppercase tracking-wider ml-1">Color de Firma</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {(['blue', 'black', 'gray'] as const).map((color) => (
+                                                <button
+                                                    key={color}
+                                                    onClick={() => setSignatureColor(color)}
+                                                    className={cn(
+                                                        "p-3 rounded-lg border transition-all flex flex-col items-center gap-1",
+                                                        signatureColor === color
+                                                            ? "bg-emerald-500/10 border-emerald-500/50"
+                                                            : "bg-white/5 border-white/10 hover:border-white/20"
+                                                    )}>
+                                                    <div className={cn(
+                                                        "w-8 h-8 rounded-full border-2",
+                                                        color === 'blue' ? 'bg-blue-400 border-blue-500' :
+                                                            color === 'black' ? 'bg-white border-gray-300' :
+                                                                'bg-gray-400 border-gray-500'
+                                                    )} />
+                                                    <span className="text-[8px] uppercase font-bold text-white/40">
+                                                        {color === 'blue' ? 'Azul' : color === 'black' ? 'Negro' : 'Gris'}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Preview Grande */}
                                 <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[160px] relative">
-                                    <span style={{ fontFamily: selectedFont }} className="text-5xl text-blue-400 drop-shadow-2xl text-center">
+                                    <span style={{ fontFamily: selectedFont }} className={cn(
+                                        "drop-shadow-2xl text-center transition-all",
+                                        sizeMap[signatureSize],
+                                        colorMap[signatureColor]
+                                    )}>
                                         {signerName || 'Marcelo Avila'}
                                     </span>
                                     <p className="mt-4 text-[9px] text-white/20 font-mono text-center">Firma Certificada AMIS 3.0<br />Válida para documentos internos y externos</p>
@@ -207,7 +291,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                     {documentUrl ? (
                                         <div className="relative min-h-full w-full bg-white/5 p-4 flex flex-col items-center">
                                             {/* Contenedor del PDF que determina el tamaño real */}
-                                            <div className="relative w-full max-w-4xl bg-white shadow-2xl min-h-[1200px]">
+                                            <div className="doc-content relative w-full max-w-4xl bg-white shadow-2xl min-h-[1200px]">
                                                 <iframe
                                                     src={`${documentUrl}#toolbar=0&navpanes=0`}
                                                     className={cn(
@@ -221,28 +305,40 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                                     <div className="absolute inset-0 z-10" />
                                                 )}
 
-                                                {/* Sello de Firma basado en PORCENTAJES */}
+                                                {/* Sello de Firmas basado en PORCENTAJES */}
                                                 <AnimatePresence>
-                                                    {pdfPos && (
+                                                    {signatures.map((sig) => (
                                                         <motion.div
+                                                            key={sig.id}
                                                             initial={{ opacity: 0, scale: 0.8 }}
                                                             animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.5 }}
                                                             style={{
-                                                                left: `${pdfPos.x}%`,
-                                                                top: `${pdfPos.y}%`
+                                                                left: `${sig.x}%`,
+                                                                top: `${sig.y}%`
                                                             }}
-                                                            className="absolute z-20 -translate-x-1/2 -translate-y-full pointer-events-none"
+                                                            className="absolute z-20 -translate-x-1/2 -translate-y-[90%] pointer-events-auto group/sig"
                                                         >
-                                                            <div className="bg-blue-600/90 backdrop-blur-md border-2 border-white shadow-[0_0_20px_rgba(37,99,235,0.4)] px-6 py-2 rounded-lg flex flex-col items-center">
-                                                                <span style={{ fontFamily: selectedFont }} className="text-2xl text-white block whitespace-nowrap leading-none mb-1">
+                                                            <div className="bg-blue-600/90 backdrop-blur-md border border-white/50 shadow-[0_0_20px_rgba(37,99,235,0.4)] px-4 py-1.5 rounded-lg flex flex-col items-center relative min-w-[140px]">
+                                                                <span style={{ fontFamily: selectedFont }} className="text-xl text-white block whitespace-nowrap leading-none mb-1">
                                                                     {signerName}
                                                                 </span>
-                                                                <div className="text-[7px] text-white/70 font-bold uppercase tracking-widest border-t border-white/20 pt-1 w-full text-center">Firma Digital AMIS</div>
+                                                                <div className="text-[6px] text-white/70 font-bold uppercase tracking-widest border-t border-white/20 pt-1 w-full text-center">Firma Digital AMIS</div>
+
+                                                                {/* Botón Eliminar */}
+                                                                {!isNavigating && (
+                                                                    <button
+                                                                        onClick={(e) => removeSignature(sig.id, e)}
+                                                                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover/sig:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <X className="w-3 h-3" />
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                             {/* Indicador de Punto de Anclaje */}
-                                                            <div className="w-3 h-3 bg-white rounded-full border-2 border-blue-600 absolute left-1/2 -translate-x-1/2 top-full -mt-1.5 shadow-md" />
+                                                            <div className="w-2.5 h-2.5 bg-white rounded-full border-2 border-blue-600 absolute left-1/2 -translate-x-1/2 top-full -mt-1 shadow-md" />
                                                         </motion.div>
-                                                    )}
+                                                    ))}
                                                 </AnimatePresence>
                                             </div>
                                         </div>
@@ -268,7 +364,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
 
                             <button
                                 onClick={handleConfirm}
-                                disabled={isConfirming || !signerName || (step === 2 && !pdfPos)}
+                                disabled={isConfirming || !signerName || (step === 2 && !signatures.length)}
                                 className={cn(
                                     "px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
                                     step === 1 ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-emerald-600 hover:bg-emerald-500 text-white"

@@ -244,30 +244,55 @@ export const SemanticDMS: React.FC = () => {
                                 )}
                             </div>
 
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSigningDoc(doc);
-                                }}
-                                className={cn(
-                                    "flex items-center gap-1 px-2 py-1 border rounded-md transition-all group/btn",
-                                    doc.signed
-                                        ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/10 text-emerald-500"
-                                        : "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400"
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSigningDoc(doc);
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-1 px-2 py-1 border rounded-md transition-all group/btn",
+                                        doc.signed
+                                            ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/10 text-emerald-500"
+                                            : "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400"
+                                    )}
+                                >
+                                    {doc.signed ? (
+                                        <>
+                                            <ShieldCheck className="w-2.5 h-2.5" />
+                                            <span className="text-[8px] font-bold uppercase tracking-tighter">Añadir Firma</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PenTool className="w-2.5 h-2.5 group-hover/btn:scale-110 transition-transform" />
+                                            <span className="text-[8px] font-bold uppercase tracking-tighter">Firmar</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {!doc.signed && (
+                                    <select
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={async (e) => {
+                                            const role = e.target.value;
+                                            if (role) {
+                                                const res = await (useSignature() as any).requestSignature(doc.id, role);
+                                                if (res.success) {
+                                                    alert('Firma solicitada al rol: ' + role);
+                                                }
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                        className="bg-white/5 border border-white/10 rounded-md px-1 py-1 text-[8px] text-white/40 focus:outline-none focus:border-orange-500/50"
+                                    >
+                                        <option value="">Solicitar...</option>
+                                        <option value="medical_director">Director Médico</option>
+                                        <option value="auditor">Auditor Jefe</option>
+                                        <option value="legal">Representante Legal</option>
+                                    </select>
                                 )}
-                            >
-                                {doc.signed ? (
-                                    <>
-                                        <ShieldCheck className="w-2.5 h-2.5" />
-                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Añadir Firma</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <PenTool className="w-2.5 h-2.5 group-hover/btn:scale-110 transition-transform" />
-                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Firmar</span>
-                                    </>
-                                )}
-                            </button>
+                            </div>
+
                         </div>
                     </div>
                 ))}
@@ -306,7 +331,7 @@ export const SemanticDMS: React.FC = () => {
                     documentUrl={signingDoc.url}
                     isPdf={!signingDoc.url.endsWith('.html')}
                     onClose={() => setSigningDoc(null)}
-                    onConfirm={async (name, style, position) => {
+                    onConfirm={async (name, style, signatures, size, color) => {
                         // Determinar qué método usar basado en la URL/extensión
                         const isNative = signingDoc.url.endsWith('.html');
                         let result;
@@ -314,8 +339,8 @@ export const SemanticDMS: React.FC = () => {
                         if (isNative) {
                             result = await signNativeDocument(signingDoc, name, style);
                         } else {
-                            // Ahora pasamos la posición elegida visualmente
-                            result = await signPDFDocument(signingDoc, name, position);
+                            // Ahora pasamos el array de firmas elegido visualmente
+                            result = await signPDFDocument(signingDoc, name, signatures as any, size, color);
                         }
 
                         if (result.success) {
