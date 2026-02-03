@@ -20,8 +20,7 @@ import {
     Reply,
     Bookmark,
     BookmarkCheck,
-    CornerDownRight,
-    Search
+    CornerDownRight
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useMessaging } from '../../hooks/useMessaging';
@@ -30,7 +29,7 @@ import { useProfessionals } from '../../hooks/useProfessionals';
 
 export const MessagingHub: React.FC = () => {
     const { user } = useAuth();
-    const { messages, channels, createChannel, deleteChannel, deleteMessage, toggleSaveMessage, sendMessage: rawSendMessage } = useMessaging();
+    const { messages, channels, createChannel, deleteChannel } = useMessaging();
     const { professionals } = useProfessionals();
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [input, setInput] = useState('');
@@ -519,128 +518,130 @@ export const MessagingHub: React.FC = () => {
                         </div>
                     </div>
                 )}
-            </div>
+            </div >
             {/* Modal de Creación (Canal o Grupo) */}
-            {(isCreatingChannel || isCreatingGroup) && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="w-full max-w-md bg-[#0A0A0B] border border-white/10 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-black uppercase tracking-widest text-white">
-                                {isCreatingChannel ? 'Nuevo Canal' : 'Crear Grupo'}
-                            </h3>
-                            <button
-                                onClick={() => { setIsCreatingChannel(false); setIsCreatingGroup(false); }}
-                                className="p-2 hover:bg-white/5 rounded-full text-white/40 transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-[10px] uppercase font-black text-white/40 tracking-widest mb-2 block">Nombre del {isCreatingChannel ? 'Canal' : 'Grupo'}</label>
-                                <input
-                                    type="text"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    placeholder={isCreatingChannel ? "ej. Licitaciones-2026" : "ej. La Oficina"}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all font-light"
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Clock className="w-3.5 h-3.5 text-orange-400" />
-                                        <span className="text-xs font-bold text-white uppercase tracking-wider">Modo Efímero</span>
-                                    </div>
-                                    <p className="text-[10px] text-white/40">Los mensajes se autodestruyen después del tiempo definido.</p>
-                                </div>
+            {
+                (isCreatingChannel || isCreatingGroup) && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-md bg-[#0A0A0B] border border-white/10 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-300">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-black uppercase tracking-widest text-white">
+                                    {isCreatingChannel ? 'Nuevo Canal' : 'Crear Grupo'}
+                                </h3>
                                 <button
-                                    onClick={() => setIsEphemeral(!isEphemeral)}
-                                    className={cn(
-                                        "w-12 h-6 rounded-full transition-all relative",
-                                        isEphemeral ? "bg-orange-500/80 shadow-[0_0_15px_rgba(249,115,22,0.3)]" : "bg-white/10"
-                                    )}
+                                    onClick={() => { setIsCreatingChannel(false); setIsCreatingGroup(false); }}
+                                    className="p-2 hover:bg-white/5 rounded-full text-white/40 transition-colors"
                                 >
-                                    <div className={cn(
-                                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-                                        isEphemeral ? "right-1" : "left-1"
-                                    )} />
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            {isEphemeral && (
-                                <div className="animate-in slide-in-from-top-2">
-                                    <label className="text-[10px] uppercase font-black text-white/40 tracking-widest mb-2 block">Duración</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['24h', '7d', '30d'].map(d => (
-                                            <button
-                                                key={d}
-                                                onClick={() => setDuration(d)}
-                                                className={cn(
-                                                    "py-2 text-[10px] uppercase font-black rounded-lg border transition-all",
-                                                    duration === d
-                                                        ? "bg-orange-500/20 border-orange-500 text-orange-400"
-                                                        : "bg-white/5 border-white/5 text-white/20 hover:text-white/40"
-                                                )}
-                                            >
-                                                {d === '24h' ? '24 Horas' : d === '7d' ? '7 Días' : '30 Días'}
-                                            </button>
-                                        ))}
-                                    </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-[10px] uppercase font-black text-white/40 tracking-widest mb-2 block">Nombre del {isCreatingChannel ? 'Canal' : 'Grupo'}</label>
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        placeholder={isCreatingChannel ? "ej. Licitaciones-2026" : "ej. La Oficina"}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all font-light"
+                                        autoFocus
+                                    />
                                 </div>
-                            )}
 
-                            {/* Selección de Colegas para Grupo */}
-                            {isCreatingGroup && (
-                                <div className="space-y-3">
-                                    <label className="text-[10px] uppercase font-black text-white/40 tracking-widest block">Seleccionar Colegas ({selectedProfessionals.length})</label>
-                                    <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1 pr-2">
-                                        {professionals.map(p => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => toggleProfessionalSelection(p.id)}
-                                                className={cn(
-                                                    "p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between group",
-                                                    selectedProfessionals.includes(p.id)
-                                                        ? "bg-blue-500/10 border-blue-500/30"
-                                                        : "bg-white/5 border-transparent hover:bg-white/10"
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center border border-white/10">
-                                                        <UserIcon className="w-3 h-3 text-white/40" />
+                                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Clock className="w-3.5 h-3.5 text-orange-400" />
+                                            <span className="text-xs font-bold text-white uppercase tracking-wider">Modo Efímero</span>
+                                        </div>
+                                        <p className="text-[10px] text-white/40">Los mensajes se autodestruyen después del tiempo definido.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsEphemeral(!isEphemeral)}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full transition-all relative",
+                                            isEphemeral ? "bg-orange-500/80 shadow-[0_0_15px_rgba(249,115,22,0.3)]" : "bg-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                                            isEphemeral ? "right-1" : "left-1"
+                                        )} />
+                                    </button>
+                                </div>
+
+                                {isEphemeral && (
+                                    <div className="animate-in slide-in-from-top-2">
+                                        <label className="text-[10px] uppercase font-black text-white/40 tracking-widest mb-2 block">Duración</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['24h', '7d', '30d'].map(d => (
+                                                <button
+                                                    key={d}
+                                                    onClick={() => setDuration(d)}
+                                                    className={cn(
+                                                        "py-2 text-[10px] uppercase font-black rounded-lg border transition-all",
+                                                        duration === d
+                                                            ? "bg-orange-500/20 border-orange-500 text-orange-400"
+                                                            : "bg-white/5 border-white/5 text-white/20 hover:text-white/40"
+                                                    )}
+                                                >
+                                                    {d === '24h' ? '24 Horas' : d === '7d' ? '7 Días' : '30 Días'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Selección de Colegas para Grupo */}
+                                {isCreatingGroup && (
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase font-black text-white/40 tracking-widest block">Seleccionar Colegas ({selectedProfessionals.length})</label>
+                                        <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1 pr-2">
+                                            {professionals.map(p => (
+                                                <div
+                                                    key={p.id}
+                                                    onClick={() => toggleProfessionalSelection(p.id)}
+                                                    className={cn(
+                                                        "p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between group",
+                                                        selectedProfessionals.includes(p.id)
+                                                            ? "bg-blue-500/10 border-blue-500/30"
+                                                            : "bg-white/5 border-transparent hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center border border-white/10">
+                                                            <UserIcon className="w-3 h-3 text-white/40" />
+                                                        </div>
+                                                        <span className="text-xs text-white/80">{p.name} {p.lastName}</span>
                                                     </div>
-                                                    <span className="text-xs text-white/80">{p.name} {p.lastName}</span>
+                                                    <div className={cn(
+                                                        "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
+                                                        selectedProfessionals.includes(p.id)
+                                                            ? "bg-blue-500 border-blue-500"
+                                                            : "border-white/10 group-hover:border-white/20"
+                                                    )}>
+                                                        {selectedProfessionals.includes(p.id) && <Check className="w-2.5 h-2.5 text-white" />}
+                                                    </div>
                                                 </div>
-                                                <div className={cn(
-                                                    "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
-                                                    selectedProfessionals.includes(p.id)
-                                                        ? "bg-blue-500 border-blue-500"
-                                                        : "border-white/10 group-hover:border-white/20"
-                                                )}>
-                                                    {selectedProfessionals.includes(p.id) && <Check className="w-2.5 h-2.5 text-white" />}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            <button
-                                onClick={handleCreate}
-                                disabled={!newName.trim()}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-20 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20"
-                            >
-                                <Check className="w-4 h-4" /> Finalizar Creación
-                            </button>
+                                <button
+                                    onClick={handleCreate}
+                                    disabled={!newName.trim()}
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-20 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20"
+                                >
+                                    <Check className="w-4 h-4" /> Finalizar Creación
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

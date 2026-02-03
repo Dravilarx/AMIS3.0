@@ -106,7 +106,7 @@ export const useShifts = () => {
 
     const duplicateShift = async (shift: Shift) => {
         try {
-            const { id, ...dataToClone } = shift;
+            // const { id, ...dataToClone } = shift; // Unused
             const newShiftData = {
                 professional_id: shift.professionalId,
                 professional_name: shift.professionalName,

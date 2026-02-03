@@ -1,18 +1,4 @@
-const [signatures, setSignatures] = useState<Array<{ x: number, y: number, id: string }>>([]);
-const containerRef = useRef<HTMLDivElement>(null);
-
-const selectedFont = SIGNATURE_STYLES.find(s => s.id === selectedStyle)?.font || SIGNATURE_STYLES[0].font;
-
-// Mapeo de tamaños y colores
-const sizeMap = { small: 'text-3xl', medium: 'text-5xl', large: 'text-7xl' };
-const colorMap = {
-    blue: 'text-blue-400',
-    black: 'text-white',
-    gray: 'text-gray-400'
-};
-
-// Efecto omitido para evitar errores de linter si no se usaba
-
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
@@ -21,7 +7,8 @@ import {
     Info,
     Type,
     PenTool,
-    Loader2
+    Loader2,
+    Eye
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 

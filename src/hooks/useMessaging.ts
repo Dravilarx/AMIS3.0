@@ -199,7 +199,7 @@ export const useMessaging = (channelId?: string) => {
         }
     };
 
-    const createChannel = async (name: string, type: 'project' | 'shift' | 'direct' | 'group', isEphemeralValue: boolean = false, members?: string[]) => {
+    const createChannel = async (name: string, type: 'project' | 'shift' | 'direct' | 'group', isEphemeralValue: boolean = false, _members?: string[]) => {
         if (!user) return;
         try {
             const { data, error } = await supabase.from('channels').insert([{

@@ -7,7 +7,15 @@ import {
     ShieldCheck,
     Loader2,
     Copy,
-    Trash2
+    Trash2,
+    ImageIcon,
+    Video,
+    BarChart,
+    AlertCircle,
+    Settings2,
+    Briefcase,
+    CheckSquare,
+    PenTool
 } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
