@@ -11,7 +11,6 @@ import {
     Undo,
     Redo,
     Type,
-    CheckCircle2,
     AlertCircle,
     Loader2
 } from 'lucide-react';
@@ -137,7 +136,7 @@ export const NativeDocumentEditor: React.FC<NativeDocumentEditorProps> = ({ onCl
                         ref={editorRef}
                         contentEditable
                         className="prose prose-invert max-w-none focus:outline-none min-h-[400px] text-white/80"
-                        placeholder="Comienza a escribir aquí..."
+                        data-placeholder="Comienza a escribir aquí..." // Custom attribute instead/
                     />
                 </div>
 

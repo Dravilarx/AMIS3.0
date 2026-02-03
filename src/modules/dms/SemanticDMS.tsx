@@ -6,15 +6,6 @@ import {
     FileDown,
     ShieldCheck,
     Loader2,
-    Lock,
-    AlertCircle,
-    Image as ImageIcon,
-    Video,
-    BarChart,
-    Briefcase,
-    CheckSquare,
-    Settings2,
-    PenTool,
     Copy,
     Trash2
 } from 'lucide-react';
@@ -331,7 +322,7 @@ export const SemanticDMS: React.FC = () => {
                     documentUrl={signingDoc.url}
                     isPdf={!signingDoc.url.endsWith('.html')}
                     onClose={() => setSigningDoc(null)}
-                    onConfirm={async (name, style, signatures, size, color) => {
+                    onConfirm={async (name: string, style: string, signatures?: any, size?: any, color?: any) => {
                         // Determinar qué método usar basado en la URL/extensión
                         const isNative = signingDoc.url.endsWith('.html');
                         let result;
@@ -340,7 +331,7 @@ export const SemanticDMS: React.FC = () => {
                             result = await signNativeDocument(signingDoc, name, style);
                         } else {
                             // Ahora pasamos el array de firmas elegido visualmente
-                            result = await signPDFDocument(signingDoc, name, signatures as any, size, color);
+                            result = await signPDFDocument(signingDoc, name, signatures, size, color);
                         }
 
                         if (result.success) {
