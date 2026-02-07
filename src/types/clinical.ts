@@ -112,3 +112,22 @@ export interface AppointmentResult {
     doctorId: string;
     createdAt: string;
 }
+
+// ── Workflow procedure (active instance in clinical_procedures table) ──
+export interface ClinicalProcedure {
+    id: string;
+    patientName: string;
+    examType: string;
+    currentStep: ClinicalStep;
+    timestamp: string;
+    location: string;
+    status: string;
+    details: {
+        admissionVerified: boolean;
+        preparationChecklist: string[];
+        inventoryUsed: string[];
+        comments?: string;
+        attachments?: string[];
+        messagingInstructions?: string;
+    };
+}

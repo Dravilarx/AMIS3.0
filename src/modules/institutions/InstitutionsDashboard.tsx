@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Search, Filter, AlertTriangle, FileText, Users, Shield, TrendingUp, Loader2, ChevronRight, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building2, Plus, Search, AlertTriangle, FileText, Shield, Loader2, ChevronRight, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useInstitutions } from '../../hooks/useInstitutions';
 import { InstitutionModal } from './InstitutionModal';

@@ -775,7 +775,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 onClick={async () => {
                                     const res = await onUpsertBattery({
                                         ...editingBatt,
-                                        requirementIds: editingBatt.requirements?.map((r: any) => r.id)
+                                        requirements: editingBatt.requirements?.map((r: any) => r.id)
                                     });
                                     if (res.success) {
                                         setEditingBattery(null);
