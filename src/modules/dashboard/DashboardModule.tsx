@@ -1,9 +1,11 @@
 import React from 'react';
-import { TrendingUp, Users, ShieldAlert, Cpu, ArrowUpRight, MessageSquare, AlertCircle } from 'lucide-react';
+import { TrendingUp, Users, ShieldAlert, Cpu, ArrowUpRight, MessageSquare, AlertCircle, Newspaper } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTenders } from '../../hooks/useTenders';
 import { useProfessionals } from '../../hooks/useProfessionals';
 import { useMessaging } from '../../hooks/useMessaging';
+import { useNews } from '../../hooks/useNews';
+import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../types/news';
 
 interface CardProps {
     title: string;
@@ -46,6 +48,7 @@ export const DashboardModule: React.FC = () => {
     const { professionals, loading: loadingProfessionals } = useProfessionals();
     const { messages } = useMessaging();
     const { projects, loading: loadingProjects } = useProjects();
+    const { articles: newsArticles } = useNews();
 
     const activeTenders = tenders.length;
     const activeProjects = projects.filter(p => p.status === 'active').length;
@@ -184,6 +187,60 @@ export const DashboardModule: React.FC = () => {
                                     <p className="text-[11px] text-white/50 line-clamp-1">{msg.content}</p>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* ── News Widget ───────────────────────────── */}
+                    <div className="card-premium">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <Newspaper className="w-5 h-5 text-amber-400" />
+                                <h3 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Últimas Noticias</h3>
+                            </div>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
+                                className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition-colors"
+                            >
+                                Ver todas →
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            {newsArticles.slice(0, 3).map((article) => (
+                                <div
+                                    key={article.id}
+                                    className="flex gap-3 p-2 -mx-2 rounded-xl hover:bg-white/[0.03] transition-colors cursor-pointer group"
+                                    onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
+                                >
+                                    {(article.imageUrls?.[0] || article.coverImageUrl) && (
+                                        <div className="flex-none w-14 h-14 rounded-lg overflow-hidden border border-white/10">
+                                            <img
+                                                src={article.imageUrls?.[0] || article.coverImageUrl}
+                                                alt=""
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <span className={cn(
+                                                "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border",
+                                                CATEGORY_COLORS[article.category]
+                                            )}>
+                                                {CATEGORY_ICONS[article.category]}
+                                            </span>
+                                            <span className="text-[8px] text-white/15">
+                                                {new Date(article.publishedAt || article.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-white/60 font-bold line-clamp-2 group-hover:text-white/80 transition-colors">
+                                            {article.title}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            {newsArticles.length === 0 && (
+                                <p className="text-[10px] text-white/15 italic text-center py-4">Sin noticias recientes</p>
+                            )}
                         </div>
                     </div>
                 </div>

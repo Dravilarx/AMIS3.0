@@ -11,7 +11,7 @@ const MODULES = [
     { id: 'staffing', name: 'RR.HH. 360' },
     { id: 'shifts', name: 'Turnos y Guardias' },
     { id: 'logistics', name: 'Logística' },
-    { id: 'clinical', name: 'Operación Clínica' },
+    { id: 'clinical', name: 'Procedimientos' },
     { id: 'audit', name: 'Auditoría IA' },
     { id: 'projects', name: 'BPM & Proyectos' },
     { id: 'messaging', name: 'Mensajería' },

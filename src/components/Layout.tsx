@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, LogOut, Lightbulb, Search } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, LogOut, Lightbulb, Search, Building2, Newspaper } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 
@@ -24,12 +24,12 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news';
     onNavigate: (view: any) => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
-    const { user, hasModuleAccess } = useAuth();
+    const { user, hasModuleAccess, signOut } = useAuth();
 
     const navItems = [
         { id: 'dashboard', name: 'Panel Principal', icon: LayoutDashboard },
@@ -37,12 +37,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'staffing', name: 'RR.HH. 360', icon: Users },
         { id: 'shifts', name: 'Turnos y Guardias', icon: Calendar },
         { id: 'logistics', name: 'Logística', icon: Truck },
-        { id: 'clinical', name: 'Operación Clínica', icon: Stethoscope },
+        { id: 'institutions', name: 'Instituciones', icon: Building2 },
+        { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
         { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
         { id: 'projects', name: 'BPM & Proyectos', icon: Layers },
         { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
         { id: 'dms', name: 'Documentos', icon: FolderSearch },
         { id: 'ideation', name: 'Lluvia de Ideas', icon: Lightbulb },
+        { id: 'news', name: 'Noticias', icon: Newspaper },
     ] as const;
 
     const filteredNav = navItems.filter(item => hasModuleAccess(item.id));
@@ -111,9 +113,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                         <SidebarItem
                             icon={LogOut}
                             label="Cerrar Sesión"
-                            onClick={() => {
+                            onClick={async () => {
                                 if (confirm('¿Está seguro que desea cerrar sesión?')) {
-                                    window.location.reload();
+                                    await signOut();
                                 }
                             }}
                         />

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER';
 
@@ -34,14 +35,15 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    loading: boolean;
     hasModuleAccess: (moduleId: string) => boolean;
     canPerform: (module: keyof UserPermissions, action: keyof ModulePermission) => boolean;
     isSuperAdmin: () => boolean;
+    signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Permisos por defecto para roles (como fallback)
 const DEFAULT_PERMISSIONS_BY_ROLE: Record<UserRole, UserPermissions> = {
     'SUPER_ADMIN': {
         dashboard: { read: true, create: true, update: true, delete: true },
@@ -104,21 +106,73 @@ const DEFAULT_PERMISSIONS_BY_ROLE: Record<UserRole, UserPermissions> = {
         audit: { read: true, create: false, update: false, delete: false },
         projects: { read: true, create: false, update: false, delete: false },
         messaging: { read: true, create: false, update: false, delete: false },
-        dms: { read: true, create: true, update: false, delete: false }, // VIEWER puede cargar archivos
+        dms: { read: true, create: true, update: false, delete: false },
         ideation: { read: true, create: false, update: false, delete: false },
         admin_access: false
     }
 };
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user] = useState<User>({
-        id: '1',
-        name: 'Marcelo Avila',
-        email: 'marcelo.avila@amis.global',
-        role: 'SUPER_ADMIN',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-        permissions: DEFAULT_PERMISSIONS_BY_ROLE['SUPER_ADMIN']
-    });
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Initial session check
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                fetchUserProfile(session.user);
+            } else {
+                setLoading(false);
+            }
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                fetchUserProfile(session.user);
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setLoading(false);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchUserProfile = async (authUser: any) => {
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authUser.id)
+                .single();
+
+            if (error) throw error;
+
+            const role = (profile?.role as UserRole) || 'VIEWER';
+
+            setUser({
+                id: authUser.id,
+                name: profile?.full_name || authUser.email.split('@')[0],
+                email: authUser.email,
+                role: role,
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
+                permissions: DEFAULT_PERMISSIONS_BY_ROLE[role]
+            });
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+            // Fallback user if profile fetch fails but auth session exists
+            setUser({
+                id: authUser.id,
+                name: authUser.email.split('@')[0],
+                email: authUser.email,
+                role: 'VIEWER',
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
+                permissions: DEFAULT_PERMISSIONS_BY_ROLE['VIEWER']
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const hasModuleAccess = (moduleId: string) => {
         if (!user || !user.permissions) return false;
@@ -138,9 +192,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const isSuperAdmin = () => user?.email === 'marcelo.avila@amis.global';
 
+    const signOut = async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch (err) {
+            console.error('Error during Supabase signOut:', err);
+        } finally {
+            setUser(null);
+            localStorage.clear();
+            sessionStorage.clear();
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, hasModuleAccess, canPerform, isSuperAdmin }}>
-            {children}
+        <AuthContext.Provider value={{ user, loading, hasModuleAccess, canPerform, isSuperAdmin, signOut }}>
+            {!loading && children}
         </AuthContext.Provider>
     );
 };
