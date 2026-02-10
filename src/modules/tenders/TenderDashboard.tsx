@@ -45,23 +45,23 @@ export const TenderDashboard: React.FC = () => {
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-96">
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-            <p className="text-white/40 font-mono text-sm">Calculando viabilidad de proyectos...</p>
+            <Loader2 className="w-10 h-10 text-info animate-spin mb-4" />
+            <p className="text-prevenort-text/40 font-mono text-sm">Calculando viabilidad de proyectos...</p>
         </div>
     );
 
     if (error) return (
-        <div className="p-12 text-center card-premium border-red-500/20">
-            <p className="text-red-400">Error en el motor de licitaciones: {error}</p>
+        <div className="p-12 text-center card-premium border-danger/20">
+            <p className="text-danger">Error en el motor de licitaciones: {error}</p>
         </div>
     );
 
     if (!activeTender) return (
-        <div className="p-12 text-center card-premium border-white/5 space-y-4">
-            <p className="text-white/40 italic">No hay licitaciones registradas en el sistema.</p>
+        <div className="p-12 text-center card-premium border-prevenort-border space-y-4">
+            <p className="text-prevenort-text/40 italic">No hay licitaciones registradas en el sistema.</p>
             <button
                 onClick={() => setIsParserOpen(true)}
-                className="mx-auto flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-white/90 rounded-xl transition-all font-black text-xs uppercase tracking-widest shadow-xl"
+                className="mx-auto flex items-center gap-2 px-6 py-3 bg-prevenort-primary text-white hover:opacity-90 rounded-xl transition-all font-black text-xs uppercase tracking-widest shadow-xl"
             >
                 <Sparkles className="w-5 h-5" />
                 <span>Cargar y Analizar Bases con IA</span>
@@ -71,9 +71,9 @@ export const TenderDashboard: React.FC = () => {
 
     const getStatusColor = () => {
         switch (decision) {
-            case 'PARTICIPAR': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-            case 'REVISAR': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            case 'NO_PARTICIPAR': return 'text-red-400 bg-red-500/10 border-red-500/20';
+            case 'PARTICIPAR': return 'text-success bg-success/10 border-success/20';
+            case 'REVISAR': return 'text-warning bg-warning/10 border-warning/20';
+            case 'NO_PARTICIPAR': return 'text-danger bg-danger/10 border-danger/20';
         }
     };
 
@@ -88,23 +88,23 @@ export const TenderDashboard: React.FC = () => {
             {/* Header con IA */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-white/90 tracking-tighter uppercase">Análisis de Licitación</h2>
-                    <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Validación contra Matriz de Riesgo v3.0</p>
+                    <h2 className="text-2xl font-black text-prevenort-text tracking-tighter uppercase">Análisis de Licitación</h2>
+                    <p className="text-xs text-prevenort-text/40 font-mono uppercase tracking-widest">Validación contra Matriz de Riesgo v3.0</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <select
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500/50 transition-all text-white/60"
+                        className="bg-prevenort-surface border border-prevenort-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-info/50 transition-all text-prevenort-text/60"
                         value={selectedId || ''}
                         onChange={(e) => setSelectedId(e.target.value)}
                     >
                         {tenders.map(t => (
-                            <option key={t.id} value={t.id} className="bg-[#0a0a0a]">{t.id} - {t.identificacion.tipoServicio}</option>
+                            <option key={t.id} value={t.id} className="bg-prevenort-surface text-prevenort-text">{t.id} - {t.identificacion.tipoServicio}</option>
                         ))}
                     </select>
                     <button
                         onClick={() => setIsParserOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg transition-all font-bold text-xs uppercase tracking-tight shadow-xl shadow-blue-500/20 border border-blue-400/30"
+                        className="flex items-center gap-2 px-4 py-2 bg-info text-white hover:opacity-90 rounded-lg transition-all font-bold text-xs uppercase tracking-tight shadow-xl shadow-info/20 border border-info/30"
                     >
                         <Sparkles className="w-4 h-4" />
                         <span>Analizar PDF con Agrawall AI</span>
@@ -118,35 +118,35 @@ export const TenderDashboard: React.FC = () => {
                 {/* Columna Principal - Detalles */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="card-premium group">
-                        <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-6 group-hover:text-blue-400 transition-colors">Identificación & Volumen</h3>
+                        <h3 className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-[0.2em] mb-6 group-hover:text-info transition-colors">Identificación & Volumen</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             <div>
-                                <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Servicio</p>
-                                <p className="font-bold text-white/90">{activeTender.identificacion.tipoServicio}</p>
+                                <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Servicio</p>
+                                <p className="font-bold text-prevenort-text">{activeTender.identificacion.tipoServicio}</p>
                             </div>
                             <div>
-                                <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Modalidad</p>
-                                <p className="font-bold text-white/90">{activeTender.identificacion.modalidad}</p>
+                                <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Modalidad</p>
+                                <p className="font-bold text-prevenort-text">{activeTender.identificacion.modalidad}</p>
                             </div>
                             <div>
-                                <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Volumen Total</p>
-                                <p className="font-bold text-blue-400">{activeTender.volumen.total.toLocaleString()} un.</p>
+                                <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Volumen Total</p>
+                                <p className="font-bold text-info">{activeTender.volumen.total.toLocaleString()} un.</p>
                             </div>
                             <div>
-                                <p className="text-[9px] text-white/30 uppercase font-mono mb-1">Duración</p>
-                                <p className="font-bold text-white/90">{activeTender.identificacion.duracion}</p>
+                                <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Duración</p>
+                                <p className="font-bold text-prevenort-text">{activeTender.identificacion.duracion}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="card-premium">
-                            <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-4">Integración Técnica</h3>
+                            <h3 className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-[0.2em] mb-4">Integración Técnica</h3>
                             <div className="space-y-3">
                                 {Object.entries(activeTender.integracion).map(([key, value]) => (
-                                    <div key={key} className="flex items-center justify-between text-xs py-2 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-all px-1">
-                                        <span className="capitalize text-white/50">{key.replace(/([A-Z])/g, ' $1')}</span>
-                                        <span className={value ? "text-emerald-400" : "text-white/20 font-mono"}>
+                                    <div key={key} className="flex items-center justify-between text-xs py-2 border-b border-prevenort-border last:border-0 hover:bg-prevenort-primary/5 transition-all px-1">
+                                        <span className="capitalize text-prevenort-text/50">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                        <span className={value ? "text-success" : "text-prevenort-text/20 font-mono"}>
                                             {value ? "REQUERIDO" : "N/A"}
                                         </span>
                                     </div>
@@ -154,19 +154,19 @@ export const TenderDashboard: React.FC = () => {
                             </div>
                         </div>
                         <div className="card-premium">
-                            <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-4">Penalidades (Max)</h3>
+                            <h3 className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-[0.2em] mb-4">Penalidades (Max)</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between text-xs">
-                                    <span className="text-white/50">Tope Porcentual del Contrato</span>
-                                    <span className="font-black text-red-500">{activeTender.multas.topePorcentualContrato}%</span>
+                                    <span className="text-prevenort-text/50">Tope Porcentual del Contrato</span>
+                                    <span className="font-black text-danger">{activeTender.multas.topePorcentualContrato}%</span>
                                 </div>
-                                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/10 p-[1px]">
+                                <div className="w-full bg-prevenort-border/50 h-2 rounded-full overflow-hidden border border-prevenort-border p-[1px]">
                                     <div
-                                        className="bg-gradient-to-r from-orange-500 to-red-600 h-full rounded-full transition-all duration-1000"
+                                        className="bg-gradient-to-r from-warning to-danger h-full rounded-full transition-all duration-1000"
                                         style={{ width: `${activeTender.multas.topePorcentualContrato}%` }}
                                     />
                                 </div>
-                                <p className="text-[9px] text-white/20 italic">Valores calculados sobre el presupuesto total anual de la licitación.</p>
+                                <p className="text-[9px] text-prevenort-text/20 italic">Valores calculados sobre el presupuesto total anual de la licitación.</p>
                             </div>
                         </div>
                     </div>
@@ -175,13 +175,13 @@ export const TenderDashboard: React.FC = () => {
                 {/* Columna Lateral - Decisión (Semáforo) */}
                 <div className="space-y-6">
                     {activeTender.riesgoSLA.escala > 7 && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-2xl flex items-start gap-4 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-                            <div className="p-2 bg-red-500 rounded-lg shadow-lg">
+                        <div className="p-4 bg-danger/10 border border-danger/50 rounded-2xl flex items-start gap-4 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                            <div className="p-2 bg-danger rounded-lg shadow-lg">
                                 <ShieldAlert className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h4 className="text-xs font-black text-red-400 uppercase tracking-widest leading-none mb-1">IA ALERT: Riesgo Crítico Detectado</h4>
-                                <p className="text-[10px] text-red-500/80 italic leading-tight">Gemini ha identificado cláusulas de SLA draconianas. Se requiere auditoría legal inmediata.</p>
+                                <h4 className="text-xs font-black text-danger uppercase tracking-widest leading-none mb-1">IA ALERT: Riesgo Crítico Detectado</h4>
+                                <p className="text-[10px] text-danger/80 italic leading-tight">Gemini ha identificado cláusulas de SLA draconianas. Se requiere auditoría legal inmediata.</p>
                             </div>
                         </div>
                     )}
@@ -204,7 +204,7 @@ export const TenderDashboard: React.FC = () => {
                             <button
                                 onClick={handleCreateProject}
                                 disabled={creatingProject}
-                                className="group flex items-center justify-center gap-3 w-[80%] py-4 bg-white text-black rounded-2xl font-black uppercase tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+                                className="group flex items-center justify-center gap-3 w-[80%] py-4 bg-prevenort-text text-prevenort-bg rounded-2xl font-black uppercase tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
                             >
                                 {creatingProject ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -222,10 +222,10 @@ export const TenderDashboard: React.FC = () => {
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
-                                    <ShieldAlert className="w-4 h-4 text-white/40" />
-                                    <span className="text-xs font-bold text-white/70 uppercase">Escala Riesgo SLA</span>
+                                    <ShieldAlert className="w-4 h-4 text-prevenort-text/40" />
+                                    <span className="text-xs font-bold text-prevenort-text/70 uppercase">Escala Riesgo SLA</span>
                                 </div>
-                                <span className="text-2xl font-black font-mono">{riskScore}/8</span>
+                                <span className="text-2xl font-black font-mono text-prevenort-text">{riskScore}/8</span>
                             </div>
                             <div className="grid grid-cols-8 gap-1.5">
                                 {[...Array(8)].map((_, i) => (
@@ -234,8 +234,8 @@ export const TenderDashboard: React.FC = () => {
                                         className={cn(
                                             "h-3 rounded-sm transition-all duration-500",
                                             i < riskScore
-                                                ? (riskScore > 6 ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]")
-                                                : "bg-white/5"
+                                                ? (riskScore > 6 ? "bg-danger shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-info shadow-[0_0_10px_rgba(59,130,246,0.5)]")
+                                                : "bg-prevenort-border/50"
                                         )}
                                     />
                                 ))}
@@ -245,15 +245,15 @@ export const TenderDashboard: React.FC = () => {
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4 text-white/40" />
-                                    <span className="text-xs font-bold text-white/70 uppercase">Margen Real Bruto</span>
+                                    <TrendingUp className="w-4 h-4 text-prevenort-text/40" />
+                                    <span className="text-xs font-bold text-prevenort-text/70 uppercase">Margen Real Bruto</span>
                                 </div>
-                                <span className={cn("text-2xl font-black font-mono", realMargin > 20 ? "text-emerald-400" : "text-amber-400")}>
+                                <span className={cn("text-2xl font-black font-mono", realMargin > 20 ? "text-success" : "text-warning")}>
                                     {realMargin.toFixed(1)}%
                                 </span>
                             </div>
                             {isOverCapacity && (
-                                <div className="flex items-center gap-3 text-[10px] text-amber-400 bg-amber-400/5 p-4 rounded-xl border border-amber-400/20 backdrop-blur-md animate-in slide-in-from-right-4">
+                                <div className="flex items-center gap-3 text-[10px] text-warning bg-warning/5 p-4 rounded-xl border border-warning/20 backdrop-blur-md animate-in slide-in-from-right-4">
                                     <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                                     <p className="leading-tight">
                                         <span className="block font-black uppercase mb-1">Costo Staffing Elevado</span>

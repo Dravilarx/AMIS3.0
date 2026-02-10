@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
+import { Stethoscope, Mail, Lock, Loader2 } from 'lucide-react';
 
 export const AuthView: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -28,77 +28,85 @@ export const AuthView: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black">
-            <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
-                <div className="text-center space-y-4">
-                    <div className="inline-flex p-4 rounded-3xl bg-blue-600/10 border border-blue-500/20 shadow-2xl shadow-blue-500/10 mb-4">
-                        <ShieldCheck className="w-12 h-12 text-blue-500" />
+        <div className="min-h-screen bg-prevenort-bg flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-50 via-slate-50 to-slate-100">
+            <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-1000">
+                <div className="text-center space-y-6">
+                    <div className="inline-flex p-5 rounded-[2rem] bg-white border border-slate-100 shadow-xl shadow-blue-500/10 mb-2 rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <div className="p-4 bg-gradient-to-br from-prevenort-primary to-blue-700 rounded-2xl shadow-inner">
+                            <Stethoscope className="w-10 h-10 text-white" />
+                        </div>
                     </div>
-                    <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic">
-                        AMIS <span className="text-blue-600">3.0</span>
-                    </h1>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Advanced Medical Intelligence System</p>
+                    <div>
+                        <h1 className="text-5xl font-black text-prevenort-primary tracking-tighter uppercase mb-1">
+                            PREVENORT
+                        </h1>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.4em]">Health Intelligence</p>
+                    </div>
                 </div>
 
-                <div className="bg-zinc-900/50 border border-white/5 backdrop-blur-xl rounded-[2.5rem] p-10 shadow-2xl">
-                    <form onSubmit={handleLogin} className="space-y-6">
+                <div className="bg-white/80 border border-white backdrop-blur-2xl rounded-[3rem] p-10 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-prevenort-primary/20 to-transparent" />
+
+                    <form onSubmit={handleLogin} className="space-y-7 relative z-10">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Correo Corporativo</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Credenciales de Red</label>
                             <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-blue-500 transition-colors" />
+                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-prevenort-primary transition-colors" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="nombre@amis.global"
-                                    className="w-full bg-black/40 border border-white/5 rounded-2xl pl-12 pr-4 py-4 text-sm text-white focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-white/10"
+                                    placeholder="usuario@prevenort.cl"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-12 pr-5 py-4.5 text-sm text-slate-900 focus:bg-white focus:border-prevenort-primary/30 focus:ring-4 focus:ring-prevenort-primary/5 outline-none transition-all placeholder:text-slate-300 font-medium"
                                     required
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Contraseña</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Clave de Acceso</label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-blue-500 transition-colors" />
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-prevenort-primary transition-colors" />
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full bg-black/40 border border-white/5 rounded-2xl pl-12 pr-4 py-4 text-sm text-white focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-white/10"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-12 pr-5 py-4.5 text-sm text-slate-900 focus:bg-white focus:border-prevenort-primary/30 focus:ring-4 focus:ring-prevenort-primary/5 outline-none transition-all placeholder:text-slate-300 font-medium"
                                     required
                                 />
                             </div>
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-                                <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider text-center">{error}</p>
+                            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl animate-in shake duration-500">
+                                <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider text-center">{error}</p>
                             </div>
                         )}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                            className="w-full bg-prevenort-primary hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-500/25 flex items-center justify-center gap-3 active:scale-[0.98]"
                         >
                             {loading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                'Iniciar Misión'
+                                'Ingresar al Portal'
                             )}
                         </button>
-
                     </form>
                 </div>
 
                 <div className="text-center">
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">
-                        &copy; 2026 Holding Portezuelo • Operaciones Seguras
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] flex items-center justify-center gap-2">
+                        <span className="w-8 h-px bg-slate-200" />
+                        SISTEMA DE GESTIÓN CLÍNICA INTEGRADA
+                        <span className="w-8 h-px bg-slate-200" />
                     </p>
                 </div>
             </div>
         </div>
     );
 };
+

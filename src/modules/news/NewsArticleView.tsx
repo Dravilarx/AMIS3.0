@@ -40,9 +40,9 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Panel */}
-            <div className="relative w-full max-w-xl bg-[#0a0a0a] border-l border-white/10 overflow-y-auto custom-scrollbar animate-slide-in-right">
+            <div className="relative w-full max-w-xl bg-prevenort-bg border-l border-prevenort-border overflow-y-auto custom-scrollbar animate-slide-in-right">
                 {/* Header */}
-                <div className="sticky top-0 z-10 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 p-6">
+                <div className="sticky top-0 z-10 bg-prevenort-bg/95 backdrop-blur-xl border-b border-prevenort-border p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className={cn(
@@ -74,29 +74,29 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                             {onTogglePin && (
                                 <button
                                     onClick={onTogglePin}
-                                    className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-prevenort-surface rounded-lg transition-colors"
                                     title={article.isPinned ? 'Desfijar' : 'Fijar'}
                                 >
-                                    <Pin className={cn("w-4 h-4", article.isPinned ? "text-blue-400 fill-blue-400" : "text-white/30")} />
+                                    <Pin className={cn("w-4 h-4", article.isPinned ? "text-blue-400 fill-blue-400" : "text-prevenort-text/30")} />
                                 </button>
                             )}
                             {onEdit && (
-                                <button onClick={onEdit} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                                    <Edit3 className="w-4 h-4 text-white/30 hover:text-white/60" />
+                                <button onClick={onEdit} className="p-2 hover:bg-prevenort-surface rounded-lg transition-colors">
+                                    <Edit3 className="w-4 h-4 text-prevenort-text/30 hover:text-prevenort-text/60" />
                                 </button>
                             )}
                             {onDelete && (
-                                <button onClick={onDelete} className="p-2 hover:bg-red-500/10 rounded-lg transition-colors">
-                                    <Trash2 className="w-4 h-4 text-white/30 hover:text-red-400" />
+                                <button onClick={onDelete} className="p-2 hover:bg-danger/10 rounded-lg transition-colors">
+                                    <Trash2 className="w-4 h-4 text-prevenort-text/30 hover:text-danger" />
                                 </button>
                             )}
-                            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors ml-2">
-                                <X className="w-5 h-5 text-white/40" />
+                            <button onClick={onClose} className="p-2 hover:bg-prevenort-surface rounded-lg transition-colors ml-2">
+                                <X className="w-5 h-5 text-prevenort-text/40" />
                             </button>
                         </div>
                     </div>
 
-                    <h1 className="text-xl font-black text-white leading-tight">{article.title}</h1>
+                    <h1 className="text-xl font-black text-prevenort-text leading-tight">{article.title}</h1>
                 </div>
 
                 {/* ── Image Gallery ──────────────────────────────── */}
@@ -157,24 +157,24 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                 )}
 
                 {/* Meta info */}
-                <div className="px-6 py-4 border-b border-white/5">
+                <div className="px-6 py-4 border-b border-prevenort-border">
                     <div className="grid grid-cols-2 gap-3 text-[10px]">
-                        <div className="flex items-center gap-2 text-white/30">
+                        <div className="flex items-center gap-2 text-prevenort-text/30">
                             <User className="w-3 h-3" />
                             <span className="font-medium">{article.authorName || 'Sistema'}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-white/30">
+                        <div className="flex items-center gap-2 text-prevenort-text/30">
                             <Clock className="w-3 h-3" />
                             <span>{formatFullDate(article.publishedAt || article.createdAt)}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-white/30">
+                        <div className="flex items-center gap-2 text-prevenort-text/30">
                             <Globe className="w-3 h-3" />
                             <span>{VISIBILITY_LABELS[article.visibility]}</span>
                             {article.visibility === 'roles' && article.targetRoles.length > 0 && (
-                                <span className="text-white/20">({article.targetRoles.join(', ')})</span>
+                                <span className="text-prevenort-text/20">({article.targetRoles.join(', ')})</span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 text-white/30">
+                        <div className="flex items-center gap-2 text-prevenort-text/30">
                             <Eye className="w-3 h-3" />
                             <span>{article.readCount || 0} lecturas</span>
                         </div>
@@ -188,7 +188,7 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                                 <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">
                                     {isScheduled ? 'Publicación Programada' : 'Fue Programada para'}
                                 </p>
-                                <p className="text-xs text-white/60 font-medium mt-0.5">
+                                <p className="text-xs text-prevenort-text/60 font-medium mt-0.5">
                                     {formatFullDate(article.scheduledAt)}
                                 </p>
                             </div>
@@ -201,7 +201,7 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                             <Calendar className="w-4 h-4 text-purple-400" />
                             <div>
                                 <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Fecha del Evento</p>
-                                <p className="text-xs text-white/60 font-medium mt-0.5">
+                                <p className="text-xs text-prevenort-text/60 font-medium mt-0.5">
                                     {formatFullDate(article.eventDate)}
                                 </p>
                             </div>
@@ -222,7 +222,7 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                     <div className="prose prose-invert prose-sm max-w-none">
                         {article.content.split('\n').map((paragraph, idx) => (
                             paragraph.trim() ? (
-                                <p key={idx} className="text-sm text-white/70 leading-relaxed mb-4">
+                                <p key={idx} className="text-sm text-prevenort-text/70 leading-relaxed mb-4">
                                     {paragraph}
                                 </p>
                             ) : (
@@ -244,7 +244,7 @@ export const NewsArticleView: React.FC<NewsArticleViewProps> = ({
                                         "flex-none w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
                                         i === galleryIndex
                                             ? "border-blue-500 opacity-100"
-                                            : "border-white/10 opacity-50 hover:opacity-80"
+                                            : "border-prevenort-border opacity-50 hover:opacity-80"
                                     )}
                                 >
                                     <img src={url} alt="" className="w-full h-full object-cover" />

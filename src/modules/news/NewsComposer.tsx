@@ -175,19 +175,19 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-prevenort-bg border border-prevenort-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5">
+                <div className="flex items-center justify-between p-6 border-b border-prevenort-border">
                     <div>
                         <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">
                             {isEditing ? 'Editar Publicación' : 'Nueva Publicación'}
                         </p>
-                        <h2 className="text-lg font-bold text-white mt-1">
+                        <h2 className="text-lg font-bold text-prevenort-text mt-1">
                             {isEditing ? 'Modificar Artículo' : 'Redactar Comunicado'}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                        <X className="w-5 h-5 text-white/40" />
+                    <button onClick={onClose} className="p-2 hover:bg-prevenort-surface rounded-lg transition-colors">
+                        <X className="w-5 h-5 text-prevenort-text/40" />
                     </button>
                 </div>
 
@@ -195,47 +195,47 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                 <div className="p-6 space-y-5">
                     {/* Title */}
                     <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                        <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                             Título *
                         </label>
                         <input
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/50"
+                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text placeholder:text-prevenort-text/20 focus:outline-none focus:border-info/50"
                             placeholder="Título de la publicación"
                         />
                     </div>
 
                     {/* Content */}
                     <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                        <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                             Contenido *
                         </label>
                         <textarea
                             value={formData.content}
                             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                             rows={6}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/50 resize-none custom-scrollbar"
+                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text placeholder:text-prevenort-text/20 focus:outline-none focus:border-info/50 resize-none custom-scrollbar"
                             placeholder="Escribe el contenido del comunicado..."
                         />
                     </div>
 
                     {/* Excerpt */}
                     <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                        <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                             Extracto (preview)
                         </label>
                         <input
                             value={formData.excerpt}
                             onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/50"
+                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text placeholder:text-prevenort-text/20 focus:outline-none focus:border-info/50"
                             placeholder="Resumen breve para la tarjeta de preview..."
                         />
                     </div>
 
                     {/* ── Image Drop Zone ────────────────────────────── */}
                     <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black text-white/20 tracking-widest flex items-center gap-1">
+                        <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest flex items-center gap-1">
                             <ImageIcon className="w-3 h-3" /> Imágenes ({imagePreviews.length}/{MAX_IMAGES})
                         </label>
 
@@ -243,7 +243,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                         {imagePreviews.length > 0 && (
                             <div className="grid grid-cols-5 gap-2 mb-2">
                                 {imagePreviews.map((src, i) => (
-                                    <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-white/10">
+                                    <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-prevenort-border">
                                         <img src={src} alt="" className="w-full h-full object-cover" />
                                         <button
                                             onClick={() => removeImage(i)}
@@ -262,13 +262,13 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-white/10 hover:border-blue-500/30 rounded-xl cursor-pointer transition-colors bg-white/[0.01] hover:bg-blue-500/[0.03]"
+                                className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-prevenort-border hover:border-info/30 rounded-xl cursor-pointer transition-colors bg-prevenort-surface/30 hover:bg-info/[0.03]"
                             >
-                                <Upload className="w-6 h-6 text-white/20" />
-                                <p className="text-[10px] text-white/30 font-medium">
+                                <Upload className="w-6 h-6 text-prevenort-text/20" />
+                                <p className="text-[10px] text-prevenort-text/30 font-medium">
                                     Arrastra imágenes aquí o haz clic para seleccionar
                                 </p>
-                                <p className="text-[9px] text-white/15">
+                                <p className="text-[9px] text-prevenort-text/15">
                                     Máx. {MAX_IMAGES - imagePreviews.length} más · Se redimensionan automáticamente
                                 </p>
                             </div>
@@ -286,13 +286,13 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                     {/* Category + Priority */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                            <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                                 Categoría
                             </label>
                             <select
                                 value={formData.category}
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value as NewsCategory })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/60 focus:outline-none focus:border-blue-500/50"
+                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text/60 focus:outline-none focus:border-info/50"
                             >
                                 {(Object.entries(CATEGORY_LABELS) as [NewsCategory, string][]).map(([k, v]) => (
                                     <option key={k} value={k}>{v}</option>
@@ -300,13 +300,13 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                            <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                                 Prioridad
                             </label>
                             <select
                                 value={formData.priority}
                                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as NewsPriority })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/60 focus:outline-none focus:border-blue-500/50"
+                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text/60 focus:outline-none focus:border-info/50"
                             >
                                 {(Object.entries(PRIORITY_LABELS) as [NewsPriority, string][]).map(([k, v]) => (
                                     <option key={k} value={k}>{v}</option>
@@ -318,21 +318,21 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                     {/* Event date */}
                     {formData.category === 'evento' && (
                         <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-white/20 tracking-widest flex items-center gap-1">
+                            <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest flex items-center gap-1">
                                 <Calendar className="w-3 h-3" /> Fecha del Evento
                             </label>
                             <input
                                 type="datetime-local"
                                 value={formData.eventDate}
                                 onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/60 focus:outline-none focus:border-blue-500/50"
+                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text/60 focus:outline-none focus:border-info/50"
                             />
                         </div>
                     )}
 
                     {/* ── Visibility / Distribution ────────────────── */}
                     <div className="space-y-3">
-                        <label className="text-[9px] uppercase font-black text-white/20 tracking-widest">
+                        <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest">
                             Distribución
                         </label>
                         <div className="grid grid-cols-4 gap-2">
@@ -344,7 +344,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                         "px-3 py-2.5 rounded-xl text-xs font-bold border transition-all",
                                         formData.visibility === k
                                             ? "bg-blue-600/20 text-blue-400 border-blue-500/30"
-                                            : "bg-white/5 text-white/40 border-white/10 hover:border-white/20"
+                                            : "bg-prevenort-surface text-prevenort-text/40 border-prevenort-border hover:border-prevenort-text/20"
                                     )}
                                 >
                                     {v}
@@ -354,7 +354,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
 
                         {/* Role selection */}
                         {formData.visibility === 'roles' && (
-                            <div className="flex flex-wrap gap-2 p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                            <div className="flex flex-wrap gap-2 p-3 bg-prevenort-surface/30 rounded-xl border border-prevenort-border">
                                 {AVAILABLE_ROLES.map(role => (
                                     <button
                                         key={role}
@@ -363,7 +363,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                             "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all border",
                                             formData.targetRoles.includes(role)
                                                 ? "bg-blue-600/20 text-blue-400 border-blue-500/30"
-                                                : "bg-white/5 text-white/30 border-white/10 hover:text-white/50"
+                                                : "bg-prevenort-surface text-prevenort-text/30 border-prevenort-border hover:text-prevenort-text/50"
                                         )}
                                     >
                                         {role}
@@ -374,13 +374,13 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
 
                         {/* Group selection */}
                         {formData.visibility === 'groups' && (
-                            <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                            <div className="p-3 bg-prevenort-surface/30 rounded-xl border border-prevenort-border">
                                 {loadingGroups ? (
-                                    <div className="flex items-center gap-2 text-white/30 text-xs">
+                                    <div className="flex items-center gap-2 text-prevenort-text/30 text-xs">
                                         <Loader2 className="w-3 h-3 animate-spin" /> Cargando grupos...
                                     </div>
                                 ) : groups.length === 0 ? (
-                                    <div className="flex items-center gap-2 text-white/20 text-xs">
+                                    <div className="flex items-center gap-2 text-prevenort-text/20 text-xs">
                                         <Users className="w-3 h-3" /> No hay grupos creados en Mensajería
                                     </div>
                                 ) : (
@@ -393,7 +393,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                                     "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border",
                                                     formData.targetGroupIds.includes(g.id)
                                                         ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/30"
-                                                        : "bg-white/5 text-white/30 border-white/10 hover:text-white/50"
+                                                        : "bg-prevenort-surface text-prevenort-text/30 border-prevenort-border hover:text-prevenort-text/50"
                                                 )}
                                             >
                                                 {g.name}
@@ -406,7 +406,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                     </div>
 
                     {/* ── Publish mode & Toggles ───────────────────── */}
-                    <div className="space-y-3 p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                    <div className="space-y-3 p-4 bg-prevenort-surface/30 rounded-xl border border-prevenort-border">
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setPublishMode('now')}
@@ -414,7 +414,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                     "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all",
                                     publishMode === 'now'
                                         ? "bg-blue-600/20 text-blue-400 border-blue-500/30"
-                                        : "bg-white/5 text-white/40 border-white/10 hover:border-white/20"
+                                        : "bg-prevenort-surface text-prevenort-text/40 border-prevenort-border hover:border-prevenort-text/20"
                                 )}
                             >
                                 <Send className="w-3.5 h-3.5" />
@@ -426,7 +426,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                     "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all",
                                     publishMode === 'scheduled'
                                         ? "bg-purple-600/20 text-purple-400 border-purple-500/30"
-                                        : "bg-white/5 text-white/40 border-white/10 hover:border-white/20"
+                                        : "bg-prevenort-surface text-prevenort-text/40 border-prevenort-border hover:border-prevenort-text/20"
                                 )}
                             >
                                 <Clock className="w-3.5 h-3.5" />
@@ -436,14 +436,14 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
 
                         {publishMode === 'scheduled' && (
                             <div className="space-y-2">
-                                <label className="text-[9px] uppercase font-black text-white/20 tracking-widest flex items-center gap-1">
+                                <label className="text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest flex items-center gap-1">
                                     <Clock className="w-3 h-3" /> Fecha de publicación
                                 </label>
                                 <input
                                     type="datetime-local"
                                     value={formData.scheduledAt}
                                     onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/60 focus:outline-none focus:border-blue-500/50"
+                                    className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text/60 focus:outline-none focus:border-info/50"
                                 />
                             </div>
                         )}
@@ -453,26 +453,26 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                 type="checkbox"
                                 checked={formData.isPinned}
                                 onChange={(e) => setFormData({ ...formData, isPinned: e.target.checked })}
-                                className="rounded border-white/20"
+                                className="rounded border-prevenort-border"
                             />
-                            <Pin className="w-3.5 h-3.5 text-white/40" />
-                            <span className="text-xs text-white/60 font-medium">Fijar en portada</span>
+                            <Pin className="w-3.5 h-3.5 text-prevenort-text/40" />
+                            <span className="text-xs text-prevenort-text/60 font-medium">Fijar en portada</span>
                         </label>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t border-white/5">
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-prevenort-border">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 text-xs text-white/40 hover:text-white/60 transition-colors font-medium"
+                        className="px-5 py-2.5 text-xs text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors font-medium"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saving || uploadingImages || !formData.title.trim() || !formData.content.trim()}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-prevenort-primary hover:bg-prevenort-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
                     >
                         {saving || uploadingImages ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

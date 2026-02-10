@@ -35,17 +35,17 @@ export const ExpenseTracker: React.FC = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold">Logística & Viáticos</h2>
-                    <p className="text-white/40 text-sm">Control de gastos y reembolsos con Auditoría AI</p>
+                    <p className="text-prevenort-text/40 text-sm">Control de gastos y reembolsos con Auditoría AI</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm font-medium">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-prevenort-surface border border-prevenort-border rounded-lg hover:bg-prevenort-surface/80 transition-colors text-sm font-medium">
                         <Download className="w-4 h-4" />
                         <span>Exportar Reporte</span>
                     </button>
                     <button
                         onClick={handleMockUpload}
                         disabled={isProcessing}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white rounded-lg transition-all font-medium text-sm shadow-lg shadow-blue-500/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-prevenort-primary hover:bg-prevenort-primary/90 disabled:bg-prevenort-primary/50 text-white rounded-lg transition-all font-medium text-sm shadow-lg shadow-prevenort-primary/20"
                     >
                         {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                         <span>{isProcessing ? 'Procesando con Vision...' : 'Escanear Recibo'}</span>
@@ -55,11 +55,11 @@ export const ExpenseTracker: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="card-premium">
-                    <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Total Verificado</p>
+                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold tracking-widest mb-1">Total Verificado</p>
                     <p className="text-2xl font-black">{formatCurrency(totalConfirmed)}</p>
                 </div>
                 <div className="card-premium">
-                    <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Pendiente Revisión</p>
+                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold tracking-widest mb-1">Pendiente Revisión</p>
                     <p className="text-2xl font-black text-amber-400">
                         {formatCurrency(expenses.filter(e => e.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0))}
                     </p>
@@ -78,7 +78,7 @@ export const ExpenseTracker: React.FC = () => {
             <div className="card-premium overflow-hidden !p-0">
                 <table className="w-full text-left text-sm">
                     <thead>
-                        <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                        <tr className="bg-prevenort-surface text-prevenort-text/40 border-b border-prevenort-border">
                             <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Proveedor</th>
                             <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Fecha</th>
                             <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Categoría</th>
@@ -87,18 +87,18 @@ export const ExpenseTracker: React.FC = () => {
                             <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-prevenort-border/50">
                         {expenses.map((expense) => (
-                            <tr key={expense.id} className="hover:bg-white/[0.02] transition-colors group">
+                            <tr key={expense.id} className="hover:bg-prevenort-surface/50 transition-colors group">
                                 <td className="px-6 py-4">
-                                    <p className="font-bold text-white/90">{expense.vendor}</p>
-                                    <p className="text-[10px] text-white/30 uppercase tracking-tighter">RUT: {expense.tax_id}</p>
+                                    <p className="font-bold text-prevenort-text/90">{expense.vendor}</p>
+                                    <p className="text-[10px] text-prevenort-text/30 uppercase tracking-tighter">RUT: {expense.tax_id}</p>
                                 </td>
-                                <td className="px-6 py-4 text-white/60 font-medium">
+                                <td className="px-6 py-4 text-prevenort-text/60 font-medium">
                                     {expense.date}
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] text-white/80">
+                                    <span className="bg-prevenort-surface border border-prevenort-border px-2 py-0.5 rounded text-[10px] text-prevenort-text/80">
                                         {expense.category}
                                     </span>
                                 </td>
@@ -121,7 +121,7 @@ export const ExpenseTracker: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className="p-2 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                                    <button className="p-2 text-prevenort-text/20 hover:text-danger transition-colors opacity-0 group-hover:opacity-100">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </td>

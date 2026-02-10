@@ -87,16 +87,16 @@ export const ProjectBPM: React.FC = () => {
 
     if (projectsLoading || tasksLoading) return (
         <div className="flex flex-col items-center justify-center h-96">
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-            <p className="text-white/40 font-mono text-sm uppercase tracking-widest">Sincronizando con Portezuelo Cloud...</p>
+            <Loader2 className="w-10 h-10 text-info animate-spin mb-4" />
+            <p className="text-prevenort-text/40 font-mono text-sm uppercase tracking-widest">Sincronizando con Portezuelo Cloud...</p>
         </div>
     );
 
     if (projectsError) return (
-        <div className="p-12 text-center card-premium border-red-500/20">
-            <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-4" />
-            <p className="text-red-400 font-bold uppercase tracking-tighter">Error de Conexión BPM</p>
-            <p className="text-white/20 text-xs mt-1">{projectsError}</p>
+        <div className="p-12 text-center card-premium border-danger/20">
+            <AlertCircle className="w-10 h-10 text-danger mx-auto mb-4" />
+            <p className="text-danger font-bold uppercase tracking-tighter">Error de Conexión BPM</p>
+            <p className="text-prevenort-text/20 text-xs mt-1">{projectsError}</p>
         </div>
     );
 
@@ -104,8 +104,8 @@ export const ProjectBPM: React.FC = () => {
         <div className="space-y-6 animate-in fade-in duration-700">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-white/90 tracking-tighter uppercase">BPM & Control de Proyectos</h2>
-                    <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Portezuelo Privacy Layer & AI Summaries (M7)</p>
+                    <h2 className="text-2xl font-black text-prevenort-text tracking-tighter uppercase">BPM & Control de Proyectos</h2>
+                    <p className="text-xs text-prevenort-text/40 font-mono uppercase tracking-widest">Portezuelo Privacy Layer & AI Summaries (M7)</p>
                 </div>
                 <div className="flex gap-2">
                     {activeTab === 'projects' ? (
@@ -114,14 +114,14 @@ export const ProjectBPM: React.FC = () => {
                                 setSelectedProject(null);
                                 setIsProjectModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-white/90 rounded-xl text-xs font-black uppercase tracking-tight transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-prevenort-text text-prevenort-bg hover:opacity-90 rounded-xl text-xs font-black uppercase tracking-tight transition-all"
                         >
                             <Plus className="w-4 h-4" /> Nuevo Proyecto
                         </button>
                     ) : (
                         <button
                             onClick={() => handleAddTask()}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-xl text-xs font-black uppercase tracking-tight transition-all shadow-lg shadow-blue-500/20"
+                            className="flex items-center gap-2 px-4 py-2 bg-info text-white hover:opacity-90 rounded-xl text-xs font-black uppercase tracking-tight transition-all shadow-lg shadow-info/20"
                         >
                             <Plus className="w-4 h-4" /> Nueva Tarea
                         </button>
@@ -131,12 +131,12 @@ export const ProjectBPM: React.FC = () => {
 
             {/* Tabs & View Controls */}
             <div className="flex items-center justify-between">
-                <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl w-fit">
+                <div className="flex gap-1 p-1 bg-prevenort-surface border border-prevenort-border rounded-xl w-fit">
                     <button
                         onClick={() => setActiveTab('projects')}
                         className={cn(
                             "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                            activeTab === 'projects' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                            activeTab === 'projects' ? "bg-prevenort-primary/10 text-prevenort-primary border border-prevenort-primary/20" : "text-prevenort-text/40 hover:text-prevenort-text/60"
                         )}
                     >
                         Proyectos
@@ -145,7 +145,7 @@ export const ProjectBPM: React.FC = () => {
                         onClick={() => setActiveTab('tasks')}
                         className={cn(
                             "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                            activeTab === 'tasks' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                            activeTab === 'tasks' ? "bg-prevenort-primary/10 text-prevenort-primary border border-prevenort-primary/20" : "text-prevenort-text/40 hover:text-prevenort-text/60"
                         )}
                     >
                         Tareas BPM
@@ -155,22 +155,22 @@ export const ProjectBPM: React.FC = () => {
                 {activeTab === 'tasks' && (
                     <div className="flex items-center gap-3">
                         <select
-                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/60 focus:border-blue-500/50 outline-none transition-all appearance-none"
+                            className="bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-prevenort-text/60 focus:border-info/50 outline-none transition-all appearance-none"
                             value={filterProjectId}
                             onChange={(e) => setFilterProjectId(e.target.value)}
                         >
-                            <option value="all" className="bg-neutral-900">Todos los Proyectos</option>
+                            <option value="all" className="bg-prevenort-surface text-prevenort-text">Todos los Proyectos</option>
                             {projects.map(p => (
-                                <option key={p.id} value={p.id} className="bg-neutral-900">{p.name}</option>
+                                <option key={p.id} value={p.id} className="bg-prevenort-surface text-prevenort-text">{p.name}</option>
                             ))}
                         </select>
 
-                        <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl">
+                        <div className="flex gap-1 p-1 bg-prevenort-surface border border-prevenort-border rounded-xl">
                             <button
                                 onClick={() => setTaskViewMode('kanban')}
                                 className={cn(
                                     "p-2 rounded-lg transition-all",
-                                    taskViewMode === 'kanban' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
+                                    taskViewMode === 'kanban' ? "bg-prevenort-primary/10 text-prevenort-primary" : "text-prevenort-text/20 hover:text-prevenort-text/40"
                                 )}
                                 title="Vista Kanban"
                             >
@@ -180,7 +180,7 @@ export const ProjectBPM: React.FC = () => {
                                 onClick={() => setTaskViewMode('list')}
                                 className={cn(
                                     "p-2 rounded-lg transition-all",
-                                    taskViewMode === 'list' ? "bg-white/10 text-white" : "text-white/20 hover:text-white/40"
+                                    taskViewMode === 'list' ? "bg-prevenort-primary/10 text-prevenort-primary" : "text-prevenort-text/20 hover:text-prevenort-text/40"
                                 )}
                                 title="Vista Lista"
                             >
@@ -202,17 +202,17 @@ export const ProjectBPM: React.FC = () => {
                                         setFilterProjectId(project.id);
                                         setActiveTab('tasks');
                                     }}
-                                    className="card-premium group hover:border-blue-500/30 transition-all cursor-pointer"
+                                    className="card-premium group hover:border-info/30 transition-all cursor-pointer"
                                 >
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3">
-                                                <h4 className="text-lg font-black text-white/90 tracking-tight group-hover:text-blue-400 transition-colors">{project.name}</h4>
+                                                <h4 className="text-lg font-black text-prevenort-text tracking-tight group-hover:text-info transition-colors">{project.name}</h4>
                                                 <span className={cn(
                                                     "flex items-center gap-1 text-[8px] px-2 py-0.5 rounded font-black uppercase tracking-widest border",
-                                                    project.privacyLevel === 'confidential' ? 'text-red-400 border-red-500/20 bg-red-500/5' :
-                                                        project.privacyLevel === 'private' ? 'text-orange-400 border-orange-500/20 bg-orange-500/5' :
-                                                            'text-blue-400 border-blue-500/20 bg-blue-500/5'
+                                                    project.privacyLevel === 'confidential' ? 'text-danger border-danger/20 bg-danger/5' :
+                                                        project.privacyLevel === 'private' ? 'text-warning border-warning/20 bg-warning/5' :
+                                                            'text-info border-info/20 bg-info/5'
                                                 )}>
                                                     {project.privacyLevel === 'confidential' ? <Shield className="w-3 h-3" /> :
                                                         project.privacyLevel === 'private' ? <Lock className="w-3 h-3" /> :
@@ -222,19 +222,19 @@ export const ProjectBPM: React.FC = () => {
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-4">
-                                                <div className="flex items-center gap-1.5 text-[9px] text-white/30 font-mono uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 font-mono uppercase tracking-widest">
                                                     <span>ID: {project.id}</span>
                                                 </div>
-                                                <div className="h-3 w-px bg-white/10" />
-                                                <div className="flex items-center gap-1.5 text-[9px] text-white/30 font-mono uppercase tracking-widest">
+                                                <div className="h-3 w-px bg-prevenort-border" />
+                                                <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 font-mono uppercase tracking-widest">
                                                     <span>Inicio: {project.startDate}</span>
                                                 </div>
                                                 {project.tenderId && (
                                                     <>
-                                                        <div className="h-3 w-px bg-white/10" />
-                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                                                            <LinkIcon className="w-3 h-3 text-emerald-400" />
-                                                            <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Licitación: {project.tenderId}</span>
+                                                        <div className="h-3 w-px bg-prevenort-border" />
+                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-success/10 border border-success/20 rounded-md">
+                                                            <LinkIcon className="w-3 h-3 text-success" />
+                                                            <span className="text-[8px] font-black text-success uppercase tracking-widest">Licitación: {project.tenderId}</span>
                                                         </div>
                                                     </>
                                                 )}
@@ -245,7 +245,7 @@ export const ProjectBPM: React.FC = () => {
                                                 e.stopPropagation();
                                                 handleEditProject(project);
                                             }}
-                                            className="p-2 text-white/20 hover:text-white transition-colors"
+                                            className="p-2 text-prevenort-text/20 hover:text-prevenort-text transition-colors"
                                         >
                                             <MoreVertical className="w-5 h-5" />
                                         </button>
@@ -254,17 +254,17 @@ export const ProjectBPM: React.FC = () => {
                                     <div className="space-y-4">
                                         <div>
                                             <div className="flex justify-between text-[10px] mb-2">
-                                                <span className="text-white/30 uppercase font-black tracking-widest">Progreso de Ejecución</span>
+                                                <span className="text-prevenort-text/30 uppercase font-black tracking-widest">Progreso de Ejecución</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-white/20 font-mono">
+                                                    <span className="text-[9px] text-prevenort-text/20 font-mono">
                                                         {tasks.filter(t => t.projectId === project.id && t.status === 'completed').length} / {tasks.filter(t => t.projectId === project.id).length} Tareas
                                                     </span>
-                                                    <span className="font-black text-blue-400">{project.progress}%</span>
+                                                    <span className="font-black text-info">{project.progress}%</span>
                                                 </div>
                                             </div>
-                                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                                            <div className="h-1.5 w-full bg-prevenort-border/50 rounded-full overflow-hidden border border-prevenort-border p-[1px]">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                                    className="h-full bg-gradient-to-r from-info to-indigo-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                                                     style={{ width: `${project.progress}%` }}
                                                 />
                                             </div>
@@ -272,7 +272,7 @@ export const ProjectBPM: React.FC = () => {
 
                                         <div className="flex flex-wrap gap-2">
                                             {project.tags.map((tag, i) => (
-                                                <span key={i} className="text-[9px] px-2 py-0.5 bg-white/5 border border-white/10 rounded font-bold text-white/40 group-hover:text-white/60 transition-colors">
+                                                <span key={i} className="text-[9px] px-2 py-0.5 bg-prevenort-bg border border-prevenort-border rounded font-bold text-prevenort-text/40 group-hover:text-prevenort-text/60 transition-colors">
                                                     #{tag}
                                                 </span>
                                             ))}
@@ -281,10 +281,10 @@ export const ProjectBPM: React.FC = () => {
                                 </div>
                             ))}
                             {projects.length === 0 && (
-                                <div className="text-center py-24 bg-white/[0.02] rounded-3xl border-2 border-dashed border-white/5">
-                                    <Layers className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                                    <p className="text-white/40 font-bold uppercase tracking-widest text-sm">No hay proyectos activos</p>
-                                    <p className="text-white/10 text-[10px] mt-2 italic font-mono">Inicia un proyecto desde una licitación ganada</p>
+                                <div className="text-center py-24 bg-prevenort-surface rounded-3xl border-2 border-dashed border-prevenort-border">
+                                    <Layers className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4" />
+                                    <p className="text-prevenort-text/40 font-bold uppercase tracking-widest text-sm">No hay proyectos activos</p>
+                                    <p className="text-prevenort-text/20 text-[10px] mt-2 italic font-mono">Inicia un proyecto desde una licitación ganada</p>
                                 </div>
                             )}
                         </div>
@@ -303,24 +303,24 @@ export const ProjectBPM: React.FC = () => {
                                     <div
                                         key={task.id}
                                         onClick={() => handleEditTask(task)}
-                                        className="card-premium p-4 border-white/5 hover:border-blue-500/20 transition-all cursor-pointer"
+                                        className="card-premium p-4 hover:border-info/20 transition-all cursor-pointer"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex gap-4">
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-lg flex items-center justify-center border",
-                                                    task.status === 'completed' ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400' :
-                                                        task.status === 'in-progress' ? 'border-blue-500/30 bg-blue-500/5 text-blue-400' :
-                                                            'border-white/10 bg-white/5 text-white/40'
+                                                    task.status === 'completed' ? 'border-success/30 bg-success/5 text-success' :
+                                                        task.status === 'in-progress' ? 'border-info/30 bg-info/5 text-info' :
+                                                            'border-prevenort-border bg-prevenort-surface text-prevenort-text/40'
                                                 )}>
                                                     <Layers className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h5 className="font-bold text-white/90 group-hover:text-blue-400 transition-colors">{task.title}</h5>
-                                                    <p className="text-[10px] text-white/40 font-mono">
+                                                    <h5 className="font-bold text-prevenort-text group-hover:text-info transition-colors">{task.title}</h5>
+                                                    <p className="text-[10px] text-prevenort-text/40 font-mono">
                                                         Responsable: {getProfessionalName(task.assignedTo)} | Vence: {task.dueDate}
                                                         {task.subtasks && task.subtasks.length > 0 && (
-                                                            <span className="ml-2 text-blue-400/60 font-black">
+                                                            <span className="ml-2 text-info/60 font-black">
                                                                 [{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} SUBTAREAS]
                                                             </span>
                                                         )}
@@ -329,9 +329,9 @@ export const ProjectBPM: React.FC = () => {
                                             </div>
                                             <span className={cn(
                                                 "text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-tighter border",
-                                                task.priority === 'critical' ? 'text-red-400 border-red-500/20' :
-                                                    task.priority === 'high' ? 'text-orange-400 border-orange-500/20' :
-                                                        'text-white/40 border-white/10'
+                                                task.priority === 'critical' ? 'text-danger border-danger/20' :
+                                                    task.priority === 'high' ? 'text-warning border-warning/20' :
+                                                        'text-prevenort-text/40 border-prevenort-border'
                                             )}>
                                                 {task.priority}
                                             </span>
@@ -339,9 +339,9 @@ export const ProjectBPM: React.FC = () => {
 
                                         {task.progress !== undefined && task.progress > 0 && (
                                             <div className="mt-3 px-14">
-                                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-1 w-full bg-prevenort-border/50 rounded-full overflow-hidden">
                                                     <div
-                                                        className="h-full bg-blue-500/50 transition-all duration-700"
+                                                        className="h-full bg-info/50 transition-all duration-700"
                                                         style={{ width: `${task.progress}%` }}
                                                     />
                                                 </div>
@@ -349,11 +349,11 @@ export const ProjectBPM: React.FC = () => {
                                         )}
 
                                         {task.aiSummary && (
-                                            <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg">
-                                                <div className="flex items-center gap-1.5 mb-1 text-[10px] text-blue-400 font-bold uppercase tracking-widest">
+                                            <div className="mt-4 p-3 bg-info/5 border border-info/10 rounded-lg">
+                                                <div className="flex items-center gap-1.5 mb-1 text-[10px] text-info font-bold uppercase tracking-widest">
                                                     <Sparkles className="w-3 h-3" /> Resumen AI Agrawall
                                                 </div>
-                                                <p className="text-xs text-white/70 italic leading-relaxed">
+                                                <p className="text-xs text-prevenort-text/70 italic leading-relaxed">
                                                     "{task.aiSummary}"
                                                 </p>
                                             </div>
@@ -361,9 +361,9 @@ export const ProjectBPM: React.FC = () => {
                                     </div>
                                 ))}
                                 {filteredTasks.length === 0 && (
-                                    <div className="text-center py-24 bg-white/[0.02] rounded-3xl border-2 border-dashed border-white/5">
-                                        <Layers className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                                        <p className="text-white/40 font-bold uppercase tracking-widest text-sm">No hay tareas pendientes</p>
+                                    <div className="text-center py-24 bg-prevenort-surface rounded-3xl border-2 border-dashed border-prevenort-border">
+                                        <Layers className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4" />
+                                        <p className="text-prevenort-text/40 font-bold uppercase tracking-widest text-sm">No hay tareas pendientes</p>
                                     </div>
                                 )}
                             </div>
@@ -375,24 +375,24 @@ export const ProjectBPM: React.FC = () => {
                 {!(activeTab === 'tasks' && taskViewMode === 'kanban') && (
                     <div className="space-y-6">
                         <div className="card-premium">
-                            <h3 className="font-bold mb-4 flex items-center gap-2">
-                                <BarChart2 className="w-4 h-4 text-blue-400" /> Métricas BPM
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-prevenort-text">
+                                <BarChart2 className="w-4 h-4 text-info" /> Métricas BPM
                             </h3>
                             <div className="space-y-4">
                                 <div>
-                                    <p className="text-[10px] text-white/40 uppercase font-bold mb-2">KPI Entrega</p>
-                                    <div className="text-2xl font-bold">88.4%</div>
+                                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold mb-2">KPI Entrega</p>
+                                    <div className="text-2xl font-bold text-prevenort-text">88.4%</div>
                                 </div>
-                                <div className="pt-4 border-t border-white/5">
-                                    <p className="text-[10px] text-white/40 uppercase font-bold mb-2">Cuellos de Botella</p>
-                                    <div className="text-sm font-medium text-orange-400">Validación Legal</div>
+                                <div className="pt-4 border-t border-prevenort-border">
+                                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold mb-2">Cuellos de Botella</p>
+                                    <div className="text-sm font-medium text-warning">Validación Legal</div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="card-premium">
-                            <h3 className="font-bold mb-4 flex items-center gap-2">
-                                <MessageSquareText className="w-4 h-4 text-emerald-400" /> Actividad Reciente
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-prevenort-text">
+                                <MessageSquareText className="w-4 h-4 text-success" /> Actividad Reciente
                             </h3>
                             <div className="space-y-3">
                                 {[
@@ -400,9 +400,9 @@ export const ProjectBPM: React.FC = () => {
                                     { user: 'Maria P.', act: 'actualizó contrato RSG', time: '1h' },
                                 ].map((act, i) => (
                                     <div key={i} className="text-xs">
-                                        <span className="font-bold text-white/80">{act.user}</span>{' '}
-                                        <span className="text-white/40">{act.act}</span>{' '}
-                                        <span className="text-[9px] text-blue-500/60 font-mono ml-1">{act.time}</span>
+                                        <span className="font-bold text-prevenort-text/80">{act.user}</span>{' '}
+                                        <span className="text-prevenort-text/40">{act.act}</span>{' '}
+                                        <span className="text-[9px] text-info/60 font-mono ml-1">{act.time}</span>
                                     </div>
                                 ))}
                             </div>

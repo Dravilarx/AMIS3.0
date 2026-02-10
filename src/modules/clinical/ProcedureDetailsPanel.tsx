@@ -97,75 +97,83 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     const emailText = indications?.emailFormat ? formatIndication(indications.emailFormat) : '';
 
     return (
-        <div className="fixed inset-y-0 right-0 z-[60] w-full max-w-2xl bg-[#050505] border-l border-white/10 shadow-2xl animate-in slide-in-from-right duration-500 overflow-hidden flex flex-col">
+        <div className="fixed inset-y-0 right-0 z-[60] w-full max-w-2xl bg-prevenort-surface border-l border-prevenort-border shadow-2xl animate-in slide-in-from-right duration-500 overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-8 border-b border-white/5 bg-gradient-to-b from-blue-500/5 to-transparent flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Ficha de Procedimiento</h2>
-                    <p className="text-[10px] text-blue-400 font-mono uppercase tracking-[0.3em] mt-1">ID: {appointment.id.split('-')[0]}</p>
+            <div className="p-8 border-b border-prevenort-border bg-prevenort-bg/50 flex items-center justify-between">
+                <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-prevenort-primary to-black flex items-center justify-center shadow-xl shadow-orange-500/20">
+                        <Activity className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-black text-prevenort-text tracking-tighter uppercase leading-none">Detalles del Agendamiento</h2>
+                        <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-[0.2em] mt-1.5">Expediente Clínico Digital</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                     {onEdit && (
                         <button
                             onClick={() => onEdit(appointment)}
-                            className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                            className="p-3 bg-prevenort-surface border border-prevenort-border text-prevenort-text/40 rounded-2xl hover:text-prevenort-primary hover:border-prevenort-primary transition-all shadow-sm"
+                            title="Editar Agendamiento"
                         >
-                            Editar Cita
+                            <FileText className="w-5 h-5" />
                         </button>
                     )}
-                    <button onClick={onClose} className="p-3 hover:bg-white/5 rounded-2xl transition-all">
-                        <X className="w-6 h-6 text-white/20" />
+                    <button onClick={onClose} className="p-3 bg-prevenort-surface border border-prevenort-border text-prevenort-text/20 rounded-2xl hover:text-prevenort-text hover:border-prevenort-text/40 transition-all shadow-sm">
+                        <X className="w-6 h-6" />
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-12 scrollbar-hide">
-                {/* Patient Summary */}
-                <div className="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-3xl">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-600/20">
-                        <User className="w-8 h-8 text-white" />
+            <div className="flex-1 overflow-y-auto p-8 space-y-12 scrollbar-hide pb-32">
+                {/* Patient Summary Card */}
+                <div className="flex items-center gap-6 p-8 bg-prevenort-bg border border-prevenort-border rounded-[2rem] shadow-sm">
+                    <div className="w-16 h-16 rounded-2xl bg-prevenort-surface border border-prevenort-border flex items-center justify-center shadow-sm">
+                        <User className="w-8 h-8 text-prevenort-primary" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-white">{formatName(appointment.patientName)}</h3>
-                        <p className="text-xs text-white/40 font-medium">{formatRUT(appointment.patientRut)} • {appointment.patientEmail}</p>
+                        <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tight">{formatName(appointment.patientName)}</h3>
+                        <p className="text-[11px] text-prevenort-text/40 font-bold uppercase tracking-wider mt-1">
+                            {formatRUT(appointment.patientRut)} <span className="mx-2 opacity-30">|</span> {appointment.patientEmail}
+                        </p>
                         {appointment.patientPhone && (
-                            <p className="text-[9px] text-blue-400 font-mono mt-1">{formatPhone(appointment.patientPhone)}</p>
+                            <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-widest mt-2">{formatPhone(appointment.patientPhone)}</p>
                         )}
                     </div>
                 </div>
 
-                {/* Medical & Logistics Details */}
-                <div className="grid grid-cols-2 gap-6">
+                {/* Grid Details */}
+                <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Stethoscope className="w-4 h-4 text-blue-400" />
-                            <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Profesional Asignado</h4>
+                        <div className="flex items-center gap-3 border-b border-prevenort-border pb-2">
+                            <Stethoscope className="w-4 h-4 text-prevenort-primary" />
+                            <h4 className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Especialista AMIS</h4>
                         </div>
-                        <div className="p-5 bg-white/[0.02] border border-white/5 rounded-3xl group/doc hover:bg-white/[0.04] transition-all">
-                            <p className="text-sm font-bold text-white uppercase group-hover/doc:text-blue-400 transition-colors">
-                                {appointment.doctor?.name || 'Médico no asignado'}
+                        <div className="p-6 bg-prevenort-surface border border-prevenort-border rounded-3xl shadow-sm space-y-2">
+                            <p className="text-sm font-black text-prevenort-text uppercase">
+                                {appointment.doctor?.name || 'Por asignar'}
                             </p>
-                            <p className="text-[10px] text-white/30 mt-1 uppercase tracking-tighter">
-                                {appointment.doctor?.specialty || 'Especialidad'} • {appointment.doctor?.rut}
+                            <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-wider">
+                                {appointment.doctor?.specialty || 'Especialidad'}
                             </p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Activity className="w-4 h-4 text-red-500" />
-                            <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Antecedentes Médicos</h4>
+                        <div className="flex items-center gap-3 border-b border-prevenort-border pb-2">
+                            <Activity className="w-4 h-4 text-danger" />
+                            <h4 className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Alertas Médicas</h4>
                         </div>
-                        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-3xl flex flex-wrap gap-2">
+                        <div className="p-6 bg-prevenort-surface border border-prevenort-border rounded-3xl shadow-sm flex flex-wrap gap-2">
                             {appointment.medicalBackground?.usesAspirin ? (
-                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-red-500/10 text-red-400 border border-red-500/20">Usa Aspirina</span>
+                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-danger/10 text-danger border border-danger/20 shadow-sm animate-pulse">Usa Aspirina</span>
                             ) : (
-                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-white/5 text-white/20 border border-white/5">No Aspirina</span>
+                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-prevenort-bg text-prevenort-text/20 border border-prevenort-border">Sin Aspirina</span>
                             )}
                             {appointment.medicalBackground?.usesAnticoagulants ? (
-                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-red-500/10 text-red-400 border border-red-500/20">Anticoagulantes</span>
+                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-danger/10 text-danger border border-danger/20 shadow-sm animate-pulse">Anticoagulantes</span>
                             ) : (
-                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-white/5 text-white/20 border border-white/5">No Anticoag</span>
+                                <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase bg-prevenort-bg text-prevenort-text/20 border border-prevenort-border">Sin Anticoag</span>
                             )}
                         </div>
                     </div>
@@ -173,60 +181,58 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
 
                 {/* Procedure Context */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-emerald-400" />
-                        <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Detalle del Procedimiento</h4>
+                    <div className="flex items-center gap-3 border-b border-prevenort-border pb-2">
+                        <FileText className="w-4 h-4 text-success" />
+                        <h4 className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Plan de Atención Clínica</h4>
                     </div>
-                    <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-lg font-black text-white uppercase tracking-tighter italic">
-                                [{appointment.procedure?.code}] {appointment.procedure?.name}
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                    <div className="p-8 bg-success/10 border border-success/20 rounded-[2rem] shadow-sm">
+                        <p className="text-xl font-black text-prevenort-text uppercase tracking-tighter italic mb-6">
+                            [{appointment.procedure?.code}] {appointment.procedure?.name}
+                        </p>
+                        <div className="grid grid-cols-2 gap-8 pt-6 border-t border-success/20">
                             <div>
-                                <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Sede / Ubicación</p>
-                                <p className="text-xs font-bold text-white/80">{appointment.center?.name}</p>
+                                <p className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-[0.2em] mb-1.5 font-bold">Sede Operativa</p>
+                                <p className="text-xs font-black text-prevenort-text/60 uppercase">{appointment.center?.name}</p>
                             </div>
                             <div>
-                                <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Centro de Costo</p>
-                                <p className="text-xs font-bold text-white/80 uppercase italic">{appointment.healthcareProvider}</p>
+                                <p className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-[0.2em] mb-1.5 font-bold">Centro de Costo</p>
+                                <p className="text-xs font-black text-prevenort-primary uppercase tracking-wider">{appointment.healthcareProvider}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Section 1: Requirement Verification (CHECK-OUT) */}
+                {/* Section 1: Requirement Verification */}
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center justify-between border-b border-prevenort-border pb-3">
                         <div className="flex items-center gap-3">
-                            <ClipboardCheck className="w-4 h-4 text-blue-400" />
-                            <h4 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Verificación de Requisitos (Check-out)</h4>
+                            <ClipboardCheck className="w-4 h-4 text-prevenort-primary" />
+                            <h4 className="text-xs font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Cotejo de Requisitos Prevenort</h4>
                         </div>
-                        <span className="text-[10px] font-mono text-white/20 uppercase">REQ-002: OPERACIONAL</span>
+                        <span className="text-[10px] font-black text-prevenort-text/10 uppercase tracking-widest">Protocolo de Seguridad</span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {appointment.documents?.map((doc: any) => (
                             <div
                                 key={doc.id}
                                 className={cn(
-                                    "p-4 rounded-2xl border transition-all flex items-center justify-between group",
+                                    "p-6 rounded-[1.5rem] border transition-all flex items-center justify-between group shadow-sm",
                                     doc.verified
-                                        ? "bg-emerald-500/5 border-emerald-500/20"
-                                        : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                        ? "bg-success/10 border-success/20"
+                                        : "bg-prevenort-surface border-prevenort-border hover:border-prevenort-primary/30"
                                 )}
                             >
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-5">
                                     <div className={cn(
-                                        "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                        doc.verified ? "bg-emerald-500 text-white" : "bg-white/5 text-white/20"
+                                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
+                                        doc.verified ? "bg-success text-white" : "bg-prevenort-bg text-prevenort-text/20"
                                     )}>
-                                        {doc.verified ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                        {doc.verified ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-white/90">{doc.requirement?.name}</p>
-                                        <p className="text-[10px] text-white/30 truncate max-w-xs">{doc.requirement?.description}</p>
+                                        <p className="text-sm font-black text-prevenort-text uppercase tracking-tight">{doc.requirement?.name}</p>
+                                        <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-wider">{doc.requirement?.description}</p>
                                     </div>
                                 </div>
 
@@ -234,88 +240,88 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                     onClick={() => handleVerify(doc.id, doc.verified)}
                                     disabled={verifyingDocId === doc.id}
                                     className={cn(
-                                        "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                        "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all",
                                         doc.verified
-                                            ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                                            : "bg-white/5 text-white/40 hover:bg-blue-600 hover:text-white"
+                                            ? "bg-success/20 text-success hover:bg-success hover:text-white"
+                                            : "bg-prevenort-bg text-prevenort-text/20 hover:bg-prevenort-primary hover:text-white"
                                     )}
                                 >
                                     {verifyingDocId === doc.id ? (
-                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : doc.verified ? 'Verificado' : 'Validar'}
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : doc.verified ? 'VERIFICADO' : 'VALIDAR'}
                                 </button>
                             </div>
                         ))}
 
                         {(!appointment.documents || appointment.documents.length === 0) && (
-                            <div className="p-10 text-center border-2 border-dashed border-white/5 rounded-3xl">
-                                <AlertCircle className="w-8 h-8 text-white/10 mx-auto mb-4" />
-                                <p className="text-xs text-white/40 font-medium">No hay requisitos configurados para este procedimiento.</p>
+                            <div className="p-16 text-center border-2 border-dashed border-prevenort-border rounded-[2rem] bg-prevenort-bg/50">
+                                <AlertCircle className="w-10 h-10 text-prevenort-text/10 mx-auto mb-4" />
+                                <p className="text-[10px] text-prevenort-text/20 font-black uppercase tracking-[0.3em]">Sin requisitos clínicos asignados</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Section 2: Patient Indications (WHATSAPP / EMAIL) */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                {/* Section 2: Patient Indications */}
+                <div className="space-y-6 pt-4 mb-20">
+                    <div className="flex items-center justify-between border-b border-prevenort-border pb-3">
                         <div className="flex items-center gap-3">
-                            <Send className="w-4 h-4 text-emerald-400" />
-                            <h4 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Envío de Indicaciones</h4>
+                            <Send className="w-4 h-4 text-success" />
+                            <h4 className="text-xs font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Comunicaciones al Paciente</h4>
                         </div>
-                        <span className="text-[10px] font-mono text-white/20 uppercase">REQ-004: COMUNICACIÓN</span>
+                        <span className="text-[10px] font-black text-prevenort-text/10 uppercase tracking-widest">Indicaciones Prevenort</span>
                     </div>
 
                     {loadingInd ? (
-                        <div className="flex justify-center p-12">
-                            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                        <div className="flex justify-center p-16">
+                            <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" />
                         </div>
                     ) : indications ? (
                         <div className="space-y-6">
                             {/* WhatsApp Short */}
-                            <div className="group relative bg-[#0B2A1F]/30 border border-emerald-500/20 rounded-3xl overflow-hidden hover:bg-[#0B2A1F]/50 transition-all">
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                                                <MessageSquare className="w-4 h-4 text-white" />
+                            <div className="group relative bg-success/10 border border-success/20 rounded-[2.5rem] overflow-hidden hover:bg-success/20 transition-all shadow-sm">
+                                <div className="p-8">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-2xl bg-success flex items-center justify-center shadow-lg shadow-success/20">
+                                                <MessageSquare className="w-5 h-5 text-white" />
                                             </div>
-                                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">WhatsApp Format (Short)</span>
+                                            <span className="text-[10px] font-black text-success uppercase tracking-[0.2em]">Canal WhatsApp</span>
                                         </div>
                                         <button
                                             onClick={() => handleCopy(waText, 'wa')}
-                                            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                                            className="p-3 bg-prevenort-surface border border-success/20 rounded-2xl transition-all shadow-sm text-prevenort-text/20 hover:text-success"
                                         >
-                                            {copiedType === 'wa' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/40" />}
+                                            {copiedType === 'wa' ? <CheckCircle2 className="w-5 h-5 text-success" /> : <Copy className="w-5 h-5" />}
                                         </button>
                                     </div>
-                                    <div className="p-4 bg-black/40 rounded-xl border border-white/5">
-                                        <p className="text-xs text-white/70 whitespace-pre-wrap font-medium leading-relaxed italic">
+                                    <div className="p-6 bg-prevenort-surface rounded-3xl border border-success/20 shadow-inner">
+                                        <p className="text-[11px] text-prevenort-text/60 whitespace-pre-wrap font-medium leading-relaxed italic">
                                             {waText}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Email Long */}
-                            <div className="group relative bg-[#1A1F2C]/30 border border-blue-500/20 rounded-3xl overflow-hidden hover:bg-[#1A1F2C]/50 transition-all">
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                                                <Mail className="w-4 h-4 text-white" />
+                            {/* Email Detailed */}
+                            <div className="group relative bg-prevenort-primary/10 border border-prevenort-primary/20 rounded-[2.5rem] overflow-hidden hover:bg-prevenort-primary/20 transition-all shadow-sm">
+                                <div className="p-8">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-2xl bg-prevenort-primary flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                                <Mail className="w-5 h-5 text-white" />
                                             </div>
-                                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Email Body (Detailed)</span>
+                                            <span className="text-[10px] font-black text-prevenort-primary uppercase tracking-[0.2em]">Canal Email</span>
                                         </div>
                                         <button
                                             onClick={() => handleCopy(emailText, 'email')}
-                                            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                                            className="p-3 bg-prevenort-surface border border-prevenort-primary/20 rounded-2xl transition-all shadow-sm text-prevenort-text/20 hover:text-prevenort-primary"
                                         >
-                                            {copiedType === 'email' ? <CheckCircle2 className="w-4 h-4 text-blue-400" /> : <Copy className="w-4 h-4 text-white/40" />}
+                                            {copiedType === 'email' ? <CheckCircle2 className="w-5 h-5 text-prevenort-primary" /> : <Copy className="w-5 h-5" />}
                                         </button>
                                     </div>
-                                    <div className="p-4 bg-black/40 rounded-xl border border-white/5 max-h-40 overflow-y-auto scrollbar-hide">
-                                        <p className="text-xs text-white/70 whitespace-pre-wrap font-medium leading-relaxed">
+                                    <div className="p-6 bg-prevenort-surface rounded-3xl border border-prevenort-primary/20 shadow-inner max-h-48 overflow-y-auto scrollbar-hide">
+                                        <p className="text-[11px] text-prevenort-text/60 whitespace-pre-wrap font-medium leading-relaxed">
                                             {emailText}
                                         </p>
                                     </div>
@@ -323,32 +329,32 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="p-10 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
-                            <AlertCircle className="w-8 h-8 text-amber-500/30 mx-auto mb-4" />
-                            <p className="text-xs text-white/40 font-medium px-8">No se encontraron plantillas de indicaciones para este procedimiento en esta sede.</p>
-                            <button className="mt-4 text-[10px] font-black text-blue-400 uppercase tracking-widest hover:text-white transition-colors">Configurar ahora</button>
+                        <div className="p-16 text-center border-2 border-dashed border-prevenort-border rounded-[2.5rem] bg-prevenort-bg/50">
+                            <AlertCircle className="w-10 h-10 text-warning/30 mx-auto mb-4" />
+                            <p className="text-[10px] text-prevenort-text/20 font-black uppercase tracking-widest px-8">No se encontraron plantillas de indicaciones automáticas.</p>
+                            <button className="mt-6 px-8 py-3 bg-prevenort-surface border border-prevenort-border text-prevenort-text/40 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-prevenort-primary hover:text-white hover:border-prevenort-primary transition-all shadow-sm">Configurar Sede</button>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Actions footer */}
-            <div className="p-8 border-t border-white/5 bg-black/40 backdrop-blur-xl flex gap-4">
+            <div className="p-10 border-t border-prevenort-border bg-prevenort-surface/95 backdrop-blur-xl flex gap-6 absolute bottom-0 w-full z-10 shadow-[0_-20px_40px_rgba(0,0,0,0.02)]">
                 <button
                     onClick={handleFinish}
                     disabled={!appointment.checkoutStatus || isFinishing}
                     className={cn(
-                        "flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3",
+                        "flex-1 py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-xl",
                         appointment.checkoutStatus
-                            ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/20 hover:scale-105"
-                            : "bg-white/5 text-white/20 cursor-not-allowed"
+                            ? "bg-gradient-to-r from-prevenort-primary to-black text-white shadow-orange-500/20 hover:scale-[1.02] hover:brightness-110"
+                            : "bg-prevenort-bg text-prevenort-text/20 cursor-not-allowed border border-prevenort-border shadow-none"
                     )}
                 >
-                    {isFinishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {isFinishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
                     Finalizar Admisión
                 </button>
-                <button className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black text-white/60 uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
-                    Descargar Ficha PDF
+                <button className="flex-1 py-5 bg-prevenort-surface border border-prevenort-border rounded-[1.5rem] text-[11px] font-black text-prevenort-text/40 uppercase tracking-[0.3em] hover:bg-prevenort-bg hover:text-prevenort-primary hover:border-prevenort-primary transition-all shadow-sm">
+                    Ficha PDF
                 </button>
             </div>
         </div>

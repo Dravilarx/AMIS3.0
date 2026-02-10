@@ -89,8 +89,8 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
         { id: 'clasificacion' as const, label: 'Clasificación', icon: Tag },
     ];
 
-    const inputCls = "w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.07] transition-all";
-    const labelCls = "text-[9px] uppercase font-black text-white/20 tracking-widest mb-1.5 block";
+    const inputCls = "w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-sm text-prevenort-text/80 placeholder-prevenort-text/20 focus:outline-none focus:border-info/50 focus:bg-prevenort-surface/80 transition-all";
+    const labelCls = "text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest mb-1.5 block";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -98,22 +98,22 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative w-full max-w-2xl bg-[#0c0c0c] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-2xl bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-prevenort-border">
                     <div>
                         <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">
                             {isEditing ? 'Editar' : 'Nueva'} Institución
                         </span>
-                        <h3 className="text-lg font-black text-white tracking-tight">
+                        <h3 className="text-lg font-black text-prevenort-text tracking-tight">
                             {isEditing ? institution?.legalName : 'Registrar Cliente Institucional'}
                         </h3>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+                        className="p-2 bg-prevenort-surface hover:bg-prevenort-surface/80 rounded-xl transition-colors"
                     >
-                        <X className="w-4 h-4 text-white/40" />
+                        <X className="w-4 h-4 text-prevenort-text/40" />
                     </button>
                 </div>
 
@@ -127,7 +127,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                 'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all',
                                 activeTab === id
                                     ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                                    : 'text-white/30 hover:text-white/50 hover:bg-white/5'
+                                    : 'text-prevenort-text/30 hover:text-prevenort-text/50 hover:bg-prevenort-surface'
                             )}
                         >
                             <Icon className="w-3.5 h-3.5" />
@@ -214,11 +214,11 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                     {/* Tab: Contactos */}
                     {activeTab === 'contactos' && (
                         <div className="space-y-3">
-                            <p className="text-[10px] text-white/30 italic">Los contactos se pueden gestionar en detalle una vez creada la institución.</p>
+                            <p className="text-[10px] text-prevenort-text/30 italic">Los contactos se pueden gestionar en detalle una vez creada la institución.</p>
                             {contacts.map((contact, idx) => (
-                                <div key={idx} className="p-3 bg-white/[0.03] border border-white/5 rounded-xl space-y-3 relative group">
+                                <div key={idx} className="p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl space-y-3 relative group">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Contacto #{idx + 1}</span>
+                                        <span className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Contacto #{idx + 1}</span>
                                         {contacts.length > 1 && (
                                             <button onClick={() => removeContactRow(idx)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Trash2 className="w-3.5 h-3.5 text-red-400/60 hover:text-red-400" />
@@ -285,12 +285,12 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                     value={form.sector}
                                     onChange={(e) => setField('sector', e.target.value)}
                                 >
-                                    <option value="salud" className="bg-[#0a0a0a]">Salud</option>
-                                    <option value="mineria" className="bg-[#0a0a0a]">Minería</option>
-                                    <option value="educacion" className="bg-[#0a0a0a]">Educación</option>
-                                    <option value="gobierno" className="bg-[#0a0a0a]">Gobierno</option>
-                                    <option value="industria" className="bg-[#0a0a0a]">Industria</option>
-                                    <option value="otro" className="bg-[#0a0a0a]">Otro</option>
+                                    <option value="salud" className="bg-prevenort-bg">Salud</option>
+                                    <option value="mineria" className="bg-prevenort-bg">Minería</option>
+                                    <option value="educacion" className="bg-prevenort-bg">Educación</option>
+                                    <option value="gobierno" className="bg-prevenort-bg">Gobierno</option>
+                                    <option value="industria" className="bg-prevenort-bg">Industria</option>
+                                    <option value="otro" className="bg-prevenort-bg">Otro</option>
                                 </select>
                             </div>
                             <div>
@@ -304,7 +304,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                                 'flex-1 py-3 rounded-xl text-xs font-bold border transition-all uppercase',
                                                 form.institutionType === t
                                                     ? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-                                                    : 'bg-white/[0.03] text-white/30 border-white/5 hover:border-white/20'
+                                                    : 'bg-prevenort-surface/50 text-prevenort-text/30 border-prevenort-border hover:border-prevenort-text/20'
                                             )}
                                         >
                                             {t}
@@ -316,7 +316,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                 <label className={labelCls}>Nivel de Criticidad</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {([
-                                        { v: 'baja' as Criticality, label: 'Baja', color: 'border-white/20 text-white/40' },
+                                        { v: 'baja' as Criticality, label: 'Baja', color: 'border-prevenort-border text-prevenort-text/40' },
                                         { v: 'media' as Criticality, label: 'Media', color: 'border-blue-500/30 text-blue-400' },
                                         { v: 'alta' as Criticality, label: 'Alta', color: 'border-amber-500/30 text-amber-400' },
                                         { v: 'critica' as Criticality, label: 'Crítica', color: 'border-red-500/30 text-red-400' },
@@ -327,8 +327,8 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                             className={cn(
                                                 'py-3 rounded-xl text-xs font-bold border transition-all',
                                                 form.criticality === v
-                                                    ? cn('bg-white/[0.08]', color)
-                                                    : 'bg-white/[0.02] text-white/20 border-white/5 hover:border-white/15'
+                                                    ? cn('bg-prevenort-surface', color)
+                                                    : 'bg-prevenort-surface/30 text-prevenort-text/20 border-prevenort-border hover:border-prevenort-text/15'
                                             )}
                                         >
                                             {label}
@@ -341,10 +341,10 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5">
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-prevenort-border">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-xs font-bold text-white/40 hover:text-white/60 transition-colors"
+                        className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors"
                     >
                         Cancelar
                     </button>
@@ -354,8 +354,8 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                         className={cn(
                             'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-tight transition-all',
                             saving || !form.legalName.trim()
-                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/20 border border-blue-400/30'
+                                ? 'bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed'
+                                : 'bg-prevenort-primary hover:bg-prevenort-primary/90 text-white shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30'
                         )}
                     >
                         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}

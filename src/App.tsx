@@ -14,27 +14,8 @@ import { IdeaAnalyst } from './modules/ideation/IdeaAnalyst'
 import { AdminModule } from './modules/admin/AdminModule'
 import { InstitutionsDashboard } from './modules/institutions/InstitutionsDashboard'
 import { NewsFeed } from './modules/news/NewsFeed'
-import { useAuth } from './hooks/useAuth'
-import { AuthView } from './components/AuthView'
-
 function App() {
-  const { user, loading } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news'>('dashboard');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Iniciando Sistemas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthView />;
-  }
 
   const renderView = () => {
     switch (currentView) {

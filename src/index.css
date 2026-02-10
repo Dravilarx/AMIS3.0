@@ -2,26 +2,118 @@
 
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #000;
-  color: #fff;
+
+  /* Brand Constants */
+  --brand-orange: #f97316;
+  --brand-black: #000000;
+  --brand-white: #ffffff;
+
+  /* Semantic Diverse Palette - Global */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #f43f5e;
+  --color-info: #0ea5e9;
+  --color-accent: var(--brand-orange);
+}
+
+/* Default Theme: Dark (Original requested base) */
+:root,
+[data-theme='dark'] {
+  --brand-bg: #000000;
+  --brand-surface: #111111;
+  --brand-surface-hover: #1a1a1a;
+  --brand-border: #222222;
+  --brand-text: #ffffff;
+  --brand-text-muted: #94a3b8;
+  --brand-glass: rgba(255, 255, 255, 0.05);
+
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --accent-glow: rgba(249, 115, 22, 0.2);
+
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  color-scheme: dark;
+}
+
+/* Light Theme */
+[data-theme='light'] {
+  --brand-bg: #f8fafc;
+  --brand-surface: #ffffff;
+  --brand-surface-hover: #f1f5f9;
+  --brand-border: #e2e8f0;
+  --brand-text: #0f172a;
+  --brand-text-muted: #64748b;
+  --brand-glass: rgba(255, 255, 255, 0.7);
+
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --accent-glow: rgba(249, 115, 22, 0.08);
+
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  color-scheme: light;
 }
 
 @theme {
-  --color-portezuelo: #1a1a1a;
-  --color-premium-gray: #0a0a0a;
-  --color-premium-border: #262626;
-  --color-accent: #3b82f6;
+  --color-prevenort-primary: var(--brand-orange);
+  --color-prevenort-secondary: var(--brand-black);
+  --color-prevenort-bg: var(--brand-bg);
+  --color-prevenort-surface: var(--brand-surface);
+  --color-prevenort-border: var(--brand-border);
+  --color-prevenort-text: var(--brand-text);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+  --color-accent: var(--color-accent);
 }
 
 body {
-  @apply bg-black text-white antialiased selection:bg-blue-500/30;
+  @apply bg-prevenort-bg text-prevenort-text antialiased selection:bg-orange-500/30;
   font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .glass {
-  @apply bg-white/5 backdrop-blur-md border border-white/10;
+  background: var(--brand-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--brand-border);
 }
 
 .card-premium {
-  @apply bg-premium-gray border border-premium-border rounded-xl p-6 transition-all duration-300 hover:border-white/20;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  @apply rounded-3xl p-6 transition-all duration-300;
+  box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+.card-premium:hover {
+  background: var(--brand-surface-hover);
+  border-color: var(--brand-orange);
+  box-shadow: 0 8px 30px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.sidebar-active {
+  background: var(--brand-orange);
+  color: white;
+  @apply rounded-xl;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--brand-border);
+  @apply rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-text-muted);
 }

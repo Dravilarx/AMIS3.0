@@ -22,10 +22,10 @@ interface ProjectKanbanProps {
 }
 
 const COLUMNS: { id: BPMTask['status']; title: string; icon: any; color: string }[] = [
-    { id: 'pending', title: 'Pendientes', icon: Clock, color: 'text-white/40 border-white/10' },
-    { id: 'in-progress', title: 'En Proceso', icon: Play, color: 'text-blue-400 border-blue-500/20 bg-blue-500/5' },
-    { id: 'completed', title: 'Completados', icon: CheckCircle2, color: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' },
-    { id: 'blocked', title: 'Bloqueados', icon: AlertCircle, color: 'text-red-400 border-red-500/20 bg-red-500/5' }
+    { id: 'pending', title: 'Pendientes', icon: Clock, color: 'text-prevenort-text/40 border-prevenort-border' },
+    { id: 'in-progress', title: 'En Proceso', icon: Play, color: 'text-info border-info/20 bg-info/5' },
+    { id: 'completed', title: 'Completados', icon: CheckCircle2, color: 'text-success border-success/20 bg-success/5' },
+    { id: 'blocked', title: 'Bloqueados', icon: AlertCircle, color: 'text-danger border-danger/20 bg-danger/5' }
 ];
 
 export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professionals, onTaskUpdate, onTaskClick, onAddTask }) => {
@@ -70,13 +70,13 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                         <div className="flex items-center gap-2">
                             <column.icon className="w-4 h-4" />
                             <span className="text-[10px] font-black uppercase tracking-widest">{column.title}</span>
-                            <span className="bg-white/5 px-1.5 py-0.5 rounded text-[9px] font-mono">
+                            <span className="bg-prevenort-bg px-1.5 py-0.5 rounded text-[9px] font-mono text-prevenort-text/60">
                                 {tasksByStatus(column.id).length}
                             </span>
                         </div>
                         <button
                             onClick={() => onAddTask(column.id)}
-                            className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-1 hover:bg-prevenort-primary/10 rounded-lg transition-colors text-prevenort-text/40 hover:text-prevenort-primary"
                         >
                             <Plus className="w-4 h-4" />
                         </button>
@@ -89,36 +89,36 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, task.id)}
                                 onClick={() => onTaskClick(task)}
-                                className="group card-premium p-4 border-white/5 hover:border-blue-500/20 cursor-grab active:cursor-grabbing transition-all space-y-4"
+                                className="group card-premium p-4 hover:border-info/20 cursor-grab active:cursor-grabbing transition-all space-y-4"
                             >
                                 <div className="flex justify-between items-start gap-2">
-                                    <h5 className="text-[11px] font-bold text-white/90 leading-tight group-hover:text-blue-400 transition-colors">
+                                    <h5 className="text-[11px] font-bold text-prevenort-text leading-tight group-hover:text-info transition-colors">
                                         {task.title}
                                     </h5>
-                                    <button className="p-1 text-white/10 hover:text-white transition-colors">
+                                    <button className="p-1 text-prevenort-text/10 hover:text-prevenort-text transition-colors">
                                         <MoreVertical className="w-3 h-3" />
                                     </button>
                                 </div>
 
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-[9px] font-mono">
-                                        <div className="flex items-center gap-1.5 text-white/30 uppercase tracking-widest">
+                                        <div className="flex items-center gap-1.5 text-prevenort-text/30 uppercase tracking-widest">
                                             <User className="w-3 h-3" />
                                             <span>{getProfessionalName(task.assignedTo)}</span>
                                         </div>
                                         <span className={cn(
                                             "px-1.5 py-0.5 rounded-md border",
-                                            task.priority === 'critical' ? 'text-red-400 border-red-500/20 bg-red-500/5' :
-                                                task.priority === 'high' ? 'text-orange-400 border-orange-500/20 bg-orange-500/5' :
-                                                    'text-white/20 border-white/10'
+                                            task.priority === 'critical' ? 'text-danger border-danger/20 bg-danger/5' :
+                                                task.priority === 'high' ? 'text-warning border-warning/20 bg-warning/5' :
+                                                    'text-prevenort-text/20 border-prevenort-border'
                                         )}>
                                             {task.priority}
                                         </span>
                                     </div>
 
                                     {task.aiSummary && (
-                                        <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg">
-                                            <p className="text-[8px] text-white/50 italic leading-relaxed line-clamp-2">
+                                        <div className="p-2 bg-info/5 border border-info/10 rounded-lg">
+                                            <p className="text-[8px] text-prevenort-text/50 italic leading-relaxed line-clamp-2">
                                                 "{task.aiSummary}"
                                             </p>
                                         </div>
@@ -126,13 +126,13 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
 
                                     {task.progress !== undefined && task.progress > 0 && (
                                         <div className="space-y-1 pt-1">
-                                            <div className="flex items-center justify-between text-[8px] font-mono text-white/30">
+                                            <div className="flex items-center justify-between text-[8px] font-mono text-prevenort-text/30">
                                                 <span className="uppercase tracking-tighter">Progreso Tarea</span>
                                                 <span>{task.progress}%</span>
                                             </div>
-                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-1 w-full bg-prevenort-border/50 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-blue-500/50 transition-all duration-700"
+                                                    className="h-full bg-info/50 transition-all duration-700"
                                                     style={{ width: `${task.progress}%` }}
                                                 />
                                             </div>
@@ -140,24 +140,24 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                <div className="flex items-center justify-between pt-2 border-t border-prevenort-border">
                                     <div className="flex items-center gap-3">
                                         {task.attachments && task.attachments.length > 0 && (
-                                            <div className="flex items-center gap-1 text-[9px] text-white/20">
-                                                <Paperclip className="w-3 h-3 text-white/10" />
+                                            <div className="flex items-center gap-1 text-[9px] text-prevenort-text/20">
+                                                <Paperclip className="w-3 h-3 text-prevenort-text/10" />
                                                 <span>{task.attachments.length}</span>
                                             </div>
                                         )}
                                         {task.subtasks && task.subtasks.length > 0 && (
-                                            <div className="flex items-center gap-1 text-[9px] text-white/20">
-                                                <CheckCircle2 className="w-3 h-3 text-white/10" />
+                                            <div className="flex items-center gap-1 text-[9px] text-prevenort-text/20">
+                                                <CheckCircle2 className="w-3 h-3 text-prevenort-text/10" />
                                                 <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-[9px] text-white/30 uppercase tracking-tighter">
+                                    <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 uppercase tracking-tighter">
                                         <span>{task.dueDate}</span>
-                                        <ChevronRight className="w-3 h-3 text-white/10" />
+                                        <ChevronRight className="w-3 h-3 text-prevenort-text/10" />
                                     </div>
                                 </div>
                             </div>
@@ -165,8 +165,8 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                     </div>
 
                     {tasksByStatus(column.id).length === 0 && (
-                        <div className="flex-1 border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center p-8 opacity-20">
-                            <span className="text-[9px] uppercase font-black tracking-widest text-center">Sin Tareas</span>
+                        <div className="flex-1 border-2 border-dashed border-prevenort-border rounded-2xl flex items-center justify-center p-8 opacity-20">
+                            <span className="text-[9px] uppercase font-black tracking-widest text-center text-prevenort-text">Sin Tareas</span>
                         </div>
                     )}
                 </div>

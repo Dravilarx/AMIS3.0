@@ -111,7 +111,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
 
     const getStatusBadge = (status: ContractStatus) => {
         const map: Record<ContractStatus, { label: string; cls: string }> = {
-            draft: { label: 'Borrador', cls: 'text-white/40 bg-white/5' },
+            draft: { label: 'Borrador', cls: 'text-prevenort-text/40 bg-prevenort-surface' },
             active: { label: 'Vigente', cls: 'text-emerald-400 bg-emerald-500/10' },
             expired: { label: 'Expirado', cls: 'text-red-400 bg-red-500/10' },
             terminated: { label: 'Terminado', cls: 'text-orange-400 bg-orange-500/10' },
@@ -131,7 +131,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
     };
 
     if (loading) return (
-        <div className="fixed inset-y-0 right-0 w-[480px] z-40 bg-[#0a0a0a] border-l border-white/10 flex items-center justify-center">
+        <div className="fixed inset-y-0 right-0 w-[480px] z-40 bg-prevenort-bg border-l border-prevenort-border flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
     );
@@ -145,28 +145,28 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
         { id: 'bitacora' as TabId, label: `Bitácora (${detail.activityLog?.length || 0})`, icon: MessageSquare },
     ];
 
-    const inputCls = "w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:border-blue-500/50 transition-all";
-    const labelCls = "text-[9px] uppercase font-black text-white/20 tracking-widest mb-1 block";
+    const inputCls = "w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2 text-sm text-prevenort-text/80 placeholder-prevenort-text/20 focus:outline-none focus:border-info/50 transition-all";
+    const labelCls = "text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest mb-1 block";
 
     return (
-        <div className="fixed inset-y-0 right-0 w-[480px] z-40 bg-[#0a0a0a] border-l border-white/10 shadow-2xl shadow-black/70 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-y-0 right-0 w-[480px] z-40 bg-prevenort-bg border-l border-prevenort-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-white/5 flex-shrink-0">
+            <div className="px-5 py-4 border-b border-prevenort-border flex-shrink-0">
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                         <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">Detalle Institucional</span>
-                        <h3 className="text-lg font-black text-white tracking-tight truncate">{detail.legalName}</h3>
-                        {detail.rut && <p className="text-xs text-white/30 font-mono">{detail.rut}</p>}
+                        <h3 className="text-lg font-black text-prevenort-text tracking-tight truncate">{detail.legalName}</h3>
+                        {detail.rut && <p className="text-xs text-prevenort-text/30 font-mono">{detail.rut}</p>}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                        <button onClick={() => onEdit(detail)} className="p-2 bg-white/5 hover:bg-blue-600/20 rounded-xl transition-all">
-                            <Edit3 className="w-3.5 h-3.5 text-white/40 hover:text-blue-400" />
+                        <button onClick={() => onEdit(detail)} className="p-2 bg-prevenort-surface hover:bg-info/20 rounded-xl transition-all">
+                            <Edit3 className="w-3.5 h-3.5 text-prevenort-text/40 hover:text-info" />
                         </button>
-                        <button onClick={() => onDelete(detail.id)} className="p-2 bg-white/5 hover:bg-red-600/20 rounded-xl transition-all">
-                            <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                        <button onClick={() => onDelete(detail.id)} className="p-2 bg-prevenort-surface hover:bg-danger/20 rounded-xl transition-all">
+                            <Trash2 className="w-3.5 h-3.5 text-prevenort-text/40 hover:text-danger" />
                         </button>
-                        <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
-                            <X className="w-3.5 h-3.5 text-white/40" />
+                        <button onClick={onClose} className="p-2 bg-prevenort-surface hover:bg-prevenort-surface/80 rounded-xl transition-all">
+                            <X className="w-3.5 h-3.5 text-prevenort-text/40" />
                         </button>
                     </div>
                 </div>
@@ -179,7 +179,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                 'flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all',
                                 activeTab === id
                                     ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                                    : 'text-white/25 hover:text-white/50'
+                                    : 'text-prevenort-text/25 hover:text-prevenort-text/50'
                             )}
                         >
                             <Icon className="w-3 h-3" />
@@ -197,17 +197,17 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                     <>
                         {/* Quick Stats */}
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="p-3 bg-white/[0.03] rounded-xl text-center">
+                            <div className="p-3 bg-prevenort-surface/50 rounded-xl text-center">
                                 <p className="text-xl font-black text-blue-400 font-mono">{detail.activeContracts}</p>
-                                <p className="text-[8px] text-white/20 uppercase tracking-widest">Activos</p>
+                                <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Activos</p>
                             </div>
-                            <div className="p-3 bg-white/[0.03] rounded-xl text-center">
-                                <p className="text-xl font-black text-white/60 font-mono">{detail.totalContracts}</p>
-                                <p className="text-[8px] text-white/20 uppercase tracking-widest">Total</p>
+                            <div className="p-3 bg-prevenort-surface/50 rounded-xl text-center">
+                                <p className="text-xl font-black text-prevenort-text/60 font-mono">{detail.totalContracts}</p>
+                                <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Total</p>
                             </div>
-                            <div className="p-3 bg-white/[0.03] rounded-xl text-center">
-                                <p className="text-xl font-black text-white/60 font-mono">{detail.contacts?.length || 0}</p>
-                                <p className="text-[8px] text-white/20 uppercase tracking-widest">Contactos</p>
+                            <div className="p-3 bg-prevenort-surface/50 rounded-xl text-center">
+                                <p className="text-xl font-black text-prevenort-text/60 font-mono">{detail.contacts?.length || 0}</p>
+                                <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Contactos</p>
                             </div>
                         </div>
 
@@ -215,12 +215,12 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                         <div className="space-y-3">
                             {detail.address && (
                                 <div className="flex items-start gap-2">
-                                    <MapPin className="w-3.5 h-3.5 text-white/20 mt-0.5 flex-shrink-0" />
-                                    <span className="text-xs text-white/50">{detail.address}{detail.city ? `, ${detail.city}` : ''}{detail.region ? `, ${detail.region}` : ''}</span>
+                                    <MapPin className="w-3.5 h-3.5 text-prevenort-text/20 mt-0.5 flex-shrink-0" />
+                                    <span className="text-xs text-prevenort-text/50">{detail.address}{detail.city ? `, ${detail.city}` : ''}{detail.region ? `, ${detail.region}` : ''}</span>
                                 </div>
                             )}
                             <div className="flex gap-2 flex-wrap">
-                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/40 uppercase font-bold">
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-prevenort-surface border border-prevenort-border text-prevenort-text/40 uppercase font-bold">
                                     {detail.sector}
                                 </span>
                                 <span className={cn('text-[9px] px-2 py-0.5 rounded-full border uppercase font-bold',
@@ -236,15 +236,15 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                         {/* Contacts */}
                         {detail.contacts?.length > 0 && (
                             <div>
-                                <h4 className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">Contactos</h4>
+                                <h4 className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest mb-2">Contactos</h4>
                                 <div className="space-y-2">
                                     {detail.contacts.map((c: any) => (
-                                        <div key={c.id} className="p-3 bg-white/[0.03] border border-white/5 rounded-xl">
+                                        <div key={c.id} className="p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs font-bold text-white/80">{c.fullName}</span>
+                                                <span className="text-xs font-bold text-prevenort-text/80">{c.fullName}</span>
                                                 {c.isPrimary && <span className="text-[8px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded-full font-bold">Principal</span>}
                                             </div>
-                                            {c.position && <p className="text-[10px] text-white/30 mb-1.5">{c.position}</p>}
+                                            {c.position && <p className="text-[10px] text-prevenort-text/30 mb-1.5">{c.position}</p>}
                                             <div className="flex flex-wrap gap-3">
                                                 {c.email && (
                                                     <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-[10px] text-blue-400/60 hover:text-blue-400 transition-colors">
@@ -252,7 +252,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                                     </a>
                                                 )}
                                                 {c.phone && (
-                                                    <span className="flex items-center gap-1 text-[10px] text-white/30">
+                                                    <span className="flex items-center gap-1 text-[10px] text-prevenort-text/30">
                                                         <Phone className="w-3 h-3" /> {c.phone}
                                                     </span>
                                                 )}
@@ -265,8 +265,8 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
 
                         {detail.notes && (
                             <div>
-                                <h4 className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Notas</h4>
-                                <p className="text-xs text-white/40 leading-relaxed">{detail.notes}</p>
+                                <h4 className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest mb-1">Notas</h4>
+                                <p className="text-xs text-prevenort-text/40 leading-relaxed">{detail.notes}</p>
                             </div>
                         )}
                     </>
@@ -276,7 +276,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                 {activeTab === 'contratos' && (
                     <>
                         <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black text-white/20 uppercase tracking-widest">Contratos Vinculados</h4>
+                            <h4 className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Contratos Vinculados</h4>
                             <button
                                 onClick={() => setShowContractForm(!showContractForm)}
                                 className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
@@ -318,7 +318,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <button onClick={() => setShowContractForm(false)} className="text-[10px] text-white/30 hover:text-white/50 px-3 py-1.5">Cancelar</button>
+                                    <button onClick={() => setShowContractForm(false)} className="text-[10px] text-prevenort-text/30 hover:text-prevenort-text/50 px-3 py-1.5">Cancelar</button>
                                     <button onClick={handleAddContract}
                                         className="text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg transition-colors">
                                         Guardar
@@ -331,22 +331,22 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                         <div className="space-y-3">
                             {(!detail.contracts || detail.contracts.length === 0) ? (
                                 <div className="p-8 text-center">
-                                    <FileText className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                                    <p className="text-xs text-white/30 italic">Sin contratos registrados</p>
+                                    <FileText className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
+                                    <p className="text-xs text-prevenort-text/30 italic">Sin contratos registrados</p>
                                 </div>
                             ) : detail.contracts.map((c: InstitutionContract) => (
-                                <div key={c.id} className="p-4 bg-white/[0.03] border border-white/5 rounded-xl hover:border-white/10 transition-all">
+                                <div key={c.id} className="p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-xl hover:border-prevenort-text/10 transition-all">
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
-                                            <h5 className="text-xs font-bold text-white/80">{c.contractName}</h5>
-                                            {c.contractNumber && <p className="text-[10px] text-white/25 font-mono">{c.contractNumber}</p>}
+                                            <h5 className="text-xs font-bold text-prevenort-text/80">{c.contractName}</h5>
+                                            {c.contractNumber && <p className="text-[10px] text-prevenort-text/25 font-mono">{c.contractNumber}</p>}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {getStatusBadge(c.status)}
                                             {getExpiryIndicator(c.daysUntilExpiry)}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 text-[10px] text-white/30">
+                                    <div className="flex items-center gap-4 text-[10px] text-prevenort-text/30">
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
                                             {new Date(c.startDate).toLocaleDateString('es-CL')} — {new Date(c.endDate).toLocaleDateString('es-CL')}
@@ -360,8 +360,8 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                     </div>
                                     {/* SLA Rules for this contract */}
                                     {c.slaRules && c.slaRules.length > 0 && (
-                                        <div className="mt-3 pt-2 border-t border-white/5">
-                                            <p className="text-[8px] text-white/15 uppercase tracking-widest mb-1.5">SLA Asociados</p>
+                                        <div className="mt-3 pt-2 border-t border-prevenort-border/50">
+                                            <p className="text-[8px] text-prevenort-text/15 uppercase tracking-widest mb-1.5">SLA Asociados</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {c.slaRules.map(r => (
                                                     <span key={r.id} className="text-[9px] px-2 py-0.5 bg-blue-500/5 border border-blue-500/10 text-blue-400/60 rounded-full">
@@ -380,18 +380,18 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                 {/* ── Tab: SLAs ── */}
                 {activeTab === 'sla' && (
                     <>
-                        <h4 className="text-[9px] font-black text-white/20 uppercase tracking-widest">Tiempos de Respuesta por Categoría</h4>
+                        <h4 className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Tiempos de Respuesta por Categoría</h4>
                         {detail.contracts?.some((c: InstitutionContract) => c.slaRules && c.slaRules.length > 0) ? (
                             <div className="space-y-4">
                                 {detail.contracts.filter((c: InstitutionContract) => c.slaRules && c.slaRules.length > 0).map((c: InstitutionContract) => (
                                     <div key={c.id}>
-                                        <p className="text-[10px] font-bold text-white/50 mb-2">{c.contractName}</p>
+                                        <p className="text-[10px] font-bold text-prevenort-text/50 mb-2">{c.contractName}</p>
                                         <div className="space-y-1.5">
                                             {c.slaRules!.map(rule => (
-                                                <div key={rule.id} className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-xl">
-                                                    <span className="text-xs text-white/60">{SLA_LABELS[rule.category] || rule.category}</span>
+                                                <div key={rule.id} className="flex items-center justify-between p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl">
+                                                    <span className="text-xs text-prevenort-text/60">{SLA_LABELS[rule.category] || rule.category}</span>
                                                     <div className="flex items-center gap-2">
-                                                        {rule.minHours > 0 && <span className="text-[10px] text-white/20">{rule.minHours}h —</span>}
+                                                        {rule.minHours > 0 && <span className="text-[10px] text-prevenort-text/20">{rule.minHours}h —</span>}
                                                         <span className={cn('text-sm font-black font-mono',
                                                             rule.maxHours <= 2 ? 'text-red-400' :
                                                                 rule.maxHours <= 4 ? 'text-amber-400' :
@@ -408,9 +408,9 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                             </div>
                         ) : (
                             <div className="p-8 text-center">
-                                <Shield className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                                <p className="text-xs text-white/30 italic">Sin reglas SLA configuradas</p>
-                                <p className="text-[10px] text-white/15 mt-1">Configure SLAs desde un contrato activo</p>
+                                <Shield className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
+                                <p className="text-xs text-prevenort-text/30 italic">Sin reglas SLA configuradas</p>
+                                <p className="text-[10px] text-prevenort-text/15 mt-1">Configure SLAs desde un contrato activo</p>
                             </div>
                         )}
                     </>
@@ -420,7 +420,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                 {activeTab === 'bitacora' && (
                     <>
                         <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black text-white/20 uppercase tracking-widest">Historial de Interacciones</h4>
+                            <h4 className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Historial de Interacciones</h4>
                             <button
                                 onClick={() => setShowActivityForm(!showActivityForm)}
                                 className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
@@ -437,7 +437,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                     <select className={inputCls} value={actForm.eventType}
                                         onChange={(e) => setActForm(p => ({ ...p, eventType: e.target.value as ActivityEventType }))}>
                                         {Object.entries(EVENT_LABELS).map(([k, v]) => (
-                                            <option key={k} value={k} className="bg-[#0a0a0a]">{v}</option>
+                                            <option key={k} value={k} className="bg-prevenort-bg">{v}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -454,7 +454,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                                         placeholder="Detalles de la interacción..." />
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <button onClick={() => setShowActivityForm(false)} className="text-[10px] text-white/30 hover:text-white/50 px-3 py-1.5">Cancelar</button>
+                                    <button onClick={() => setShowActivityForm(false)} className="text-[10px] text-prevenort-text/30 hover:text-prevenort-text/50 px-3 py-1.5">Cancelar</button>
                                     <button onClick={handleAddActivity}
                                         className="text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg transition-colors">
                                         Registrar
@@ -467,28 +467,28 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
                         <div className="space-y-0 relative">
                             {(!detail.activityLog || detail.activityLog.length === 0) ? (
                                 <div className="p-8 text-center">
-                                    <MessageSquare className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                                    <p className="text-xs text-white/30 italic">Sin registros de bitácora</p>
+                                    <MessageSquare className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
+                                    <p className="text-xs text-prevenort-text/30 italic">Sin registros de bitácora</p>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="absolute left-4 top-0 bottom-0 w-px bg-white/5" />
+                                    <div className="absolute left-4 top-0 bottom-0 w-px bg-prevenort-border/50" />
                                     {detail.activityLog.map((act: InstitutionActivity) => (
                                         <div key={act.id} className="relative pl-10 pb-4">
-                                            <div className="absolute left-2.5 top-1 w-3.5 h-3.5 rounded-full bg-[#0a0a0a] border-2 border-white/10 flex items-center justify-center text-[8px]">
+                                            <div className="absolute left-2.5 top-1 w-3.5 h-3.5 rounded-full bg-prevenort-bg border-2 border-prevenort-border flex items-center justify-center text-[8px]">
                                                 {EVENT_ICONS[act.eventType] || '•'}
                                             </div>
-                                            <div className="p-3 bg-white/[0.03] border border-white/5 rounded-xl hover:bg-white/[0.05] transition-colors">
+                                            <div className="p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl hover:bg-prevenort-surface transition-colors">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[9px] font-black text-white/25 uppercase tracking-wider">
+                                                    <span className="text-[9px] font-black text-prevenort-text/25 uppercase tracking-wider">
                                                         {EVENT_LABELS[act.eventType] || act.eventType}
                                                     </span>
-                                                    <span className="text-[9px] text-white/15 font-mono">
+                                                    <span className="text-[9px] text-prevenort-text/15 font-mono">
                                                         {new Date(act.eventDate).toLocaleDateString('es-CL')}
                                                     </span>
                                                 </div>
-                                                <h5 className="text-xs font-bold text-white/70">{act.title}</h5>
-                                                {act.description && <p className="text-[10px] text-white/30 mt-1 leading-relaxed">{act.description}</p>}
+                                                <h5 className="text-xs font-bold text-prevenort-text/70">{act.title}</h5>
+                                                {act.description && <p className="text-[10px] text-prevenort-text/30 mt-1 leading-relaxed">{act.description}</p>}
                                             </div>
                                         </div>
                                     ))}
