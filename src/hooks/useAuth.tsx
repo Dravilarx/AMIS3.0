@@ -122,6 +122,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (session) {
                 fetchUserProfile(session.user);
             } else {
+                // No session — default to SUPER_ADMIN for demo/internal use
+                setUser({
+                    id: 'default-admin',
+                    name: 'Marcelo Avila',
+                    email: 'marcelo.avila@amis.global',
+                    role: 'SUPER_ADMIN',
+                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marcelo',
+                    permissions: DEFAULT_PERMISSIONS_BY_ROLE['SUPER_ADMIN']
+                });
                 setLoading(false);
             }
         });
