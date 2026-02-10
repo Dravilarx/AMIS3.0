@@ -198,15 +198,13 @@ export const NewsFeed: React.FC = () => {
                         Noticias & Comunicados
                     </h1>
                 </div>
-                {isAdmin && (
-                    <button
-                        onClick={() => { setEditingArticle(null); setShowComposer(true); }}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-prevenort-primary/20 hover:shadow-prevenort-primary/40"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Nueva Publicación
-                    </button>
-                )}
+                <button
+                    onClick={() => { setEditingArticle(null); setShowComposer(true); }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-prevenort-primary/20 hover:shadow-prevenort-primary/40"
+                >
+                    <Plus className="w-4 h-4" />
+                    Nueva Publicación
+                </button>
             </div>
 
             {/* KPI Cards */}
