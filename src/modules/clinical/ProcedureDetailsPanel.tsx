@@ -13,7 +13,11 @@ import {
     Loader2,
     Stethoscope,
     Activity,
-    FileText
+    FileText,
+    Upload,
+    ExternalLink,
+    ShieldCheck,
+    XCircle
 } from 'lucide-react';
 import { type ClinicalAppointment, type ClinicalIndications } from '../../types/clinical';
 import { cn, formatRUT, formatName, formatPhone } from '../../lib/utils';
@@ -22,7 +26,7 @@ interface ProcedureDetailsPanelProps {
     isOpen: boolean;
     onClose: () => void;
     appointment: ClinicalAppointment | null;
-    onVerifyDoc: (docId: string, verified: boolean) => Promise<{ success: boolean; error?: string }>;
+    onVerifyDoc: (docId: string, verified: boolean, file?: File) => Promise<{ success: boolean; error?: string }>;
     onGetIndications: (procedureId: string, centerId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
     onUpdateStatus: (id: string, status: any) => Promise<{ success: boolean; error?: string }>;
     onEdit?: (appointment: ClinicalAppointment) => void;
@@ -42,6 +46,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null);
     const [isFinishing, setIsFinishing] = useState(false);
     const [copiedType, setCopiedType] = useState<'wa' | 'email' | null>(null);
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen && appointment) {
@@ -53,6 +58,8 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                 })
                 .finally(() => setLoadingInd(false));
         }
+        // Reset dropdown state when panel opens/closes
+        setOpenDropdownId(null);
     }, [isOpen, appointment]);
 
     if (!isOpen || !appointment) return null;
@@ -63,10 +70,44 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
         setTimeout(() => setCopiedType(null), 2000);
     };
 
-    const handleVerify = async (docId: string, currentStatus: boolean) => {
+    // Manual verification (no file attached)
+    const handleManualVerify = async (docId: string) => {
         setVerifyingDocId(docId);
-        await onVerifyDoc(docId, !currentStatus);
+        setOpenDropdownId(null);
+        const result = await onVerifyDoc(docId, true);
         setVerifyingDocId(null);
+        if (!result.success) {
+            alert('Error al validar: ' + (result.error || 'Error desconocido'));
+        }
+    };
+
+    // File-based verification (upload a document)
+    const handleFileVerify = (docId: string) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+        input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setVerifyingDocId(docId);
+            setOpenDropdownId(null);
+            const result = await onVerifyDoc(docId, true, file);
+            setVerifyingDocId(null);
+            if (!result.success) {
+                alert('Error al subir archivo: ' + (result.error || 'Error desconocido'));
+            }
+        };
+        input.click();
+    };
+
+    // Revert verification
+    const handleRevert = async (docId: string) => {
+        setVerifyingDocId(docId);
+        const result = await onVerifyDoc(docId, false);
+        setVerifyingDocId(null);
+        if (!result.success) {
+            alert('Error al revertir: ' + (result.error || 'Error desconocido'));
+        }
     };
 
     const handleFinish = async () => {
@@ -217,39 +258,107 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             <div
                                 key={doc.id}
                                 className={cn(
-                                    "p-6 rounded-[1.5rem] border transition-all flex items-center justify-between group shadow-sm",
+                                    "p-6 rounded-[1.5rem] border transition-all group shadow-sm",
                                     doc.verified
                                         ? "bg-success/10 border-success/20"
                                         : "bg-prevenort-surface border-prevenort-border hover:border-prevenort-primary/30"
                                 )}
                             >
-                                <div className="flex items-center gap-5">
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
-                                        doc.verified ? "bg-success text-white" : "bg-prevenort-bg text-prevenort-text/20"
-                                    )}>
-                                        {doc.verified ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-5">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
+                                            doc.verified ? "bg-success text-white" : "bg-prevenort-bg text-prevenort-text/20"
+                                        )}>
+                                            {doc.verified ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-prevenort-text uppercase tracking-tight">{doc.requirement?.name}</p>
+                                            <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-wider">{doc.requirement?.description}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-black text-prevenort-text uppercase tracking-tight">{doc.requirement?.name}</p>
-                                        <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-wider">{doc.requirement?.description}</p>
+
+                                    <div className="flex items-center gap-2">
+                                        {verifyingDocId === doc.id ? (
+                                            <div className="px-6 py-3 rounded-2xl bg-prevenort-bg flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin text-prevenort-primary" />
+                                                <span className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-wider">Procesando...</span>
+                                            </div>
+                                        ) : doc.verified ? (
+                                            /* Verified state — show status + revert button */
+                                            <>
+                                                {doc.documentUrl && (
+                                                    <a
+                                                        href={doc.documentUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2.5 rounded-xl bg-success/20 text-success hover:bg-success hover:text-white transition-all shadow-sm"
+                                                        title="Ver documento adjunto"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                )}
+                                                <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-success/20 text-success">
+                                                    <ShieldCheck className="w-4 h-4" />
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.15em]">
+                                                        {doc.documentUrl ? 'DOC. ADJUNTO' : 'MANUAL'}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRevert(doc.id)}
+                                                    className="p-2.5 rounded-xl bg-prevenort-bg text-prevenort-text/20 hover:bg-danger/10 hover:text-danger transition-all border border-prevenort-border hover:border-danger/20"
+                                                    title="Revertir validación"
+                                                >
+                                                    <XCircle className="w-4 h-4" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            /* Not verified — show VALIDAR dropdown */
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setOpenDropdownId(openDropdownId === doc.id ? null : doc.id)}
+                                                    className="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-prevenort-bg text-prevenort-text/40 hover:bg-prevenort-primary hover:text-white transition-all border border-prevenort-border hover:border-prevenort-primary"
+                                                >
+                                                    VALIDAR
+                                                </button>
+
+                                                {openDropdownId === doc.id && (
+                                                    <>
+                                                        {/* Backdrop to close dropdown */}
+                                                        <div className="fixed inset-0 z-[70]" onClick={() => setOpenDropdownId(null)} />
+                                                        <div className="absolute right-0 top-full mt-2 z-[80] w-64 bg-prevenort-surface border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                                            <button
+                                                                onClick={() => handleManualVerify(doc.id)}
+                                                                className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-prevenort-primary/10 transition-all group/opt"
+                                                            >
+                                                                <div className="w-9 h-9 rounded-xl bg-prevenort-bg flex items-center justify-center group-hover/opt:bg-prevenort-primary group-hover/opt:text-white transition-all">
+                                                                    <ShieldCheck className="w-4 h-4 text-prevenort-text/30 group-hover/opt:text-white" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[11px] font-black text-prevenort-text uppercase tracking-tight">Validación Manual</p>
+                                                                    <p className="text-[9px] text-prevenort-text/30 font-bold leading-tight mt-0.5">Confirmar verificación visual</p>
+                                                                </div>
+                                                            </button>
+                                                            <div className="mx-4 border-t border-prevenort-border" />
+                                                            <button
+                                                                onClick={() => handleFileVerify(doc.id)}
+                                                                className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-success/10 transition-all group/opt"
+                                                            >
+                                                                <div className="w-9 h-9 rounded-xl bg-prevenort-bg flex items-center justify-center group-hover/opt:bg-success group-hover/opt:text-white transition-all">
+                                                                    <Upload className="w-4 h-4 text-prevenort-text/30 group-hover/opt:text-white" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[11px] font-black text-prevenort-text uppercase tracking-tight">Subir Documento</p>
+                                                                    <p className="text-[9px] text-prevenort-text/30 font-bold leading-tight mt-0.5">PDF, imagen o Word</p>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-
-                                <button
-                                    onClick={() => handleVerify(doc.id, doc.verified)}
-                                    disabled={verifyingDocId === doc.id}
-                                    className={cn(
-                                        "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all",
-                                        doc.verified
-                                            ? "bg-success/20 text-success hover:bg-success hover:text-white"
-                                            : "bg-prevenort-bg text-prevenort-text/20 hover:bg-prevenort-primary hover:text-white"
-                                    )}
-                                >
-                                    {verifyingDocId === doc.id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : doc.verified ? 'VERIFICADO' : 'VALIDAR'}
-                                </button>
                             </div>
                         ))}
 

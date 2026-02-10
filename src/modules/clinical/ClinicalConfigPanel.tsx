@@ -173,7 +173,11 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                 onClick={async () => {
                                                     if (confirm(`¿Está seguro de eliminar el procedimiento "${proc.name}"? Esta acción no se puede deshacer.`)) {
                                                         const res = await onDeleteProcedure?.(proc.id);
-                                                        if (res?.success) alert('Procedimiento eliminado');
+                                                        if (res?.success) {
+                                                            alert('Procedimiento eliminado con éxito');
+                                                        } else {
+                                                            alert('No se pudo eliminar: ' + (res?.error || 'El procedimiento tiene citas o indicaciones asociadas'));
+                                                        }
                                                     }
                                                 }}
                                                 className="p-2 hover:bg-danger/10 rounded-lg text-prevenort-text/20 hover:text-danger transition-all"
@@ -366,10 +370,10 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 </button>
 
                                 {indications.map(ind => (
-                                    <div key={ind.id} className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-6 hover:border-prevenort-primary/30 transition-all flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:shadow-blue-500/5">
+                                    <div key={ind.id} className="group relative bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-6 hover:border-prevenort-primary/30 transition-all flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:shadow-blue-500/5">
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-start">
-                                                <div className="p-2 bg-blue-50 rounded-xl text-prevenort-primary">
+                                                <div className="p-2 bg-prevenort-bg rounded-xl text-prevenort-primary border border-prevenort-border">
                                                     <Mail className="w-4 h-4" />
                                                 </div>
                                                 <div className="flex gap-2">
@@ -553,245 +557,253 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             </div>
 
             {/* Procedure Edit Modal */}
-            {editingProc && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
-                                    {editingProc.id ? 'Editar Procedimiento' : 'Nuevo Procedimiento'}
-                                </h3>
-                                <p className="text-[10px] text-prevenort-text/40 font-mono uppercase tracking-widest">Configuración Técnica y Precio</p>
+            {
+                editingProc && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                        {editingProc.id ? 'Editar Procedimiento' : 'Nuevo Procedimiento'}
+                                    </h3>
+                                    <p className="text-[10px] text-prevenort-text/40 font-mono uppercase tracking-widest">Configuración Técnica y Precio</p>
+                                </div>
+                                <button onClick={() => setEditingProc(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                    <X className="w-6 h-6" />
+                                </button>
                             </div>
-                            <button onClick={() => setEditingProc(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="p-8 space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre</label>
+                                        <input
+                                            type="text"
+                                            value={editingProc.name || ''}
+                                            onChange={(e) => setEditingProc({ ...editingProc, name: e.target.value })}
+                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Código</label>
+                                        <input
+                                            type="text"
+                                            value={editingProc.code || ''}
+                                            onChange={(e) => setEditingProc({ ...editingProc, code: e.target.value })}
+                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        />
+                                    </div>
+                                </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre</label>
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Precio Base ($)</label>
                                     <input
-                                        type="text"
-                                        value={editingProc.name || ''}
-                                        onChange={(e) => setEditingProc({ ...editingProc, name: e.target.value })}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        type="number"
+                                        value={editingProc.basePrice === 0 ? '' : editingProc.basePrice}
+                                        onChange={(e) => setEditingProc({ ...editingProc, basePrice: e.target.value === '' ? 0 : Number(e.target.value) })}
+                                        onFocus={(e) => e.target.select()}
+                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all font-mono"
+                                        placeholder="0"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Código</label>
-                                    <input
-                                        type="text"
-                                        value={editingProc.code || ''}
-                                        onChange={(e) => setEditingProc({ ...editingProc, code: e.target.value })}
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Descripción</label>
+                                    <textarea
+                                        value={editingProc.description || ''}
+                                        onChange={(e) => setEditingProc({ ...editingProc, description: e.target.value })}
                                         className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Precio Base ($)</label>
-                                <input
-                                    type="number"
-                                    value={editingProc.basePrice || 0}
-                                    onChange={(e) => setEditingProc({ ...editingProc, basePrice: Number(e.target.value) })}
-                                    className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all font-mono"
-                                />
+                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border flex gap-4">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onUpsertProcedure(editingProc);
+                                        if (res.success) {
+                                            setEditingProc(null);
+                                            alert('Procedimiento guardado con éxito');
+                                        } else {
+                                            alert('Error al guardar: ' + res.error);
+                                        }
+                                    }}
+                                    className="flex-1 py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                >
+                                    Guardar Procedimiento
+                                </button>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción</label>
-                                <textarea
-                                    value={editingProc.description || ''}
-                                    onChange={(e) => setEditingProc({ ...editingProc, description: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-prevenort-primary transition-all"
-                                />
-                            </div>
-                        </div>
-                        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
-                            <button
-                                onClick={async () => {
-                                    const res = await onUpsertProcedure(editingProc);
-                                    if (res.success) {
-                                        setEditingProc(null);
-                                        alert('Procedimiento guardado con éxito');
-                                    } else {
-                                        alert('Error al guardar: ' + res.error);
-                                    }
-                                }}
-                                className="flex-1 py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
-                            >
-                                Guardar Procedimiento
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Requirement Edit Modal */}
-            {editingReq && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">
-                                    {editingReq.id ? 'Editar Requisito' : 'Nuevo Requisito'}
-                                </h3>
+            {
+                editingReq && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                        {editingReq.id ? 'Editar Requisito' : 'Nuevo Requisito'}
+                                    </h3>
+                                </div>
+                                <button onClick={() => setEditingRequirement(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                    <X className="w-6 h-6" />
+                                </button>
                             </div>
-                            <button onClick={() => setEditingRequirement(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-300 hover:text-slate-900 transition-all">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nombre del Requisito</label>
-                                <input
-                                    type="text"
-                                    value={editingReq.name || ''}
-                                    onChange={(e) => setEditingRequirement({ ...editingReq, name: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-prevenort-primary transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</label>
-                                <select
-                                    value={editingReq.requirementType || 'document'}
-                                    onChange={(e) => setEditingRequirement({ ...editingReq, requirementType: e.target.value as any })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-prevenort-primary transition-all appearance-none"
-                                >
-                                    <option value="document">Documento</option>
-                                    <option value="physical_exam">Examen Físico</option>
-                                    <option value="equipment">Equipamiento</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <input
-                                    type="checkbox"
-                                    checked={editingReq.isMandatory || false}
-                                    onChange={(e) => setEditingRequirement({ ...editingReq, isMandatory: e.target.checked })}
-                                    className="w-4 h-4 rounded border-slate-300 text-prevenort-primary focus:ring-prevenort-primary"
-                                />
-                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Es Mandatorio</label>
-                            </div>
-                        </div>
-                        <div className="p-8 bg-slate-50 border-t border-slate-100">
-                            <button
-                                onClick={async () => {
-                                    const res = await onUpsertRequirement(editingReq);
-                                    if (res.success) {
-                                        setEditingRequirement(null);
-                                        alert('Requisito guardado con éxito');
-                                    } else {
-                                        alert('Error: ' + res.error);
-                                    }
-                                }}
-                                className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
-                            >
-                                Guardar Requisito
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Battery Edit Modal */}
-            {editingBatt && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="w-full max-w-lg bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">
-                                    {editingBatt.id ? 'Editar Batería' : 'Nueva Batería'}
-                                </h3>
-                            </div>
-                            <button onClick={() => setEditingBattery(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-300 hover:text-slate-900 transition-all">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nombre de la Batería</label>
-                                <input
-                                    type="text"
-                                    value={editingBatt.name || ''}
-                                    onChange={(e) => setEditingBattery({ ...editingBatt, name: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-prevenort-primary transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción</label>
-                                <textarea
-                                    value={editingBatt.description || ''}
-                                    onChange={(e) => setEditingBattery({ ...editingBatt, description: e.target.value })}
-                                    className="w-full h-24 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-prevenort-primary transition-all leading-relaxed"
-                                />
-                            </div>
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                                    <span>Vincular Requisitos Maestro</span>
-                                    <span className="text-prevenort-primary">{(editingBatt.requirements?.length || 0)} seleccionados</span>
-                                </label>
-                                <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                    {requirements.map(req => {
-                                        const isSelected = editingBatt.requirements?.some((r: any) => r.id === req.id);
-                                        return (
-                                            <button
-                                                key={req.id}
-                                                onClick={() => {
-                                                    const current = editingBatt.requirements || [];
-                                                    const next = isSelected
-                                                        ? current.filter((r: any) => r.id !== req.id)
-                                                        : [...current, req];
-                                                    setEditingBattery({ ...editingBatt, requirements: next });
-                                                }}
-                                                className={cn(
-                                                    "flex items-center justify-between p-4 rounded-xl border transition-all text-left",
-                                                    isSelected
-                                                        ? "bg-blue-50 border-prevenort-primary/30 text-slate-900"
-                                                        : "bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200"
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={cn(
-                                                        "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                                                        isSelected ? "bg-prevenort-primary border-prevenort-primary" : "border-slate-300"
-                                                    )}>
-                                                        {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-bold leading-none">{req.name}</p>
-                                                        <p className="text-[9px] mt-1 opacity-50 uppercase tracking-tighter">{req.requirementType}</p>
-                                                    </div>
-                                                </div>
-                                                {req.isMandatory && (
-                                                    <span className="text-[8px] font-black text-amber-600 uppercase px-1.5 py-0.5 bg-amber-50 rounded">Mandatorio</span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
+                            <div className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre del Requisito</label>
+                                    <input
+                                        type="text"
+                                        value={editingReq.name || ''}
+                                        onChange={(e) => setEditingRequirement({ ...editingReq, name: e.target.value })}
+                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Tipo</label>
+                                    <select
+                                        value={editingReq.requirementType || 'document'}
+                                        onChange={(e) => setEditingRequirement({ ...editingReq, requirementType: e.target.value as any })}
+                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all appearance-none"
+                                    >
+                                        <option value="document">Documento</option>
+                                        <option value="physical_exam">Examen Físico</option>
+                                        <option value="equipment">Equipamiento</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-3 p-4 bg-prevenort-bg rounded-xl border border-prevenort-border">
+                                    <input
+                                        type="checkbox"
+                                        checked={editingReq.isMandatory || false}
+                                        onChange={(e) => setEditingRequirement({ ...editingReq, isMandatory: e.target.checked })}
+                                        className="w-4 h-4 rounded border-prevenort-border text-prevenort-primary focus:ring-prevenort-primary"
+                                    />
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Es Mandatorio</label>
                                 </div>
                             </div>
-                        </div>
-                        <div className="p-8 bg-slate-50 border-t border-slate-100">
-                            <button
-                                onClick={async () => {
-                                    const res = await onUpsertBattery({
-                                        ...editingBatt,
-                                        requirements: editingBatt.requirements?.map((r: any) => r.id)
-                                    });
-                                    if (res.success) {
-                                        setEditingBattery(null);
-                                        alert('Batería guardada con éxito');
-                                    } else {
-                                        alert('Error: ' + res.error);
-                                    }
-                                }}
-                                className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
-                            >
-                                Guardar Batería y Vincular Requisitos
-                            </button>
+                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onUpsertRequirement(editingReq);
+                                        if (res.success) {
+                                            setEditingRequirement(null);
+                                            alert('Requisito guardado con éxito');
+                                        } else {
+                                            alert('Error: ' + res.error);
+                                        }
+                                    }}
+                                    className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                >
+                                    Guardar Requisito
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            {/* Battery Edit Modal */}
+            {
+                editingBatt && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                        {editingBatt.id ? 'Editar Batería' : 'Nueva Batería'}
+                                    </h3>
+                                </div>
+                                <button onClick={() => setEditingBattery(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre de la Batería</label>
+                                    <input
+                                        type="text"
+                                        value={editingBatt.name || ''}
+                                        onChange={(e) => setEditingBattery({ ...editingBatt, name: e.target.value })}
+                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Descripción</label>
+                                    <textarea
+                                        value={editingBatt.description || ''}
+                                        onChange={(e) => setEditingBattery({ ...editingBatt, description: e.target.value })}
+                                        className="w-full h-24 bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all leading-relaxed"
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center justify-between">
+                                        <span>Vincular Requisitos Maestro</span>
+                                        <span className="text-prevenort-primary">{(editingBatt.requirements?.length || 0)} seleccionados</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {requirements.map(req => {
+                                            const isSelected = editingBatt.requirements?.some((r: any) => r.id === req.id);
+                                            return (
+                                                <button
+                                                    key={req.id}
+                                                    onClick={() => {
+                                                        const current = editingBatt.requirements || [];
+                                                        const next = isSelected
+                                                            ? current.filter((r: any) => r.id !== req.id)
+                                                            : [...current, req];
+                                                        setEditingBattery({ ...editingBatt, requirements: next });
+                                                    }}
+                                                    className={cn(
+                                                        "flex items-center justify-between p-4 rounded-xl border transition-all text-left",
+                                                        isSelected
+                                                            ? "bg-prevenort-primary/10 border-prevenort-primary/30 text-prevenort-text"
+                                                            : "bg-prevenort-bg border-prevenort-border text-prevenort-text/40 hover:border-prevenort-border/60"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={cn(
+                                                            "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                                                            isSelected ? "bg-prevenort-primary border-prevenort-primary" : "border-prevenort-border"
+                                                        )}>
+                                                            {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold leading-none">{req.name}</p>
+                                                            <p className="text-[9px] mt-1 opacity-50 uppercase tracking-tighter">{req.requirementType}</p>
+                                                        </div>
+                                                    </div>
+                                                    {req.isMandatory && (
+                                                        <span className="text-[8px] font-black text-amber-600 uppercase px-1.5 py-0.5 bg-amber-500/10 rounded">Mandatorio</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onUpsertBattery({
+                                            ...editingBatt,
+                                            requirements: editingBatt.requirements?.map((r: any) => r.id)
+                                        });
+                                        if (res.success) {
+                                            setEditingBattery(null);
+                                            alert('Batería guardada con éxito');
+                                        } else {
+                                            alert('Error: ' + res.error);
+                                        }
+                                    }}
+                                    className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                >
+                                    Guardar Batería y Vincular Requisitos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };

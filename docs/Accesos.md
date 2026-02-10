@@ -8,6 +8,8 @@ Este documento detalla el diseño de un sistema de gestión de acceso robusto y 
 
 El sistema actúa como la puerta de entrada de la aplicación, asegurando que la asignación de funcionalidades no sea estática, sino controlada dinámicamente por la consola administrativa.
 
+Cada empresa que utilice el sisterma  podra ocupar una o mas funcionalidades dependiedo de las que sean asignadas por el superusuario Marcelo Avila
+
 ### 1.1. Determinación de Accesos a Nivel de Consola
 
 Un administrador tendrá la facultad de definir granularmente los siguientes niveles de acceso:
@@ -78,7 +80,7 @@ Debido a la heterogeneidad de las facultades de los usuarios, se establece la si
 
  | Acceso a una sola empresa, módulos de consulta y solo lectura.
 
- |
+
 
 ---
 
@@ -103,7 +105,4 @@ Ciertas herramientas son transversales a la organización, pero su alcance está
 > **Resumen de Seguridad:** La arquitectura garantiza que la información llegue únicamente a las personas correctas, manteniendo la confidencialidad y la integridad de los datos en todo momento.
 > 
 > 
-
 ---
-
-¿Deseas que profundice en la descripción técnica de alguno de los perfiles de usuario mencionados? 

@@ -267,20 +267,52 @@ export const useClinicalProcedures = () => {
         }
     };
 
-    const verifyDocument = async (docId: string, verified: boolean) => {
+    const verifyDocument = async (docId: string, verified: boolean, file?: File) => {
         try {
+            let documentUrl: string | null = null;
+
+            // If a file is provided, upload it to Supabase Storage
+            if (file && verified) {
+                const fileExt = file.name.split('.').pop() || 'pdf';
+                const filePath = `clinical/${docId}_${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('documents')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = supabase.storage
+                    .from('documents')
+                    .getPublicUrl(filePath);
+
+                documentUrl = urlData.publicUrl;
+            }
+
+            const updatePayload: Record<string, any> = {
+                verified,
+                verified_at: verified ? new Date().toISOString() : null
+            };
+            if (documentUrl) {
+                updatePayload.document_url = documentUrl;
+            }
+            if (!verified) {
+                updatePayload.document_url = null;
+            }
+
             const { error } = await supabase
                 .from('appointment_documents')
-                .update({
-                    verified,
-                    verified_at: verified ? new Date().toISOString() : null
-                })
+                .update(updatePayload)
                 .eq('id', docId);
 
             if (error) throw error;
             await fetchData();
             return { success: true };
         } catch (err: any) {
+            console.error('❌ Error verificando documento:', err.message || err);
             return { success: false, error: err.message };
         }
     };
@@ -416,7 +448,8 @@ export const useClinicalProcedures = () => {
             await fetchData();
             return { success: true };
         } catch (err: any) {
-            return { success: false, error: err.message };
+            console.error('❌ Error eliminando procedimiento:', err.message || err);
+            return { success: false, error: err.message || 'Error al eliminar' };
         }
     };
 

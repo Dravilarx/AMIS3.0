@@ -204,7 +204,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             </div>
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Domicilio Actual</label>
+                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Domicilio Actual</label>
                             <input
                                 value={formData.patientAddress}
                                 onChange={(e) => setFormData({ ...formData, patientAddress: e.target.value })}
@@ -256,7 +256,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Procedimiento Médico</label>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Procedimiento Médico</label>
                                 <select
                                     required
                                     value={formData.procedureId}
@@ -270,7 +270,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Centro / Sede AMIS</label>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Centro / Sede AMIS</label>
                                 <select
                                     required
                                     value={formData.centerId}
@@ -284,7 +284,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Fecha Programada</label>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Fecha Programada</label>
                                 <input
                                     type="date"
                                     required
@@ -294,7 +294,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Hora Estimada</label>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Hora Estimada</label>
                                 <input
                                     type="time"
                                     required
@@ -304,7 +304,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5 md:col-span-2">
-                                <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Médico / Especialista a Cargo</label>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Médico / Especialista a Cargo</label>
                                 <select
                                     required
                                     value={formData.doctorId}
@@ -319,7 +319,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             </div>
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-1">Institución de Referencia</label>
+                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Institución de Referencia</label>
                             <input
                                 value={formData.referralInstitution}
                                 onChange={(e) => setFormData({ ...formData, referralInstitution: e.target.value })}
