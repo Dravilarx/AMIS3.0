@@ -273,12 +273,23 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             // 1. Specific: Inst + Mod + Tipo
             // 2. Mid: Inst + TODAS + Tipo
             // 3. Fallback: 60 min (1h)
+            //
+            // Agrupación de tipos para SLA:
+            //   M (Mutual) → busca SLA de U (Urgencia)
+            //   UPC, UTI   → busca SLA de H (Hospitalizado)
+            //   ONC        → busca SLA propio de ONC
+            const TIPO_SLA_GROUP: Record<string, string> = {
+                'M': 'U',
+                'UPC': 'H',
+                'UTI': 'H',
+            };
+            const slaLookupTipo = TIPO_SLA_GROUP[r.tipo] || r.tipo;
 
             const findSla = () => {
-                const k1 = `${r.aetitle}|${r.modalidad}|${r.tipo}`;
+                const k1 = `${r.aetitle}|${r.modalidad}|${slaLookupTipo}`;
                 if (institutionalSlaMap.has(k1)) return institutionalSlaMap.get(k1);
 
-                const k2 = `${r.aetitle}|TODAS|${r.tipo}`;
+                const k2 = `${r.aetitle}|TODAS|${slaLookupTipo}`;
                 if (institutionalSlaMap.has(k2)) return institutionalSlaMap.get(k2);
 
                 return 60; // Default 1h (60 min)

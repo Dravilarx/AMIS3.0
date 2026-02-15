@@ -9,6 +9,7 @@ export type Criticality = 'baja' | 'media' | 'alta' | 'critica';
 export type ContractStatus = 'draft' | 'active' | 'expired' | 'terminated' | 'renewing';
 export type SLACategory = 'urgencia' | 'ambulatorio' | 'hospitalizado' | 'prioritario' | 'oncologico';
 export type ActivityEventType = 'reunion' | 'llamada' | 'email' | 'visita' | 'incidente' | 'nota' | 'auditoria';
+export type InstitutionCategory = 'clinica' | 'hospital' | 'municipalidad' | 'servicio_salud' | 'sar' | 'centro_medico' | 'laboratorio' | 'clinica_dental' | 'centro_imagen' | 'mutual' | 'isapre' | 'fonasa' | 'otro';
 
 export interface Institution {
     id: string;
@@ -20,6 +21,8 @@ export interface Institution {
     region?: string;
     sector: string;
     institutionType: InstitutionType;
+    institutionCategory: InstitutionCategory;
+    institutionCode?: string;
     criticality: Criticality;
     isActive: boolean;
     notes?: string;
@@ -109,3 +112,20 @@ export const EVENT_TYPE_LABELS: Record<ActivityEventType, string> = {
     nota: 'Nota Interna',
     auditoria: 'Auditoría',
 };
+
+/** Categorías institucionales con prefijo de código */
+export const INSTITUTION_CATEGORIES: { value: InstitutionCategory; label: string; prefix: string; icon: string }[] = [
+    { value: 'clinica', label: 'Clínica', prefix: 'CLI', icon: '🏥' },
+    { value: 'hospital', label: 'Hospital', prefix: 'HOS', icon: '🏨' },
+    { value: 'centro_medico', label: 'Centro Médico', prefix: 'CME', icon: '⚕️' },
+    { value: 'centro_imagen', label: 'Centro de Imágenes', prefix: 'CIM', icon: '📡' },
+    { value: 'laboratorio', label: 'Laboratorio', prefix: 'LAB', icon: '🔬' },
+    { value: 'clinica_dental', label: 'Clínica Dental', prefix: 'CDN', icon: '🦷' },
+    { value: 'municipalidad', label: 'Municipalidad', prefix: 'MUN', icon: '🏛️' },
+    { value: 'servicio_salud', label: 'Servicio de Salud', prefix: 'SSA', icon: '🏢' },
+    { value: 'sar', label: 'SAR', prefix: 'SAR', icon: '🚑' },
+    { value: 'mutual', label: 'Mutual de Seguridad', prefix: 'MUT', icon: '🛡️' },
+    { value: 'isapre', label: 'Isapre', prefix: 'ISA', icon: '💳' },
+    { value: 'fonasa', label: 'Fonasa', prefix: 'FON', icon: '🏦' },
+    { value: 'otro', label: 'Otro', prefix: 'OTR', icon: '📋' },
+];

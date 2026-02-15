@@ -34,6 +34,7 @@ export const useProfessionals = () => {
                 phone: p.phone,
                 role: p.role,
                 status: p.status,
+                isActive: p.is_active ?? true,
                 registrationExpiry: p.registration_expiry,
                 university: p.university,
                 registrationNumber: p.registration_number,
@@ -70,33 +71,34 @@ export const useProfessionals = () => {
 
     const addProfessional = async (professional: Omit<Professional, 'id'>) => {
         try {
-            setLoading(true);
+            // Helper: empty strings → null (PostgreSQL no acepta "" en campos date/etc)
+            const orNull = (v: string | undefined | null) => (v && v.trim() !== '' ? v.trim() : null);
 
             // 1. Insertar el profesional
             const { data: profData, error: profError } = await supabase
                 .from('professionals')
                 .insert([{
                     name: professional.name,
-                    last_name: professional.lastName,
-                    email: professional.email,
-                    national_id: professional.nationalId,
-                    nationality: professional.nationality,
-                    birth_date: professional.birthDate,
-                    joining_date: professional.joiningDate,
-                    phone: professional.phone,
-                    role: professional.role,
+                    last_name: orNull(professional.lastName),
+                    email: orNull(professional.email),
+                    national_id: orNull(professional.nationalId),
+                    nationality: orNull(professional.nationality),
+                    birth_date: orNull(professional.birthDate),
+                    joining_date: orNull(professional.joiningDate),
+                    phone: orNull(professional.phone),
+                    role: orNull(professional.role),
                     status: professional.status,
-                    registration_expiry: professional.registrationExpiry,
-                    university: professional.university,
-                    registration_number: professional.registrationNumber,
-                    specialty: professional.specialty,
-                    sub_specialty: professional.subSpecialty,
-                    team: professional.team,
-                    username: professional.username,
-                    signature_type: professional.signatureType,
-                    city: professional.residence?.city,
-                    region: professional.residence?.region,
-                    country: professional.residence?.country,
+                    is_active: professional.isActive ?? true,
+                    university: orNull(professional.university),
+                    registration_number: orNull(professional.registrationNumber),
+                    specialty: orNull(professional.specialty),
+                    sub_specialty: orNull(professional.subSpecialty),
+                    team: orNull(professional.team),
+                    username: orNull(professional.username),
+                    signature_type: orNull(professional.signatureType),
+                    city: orNull(professional.residence?.city),
+                    region: orNull(professional.residence?.region),
+                    country: orNull(professional.residence?.country),
                     competencies: professional.competencies,
                     induction: professional.induction
                 }])
@@ -126,8 +128,6 @@ export const useProfessionals = () => {
         } catch (err: any) {
             console.error('Error adding professional:', err);
             return { success: false, error: err.message };
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -135,31 +135,34 @@ export const useProfessionals = () => {
         try {
             setLoading(true);
 
+            // Helper: empty strings → null (PostgreSQL no acepta "" en campos date/etc)
+            const orNull = (v: string | undefined | null) => (v && v.trim() !== '' ? v.trim() : null);
+
             // 1. Actualizar el profesional
             const { error: profError } = await supabase
                 .from('professionals')
                 .update({
                     name: professional.name,
-                    last_name: professional.lastName,
-                    email: professional.email,
-                    national_id: professional.nationalId,
-                    nationality: professional.nationality,
-                    birth_date: professional.birthDate,
-                    joining_date: professional.joiningDate,
-                    phone: professional.phone,
-                    role: professional.role,
+                    last_name: orNull(professional.lastName),
+                    email: orNull(professional.email),
+                    national_id: orNull(professional.nationalId),
+                    nationality: orNull(professional.nationality),
+                    birth_date: orNull(professional.birthDate),
+                    joining_date: orNull(professional.joiningDate),
+                    phone: orNull(professional.phone),
+                    role: orNull(professional.role),
                     status: professional.status,
-                    registration_expiry: professional.registrationExpiry,
-                    university: professional.university,
-                    registration_number: professional.registrationNumber,
-                    specialty: professional.specialty,
-                    sub_specialty: professional.subSpecialty,
-                    team: professional.team,
-                    username: professional.username,
-                    signature_type: professional.signatureType,
-                    city: professional.residence?.city,
-                    region: professional.residence?.region,
-                    country: professional.residence?.country,
+                    is_active: professional.isActive ?? true,
+                    university: orNull(professional.university),
+                    registration_number: orNull(professional.registrationNumber),
+                    specialty: orNull(professional.specialty),
+                    sub_specialty: orNull(professional.subSpecialty),
+                    team: orNull(professional.team),
+                    username: orNull(professional.username),
+                    signature_type: orNull(professional.signatureType),
+                    city: orNull(professional.residence?.city),
+                    region: orNull(professional.residence?.region),
+                    country: orNull(professional.residence?.country),
                     competencies: professional.competencies,
                     induction: professional.induction
                 })
@@ -205,11 +208,7 @@ export const useProfessionals = () => {
             setLoading(true);
             const { error } = await supabase
                 .from('professionals')
-                .update({
-                    is_deleted: true,
-                    archived_at: new Date().toISOString(),
-                    status: 'inhabilitado'
-                })
+                .delete()
                 .eq('id', id);
 
             if (error) throw error;
@@ -242,6 +241,7 @@ export const useProfessionals = () => {
                     phone: dataToClone.phone,
                     role: dataToClone.role,
                     status: 'active',
+                    is_active: true,
                     university: dataToClone.university,
                     specialty: dataToClone.specialty,
                     sub_specialty: dataToClone.subSpecialty,

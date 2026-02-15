@@ -55,6 +55,7 @@ export interface Professional {
     phone: string;
     role: 'Médico' | 'Tecnólogo Médico' | 'Administración' | 'Ejecutivo' | 'TENS' | 'Enfermera' | 'Ingeniero' | 'Radiólogo' | 'Secretaria';
     status: 'active' | 'inhabilitado' | 'suspendido';
+    isActive: boolean;
     registrationExpiry?: string;
 
     /** Datos para personal de salud */

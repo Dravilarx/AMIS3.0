@@ -20,6 +20,8 @@ const mapInstitution = (row: any): Institution => ({
     region: row.region,
     sector: row.sector,
     institutionType: row.institution_type,
+    institutionCategory: row.institution_category || 'otro',
+    institutionCode: row.institution_code,
     criticality: row.criticality,
     isActive: row.is_active,
     notes: row.notes,
@@ -178,21 +180,23 @@ export const useInstitutions = () => {
 
     // ── CRUD Institución ──
     const addInstitution = useCallback(async (inst: Partial<Institution>) => {
-        const { error } = await supabase.from('institutions').insert([{
-            legal_name: inst.legalName,
-            commercial_name: inst.commercialName,
-            rut: inst.rut,
-            address: inst.address,
-            city: inst.city,
-            region: inst.region,
+        const orNull = (v: string | undefined | null) => (v && v.trim() !== '' ? v.trim() : null);
+        const { data, error } = await supabase.from('institutions').insert([{
+            legal_name: inst.legalName?.trim(),
+            commercial_name: orNull(inst.commercialName),
+            rut: orNull(inst.rut),
+            address: orNull(inst.address),
+            city: orNull(inst.city),
+            region: orNull(inst.region),
             sector: inst.sector || 'salud',
             institution_type: inst.institutionType || 'privado',
+            institution_category: inst.institutionCategory || 'otro',
             criticality: inst.criticality || 'media',
             is_active: inst.isActive ?? true,
-            notes: inst.notes,
-        }]);
+            notes: orNull(inst.notes),
+        }]).select().single();
         if (!error) fetchInstitutions();
-        return { success: !error, error };
+        return { success: !error, error, data: data ? mapInstitution(data) : null };
     }, [fetchInstitutions]);
 
     const updateInstitution = useCallback(async (id: string, inst: Partial<Institution>) => {
@@ -205,6 +209,7 @@ export const useInstitutions = () => {
         if (inst.region !== undefined) updates.region = inst.region;
         if (inst.sector !== undefined) updates.sector = inst.sector;
         if (inst.institutionType !== undefined) updates.institution_type = inst.institutionType;
+        if (inst.institutionCategory !== undefined) updates.institution_category = inst.institutionCategory;
         if (inst.criticality !== undefined) updates.criticality = inst.criticality;
         if (inst.isActive !== undefined) updates.is_active = inst.isActive;
         if (inst.notes !== undefined) updates.notes = inst.notes;

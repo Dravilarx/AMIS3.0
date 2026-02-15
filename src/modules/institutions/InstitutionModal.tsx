@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Building2, UserCircle, Tag, Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { X, Building2, UserCircle, Tag, Plus, Trash2, Save, Loader2, Hash } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useInstitutions } from '../../hooks/useInstitutions';
-import type { Institution, InstitutionContact, InstitutionType, Criticality } from '../../types/institutions';
+import type { Institution, InstitutionContact, InstitutionType, InstitutionCategory, Criticality } from '../../types/institutions';
+import { INSTITUTION_CATEGORIES } from '../../types/institutions';
 
 interface InstitutionModalProps {
     institution?: Institution | null;
@@ -23,6 +24,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
     const { addInstitution, updateInstitution } = useInstitutions();
     const isEditing = !!institution;
     const [saving, setSaving] = useState(false);
+    const [generatedCode, setGeneratedCode] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'datos' | 'contactos' | 'clasificacion'>('datos');
 
     // ── Form State ──
@@ -35,6 +37,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
         region: institution?.region || '',
         sector: institution?.sector || 'salud',
         institutionType: (institution?.institutionType || 'privado') as InstitutionType,
+        institutionCategory: (institution?.institutionCategory || 'otro') as InstitutionCategory,
         criticality: (institution?.criticality || 'media') as Criticality,
         notes: institution?.notes || '',
     });
@@ -61,27 +64,42 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
     };
 
     const handleSubmit = async () => {
-        if (!form.legalName.trim()) return;
+        if (!form.legalName.trim()) {
+            alert('Debes ingresar la Razón Social');
+            return;
+        }
         setSaving(true);
 
         try {
             if (isEditing && institution) {
-                await updateInstitution(institution.id, form);
+                const result = await updateInstitution(institution.id, form);
+                if (!result.success) {
+                    alert('Error al guardar: ' + (result.error?.message || 'Error desconocido'));
+                    return;
+                }
             } else {
                 const result = await addInstitution(form);
-                // Save contacts if new institution was created successfully
-                if (result.success) {
-                    // We need a small delay to get the new institution ID
-                    // For now, contacts will be added via the detail panel
+                if (!result.success) {
+                    alert('Error al crear: ' + (result.error?.message || 'Error desconocido'));
+                    return;
+                }
+                if (result.data) {
+                    setGeneratedCode(result.data.institutionCode || null);
                 }
             }
-            onSuccess();
-        } catch (err) {
+            if (!generatedCode) {
+                onSuccess();
+            }
+        } catch (err: any) {
             console.error('Error saving institution:', err);
+            alert('Error inesperado: ' + err.message);
         } finally {
             setSaving(false);
         }
     };
+
+    // Obtener info de la categoría seleccionada
+    const selectedCategory = INSTITUTION_CATEGORIES.find(c => c.value === form.institutionCategory);
 
     const tabs = [
         { id: 'datos' as const, label: 'Datos Legales', icon: Building2 },
@@ -92,6 +110,49 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
     const inputCls = "w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-sm text-prevenort-text/80 placeholder-prevenort-text/20 focus:outline-none focus:border-info/50 focus:bg-prevenort-surface/80 transition-all";
     const labelCls = "text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest mb-1.5 block";
 
+    // ── Vista de éxito con código generado ──
+    if (generatedCode) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="relative w-full max-w-md bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 p-8 text-center">
+                    {/* Código generado grande */}
+                    <div className="mb-6">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                            <Hash className="w-8 h-8 text-emerald-400" />
+                        </div>
+                        <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-2">Institución Registrada</p>
+                        <h3 className="text-lg font-black text-prevenort-text mb-4">{form.legalName}</h3>
+                    </div>
+
+                    {/* Código grande con efecto */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 rounded-2xl blur-xl" />
+                        <div className="relative bg-prevenort-surface border border-prevenort-border rounded-2xl p-6">
+                            <p className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest mb-2">Código Institucional</p>
+                            <div className="flex items-center justify-center gap-3">
+                                <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-[0.15em]">
+                                    {generatedCode}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2 mt-3">
+                                <span className="text-lg">{selectedCategory?.icon}</span>
+                                <span className="text-xs font-bold text-prevenort-text/40">{selectedCategory?.label}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onSuccess}
+                        className="px-6 py-3 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-prevenort-primary/20"
+                    >
+                        Continuar
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
@@ -101,13 +162,21 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
             <div className="relative w-full max-w-2xl bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-prevenort-border">
-                    <div>
-                        <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">
-                            {isEditing ? 'Editar' : 'Nueva'} Institución
-                        </span>
-                        <h3 className="text-lg font-black text-prevenort-text tracking-tight">
-                            {isEditing ? institution?.legalName : 'Registrar Cliente Institucional'}
-                        </h3>
+                    <div className="flex items-center gap-3">
+                        <div>
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">
+                                {isEditing ? 'Editar' : 'Nueva'} Institución
+                            </span>
+                            <h3 className="text-lg font-black text-prevenort-text tracking-tight">
+                                {isEditing ? institution?.legalName : 'Registrar Cliente Institucional'}
+                            </h3>
+                        </div>
+                        {/* Mostrar código existente si está editando */}
+                        {isEditing && institution?.institutionCode && (
+                            <div className="ml-3 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                <span className="text-xs font-black text-blue-400 tracking-widest">{institution.institutionCode}</span>
+                            </div>
+                        )}
                     </div>
                     <button
                         onClick={onClose}
@@ -141,6 +210,33 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                     {/* Tab: Datos Legales */}
                     {activeTab === 'datos' && (
                         <div className="space-y-4">
+                            {/* Categoría Institucional - NUEVA */}
+                            <div>
+                                <label className={labelCls}>Categoría Institucional *</label>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {INSTITUTION_CATEGORIES.map(({ value, label, prefix, icon }) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            onClick={() => setField('institutionCategory', value)}
+                                            className={cn(
+                                                'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-bold border transition-all',
+                                                form.institutionCategory === value
+                                                    ? 'bg-blue-600/15 text-blue-400 border-blue-500/30 shadow-lg shadow-blue-500/5'
+                                                    : 'bg-prevenort-surface/30 text-prevenort-text/25 border-prevenort-border hover:border-prevenort-text/15 hover:text-prevenort-text/40'
+                                            )}
+                                        >
+                                            <span className="text-base">{icon}</span>
+                                            <span className="truncate w-full text-center leading-tight">{label}</span>
+                                            <span className={cn(
+                                                'text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded',
+                                                form.institutionCategory === value ? 'bg-blue-500/20 text-blue-300' : 'text-prevenort-text/15'
+                                            )}>{prefix}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <label className={labelCls}>Razón Social *</label>
@@ -341,26 +437,40 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-prevenort-border">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={saving || !form.legalName.trim()}
-                        className={cn(
-                            'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-tight transition-all',
-                            saving || !form.legalName.trim()
-                                ? 'bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed'
-                                : 'bg-prevenort-primary hover:bg-prevenort-primary/90 text-white shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30'
+                <div className="flex items-center justify-between px-6 py-4 border-t border-prevenort-border">
+                    {/* Preview del código que se generará */}
+                    <div className="flex items-center gap-2">
+                        {!isEditing && selectedCategory && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-prevenort-surface/50 border border-prevenort-border rounded-xl">
+                                <Hash className="w-3 h-3 text-prevenort-text/20" />
+                                <span className="text-[10px] font-black text-prevenort-text/30 tracking-widest">
+                                    {selectedCategory.prefix}-XXXX
+                                </span>
+                                <span className="text-[9px] text-prevenort-text/15">se generará automáticamente</span>
+                            </div>
                         )}
-                    >
-                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                        {isEditing ? 'Guardar Cambios' : 'Crear Institución'}
-                    </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={saving || !form.legalName.trim()}
+                            className={cn(
+                                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-tight transition-all',
+                                saving || !form.legalName.trim()
+                                    ? 'bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed'
+                                    : 'bg-prevenort-primary hover:bg-prevenort-primary/90 text-white shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30'
+                            )}
+                        >
+                            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                            {isEditing ? 'Guardar Cambios' : 'Crear Institución'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

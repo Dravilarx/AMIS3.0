@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     BarChart3,
     ShieldAlert,
@@ -41,6 +41,81 @@ import {
     deleteGrupoMedico
 } from './multirisService';
 import type { MedicoGroup } from './multirisService';
+import { useInstitutions } from '../../hooks/useInstitutions';
+import { useProfessionals } from '../../hooks/useProfessionals';
+
+// --- Componente de Autocomplete para Equivalencias ---
+function SuggestionInput({ defaultValue, suggestions, placeholder, onConfirm }: {
+    defaultValue: string;
+    suggestions: string[];
+    placeholder: string;
+    onConfirm: (value: string) => void;
+}) {
+    const [value, setValue] = useState(defaultValue);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [focused, setFocused] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const filtered = value.trim()
+        ? suggestions.filter(s =>
+            s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase()
+        ).slice(0, 8)
+        : suggestions.slice(0, 8);
+
+    const handleSelect = (s: string) => {
+        setValue(s);
+        setShowDropdown(false);
+        onConfirm(s);
+    };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setShowDropdown(false);
+                setFocused(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+        <div ref={containerRef} className="relative flex-1">
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => { setValue(e.target.value); setShowDropdown(true); }}
+                onFocus={() => { setFocused(true); setShowDropdown(true); }}
+                onBlur={() => { setTimeout(() => { if (!focused) setShowDropdown(false); }, 200); onConfirm(value); }}
+                placeholder={placeholder}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold focus:border-success outline-none transition-all"
+            />
+            {showDropdown && filtered.length > 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-neutral-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto no-scrollbar">
+                    <div className="px-3 py-1.5 text-[8px] font-black text-white/20 uppercase tracking-widest border-b border-white/5">
+                        Sugerencias de AMIS
+                    </div>
+                    {filtered.map((s, i) => (
+                        <button
+                            key={i}
+                            onMouseDown={(e) => { e.preventDefault(); handleSelect(s); }}
+                            className="w-full text-left px-4 py-2 text-xs font-bold text-white/70 hover:bg-success/10 hover:text-success transition-colors flex items-center gap-2"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-success/40" />
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            )}
+            {value !== defaultValue && value.trim() && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" title="Sin guardar" />
+                </div>
+            )}
+        </div>
+    );
+}
 
 // --- Componentes de UI ---
 
@@ -113,7 +188,13 @@ export const StatMultirisModule: React.FC = () => {
     const [selectedGrupo, setSelectedGrupo] = useState<string | null>(null);
     const [rankMode, setRankMode] = useState<'instituciones' | 'medicos'>('instituciones');
     const [rankMetric, setRankMetric] = useState<'exams' | 'addendas' | 'sla' | 'tat'>('exams');
-    const [rankTipo, setRankTipo] = useState<'ALL' | 'U' | 'A' | 'H'>('ALL');
+    const [rankTipo, setRankTipo] = useState<'ALL' | 'U' | 'A' | 'H' | 'ONC'>('ALL');
+
+    // Datos maestros para sugerencias de equivalencias
+    const { institutions } = useInstitutions();
+    const { professionals } = useProfessionals();
+    const institutionSuggestions = institutions.map(i => i.commercialName || i.legalName).filter(Boolean) as string[];
+    const professionalSuggestions = professionals.map(p => `${p.lastName} ${p.name}`.trim()).filter(Boolean);
     const [rankOrder, setRankOrder] = useState<'auto' | 'asc' | 'desc'>('auto');
     const [filterModalidad, setFilterModalidad] = useState<string>('TODAS');
     const [filterInstitucion, setFilterInstitucion] = useState<string>('TODAS');
@@ -324,7 +405,14 @@ export const StatMultirisModule: React.FC = () => {
     const addendaPercentage = totalExams > 0 ? ((totalAddendas / totalExams) * 100).toFixed(1) : '0';
 
     // Desglose por Tipo de Paciente
-    const tipoLabels: Record<string, string> = { U: 'Urgencias', A: 'Ambulat.', H: 'Hospital.', M: 'Mixto', O: 'Otros', UPC: 'UPC', UTI: 'UTI' };
+    const tipoLabels: Record<string, string> = { U: 'Urgencia', A: 'Ambulat.', H: 'Hospital.', M: 'Mutual', O: 'Otros', UPC: 'Ud. Pac. Crít.', UTI: 'UTI', ONC: 'Oncológ.' };
+    // Agrupación para filtrado: M se suma a U, UPC/UTI se suman a H
+    const TIPO_GROUPS: Record<string, string[]> = {
+        U: ['U', 'M'],
+        A: ['A'],
+        H: ['H', 'UPC', 'UTI'],
+        ONC: ['ONC'],
+    };
     const byTipo = filteredData.reduce((acc, curr) => {
         const t = curr.tipo_paciente || 'O';
         if (!acc[t]) acc[t] = { exams: 0, sla: 0, tatSum: 0, addendas: 0 };
@@ -490,12 +578,11 @@ export const StatMultirisModule: React.FC = () => {
                                                 <div className="flex flex-col gap-2">
                                                     <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-white">{m.raw_name}</span></span>
                                                     <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="text"
+                                                        <SuggestionInput
                                                             defaultValue={m.formal_name}
-                                                            onBlur={(e) => handleUpdateMapping(m.id, e.target.value)}
+                                                            suggestions={institutionSuggestions}
                                                             placeholder="Nombre formal en AMIS..."
-                                                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold focus:border-success outline-none"
+                                                            onConfirm={(v) => handleUpdateMapping(m.id, v)}
                                                         />
                                                         <div className="p-2 bg-success/20 text-success rounded-xl">
                                                             <UserCheck className="w-4 h-4" />
@@ -517,12 +604,11 @@ export const StatMultirisModule: React.FC = () => {
                                                 <div className="flex flex-col gap-2">
                                                     <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-white">{m.raw_name}</span></span>
                                                     <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="text"
+                                                        <SuggestionInput
                                                             defaultValue={m.formal_name}
-                                                            onBlur={(e) => handleUpdateMapping(m.id, e.target.value)}
+                                                            suggestions={professionalSuggestions}
                                                             placeholder="Nombre Real / Recursos Humanos..."
-                                                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold focus:border-success outline-none"
+                                                            onConfirm={(v) => handleUpdateMapping(m.id, v)}
                                                         />
                                                         <div className="p-2 bg-success/20 text-success rounded-xl">
                                                             <UserCheck className="w-4 h-4" />
@@ -580,9 +666,13 @@ export const StatMultirisModule: React.FC = () => {
                                                     onChange={(e) => setNewSla({ ...newSla, tipo: e.target.value })}
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
                                                 >
-                                                    <option value="U">Urgencia (U)</option>
+                                                    <option value="U">Urgencia (U) — incluye Mutual</option>
                                                     <option value="A">Ambulatorio (A)</option>
-                                                    <option value="H">Hospitalizado (H)</option>
+                                                    <option value="H">Hospitalizado (H) — incluye UPC, UTI</option>
+                                                    <option value="M">Mutual (M) — usa SLA de Urgencia</option>
+                                                    <option value="UPC">Unidad Paciente Crítico (UPC) — usa SLA de Hospital.</option>
+                                                    <option value="UTI">UTI — usa SLA de Hospitalizado</option>
+                                                    <option value="ONC">Oncológico (ONC)</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1086,7 +1176,7 @@ export const StatMultirisModule: React.FC = () => {
                                     return acc;
                                 }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
                                 const instTipoKeys = Object.keys(instByTipo).sort((a, b) => instByTipo[b].exams - instByTipo[a].exams).slice(0, 3);
-                                const tc = (k: string) => k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60';
+                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-white/40';
                                 return (
                                     <motion.div key="inst" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                         <div className="card-premium">
@@ -1226,7 +1316,7 @@ export const StatMultirisModule: React.FC = () => {
                                     return acc;
                                 }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
                                 const medTipoKeys = Object.keys(medByTipo).sort((a, b) => medByTipo[b].exams - medByTipo[a].exams).slice(0, 3);
-                                const tc = (k: string) => k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60';
+                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-white/40';
                                 return (
                                     <motion.div key="med" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
                                         <div className="card-premium">
@@ -1735,9 +1825,10 @@ export const StatMultirisModule: React.FC = () => {
                                 const rankByTipo = rankTipo === 'ALL' ? rankData.map((item: any) => {
                                     return { ...item };
                                 }) : (() => {
-                                    // Recalcular stats por entidad filtrando por tipo_paciente
+                                    // Recalcular stats por entidad filtrando por tipo_paciente (con agrupación)
                                     const groupField = rankMode === 'instituciones' ? 'institucion' : 'medico';
-                                    const tipoFiltered = filteredData.filter(d => d.tipo_paciente === rankTipo);
+                                    const matchTipos = TIPO_GROUPS[rankTipo] || [rankTipo];
+                                    const tipoFiltered = filteredData.filter(d => matchTipos.includes(d.tipo_paciente));
                                     const grouped = tipoFiltered.reduce((acc, curr) => {
                                         const key = getFormalName(curr[groupField], groupField === 'institucion' ? 'institucion' : 'medico');
                                         if (!acc[key]) acc[key] = { name: key, volume: 0, adendas: 0, withinSla: 0, tatSum: 0 };
@@ -1778,7 +1869,7 @@ export const StatMultirisModule: React.FC = () => {
                                 });
                                 const maxVal = sorted.length > 0 ? Math.max(...sorted.map((s: any) => getValue(s)), 1) : 1;
                                 const metricLabels: Record<string, string> = { exams: 'Exámenes', addendas: '% Adendas', sla: '% SLA', tat: 'TAT Promedio' };
-                                const tipoFilterLabels: Record<string, string> = { ALL: 'Todos', U: 'Urgencias', A: 'Ambulatorio', H: 'Hospitalizado' };
+                                const tipoFilterLabels: Record<string, string> = { ALL: 'Todos', U: 'Urgencia + Mutual', A: 'Ambulatorio', H: 'Hospital. + UPC/UTI', ONC: 'Oncológicos' };
 
                                 return (
                                     <motion.div key="ranking" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
@@ -1817,9 +1908,9 @@ export const StatMultirisModule: React.FC = () => {
                                                 </div>
 
                                                 {/* Tipo Paciente */}
-                                                <div className="flex rounded-xl overflow-hidden border border-white/10">
-                                                    {(['ALL', 'U', 'A', 'H'] as const).map(tp => (
-                                                        <button key={tp} onClick={() => setRankTipo(tp)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankTipo === tp ? (tp === 'U' ? 'bg-danger text-white' : tp === 'A' ? 'bg-success text-black' : tp === 'H' ? 'bg-info text-black' : 'bg-white/20 text-white') : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                <div className="flex flex-wrap rounded-xl overflow-hidden border border-white/10">
+                                                    {(['ALL', 'U', 'A', 'H', 'ONC'] as const).map(tp => (
+                                                        <button key={tp} onClick={() => setRankTipo(tp)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankTipo === tp ? (tp === 'U' ? 'bg-danger text-white' : tp === 'A' ? 'bg-success text-black' : tp === 'H' ? 'bg-info text-black' : tp === 'ONC' ? 'bg-fuchsia-500 text-white' : 'bg-white/20 text-white') : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
                                                             {tipoFilterLabels[tp]}
                                                         </button>
                                                     ))}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Briefcase, GraduationCap, Plus, Trash2, Loader2, Layers, FolderSearch, AlertCircle, CheckCircle2, UploadCloud, ShieldCheck, BookOpen, BellRing, UserCheck, Sparkles, Trash } from 'lucide-react';
+import { X, User, Briefcase, GraduationCap, Plus, Trash2, Loader2, Layers, FolderSearch, AlertCircle, CheckCircle2, UploadCloud, ShieldCheck, BookOpen, BellRing, UserCheck, Sparkles, Trash, Save, AlertOctagon } from 'lucide-react';
 import { useBatteries } from '../dms/useBatteries';
 import { useDocuments } from '../../hooks/useDocuments';
 import { DocumentUploadModal } from '../dms/DocumentUploadModal';
@@ -12,6 +12,7 @@ interface ProfessionalModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (professional: Omit<Professional, 'id'>) => Promise<{ success: boolean; error?: string }>;
+    onDelete?: (id: string) => Promise<{ success: boolean; error?: string }>;
     initialData?: Professional | null;
     existingProfessionals?: Professional[];
 }
@@ -25,7 +26,7 @@ const EMPLOYMENT_RELATIONSHIPS = [
     'Boleta honorarios empresa'
 ];
 
-export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, onClose, onSave, initialData, existingProfessionals }) => {
+export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, onClose, onSave, onDelete, initialData, existingProfessionals }) => {
     const [formData, setFormData] = useState<Omit<Professional, 'id'>>({
         name: '',
         lastName: '',
@@ -37,6 +38,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
         phone: '',
         role: 'Médico',
         status: 'active',
+        isActive: true,
         residence: { city: '', region: '', country: 'Chile' },
         university: '',
         registrationNumber: '',
@@ -67,6 +69,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 phone: initialData.phone || '',
                 role: initialData.role,
                 status: initialData.status,
+                isActive: initialData.isActive ?? true,
                 residence: initialData.residence,
                 registrationNumber: initialData.registrationNumber || '',
                 specialty: initialData.specialty || '',
@@ -94,6 +97,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 phone: '',
                 role: 'Médico',
                 status: 'active',
+                isActive: true,
                 residence: { city: '', region: '', country: 'Chile' },
                 university: '',
                 registrationNumber: '',
@@ -115,7 +119,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
 
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [activeTab, setActiveTab] = useState<'info' | 'academic' | 'contracts' | 'expediente' | 'induction'>('info');
+
+    const isEditing = !!initialData;
 
     // Integración de Baterías
     const { batteries } = useBatteries();
@@ -277,9 +285,28 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Sección 1: Cargo y Rol */}
                             <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Briefcase className="w-4 h-4 text-blue-400" />
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Información del Cargo</h3>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Briefcase className="w-4 h-4 text-blue-400" />
+                                        <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Información del Cargo</h3>
+                                    </div>
+                                    {/* Toggle Activo/Inactivo */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                        className={cn(
+                                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 border-2",
+                                            formData.isActive
+                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)]"
+                                                : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20 shadow-[0_0_10px_-3px_rgba(239,68,68,0.3)]"
+                                        )}
+                                    >
+                                        <span className={cn(
+                                            "w-2.5 h-2.5 rounded-full transition-colors",
+                                            formData.isActive ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+                                        )} />
+                                        {formData.isActive ? 'ACTIVO' : 'INACTIVO'}
+                                    </button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -761,21 +788,93 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         </div>
                     )}
 
-                    <div className="flex gap-3 pt-6 border-t border-prevenort-border">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-prevenort-border rounded-lg hover:bg-prevenort-surface transition-all text-sm font-medium text-prevenort-text"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            disabled={isSubmitting}
-                            type="submit"
-                            className="flex-[2] px-4 py-2 bg-prevenort-text text-prevenort-bg hover:opacity-90 rounded-lg transition-all text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</> : 'Vincular Profesional'}
-                        </button>
+                    <div className="pt-6 border-t border-prevenort-border space-y-3">
+                        {/* Confirmación de eliminación */}
+                        {showDeleteConfirm && (
+                            <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <AlertOctagon className="w-5 h-5 text-red-400 flex-shrink-0" />
+                                <p className="text-xs text-red-300 flex-1">¿Estás seguro de <strong>eliminar permanentemente</strong> a <strong>{initialData?.name} {initialData?.lastName}</strong>?</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="px-3 py-1.5 text-xs font-bold border border-prevenort-border rounded-lg hover:bg-prevenort-surface transition-all text-prevenort-text"
+                                    >
+                                        No
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={isDeleting}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (!onDelete || !initialData) return;
+                                            setIsDeleting(true);
+                                            try {
+                                                const result = await onDelete(initialData.id);
+                                                setIsDeleting(false);
+                                                if (result.success) {
+                                                    setShowDeleteConfirm(false);
+                                                    onClose();
+                                                } else {
+                                                    alert('Error al eliminar: ' + result.error);
+                                                }
+                                            } catch (err: any) {
+                                                setIsDeleting(false);
+                                                alert('Error al eliminar: ' + err.message);
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 text-xs font-black bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        {isDeleting ? <><Loader2 className="w-3 h-3 animate-spin" /> Eliminando...</> : <><Trash2 className="w-3 h-3" /> Sí, Eliminar</>}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Botones principales */}
+                        <div className="flex gap-3">
+                            {/* Botón Eliminar (solo al editar) */}
+                            {isEditing && onDelete && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="px-4 py-2.5 border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 rounded-xl transition-all text-sm font-bold flex items-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Eliminar
+                                </button>
+                            )}
+
+                            {/* Botón Cancelar */}
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2.5 border border-prevenort-border rounded-xl hover:bg-prevenort-surface transition-all text-sm font-medium text-prevenort-text"
+                            >
+                                Cancelar
+                            </button>
+
+                            {/* Botón Guardar */}
+                            <button
+                                disabled={isSubmitting}
+                                type="submit"
+                                className={cn(
+                                    "flex-[2] px-4 py-2.5 rounded-xl transition-all text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2",
+                                    isEditing
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]"
+                                        : "bg-prevenort-text text-prevenort-bg hover:opacity-90"
+                                )}
+                            >
+                                {isSubmitting ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                ) : isEditing ? (
+                                    <><Save className="w-4 h-4" /> Guardar Cambios</>
+                                ) : (
+                                    <><Plus className="w-4 h-4" /> Agregar Profesional</>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </form>
 
