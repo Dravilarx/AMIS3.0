@@ -212,13 +212,6 @@ export const StatMultirisModule: React.FC = () => {
     const [uploadStatus, setUploadStatus] = useState<{ status: 'idle' | 'uploading' | 'success' | 'error', message?: string }>({ status: 'idle' });
     const [isDragging, setIsDragging] = useState(false);
 
-    const [newSla, setNewSla] = useState<{ id?: string, institucion: string, modalidad: string, tipo: string, target_minutes: number }>({
-        institucion: '',
-        modalidad: 'TODAS',
-        tipo: 'U',
-        target_minutes: 120
-    });
-
     useEffect(() => {
         loadData();
         loadConfigs();
@@ -339,43 +332,6 @@ export const StatMultirisModule: React.FC = () => {
             }, 2000);
         } catch (error: any) {
             setUploadStatus({ status: 'error', message: error.message || 'Error al procesar el archivo' });
-        }
-    };
-
-    const handleSaveSla = async () => {
-        try {
-            const configToSave = {
-                ...newSla,
-                institucion: newSla.institucion.trim() === '' ? null : newSla.institucion.trim(),
-                modalidad: newSla.modalidad === 'TODAS' ? null : newSla.modalidad
-            };
-            await saveSlaConfig(configToSave);
-            loadConfigs();
-            // Reset form
-            setNewSla({ institucion: '', modalidad: 'TODAS', tipo: 'U', target_minutes: 120 });
-        } catch (error: any) {
-            alert('Error al guardar configuración: ' + error.message);
-        }
-    };
-
-    const handleEditSla = (config: any) => {
-        setNewSla({
-            id: config.id,
-            institucion: config.institucion || '',
-            modalidad: config.modalidad || 'TODAS',
-            tipo: config.tipo,
-            target_minutes: config.target_minutes
-        });
-        // Scroll to form or just visual feedback is enough
-    };
-
-    const handleDeleteSla = async (id: string) => {
-        if (!confirm('¿Seguro que deseas eliminar esta regla de SLA?')) return;
-        try {
-            await deleteSlaConfig(id);
-            loadConfigs();
-        } catch (error: any) {
-            alert('Error al eliminar: ' + error.message);
         }
     };
 
