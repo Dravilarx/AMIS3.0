@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity } from 'lucide-react';
+
 import { cn } from '../lib/utils';
 
 interface SidebarItemProps {
@@ -27,7 +28,8 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris';
+
     onNavigate: (view: any) => void;
 }
 
@@ -58,6 +60,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'dms', name: 'Archivo Digital', icon: FolderSearch },
         { id: 'ideation', name: 'Innovación', icon: Lightbulb },
         { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
+        { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
+
     ] as const;
 
     return (

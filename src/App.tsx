@@ -14,8 +14,11 @@ import { IdeaAnalyst } from './modules/ideation/IdeaAnalyst'
 import { AdminModule } from './modules/admin/AdminModule'
 import { InstitutionsDashboard } from './modules/institutions/InstitutionsDashboard'
 import { NewsFeed } from './modules/news/NewsFeed'
+import { StatMultirisModule } from './modules/stat-multiris/StatMultirisModule'
+
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris'>('dashboard');
+
 
   const renderView = () => {
     switch (currentView) {
@@ -33,6 +36,8 @@ function App() {
       case 'admin': return <AdminModule />;
       case 'institutions': return <InstitutionsDashboard />;
       case 'news': return <NewsFeed />;
+      case 'stat_multiris': return <StatMultirisModule />;
+
       default: return <DashboardModule />;
     }
   };
