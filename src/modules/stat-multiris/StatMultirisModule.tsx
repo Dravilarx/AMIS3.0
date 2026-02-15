@@ -17,7 +17,14 @@ import {
     Trash2,
     Building2,
     Link2,
-    UserCheck
+    UserCheck,
+    Calendar,
+    Trophy,
+    UsersRound,
+    Crown,
+    X,
+    Edit3,
+    Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,12 +35,16 @@ import {
     saveSlaConfig,
     deleteSlaConfig,
     getNameMappings,
-    saveNameMapping
+    saveNameMapping,
+    getGruposMedicos,
+    saveGrupoMedico,
+    deleteGrupoMedico
 } from './multirisService';
+import type { MedicoGroup } from './multirisService';
 
 // --- Componentes de UI ---
 
-const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = 'primary' }: any) => {
+const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = 'primary', breakdown }: any) => {
     const colors = {
         primary: 'bg-prevenort-primary/10 border-prevenort-primary/20 text-prevenort-primary shadow-orange-500/10',
         success: 'bg-success/10 border-success/20 text-success shadow-green-500/10',
@@ -66,6 +77,16 @@ const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = '
                     <h3 className="text-4xl font-black text-white tracking-tight drop-shadow-sm leading-none">{value}</h3>
                     {subtitle && <span className="text-[10px] text-prevenort-text/30 font-bold uppercase tracking-tighter truncate max-w-[100px]">{subtitle}</span>}
                 </div>
+                {breakdown && breakdown.length > 0 && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-3">
+                        {breakdown.map((b: any, i: number) => (
+                            <span key={i} className="text-[9px] font-black uppercase tracking-wider">
+                                <span className={b.color || 'text-white/25'}>{b.label}:</span>{' '}
+                                <span className="text-white/50">{b.value}</span>
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="mt-6 h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -85,20 +106,34 @@ const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = '
 export const StatMultirisModule: React.FC = () => {
     const [view, setView] = useState<'dashboard' | 'upload' | 'config' | 'mappings'>('dashboard');
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'instituciones' | 'medicos' | 'calidad'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'instituciones' | 'medicos' | 'grupos' | 'calidad' | 'ranking'>('general');
+    // Grupos de médicos
+    const [grupos, setGrupos] = useState<MedicoGroup[]>([]);
+    const [editingGrupo, setEditingGrupo] = useState<MedicoGroup | null>(null);
+    const [selectedGrupo, setSelectedGrupo] = useState<string | null>(null);
+    const [rankMode, setRankMode] = useState<'instituciones' | 'medicos'>('instituciones');
+    const [rankMetric, setRankMetric] = useState<'exams' | 'addendas' | 'sla' | 'tat'>('exams');
+    const [rankTipo, setRankTipo] = useState<'ALL' | 'U' | 'A' | 'H'>('ALL');
+    const [rankOrder, setRankOrder] = useState<'auto' | 'asc' | 'desc'>('auto');
     const [filterModalidad, setFilterModalidad] = useState<string>('TODAS');
     const [filterInstitucion, setFilterInstitucion] = useState<string>('TODAS');
+    const [dateRange, setDateRange] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
+    const [trendGrouping, setTrendGrouping] = useState<'day' | 'week' | 'month' | 'quarter'>('day');
+    const [trendChartType, setTrendChartType] = useState<'bar' | 'dot' | 'line'>('bar');
 
     const [consolidatedData, setConsolidatedData] = useState<any[]>([]);
     const [filteredData, setFilteredData] = useState<any[]>([]);
     const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
     const [mappings, setMappings] = useState<any[]>([]);
+    const [selectedInst, setSelectedInst] = useState<string>('TODAS');
+    const [selectedMedico, setSelectedMedico] = useState<string>('TODAS');
 
     const [uploadStatus, setUploadStatus] = useState<{ status: 'idle' | 'uploading' | 'success' | 'error', message?: string }>({ status: 'idle' });
+    const [isDragging, setIsDragging] = useState(false);
 
-    const [newSla, setNewSla] = useState({
+    const [newSla, setNewSla] = useState<{ id?: string, institucion: string, modalidad: string, tipo: string, target_minutes: number }>({
         institucion: '',
-        modalidad: 'CT',
+        modalidad: 'TODAS',
         tipo: 'U',
         target_minutes: 120
     });
@@ -107,20 +142,35 @@ export const StatMultirisModule: React.FC = () => {
         loadData();
         loadConfigs();
         loadMappings();
+        loadGrupos();
     }, []);
 
-    const loadData = async () => {
+    const loadData = async (startDate?: string | null, endDate?: string | null) => {
         try {
             setLoading(true);
-            const data = await getConsolidatedStats();
-            setConsolidatedData(data);
-            setFilteredData(data);
+            const data = await getConsolidatedStats(startDate, endDate);
+
+            // Force number types to avoid JS concatenation bugs
+            const normalizedData = data.map((d: any) => ({
+                ...d,
+                cantidad_examenes: Number(d.cantidad_examenes || 0),
+                cantidad_adendas: Number(d.cantidad_adendas || 0),
+                cantidad_dentro_sla: Number(d.cantidad_dentro_sla || 0),
+                tat_promedio_minutos: Number(d.tat_promedio_minutos || 0)
+            }));
+
+            setConsolidatedData(normalizedData);
+            setFilteredData(normalizedData);
         } catch (error) {
             console.error('Error loading stats:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        loadData(dateRange.start, dateRange.end);
+    }, [dateRange.start, dateRange.end]);
 
     useEffect(() => {
         let result = consolidatedData;
@@ -130,8 +180,18 @@ export const StatMultirisModule: React.FC = () => {
         if (filterInstitucion !== 'TODAS') {
             result = result.filter(d => d.institucion === filterInstitucion);
         }
+
+        if (dateRange.start) {
+            result = result.filter(d => d.fecha_reporte >= dateRange.start!);
+        }
+        if (dateRange.end) {
+            result = result.filter(d => d.fecha_reporte <= dateRange.end!);
+        }
+
         setFilteredData(result);
-    }, [filterModalidad, filterInstitucion, consolidatedData]);
+    }, [filterModalidad, filterInstitucion, consolidatedData, dateRange]);
+
+
 
     const loadConfigs = async () => {
         try {
@@ -148,6 +208,15 @@ export const StatMultirisModule: React.FC = () => {
             setMappings(data);
         } catch (error) {
             console.error('Error loading mappings:', error);
+        }
+    };
+
+    const loadGrupos = async () => {
+        try {
+            const data = await getGruposMedicos();
+            setGrupos(data);
+        } catch (error) {
+            console.error('Error loading grupos:', error);
         }
     };
 
@@ -173,18 +242,50 @@ export const StatMultirisModule: React.FC = () => {
         }
     };
 
+    const handleFileDrop = async (file: File) => {
+        try {
+            setUploadStatus({ status: 'uploading' });
+            const records = await parseMultirisExcel(file);
+            await uploadMultirisData(records, file.name);
+            setUploadStatus({ status: 'success', message: `${records.length} registros cargados. Se han descubierto nuevas instituciones/médicos si los hubiera.` });
+
+            setTimeout(() => {
+                loadData();
+                loadConfigs();
+                loadMappings();
+                setView('dashboard');
+                setUploadStatus({ status: 'idle' });
+            }, 2000);
+        } catch (error: any) {
+            setUploadStatus({ status: 'error', message: error.message || 'Error al procesar el archivo' });
+        }
+    };
+
     const handleSaveSla = async () => {
         try {
             const configToSave = {
                 ...newSla,
-                institucion: newSla.institucion.trim() === '' ? null : newSla.institucion.trim()
+                institucion: newSla.institucion.trim() === '' ? null : newSla.institucion.trim(),
+                modalidad: newSla.modalidad === 'TODAS' ? null : newSla.modalidad
             };
             await saveSlaConfig(configToSave);
             loadConfigs();
-            setNewSla({ ...newSla, institucion: '' });
+            // Reset form
+            setNewSla({ institucion: '', modalidad: 'TODAS', tipo: 'U', target_minutes: 120 });
         } catch (error: any) {
             alert('Error al guardar configuración: ' + error.message);
         }
+    };
+
+    const handleEditSla = (config: any) => {
+        setNewSla({
+            id: config.id,
+            institucion: config.institucion || '',
+            modalidad: config.modalidad || 'TODAS',
+            tipo: config.tipo,
+            target_minutes: config.target_minutes
+        });
+        // Scroll to form or just visual feedback is enough
     };
 
     const handleDeleteSla = async (id: string) => {
@@ -213,13 +314,27 @@ export const StatMultirisModule: React.FC = () => {
     };
 
     // --- Lógica de Reportes sobre Filtros ---
-    const totalExams = filteredData.reduce((acc, curr) => acc + curr.cantidad_examenes, 0);
+    const totalExams = filteredData.reduce((acc, curr) => acc + (curr.cantidad_examenes || 0), 0);
     const totalWithinSla = filteredData.reduce((acc, curr) => acc + (curr.cantidad_dentro_sla || 0), 0);
     const slaCompliance = totalExams > 0 ? ((totalWithinSla / totalExams) * 100).toFixed(1) : '0';
     const avgTat = filteredData.length > 0
-        ? (filteredData.reduce((acc, curr) => acc + (curr.tat_promedio_minutos * curr.cantidad_examenes), 0) / totalExams).toFixed(1)
+        ? (filteredData.reduce((acc, curr) => acc + ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0)), 0) / totalExams).toFixed(1)
         : '0';
-    const totalAddendas = filteredData.reduce((acc, curr) => acc + curr.cantidad_adendas, 0);
+    const totalAddendas = filteredData.reduce((acc, curr) => acc + (curr.cantidad_adendas || 0), 0);
+    const addendaPercentage = totalExams > 0 ? ((totalAddendas / totalExams) * 100).toFixed(1) : '0';
+
+    // Desglose por Tipo de Paciente
+    const tipoLabels: Record<string, string> = { U: 'Urgencias', A: 'Ambulat.', H: 'Hospital.', M: 'Mixto', O: 'Otros', UPC: 'UPC', UTI: 'UTI' };
+    const byTipo = filteredData.reduce((acc, curr) => {
+        const t = curr.tipo_paciente || 'O';
+        if (!acc[t]) acc[t] = { exams: 0, sla: 0, tatSum: 0, addendas: 0 };
+        acc[t].exams += (curr.cantidad_examenes || 0);
+        acc[t].sla += (curr.cantidad_dentro_sla || 0);
+        acc[t].tatSum += ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0));
+        acc[t].addendas += (curr.cantidad_adendas || 0);
+        return acc;
+    }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
+    const tipoKeys = Object.keys(byTipo).sort((a, b) => byTipo[b].exams - byTipo[a].exams).slice(0, 3); // Top 3
 
     // Distribución por Modalidad
     const statsByMod = Object.values(filteredData.reduce((acc, curr) => {
@@ -231,11 +346,18 @@ export const StatMultirisModule: React.FC = () => {
     // Agrupamiento por Institución (usando Equivalencia)
     const statsByInst = Object.values(filteredData.reduce((acc, curr) => {
         const formalName = getFormalName(curr.institucion, 'institucion');
-        if (!acc[formalName]) acc[formalName] = { name: formalName, value: 0, withinSla: 0 };
+        if (!acc[formalName]) acc[formalName] = { name: formalName, value: 0, withinSla: 0, adendas: 0, totalTat: 0 };
         acc[formalName].value += curr.cantidad_examenes;
         acc[formalName].withinSla += (curr.cantidad_dentro_sla || 0);
+        acc[formalName].adendas += (curr.cantidad_adendas || 0);
+        acc[formalName].totalTat += ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0));
         return acc;
-    }, {} as any)).sort((a: any, b: any) => b.value - a.value) as any[];
+    }, {} as any)).map((inst: any) => ({
+        ...inst,
+        avgTat: inst.value > 0 ? (inst.totalTat / inst.value).toFixed(1) : '0',
+        slaRate: inst.value > 0 ? ((inst.withinSla / inst.value) * 100).toFixed(1) : '0',
+        addendaRate: inst.value > 0 ? ((inst.adendas / inst.value) * 100).toFixed(2) : '0'
+    })).sort((a: any, b: any) => b.value - a.value) as any[];
 
     // Agrupamiento por Médico (usando Equivalencia)
     const statsByMedico = Object.values(filteredData.reduce((acc, curr) => {
@@ -252,10 +374,37 @@ export const StatMultirisModule: React.FC = () => {
         slaRate: ((m.withinSla / m.volume) * 100).toFixed(1)
     })) as any[];
 
+    // Agrupación temporal para Análisis Progresivo
+    const getGroupKey = (dateStr: string): string => {
+        if (trendGrouping === 'day') return dateStr;
+        const d = new Date(dateStr + 'T00:00:00');
+        if (trendGrouping === 'week') {
+            const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+            const weekNum = Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+            return `${dt.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+        }
+        if (trendGrouping === 'month') return dateStr.slice(0, 7);
+        // quarter
+        const q = Math.floor(d.getMonth() / 3) + 1;
+        return `${d.getFullYear()}-Q${q}`;
+    };
+    const getGroupLabel = (key: string): string => {
+        if (trendGrouping === 'day') return key.split('-').slice(1).reverse().join('/');
+        if (trendGrouping === 'week') return `S${key.split('-W')[1]}`;
+        if (trendGrouping === 'month') {
+            const [y, m] = key.split('-');
+            const mNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            return `${mNames[parseInt(m) - 1]} ${y.slice(2)}`;
+        }
+        return key.replace('-', ' ');
+    };
     const statsTemporal = Object.values(filteredData.reduce((acc, curr) => {
-        const date = curr.fecha_reporte;
-        if (!acc[date]) acc[date] = { date, value: 0 };
-        acc[date].value += curr.cantidad_examenes;
+        const key = getGroupKey(curr.fecha_reporte);
+        if (!acc[key]) acc[key] = { date: key, exams: 0, addendas: 0 };
+        acc[key].exams += curr.cantidad_examenes;
+        acc[key].addendas += curr.cantidad_adendas;
         return acc;
     }, {} as any)).sort((a: any, b: any) => a.date.localeCompare(b.date)) as any[];
 
@@ -268,15 +417,16 @@ export const StatMultirisModule: React.FC = () => {
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(255,100,0,0.05)_0%,transparent_50%)]" />
                 <div className="relative z-10">
                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                        <h1 className="text-5xl font-black tracking-tighter text-white mb-3 uppercase flex items-center gap-4">
-                            AMIS <span className="text-prevenort-primary px-4 py-1.5 rounded-2xl bg-prevenort-primary/10 border border-prevenort-primary/20 shadow-lg shadow-orange-500/10">MULTIRIS</span>
-                        </h1>
+                        <div className="flex items-center gap-4 mb-2">
+                            <h1 className="text-4xl font-black text-white tracking-tight uppercase italic decoration-prevenort-primary decoration-4">Stat Multiris <span className="text-prevenort-primary">3.0</span></h1>
+                            <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-white/40 uppercase tracking-widest leading-none">
+                                {consolidatedData.length.toLocaleString()} Segmentos Cargados
+                            </div>
+                        </div>
                         <div className="flex items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">
-                                <ShieldAlert className="w-3.5 h-3.5 text-success" /> BI Analytics Engine 3.0
-                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Smart Data Merging Engine</span>
                             <div className="h-1 w-1 rounded-full bg-white/20" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Smart Data Merging</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Holding Portezuelo</span>
                         </div>
                     </motion.div>
                 </div>
@@ -313,7 +463,7 @@ export const StatMultirisModule: React.FC = () => {
                         {view === 'dashboard' ? 'Ingestar' : 'Dashboard'}
                     </button>
                 </div>
-            </div>
+            </div >
 
             <AnimatePresence mode="wait">
                 {view === 'mappings' ? (
@@ -405,7 +555,7 @@ export const StatMultirisModule: React.FC = () => {
                                                 onChange={(e) => setNewSla({ ...newSla, institucion: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
                                             >
-                                                <option value="">Global (Todas)</option>
+                                                <option value="" disabled>Seleccionar Institución...</option>
                                                 {mappings.filter(m => m.category === 'institucion').map(m => (
                                                     <option key={m.id} value={m.raw_name}>{m.raw_name}</option>
                                                 ))}
@@ -419,6 +569,7 @@ export const StatMultirisModule: React.FC = () => {
                                                     onChange={(e) => setNewSla({ ...newSla, modalidad: e.target.value })}
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
                                                 >
+                                                    <option value="TODAS">TODAS (General)</option>
                                                     {['CT', 'MR', 'DX', 'US', 'MG', 'XA'].map(m => <option key={m} value={m}>{m}</option>)}
                                                 </select>
                                             </div>
@@ -444,9 +595,20 @@ export const StatMultirisModule: React.FC = () => {
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold"
                                             />
                                         </div>
-                                        <button onClick={handleSaveSla} className="w-full py-4 bg-info text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20">
-                                            <Save className="w-4 h-4" /> Guardar Regla
+                                        <button
+                                            onClick={handleSaveSla}
+                                            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-all shadow-lg ${newSla.id ? 'bg-prevenort-primary shadow-orange-500/20' : 'bg-info shadow-cyan-500/20'} text-white`}
+                                        >
+                                            <Save className="w-4 h-4" /> {newSla.id ? 'Actualizar Regla' : 'Guardar Regla'}
                                         </button>
+                                        {newSla.id && (
+                                            <button
+                                                onClick={() => setNewSla({ institucion: '', modalidad: 'TODAS', tipo: 'U', target_minutes: 120 })}
+                                                className="w-full py-3 text-[10px] font-black uppercase text-white/30 hover:text-white transition-colors"
+                                            >
+                                                Cancelar Edición
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -455,34 +617,84 @@ export const StatMultirisModule: React.FC = () => {
                                     <div className="p-8 border-b border-white/5">
                                         <h3 className="text-xl font-black uppercase tracking-tight">SLAs Activos</h3>
                                     </div>
-                                    <div className="overflow-y-auto flex-1 no-scrollbar">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-prevenort-text/30 sticky top-0 bg-prevenort-surface z-10">
-                                                    <th className="px-8 py-4 text-left">Institución</th>
-                                                    <th className="px-8 py-4 text-left">Mod./Tipo</th>
-                                                    <th className="px-8 py-4 text-left">Meta</th>
-                                                    <th className="px-8 py-4 text-right"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-white/5">
-                                                {slaConfigs.map((config) => (
-                                                    <tr key={config.id} className="hover:bg-white/[0.02] transition-colors group">
-                                                        <td className="px-8 py-4 uppercase font-bold text-sm">
-                                                            {config.institucion || <span className="text-[10px] font-black bg-white/10 px-2 py-1 rounded text-white/40">Global</span>}
-                                                        </td>
-                                                        <td className="px-8 py-4">
-                                                            <span className="text-xs font-black text-prevenort-primary mr-2">{config.modalidad}</span>
-                                                            <span className="text-[10px] font-black text-white/30 uppercase">{config.tipo === 'U' ? 'Urgencia' : config.tipo === 'H' ? 'Hosp.' : 'Amb.'}</span>
-                                                        </td>
-                                                        <td className="px-8 py-4 font-black text-sm">{config.target_minutes} min</td>
-                                                        <td className="px-8 py-4 text-right">
-                                                            <button onClick={() => handleDeleteSla(config.id)} className="p-2 text-danger opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                    <div className="overflow-y-auto flex-1 no-scrollbar p-8">
+                                        {/* Agrupamos y ordenamos los SLAs para una vista impecable */}
+                                        {Object.entries(
+                                            slaConfigs.reduce((acc: any, curr: any) => {
+                                                const key = curr.institucion || 'GLOBAL';
+                                                if (!acc[key]) acc[key] = [];
+                                                acc[key].push(curr);
+                                                return acc;
+                                            }, {})
+                                        )
+                                            .sort(([a], [b]) => {
+                                                if (a === 'GLOBAL') return -1;
+                                                if (b === 'GLOBAL') return 1;
+                                                return a.localeCompare(b);
+                                            })
+                                            .map(([inst, configs]: [string, any]) => {
+                                                // Ordenar configs por U, H, A
+                                                const typeOrder: Record<string, number> = { 'U': 1, 'H': 2, 'A': 3 };
+                                                const sortedConfigs = [...configs].sort((a, b) =>
+                                                    (typeOrder[a.tipo] || 99) - (typeOrder[b.tipo] || 99)
+                                                );
+
+                                                return (
+                                                    <div key={inst} className="mb-10 last:mb-0">
+                                                        <div className="flex items-center gap-3 mb-4 sticky top-0 bg-neutral-950/80 backdrop-blur-md py-2 z-10">
+                                                            <Building2 className="w-5 h-5 text-prevenort-primary" />
+                                                            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white">
+                                                                {inst === 'GLOBAL' ? 'Reglas Globales (Fallback)' : inst}
+                                                            </h4>
+                                                            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 gap-2 pl-8">
+                                                            {sortedConfigs.map((config: any) => (
+                                                                <motion.div
+                                                                    key={config.id}
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    className="group flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all"
+                                                                >
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Tipo de Paciente</span>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className={`w-2 h-2 rounded-full ${config.tipo === 'U' ? 'bg-danger' : config.tipo === 'H' ? 'bg-warning' : 'bg-success'}`} />
+                                                                                <span className="text-sm font-bold text-white">
+                                                                                    {config.tipo === 'U' ? 'Urgencia (U)' : config.tipo === 'H' ? 'Hospitalizado (H)' : 'Ambulatorio (A)'}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="flex flex-col border-l border-white/5 pl-6">
+                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Modalidad</span>
+                                                                            <span className={`text-xs font-black ${!config.modalidad || config.modalidad === 'TODAS' ? 'text-info/60' : 'text-prevenort-primary'}`}>
+                                                                                {config.modalidad || 'TODAS (Cualquier Examen)'}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        <div className="flex flex-col border-l border-white/5 pl-6">
+                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Meta TAT</span>
+                                                                            <span className="text-sm font-black text-white">{config.target_minutes} min</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <button onClick={() => handleEditSla(config)} className="p-3 text-white/40 hover:text-info hover:bg-info/10 rounded-xl transition-all">
+                                                                            <Settings className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button onClick={() => handleDeleteSla(config.id)} className="p-3 text-white/40 hover:text-danger hover:bg-danger/10 rounded-xl transition-all">
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </button>
+                                                                    </div>
+                                                                </motion.div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                     </div>
                                 </div>
                             </div>
@@ -490,11 +702,39 @@ export const StatMultirisModule: React.FC = () => {
                     </motion.div>
                 ) : view === 'upload' ? (
                     <motion.div key="upload" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-2xl mx-auto">
-                        <div className="card-premium bg-prevenort-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6">
-                            <div className="w-20 h-20 rounded-3xl bg-prevenort-primary/10 flex items-center justify-center">
-                                {uploadStatus.status === 'uploading' ? <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" /> : <FileSpreadsheet className="w-10 h-10 text-prevenort-primary" />}
+                        <div
+                            className={`card-premium bg-prevenort-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6 transition-all duration-300 ${isDragging
+                                ? 'border-prevenort-primary bg-prevenort-primary/5 scale-[1.02] shadow-[0_0_40px_rgba(249,115,22,0.15)]'
+                                : 'border-white/10 hover:border-white/20'
+                                }`}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsDragging(false);
+                                const file = e.dataTransfer.files?.[0];
+                                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
+                                    handleFileDrop(file);
+                                }
+                            }}
+                        >
+                            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center transition-all ${isDragging ? 'bg-prevenort-primary/20 scale-110' : 'bg-prevenort-primary/10'}`}>
+                                {uploadStatus.status === 'uploading'
+                                    ? <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" />
+                                    : isDragging
+                                        ? <Upload className="w-10 h-10 text-prevenort-primary animate-bounce" />
+                                        : <FileSpreadsheet className="w-10 h-10 text-prevenort-primary" />
+                                }
                             </div>
                             <h2 className="text-2xl font-black mb-2 uppercase">Ingesta de Producción</h2>
+                            {isDragging && (
+                                <p className="text-sm font-black uppercase tracking-widest text-prevenort-primary animate-pulse">Suelta el archivo aquí</p>
+                            )}
+                            {!isDragging && (
+                                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Arrastra tu planilla aquí o haz clic en el botón</p>
+                            )}
                             {uploadStatus.status === 'error' && <div className="bg-danger/10 text-danger px-4 py-3 rounded-xl border border-danger/20 text-xs font-bold">{uploadStatus.message}</div>}
                             {uploadStatus.status === 'success' && <div className="bg-success/10 text-success px-4 py-3 rounded-xl border border-success/20 text-xs font-bold">{uploadStatus.message}</div>}
                             <label className="relative cursor-pointer group">
@@ -519,7 +759,36 @@ export const StatMultirisModule: React.FC = () => {
                                 <Target className="w-4 h-4 text-prevenort-primary" />
                                 <span className="text-[10px] font-black uppercase tracking-widest text-prevenort-text/40">Filtros</span>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Date Range Pickers */}
+                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2">
+                                    <Calendar className="w-3.5 h-3.5 text-prevenort-primary" />
+                                    <input
+                                        type="date"
+                                        value={dateRange.start || ''}
+                                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-white/60"
+                                    />
+                                    <span className="text-white/20">—</span>
+                                    <input
+                                        type="date"
+                                        value={dateRange.end || ''}
+                                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-white/60"
+                                    />
+                                    {(dateRange.start || dateRange.end) && (
+                                        <button
+                                            onClick={() => setDateRange({ start: null, end: null })}
+                                            className="ml-1 text-white/30 hover:text-white/70 transition-colors text-xs font-black"
+                                            title="Limpiar fechas"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="h-4 w-px bg-white/10" />
+
                                 <select
                                     value={filterModalidad}
                                     onChange={(e) => setFilterModalidad(e.target.value)}
@@ -542,21 +811,45 @@ export const StatMultirisModule: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <StatCard title="Volumen Total" value={totalExams.toLocaleString()} icon={Activity} trend="up" change="Carga" color="primary" />
-                            <StatCard title="SLAs Dentro" value={`${slaCompliance}%`} icon={Target} trend={Number(slaCompliance) > 90 ? 'up' : 'down'} change="Eficacia" subtitle={`${totalWithinSla} al día`} color="success" />
-                            <StatCard title="TAT Promedio" value={`${avgTat}m`} icon={Clock} trend="down" change="Velocidad" color="info" />
-                            <StatCard title="Seguridad (Adendas)" value={totalAddendas} icon={ShieldAlert} trend="up" change="Calidad" color="danger" />
+                            <StatCard title="Total Exámenes" value={totalExams.toLocaleString()} icon={Activity} trend="up" change="Volumen" color="primary"
+                                breakdown={tipoKeys.map(k => ({
+                                    label: tipoLabels[k] || k,
+                                    value: byTipo[k].exams.toLocaleString(),
+                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
+                                }))}
+                            />
+                            <StatCard title="SLAs Dentro" value={`${slaCompliance}%`} icon={Target} trend={Number(slaCompliance) > 90 ? 'up' : 'down'} change="Eficacia" subtitle={`${totalWithinSla.toLocaleString()} ok`} color="success"
+                                breakdown={tipoKeys.map(k => ({
+                                    label: tipoLabels[k] || k,
+                                    value: byTipo[k].exams > 0 ? `${((byTipo[k].sla / byTipo[k].exams) * 100).toFixed(0)}%` : '0%',
+                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
+                                }))}
+                            />
+                            <StatCard title="TAT Promedio" value={`${avgTat}m`} icon={Clock} trend="down" change="Velocidad" color="info"
+                                breakdown={tipoKeys.map(k => ({
+                                    label: tipoLabels[k] || k,
+                                    value: byTipo[k].exams > 0 ? `${(byTipo[k].tatSum / byTipo[k].exams).toFixed(0)}m` : '0m',
+                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
+                                }))}
+                            />
+                            <StatCard title="Calidad (Adendas)" value={`${addendaPercentage}%`} icon={ShieldAlert} trend={Number(addendaPercentage) < 5 ? 'up' : 'down'} change="Tasa Adendas" subtitle={`${totalAddendas} totales`} color="danger"
+                                breakdown={tipoKeys.map(k => ({
+                                    label: tipoLabels[k] || k,
+                                    value: byTipo[k].exams > 0 ? `${((byTipo[k].addendas / byTipo[k].exams) * 100).toFixed(1)}%` : '0%',
+                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
+                                }))}
+                            />
                         </div>
 
                         <div className="flex flex-wrap gap-2 border-b border-white/5 pb-px no-scrollbar">
-                            {(['general', 'instituciones', 'medicos', 'calidad'] as const).map((tab) => (
+                            {(['general', 'instituciones', 'medicos', 'grupos', 'calidad', 'ranking'] as const).map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] relative transition-all ${activeTab === tab ? 'text-prevenort-primary' : 'text-prevenort-text/30 hover:text-white/60'
                                         }`}
                                 >
-                                    {tab === 'calidad' ? 'Radar de Calidad' : tab}
+                                    {tab === 'calidad' ? 'Radar de Calidad' : tab === 'ranking' ? '🏆 Ranking' : tab === 'grupos' ? '👥 Grupos' : tab}
                                     {activeTab === tab && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-prevenort-primary rounded-t-full shadow-[0_-4px_10px_rgba(255,100,0,0.3)]" />}
                                 </button>
                             ))}
@@ -564,158 +857,851 @@ export const StatMultirisModule: React.FC = () => {
 
                         <AnimatePresence mode="wait">
                             {activeTab === 'general' && (
-                                <motion.div key="gen" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    <div className="lg:col-span-2 card-premium min-h-[450px] flex flex-col group">
-                                        <div className="flex justify-between items-center mb-8">
-                                            <div>
-                                                <h3 className="text-xl font-black uppercase tracking-tight">Evolución Operativa</h3>
-                                                <p className="text-[10px] font-bold text-white/20 uppercase mt-1">Volumen diario de exámenes reportados</p>
+                                <div className="space-y-8">
+                                    {/* --- ANÁLISIS DEL PERIODO (SNAPSHOT) --- */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1 card-premium flex flex-col min-h-[450px]">
+                                            <div className="flex items-center gap-3 mb-8">
+                                                <div className="p-2 rounded-xl bg-prevenort-primary/10 text-prevenort-primary">
+                                                    <Activity className="w-5 h-5" />
+                                                </div>
+                                                <h3 className="text-xl font-black uppercase tracking-tight">Análisis del Periodo</h3>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-                                                <BarChart3 className="w-5 h-5 text-prevenort-primary" />
+
+                                            <div className="flex-1 flex flex-col justify-center gap-10">
+                                                <div className="space-y-2">
+                                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Exámenes Totales</span>
+                                                    <div className="text-4xl font-black text-white">{totalExams.toLocaleString()}</div>
+                                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-prevenort-primary" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Total Adendas</span>
+                                                    <div className="flex items-baseline gap-3">
+                                                        <div className="text-4xl font-black text-danger">{totalAddendas.toLocaleString()}</div>
+                                                        <div className="text-xl font-bold text-danger/50">{addendaPercentage}%</div>
+                                                    </div>
+                                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${addendaPercentage}%` }} className="h-full bg-danger" />
+                                                    </div>
+                                                    <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Tasa de corrección sobre volumen total</p>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                                                    <div>
+                                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">SLA Cumplido</span>
+                                                        <div className="text-lg font-black text-success">{slaCompliance}%</div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">TAT Global</span>
+                                                        <div className="text-lg font-black text-info">{avgTat}m</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* --- ANÁLISIS PROGRESIVO (TRENDS) --- */}
+                                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 card-premium min-h-[450px] flex flex-col group">
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                                <div>
+                                                    <h3 className="text-xl font-black uppercase tracking-tight">Análisis Progresivo</h3>
+                                                    <p className="text-[10px] font-bold text-white/20 uppercase mt-1">Evolución temporal · {statsTemporal.length} períodos</p>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    {/* Agrupación temporal */}
+                                                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                        {(['day', 'week', 'month', 'quarter'] as const).map(g => (
+                                                            <button key={g} onClick={() => setTrendGrouping(g)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                                {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : 'Trimestre'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    {/* Tipo de gráfico */}
+                                                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                        {(['bar', 'dot', 'line'] as const).map(ct => (
+                                                            <button key={ct} onClick={() => setTrendChartType(ct)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendChartType === ct ? 'bg-info text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                                {ct === 'bar' ? '▮ Barras' : ct === 'dot' ? '● Puntos' : '╱ Línea'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    {/* Leyenda */}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-2 h-2 rounded-full bg-prevenort-primary" />
+                                                            <span className="text-[8px] font-black text-white/40 uppercase">Exámenes</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-2 h-2 rounded-full bg-danger" />
+                                                            <span className="text-[8px] font-black text-white/40 uppercase">Adendas</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {!hasData ? <div className="flex-1 flex items-center justify-center opacity-10"><BarChart3 className="w-24 h-24" /></div> : (() => {
+                                                const maxExams = Math.max(...statsTemporal.map((x: any) => x.exams)) || 1;
+                                                const showLabels = statsTemporal.length <= 60;
+
+                                                if (trendChartType === 'bar') {
+                                                    return (
+                                                        <div className="flex-1 flex flex-col">
+                                                            <div className="flex-1 flex items-end gap-[2px] pt-10 px-2 pb-1 overflow-x-auto no-scrollbar">
+                                                                {statsTemporal.map((d: any, i: number) => (
+                                                                    <div key={i} className="flex-1 min-w-[6px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
+                                                                        <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxExams) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />
+                                                                        <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxExams) * 100}%` }} className="w-full bg-gradient-to-t from-prevenort-primary/20 to-prevenort-primary/60 rounded-t-[4px] hover:to-white transition-all cursor-pointer" />
+                                                                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-neutral-900 border border-white/10 text-white text-[9px] font-black px-3 py-2 rounded-xl transition-all scale-90 group-hover/bar:scale-100 pointer-events-none z-30 shadow-2xl min-w-[100px]">
+                                                                            <div className="flex justify-between gap-4 mb-1"><span className="text-white/40 uppercase">Período:</span><span>{getGroupLabel(d.date)}</span></div>
+                                                                            <div className="flex justify-between gap-4 text-prevenort-primary"><span className="text-white/40 uppercase">Exámenes:</span><span>{d.exams.toLocaleString()}</span></div>
+                                                                            <div className="flex justify-between gap-4 text-danger"><span className="text-white/40 uppercase">Adendas:</span><span>{d.addendas}</span></div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            {showLabels && <div className="flex gap-[2px] px-2 overflow-x-auto no-scrollbar">
+                                                                {statsTemporal.map((d: any, i: number) => (
+                                                                    <div key={i} className="flex-1 min-w-[6px] text-center">
+                                                                        <span className="text-[6px] font-bold text-white/15 truncate block">{getGroupLabel(d.date)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                // Dot or Line chart
+                                                const padding = 40;
+                                                return (
+                                                    <div className="flex-1 relative overflow-x-auto no-scrollbar" style={{ minHeight: 300 }}>
+                                                        <svg width="100%" height="100%" viewBox={`0 0 ${Math.max(statsTemporal.length * 20, 400)} 300`} preserveAspectRatio="none" className="w-full h-full">
+                                                            {/* Grid lines */}
+                                                            {[0, 0.25, 0.5, 0.75, 1].map(frac => (
+                                                                <line key={frac} x1={padding} y1={280 - frac * 240} x2={Math.max(statsTemporal.length * 20, 400) - 10} y2={280 - frac * 240} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                                                            ))}
+                                                            {/* Line paths */}
+                                                            {trendChartType === 'line' && (
+                                                                <>
+                                                                    <polyline fill="none" stroke="var(--color-prevenort-primary, #f97316)" strokeWidth="2" points={statsTemporal.map((d: any, i: number) => {
+                                                                        const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
+                                                                        const y = 280 - (d.exams / maxExams) * 240;
+                                                                        return `${x},${y}`;
+                                                                    }).join(' ')} />
+                                                                    <polyline fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" points={statsTemporal.map((d: any, i: number) => {
+                                                                        const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
+                                                                        const y = 280 - (d.addendas / maxExams) * 240;
+                                                                        return `${x},${y}`;
+                                                                    }).join(' ')} />
+                                                                </>
+                                                            )}
+                                                            {/* Dots */}
+                                                            {statsTemporal.map((d: any, i: number) => {
+                                                                const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
+                                                                const yExams = 280 - (d.exams / maxExams) * 240;
+                                                                const yAddendas = 280 - (d.addendas / maxExams) * 240;
+                                                                return (
+                                                                    <g key={i}>
+                                                                        <circle cx={x} cy={yExams} r={trendChartType === 'dot' ? 4 : 3} fill="var(--color-prevenort-primary, #f97316)" className="hover:r-6 transition-all cursor-pointer" opacity={0.8}>
+                                                                            <title>{`${getGroupLabel(d.date)}: ${d.exams.toLocaleString()} exámenes`}</title>
+                                                                        </circle>
+                                                                        <circle cx={x} cy={yAddendas} r={trendChartType === 'dot' ? 3.5 : 2.5} fill="#ef4444" opacity={0.7}>
+                                                                            <title>{`${getGroupLabel(d.date)}: ${d.addendas} adendas`}</title>
+                                                                        </circle>
+                                                                        {showLabels && i % Math.max(Math.floor(statsTemporal.length / 15), 1) === 0 && (
+                                                                            <text x={x} y={296} textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="7" fontWeight="bold">{getGroupLabel(d.date)}</text>
+                                                                        )}
+                                                                    </g>
+                                                                );
+                                                            })}
+                                                        </svg>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Mix Modalidades como fila inferior */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <div className="lg:col-span-1 card-premium flex flex-col">
+                                            <h3 className="text-xl font-black uppercase tracking-tight mb-8">Mix Modalidades</h3>
+                                            <div className="flex-1 flex flex-col justify-center gap-6">
+                                                {statsByMod.length === 0 ? <p className="text-center text-[10px] font-black uppercase text-white/10 tracking-widest">Sin datos para filtrar</p> :
+                                                    statsByMod.map((mod, i) => (
+                                                        <div key={i} className="space-y-3">
+                                                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                                                                <span className="flex items-center gap-2">
+                                                                    <span className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`} />
+                                                                    {mod.name}
+                                                                </span>
+                                                                <span className="text-white">{mod.value}</span>
+                                                            </div>
+                                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                                <motion.div initial={{ width: 0 }} animate={{ width: `${(mod.value / totalExams) * 100}%` }} className={`h-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`} />
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                }
                                             </div>
                                         </div>
-                                        {!hasData ? <div className="flex-1 flex items-center justify-center opacity-10"><BarChart3 className="w-24 h-24" /></div> : (
-                                            <div className="flex-1 flex items-end gap-1.5 pt-10 px-2 pb-6">
-                                                {statsTemporal.slice(-45).map((d, i) => (
-                                                    <div key={i} className="flex-1 group/bar relative">
-                                                        <motion.div
-                                                            initial={{ height: 0 }}
-                                                            animate={{ height: `${(d.value / (Math.max(...statsTemporal.map(x => x.value)) || 1)) * 100}%` }}
-                                                            className="w-full bg-gradient-to-t from-prevenort-primary/40 to-prevenort-primary rounded-t-md hover:from-white/20 hover:to-white transition-all cursor-pointer"
-                                                        />
-                                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-white text-black text-[10px] font-black px-2 py-1 rounded-lg transition-all scale-90 group-hover/bar:scale-100 pointer-events-none z-20 shadow-2xl">
-                                                            {d.value} <span className="text-[8px] opacity-40 ml-1">{d.date.split('-').slice(1).reverse().join('/')}</span>
+                                        <div className="lg:col-span-2 card-premium flex items-center justify-center p-8 text-center bg-gradient-to-br from-white/[0.02] to-transparent">
+                                            <div className="space-y-4">
+                                                <div className="p-4 rounded-3xl bg-white/5 inline-block">
+                                                    <BarChart3 className="w-12 h-12 text-prevenort-primary/20" />
+                                                </div>
+                                                <h4 className="text-lg font-black uppercase tracking-tighter">Insights Operativos</h4>
+                                                <p className="text-[10px] font-bold text-white/20 uppercase max-w-xs leading-relaxed">
+                                                    El {addendaPercentage}% de los informes requieren ajustes posteriores.
+                                                    Mantener una tasa menor al 5% es crítico para la eficiencia administrativa.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'instituciones' && (() => {
+                                const instFiltered = selectedInst === 'TODAS' ? filteredData : filteredData.filter(d => getFormalName(d.institucion, 'institucion') === selectedInst);
+                                const instExams = instFiltered.reduce((a, c) => a + (c.cantidad_examenes || 0), 0);
+                                const instAddendas = instFiltered.reduce((a, c) => a + (c.cantidad_adendas || 0), 0);
+                                const instSla = instFiltered.reduce((a, c) => a + (c.cantidad_dentro_sla || 0), 0);
+                                const instSlaRate = instExams > 0 ? ((instSla / instExams) * 100).toFixed(1) : '0';
+                                const instAddRate = instExams > 0 ? ((instAddendas / instExams) * 100).toFixed(2) : '0';
+                                const instTemporal = Object.values(instFiltered.reduce((acc, curr) => {
+                                    const d = curr.fecha_reporte;
+                                    if (!acc[d]) acc[d] = { date: d, exams: 0, addendas: 0, sla: 0 };
+                                    acc[d].exams += curr.cantidad_examenes;
+                                    acc[d].addendas += curr.cantidad_adendas;
+                                    acc[d].sla += (curr.cantidad_dentro_sla || 0);
+                                    return acc;
+                                }, {} as any)).sort((a: any, b: any) => a.date.localeCompare(b.date)) as any[];
+                                const maxInstEx = Math.max(...instTemporal.map((x: any) => x.exams), 1);
+                                const instByTipo = instFiltered.reduce((acc, curr) => {
+                                    const t = curr.tipo_paciente || 'O';
+                                    if (!acc[t]) acc[t] = { exams: 0, sla: 0, tatSum: 0, addendas: 0 };
+                                    acc[t].exams += (curr.cantidad_examenes || 0);
+                                    acc[t].sla += (curr.cantidad_dentro_sla || 0);
+                                    acc[t].tatSum += ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0));
+                                    acc[t].addendas += (curr.cantidad_adendas || 0);
+                                    return acc;
+                                }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
+                                const instTipoKeys = Object.keys(instByTipo).sort((a, b) => instByTipo[b].exams - instByTipo[a].exams).slice(0, 3);
+                                const tc = (k: string) => k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60';
+                                return (
+                                    <motion.div key="inst" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                        <div className="card-premium">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-3 rounded-2xl bg-prevenort-primary/10 border border-prevenort-primary/20">
+                                                        <Building2 className="w-6 h-6 text-prevenort-primary" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-white">Consolidado Institucional</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{statsByInst.length} centros activos</p>
+                                                    </div>
+                                                </div>
+                                                <select value={selectedInst} onChange={(e) => setSelectedInst(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white outline-none focus:border-prevenort-primary transition-colors cursor-pointer">
+                                                    <option value="TODAS" className="bg-neutral-900">Todas las Instituciones</option>
+                                                    {statsByInst.map((inst, i) => <option key={i} value={inst.name} className="bg-neutral-900">{inst.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-4 gap-4 mb-8">
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Exámenes</p>
+                                                    <p className="text-2xl font-black text-white">{instExams.toLocaleString()}</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams.toLocaleString()}</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
+                                                    <p className="text-2xl font-black text-danger">{instAddendas} <span className="text-sm text-danger/50">{instAddRate}%</span></p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].addendas / instByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Dentro SLA</p>
+                                                    <p className="text-2xl font-black text-success">{instSlaRate}%</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].sla / instByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Días Analizados</p>
+                                                    <p className="text-2xl font-black text-info">{instTemporal.length}</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? (instByTipo[k].tatSum / instByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Tabla Institucional */}
+                                            {selectedInst === 'TODAS' && (
+                                                <div className="overflow-x-auto rounded-2xl border border-white/5">
+                                                    <table className="w-full text-left">
+                                                        <thead>
+                                                            <tr className="border-b border-white/10">
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Institución</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {statsByInst.map((inst, i) => (
+                                                                <tr key={i} onClick={() => setSelectedInst(inst.name)} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group cursor-pointer">
+                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-white group-hover:text-prevenort-primary transition-colors">{inst.name}</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-white">{inst.value.toLocaleString()}</td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-danger">{inst.adendas}</td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.addendaRate) < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{inst.addendaRate}%</span></td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{inst.slaRate}%</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-info">{inst.avgTat}m</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Gráfico Evolutivo */}
+                                        {instTemporal.length > 0 && (
+                                            <div className="card-premium min-h-[300px]">
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <div>
+                                                        <h3 className="text-lg font-black uppercase tracking-tight">Evolución Temporal {selectedInst !== 'TODAS' ? `· ${selectedInst}` : ''}</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-prevenort-primary" /><span className="text-[8px] font-black text-white/40 uppercase">Exámenes</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-white/40 uppercase">Adendas</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-end gap-[2px] h-[220px] overflow-x-auto no-scrollbar pb-4">
+                                                    {instTemporal.map((d: any, i: number) => (
+                                                        <div key={i} className="flex-1 min-w-[8px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
+                                                            {d.addendas > 0 && <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxInstEx) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />}
+                                                            <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxInstEx) * 100}%` }} className="w-full bg-gradient-to-t from-prevenort-primary/30 to-prevenort-primary/70 rounded-t-[3px] hover:to-white transition-all cursor-pointer" />
+                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-neutral-900 border border-white/10 text-white text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
+                                                                <div className="flex justify-between gap-3"><span className="text-white/40">{d.date.slice(5)}</span></div>
+                                                                <div className="flex justify-between gap-3 text-prevenort-primary"><span className="text-white/40">Ex:</span><span>{d.exams}</span></div>
+                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-white/40">Ad:</span><span>{d.addendas}</span></div>}
+                                                            </div>
                                                         </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })()}
+
+                            {activeTab === 'medicos' && (() => {
+                                const medFiltered = selectedMedico === 'TODAS' ? filteredData : filteredData.filter(d => getFormalName(d.medico, 'medico') === selectedMedico);
+                                const medExams = medFiltered.reduce((a, c) => a + (c.cantidad_examenes || 0), 0);
+                                const medAddendas = medFiltered.reduce((a, c) => a + (c.cantidad_adendas || 0), 0);
+                                const medSla = medFiltered.reduce((a, c) => a + (c.cantidad_dentro_sla || 0), 0);
+                                const medSlaRate = medExams > 0 ? ((medSla / medExams) * 100).toFixed(1) : '0';
+                                const medAddRate = medExams > 0 ? ((medAddendas / medExams) * 100).toFixed(2) : '0';
+                                const medTemporal = Object.values(medFiltered.reduce((acc, curr) => {
+                                    const d = curr.fecha_reporte;
+                                    if (!acc[d]) acc[d] = { date: d, exams: 0, addendas: 0, sla: 0 };
+                                    acc[d].exams += curr.cantidad_examenes;
+                                    acc[d].addendas += curr.cantidad_adendas;
+                                    acc[d].sla += (curr.cantidad_dentro_sla || 0);
+                                    return acc;
+                                }, {} as any)).sort((a: any, b: any) => a.date.localeCompare(b.date)) as any[];
+                                const maxMedEx = Math.max(...medTemporal.map((x: any) => x.exams), 1);
+                                const medByTipo = medFiltered.reduce((acc, curr) => {
+                                    const t = curr.tipo_paciente || 'O';
+                                    if (!acc[t]) acc[t] = { exams: 0, sla: 0, tatSum: 0, addendas: 0 };
+                                    acc[t].exams += (curr.cantidad_examenes || 0);
+                                    acc[t].sla += (curr.cantidad_dentro_sla || 0);
+                                    acc[t].tatSum += ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0));
+                                    acc[t].addendas += (curr.cantidad_adendas || 0);
+                                    return acc;
+                                }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
+                                const medTipoKeys = Object.keys(medByTipo).sort((a, b) => medByTipo[b].exams - medByTipo[a].exams).slice(0, 3);
+                                const tc = (k: string) => k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60';
+                                return (
+                                    <motion.div key="med" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
+                                        <div className="card-premium">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-3 rounded-2xl bg-info/10 border border-info/20">
+                                                        <UserCheck className="w-6 h-6 text-info" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-white">Rendimiento Médico</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{statsByMedico.length} profesionales</p>
+                                                    </div>
+                                                </div>
+                                                <select value={selectedMedico} onChange={(e) => setSelectedMedico(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white outline-none focus:border-info transition-colors cursor-pointer">
+                                                    <option value="TODAS" className="bg-neutral-900">Todos los Radiólogos</option>
+                                                    {statsByMedico.sort((a: any, b: any) => b.volume - a.volume).map((m, i) => <option key={i} value={m.name} className="bg-neutral-900">{m.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-4 gap-4 mb-8">
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Exámenes</p>
+                                                    <p className="text-2xl font-black text-white">{medExams.toLocaleString()}</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams.toLocaleString()}</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
+                                                    <p className="text-2xl font-black text-danger">{medAddendas} <span className="text-sm text-danger/50">{medAddRate}%</span></p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].addendas / medByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Dentro SLA</p>
+                                                    <p className="text-2xl font-black text-success">{medSlaRate}%</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].sla / medByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Días Analizados</p>
+                                                    <p className="text-2xl font-black text-info">{medTemporal.length}</p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? (medByTipo[k].tatSum / medByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Tabla Médicos */}
+                                            {selectedMedico === 'TODAS' && (
+                                                <div className="overflow-x-auto rounded-2xl border border-white/5">
+                                                    <table className="w-full text-left">
+                                                        <thead>
+                                                            <tr className="border-b border-white/10">
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Radiólogo</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {statsByMedico.sort((a: any, b: any) => b.volume - a.volume).map((med, i) => (
+                                                                <tr key={i} onClick={() => setSelectedMedico(med.name)} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group cursor-pointer">
+                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-white group-hover:text-info transition-colors">{med.name}</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-white">{med.volume.toLocaleString()}</td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-danger">{med.adendas}</td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${med.volume > 0 && (med.adendas / med.volume) * 100 < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{med.volume > 0 ? ((med.adendas / med.volume) * 100).toFixed(2) : '0'}%</span></td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(med.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{med.slaRate}%</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-info">{med.avgTat}m</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Gráfico Evolutivo Médico */}
+                                        {medTemporal.length > 0 && (
+                                            <div className="card-premium min-h-[300px]">
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <div>
+                                                        <h3 className="text-lg font-black uppercase tracking-tight">Evolución Temporal {selectedMedico !== 'TODAS' ? `· ${selectedMedico}` : ''}</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-info" /><span className="text-[8px] font-black text-white/40 uppercase">Exámenes</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-white/40 uppercase">Adendas</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-end gap-[2px] h-[220px] overflow-x-auto no-scrollbar pb-4">
+                                                    {medTemporal.map((d: any, i: number) => (
+                                                        <div key={i} className="flex-1 min-w-[8px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
+                                                            {d.addendas > 0 && <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxMedEx) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />}
+                                                            <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxMedEx) * 100}%` }} className="w-full bg-gradient-to-t from-info/30 to-info/70 rounded-t-[3px] hover:to-white transition-all cursor-pointer" />
+                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-neutral-900 border border-white/10 text-white text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
+                                                                <div className="flex justify-between gap-3"><span className="text-white/40">{d.date.slice(5)}</span></div>
+                                                                <div className="flex justify-between gap-3 text-info"><span className="text-white/40">Ex:</span><span>{d.exams}</span></div>
+                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-white/40">Ad:</span><span>{d.addendas}</span></div>}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })()}
+
+                            {activeTab === 'grupos' && (() => {
+                                const groupColors = ['#f97316', '#06b6d4', '#22c55e', '#a855f7', '#ec4899', '#eab308', '#ef4444', '#3b82f6'];
+                                const allMedNames = statsByMedico.map((m: any) => m.name).sort();
+
+                                const startEditing = (grupo?: MedicoGroup) => {
+                                    setEditingGrupo(grupo ? { ...grupo } : {
+                                        nombre: '',
+                                        descripcion: '',
+                                        lider: '',
+                                        miembros: [],
+                                        color: groupColors[grupos.length % groupColors.length]
+                                    });
+                                };
+
+                                const handleSave = async () => {
+                                    if (!editingGrupo || !editingGrupo.nombre.trim()) return;
+                                    try {
+                                        await saveGrupoMedico(editingGrupo);
+                                        await loadGrupos();
+                                        setEditingGrupo(null);
+                                    } catch (e) { console.error('Error saving grupo:', e); }
+                                };
+
+                                const handleDelete = async (id: string) => {
+                                    if (!confirm('¿Eliminar este grupo permanentemente?')) return;
+                                    try {
+                                        await deleteGrupoMedico(id);
+                                        await loadGrupos();
+                                        if (selectedGrupo === id) setSelectedGrupo(null);
+                                    } catch (e) { console.error('Error deleting grupo:', e); }
+                                };
+
+                                const toggleMember = (name: string) => {
+                                    if (!editingGrupo) return;
+                                    const miembros = editingGrupo.miembros.includes(name)
+                                        ? editingGrupo.miembros.filter(m => m !== name)
+                                        : [...editingGrupo.miembros, name];
+                                    // Si removieron al líder, limpiarlo
+                                    const lider = editingGrupo.lider === name && !miembros.includes(name) ? '' : editingGrupo.lider;
+                                    setEditingGrupo({ ...editingGrupo, miembros, lider });
+                                };
+
+                                // Stats del grupo seleccionado
+                                const activeGroup = grupos.find(g => g.id === selectedGrupo);
+                                const groupData = activeGroup ? filteredData.filter(d => activeGroup.miembros.includes(getFormalName(d.medico, 'medico'))) : [];
+                                const grpExams = groupData.reduce((a, c) => a + (c.cantidad_examenes || 0), 0);
+                                const grpAddendas = groupData.reduce((a, c) => a + (c.cantidad_adendas || 0), 0);
+                                const grpSla = groupData.reduce((a, c) => a + (c.cantidad_dentro_sla || 0), 0);
+                                const grpSlaRate = grpExams > 0 ? ((grpSla / grpExams) * 100).toFixed(1) : '0';
+                                const grpAddRate = grpExams > 0 ? ((grpAddendas / grpExams) * 100).toFixed(2) : '0';
+                                const grpTatSum = groupData.reduce((a, c) => a + ((c.tat_promedio_minutos || 0) * (c.cantidad_examenes || 0)), 0);
+                                const grpAvgTat = grpExams > 0 ? (grpTatSum / grpExams).toFixed(0) : '0';
+
+                                // Stats por miembro del grupo
+                                const memberStats = activeGroup ? activeGroup.miembros.map(name => {
+                                    const mData = groupData.filter(d => getFormalName(d.medico, 'medico') === name);
+                                    const exams = mData.reduce((a, c) => a + (c.cantidad_examenes || 0), 0);
+                                    const addendas = mData.reduce((a, c) => a + (c.cantidad_adendas || 0), 0);
+                                    const sla = mData.reduce((a, c) => a + (c.cantidad_dentro_sla || 0), 0);
+                                    const tatSum = mData.reduce((a, c) => a + ((c.tat_promedio_minutos || 0) * (c.cantidad_examenes || 0)), 0);
+                                    return {
+                                        name,
+                                        exams,
+                                        addendas,
+                                        addRate: exams > 0 ? ((addendas / exams) * 100).toFixed(2) : '0',
+                                        slaRate: exams > 0 ? ((sla / exams) * 100).toFixed(1) : '0',
+                                        avgTat: exams > 0 ? (tatSum / exams).toFixed(0) : '0',
+                                        isLeader: name === activeGroup.lider
+                                    };
+                                }).sort((a, b) => b.exams - a.exams) : [];
+
+                                return (
+                                    <motion.div key="grupos" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
+                                        {/* Header + Crear */}
+                                        <div className="card-premium">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20">
+                                                        <UsersRound className="w-6 h-6 text-purple-400" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-white">Grupos de Trabajo</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{grupos.length} grupos configurados</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => startEditing()}
+                                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/30 transition-all"
+                                                >
+                                                    <Plus className="w-4 h-4" /> Nuevo Grupo
+                                                </button>
+                                            </div>
+
+                                            {/* Lista de grupos existentes */}
+                                            {grupos.length === 0 && !editingGrupo && (
+                                                <div className="text-center py-16">
+                                                    <UsersRound className="w-16 h-16 text-white/10 mx-auto mb-4" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/20">No hay grupos creados</p>
+                                                    <p className="text-[9px] text-white/10 mt-1">Crea un grupo para agrupar médicos y ver sus estadísticas consolidadas</p>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {grupos.map(g => (
+                                                    <div
+                                                        key={g.id}
+                                                        onClick={() => setSelectedGrupo(selectedGrupo === g.id ? null : g.id!)}
+                                                        className={`p-5 rounded-2xl border cursor-pointer transition-all group/card ${selectedGrupo === g.id
+                                                            ? 'bg-white/10 border-white/20 shadow-lg'
+                                                            : 'bg-white/[0.03] border-white/5 hover:border-white/15 hover:bg-white/[0.05]'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-start justify-between mb-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: g.color || '#f97316' }} />
+                                                                <h4 className="text-sm font-black uppercase tracking-tight text-white">{g.nombre}</h4>
+                                                            </div>
+                                                            <div className="flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                                                <button onClick={(e) => { e.stopPropagation(); startEditing(g); }} className="p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white transition-all">
+                                                                    <Edit3 className="w-3 h-3" />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(g.id!); }} className="p-1.5 rounded-lg hover:bg-danger/20 text-white/30 hover:text-danger transition-all">
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {g.descripcion && <p className="text-[9px] text-white/30 mb-3 line-clamp-2">{g.descripcion}</p>}
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            {g.lider && (
+                                                                <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-warning/70">
+                                                                    <Crown className="w-3 h-3" /> {g.lider}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {g.miembros.slice(0, 5).map(m => (
+                                                                <span key={m} className="px-2 py-0.5 rounded-md bg-white/5 text-[7px] font-black uppercase tracking-widest text-white/40">{m.split(' ').slice(0, 2).join(' ')}</span>
+                                                            ))}
+                                                            {g.miembros.length > 5 && (
+                                                                <span className="px-2 py-0.5 rounded-md bg-white/5 text-[7px] font-black uppercase text-white/20">+{g.miembros.length - 5}</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[8px] font-bold text-white/15 uppercase tracking-widest mt-2">{g.miembros.length} miembros</p>
                                                     </div>
                                                 ))}
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    <div className="card-premium flex flex-col min-h-[450px]">
-                                        <h3 className="text-xl font-black uppercase tracking-tight mb-8">Mix Modalidades</h3>
-                                        <div className="flex-1 flex flex-col justify-center gap-6">
-                                            {statsByMod.length === 0 ? <p className="text-center text-[10px] font-black uppercase text-white/10 uppercase tracking-widest">Sin datos para filtrar</p> :
-                                                statsByMod.map((mod, i) => (
-                                                    <div key={i} className="space-y-3">
-                                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                                            <span className="flex items-center gap-2">
-                                                                <span className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`} />
-                                                                {mod.name}
-                                                            </span>
-                                                            <span className="text-white/40">{((mod.value / totalExams) * 100).toFixed(0)}%</span>
-                                                        </div>
-                                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                                            <motion.div
-                                                                initial={{ width: 0 }}
-                                                                animate={{ width: `${(mod.value / totalExams) * 100}%` }}
-                                                                className={`h-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`}
+                                        {/* Modal/Panel de Edición */}
+                                        {editingGrupo && (
+                                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-premium border-purple-500/20">
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <h3 className="text-lg font-black uppercase tracking-tight text-purple-300">
+                                                        {editingGrupo.id ? 'Editar Grupo' : 'Nuevo Grupo'}
+                                                    </h3>
+                                                    <button onClick={() => setEditingGrupo(null)} className="p-2 rounded-xl hover:bg-white/10 text-white/30 hover:text-white transition-all">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    {/* Columna izquierda: datos del grupo */}
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Nombre del Grupo *</label>
+                                                            <input
+                                                                type="text"
+                                                                value={editingGrupo.nombre}
+                                                                onChange={(e) => setEditingGrupo({ ...editingGrupo, nombre: e.target.value })}
+                                                                placeholder="Ej: Equipo Neuroradiología Chile"
+                                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-purple-500/50 transition-colors"
                                                             />
                                                         </div>
+                                                        <div>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Descripción</label>
+                                                            <textarea
+                                                                value={editingGrupo.descripcion || ''}
+                                                                onChange={(e) => setEditingGrupo({ ...editingGrupo, descripcion: e.target.value })}
+                                                                placeholder="Área, país, especialidad..."
+                                                                rows={2}
+                                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white/60 outline-none focus:border-purple-500/50 transition-colors resize-none"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Líder del Grupo</label>
+                                                            <select
+                                                                value={editingGrupo.lider || ''}
+                                                                onChange={(e) => setEditingGrupo({ ...editingGrupo, lider: e.target.value })}
+                                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white/60 outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer"
+                                                            >
+                                                                <option value="" className="bg-neutral-900">Sin líder asignado</option>
+                                                                {editingGrupo.miembros.map(m => (
+                                                                    <option key={m} value={m} className="bg-neutral-900">{m}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Color</label>
+                                                            <div className="flex gap-2">
+                                                                {groupColors.map(c => (
+                                                                    <button
+                                                                        key={c}
+                                                                        onClick={() => setEditingGrupo({ ...editingGrupo, color: c })}
+                                                                        className={`w-7 h-7 rounded-lg border-2 transition-all ${editingGrupo.color === c ? 'border-white scale-110' : 'border-transparent opacity-50 hover:opacity-80'}`}
+                                                                        style={{ backgroundColor: c }}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        {/* Miembros seleccionados */}
+                                                        <div>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 block">
+                                                                Miembros Seleccionados ({editingGrupo.miembros.length})
+                                                            </label>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {editingGrupo.miembros.length === 0 && (
+                                                                    <p className="text-[9px] text-white/15 italic">Selecciona médicos de la lista →</p>
+                                                                )}
+                                                                {editingGrupo.miembros.map(m => (
+                                                                    <span key={m} className="flex items-center gap-1 px-2. py-1 rounded-lg bg-purple-500/20 border border-purple-500/30 text-[8px] font-black uppercase tracking-widest text-purple-200">
+                                                                        {m === editingGrupo.lider && <Crown className="w-2.5 h-2.5 text-warning" />}
+                                                                        {m}
+                                                                        <button onClick={() => toggleMember(m)} className="ml-1 text-white/30 hover:text-danger transition-colors">
+                                                                            <X className="w-2.5 h-2.5" />
+                                                                        </button>
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                ))
-                                            }
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
 
-                            {activeTab === 'instituciones' && (
-                                <motion.div key="inst" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="card-premium min-h-[500px]">
-                                    <div className="flex items-center gap-3 mb-10">
-                                        <div className="p-3 rounded-2xl bg-prevenort-primary/10 border border-prevenort-primary/20">
-                                            <Building2 className="w-6 h-6 text-prevenort-primary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-2xl font-black uppercase tracking-tight text-white">Consolidado Institucional</h3>
-                                            <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Nombres formales vinculados vía Equivalencias</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                                        {statsByInst.map((inst, i) => (
-                                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="group">
-                                                <div className="flex justify-between items-end mb-3">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs font-black uppercase tracking-tight text-white group-hover:text-prevenort-primary transition-colors">{inst.name}</span>
-                                                        <span className="text-[10px] font-bold text-white/20 uppercase">{inst.value} exámenes</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${inst.withinSla / inst.value > 0.9 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
-                                                            {(inst.withinSla / inst.value * 100).toFixed(1)}% SLA
-                                                        </span>
+                                                    {/* Columna derecha: pool de médicos */}
+                                                    <div>
+                                                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 block">
+                                                            Médicos Disponibles ({allMedNames.length})
+                                                        </label>
+                                                        <div className="max-h-[360px] overflow-y-auto rounded-xl border border-white/5 bg-white/[0.02] no-scrollbar">
+                                                            {allMedNames.map(name => {
+                                                                const isSelected = editingGrupo.miembros.includes(name);
+                                                                return (
+                                                                    <button
+                                                                        key={name}
+                                                                        onClick={() => toggleMember(name)}
+                                                                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left border-b border-white/5 last:border-0 transition-all ${isSelected
+                                                                            ? 'bg-purple-500/10 text-purple-200'
+                                                                            : 'text-white/40 hover:bg-white/[0.03] hover:text-white/60'
+                                                                            }`}
+                                                                    >
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{name}</span>
+                                                                        {isSelected && <Check className="w-3.5 h-3.5 text-purple-400" />}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="h-4 w-full bg-white/5 rounded-2xl p-1 overflow-hidden border border-white/5 shadow-inner">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${(inst.value / (statsByInst[0].value || 1)) * 100}%` }}
-                                                        className="h-full bg-gradient-to-r from-prevenort-primary to-orange-400 rounded-xl relative group-hover:from-white group-hover:to-white transition-all duration-500"
+
+                                                {/* Botón Guardar */}
+                                                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-white/5">
+                                                    <button onClick={() => setEditingGrupo(null)} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        onClick={handleSave}
+                                                        disabled={!editingGrupo.nombre.trim() || editingGrupo.miembros.length === 0}
+                                                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-purple-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-purple-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                                     >
-                                                        <div className="absolute top-0 right-0 h-full w-12 bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </motion.div>
+                                                        <Save className="w-3.5 h-3.5" /> {editingGrupo.id ? 'Actualizar' : 'Crear Grupo'}
+                                                    </button>
                                                 </div>
                                             </motion.div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
+                                        )}
 
-                            {activeTab === 'medicos' && (
-                                <motion.div key="med" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                        {statsByMedico.map((med, i) => (
-                                            <motion.div
-                                                key={i}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.05 }}
-                                                className="p-8 rounded-[36px] bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 group hover:border-prevenort-primary/40 transition-all relative overflow-hidden"
-                                            >
-                                                <div className="absolute top-0 right-0 m-6 opacity-10 group-hover:scale-125 transition-transform duration-700">
-                                                    <UserCheck className="w-12 h-12" />
-                                                </div>
-                                                <div className="flex justify-between items-start mb-10 relative z-10">
-                                                    <div className="space-y-1">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-prevenort-primary/50">Staff Profesional</span>
-                                                        <h4 className="text-lg font-black uppercase text-white truncate max-w-[180px]">{med.name}</h4>
+                                        {/* Estadísticas del grupo seleccionado */}
+                                        {activeGroup && (
+                                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                                                <div className="card-premium">
+                                                    <div className="flex items-center gap-3 mb-6">
+                                                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: activeGroup.color || '#f97316' }} />
+                                                        <h3 className="text-xl font-black uppercase tracking-tight text-white">{activeGroup.nombre}</h3>
+                                                        {activeGroup.lider && (
+                                                            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-warning/60">
+                                                                <Crown className="w-3 h-3" /> Líder: {activeGroup.lider}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-3xl font-black text-white">{med.volume}</span>
-                                                        <span className="text-[10px] font-black uppercase text-white/20 tracking-tighter">Exámenes</span>
-                                                    </div>
-                                                </div>
 
-                                                <div className="grid grid-cols-2 gap-4 mb-10 relative z-10">
-                                                    <div className="p-4 rounded-3xl bg-white/5 border border-white/5">
-                                                        <p className="text-[9px] font-black uppercase text-white/30 mb-1">TAT Prom.</p>
-                                                        <p className="text-xl font-black text-info">{med.avgTat}<span className="text-[10px] ml-1">min</span></p>
+                                                    {/* KPIs del grupo */}
+                                                    <div className="grid grid-cols-4 gap-4 mb-8">
+                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Exámenes</p>
+                                                            <p className="text-2xl font-black text-white">{grpExams.toLocaleString()}</p>
+                                                        </div>
+                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Adendas</p>
+                                                            <p className="text-2xl font-black text-danger">{grpAddendas} <span className="text-sm text-danger/50">{grpAddRate}%</span></p>
+                                                        </div>
+                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">SLA</p>
+                                                            <p className="text-2xl font-black text-success">{grpSlaRate}%</p>
+                                                        </div>
+                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">TAT Promedio</p>
+                                                            <p className="text-2xl font-black text-info">{grpAvgTat}m</p>
+                                                        </div>
                                                     </div>
-                                                    <div className="p-4 rounded-3xl bg-white/5 border border-white/5">
-                                                        <p className="text-[9px] font-black uppercase text-white/30 mb-1">Calidad</p>
-                                                        <p className="text-xl font-black text-danger">{med.adendas}<span className="text-[10px] ml-1">ad.</span></p>
-                                                    </div>
-                                                </div>
 
-                                                <div className="relative z-10">
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <p className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">SLA Compliance</p>
-                                                        <p className="text-[10px] font-black text-success">{med.slaRate}%</p>
-                                                    </div>
-                                                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${med.slaRate}%` }}
-                                                            className={`h-full ${Number(med.slaRate) > 90 ? 'bg-success' : Number(med.slaRate) > 70 ? 'bg-warning' : 'bg-danger'}`}
-                                                        />
+                                                    {/* Tabla de miembros */}
+                                                    <div className="overflow-x-auto rounded-2xl border border-white/5">
+                                                        <table className="w-full text-left">
+                                                            <thead>
+                                                                <tr className="border-b border-white/10">
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Miembro</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% del Grupo</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {memberStats.map((mem, i) => (
+                                                                    <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
+                                                                        <td className="px-4 py-3">
+                                                                            <span className="text-xs font-black uppercase tracking-tight text-white flex items-center gap-2">
+                                                                                {mem.isLeader && <Crown className="w-3.5 h-3.5 text-warning" />}
+                                                                                {mem.name}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-right text-sm font-black text-white">{mem.exams.toLocaleString()}</td>
+                                                                        <td className="px-4 py-3 text-right text-sm font-black text-danger">{mem.addendas}</td>
+                                                                        <td className="px-4 py-3 text-right">
+                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.addRate) < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>
+                                                                                {mem.addRate}%
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-right">
+                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
+                                                                                {mem.slaRate}%
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-right text-sm font-black text-info">{mem.avgTat}m</td>
+                                                                        <td className="px-4 py-3 text-right">
+                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                <div className="w-16 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                                                                    <div className="h-full rounded-full" style={{ width: `${grpExams > 0 ? (mem.exams / grpExams) * 100 : 0}%`, backgroundColor: activeGroup.color || '#f97316' }} />
+                                                                                </div>
+                                                                                <span className="text-[9px] font-black text-white/40">{grpExams > 0 ? ((mem.exams / grpExams) * 100).toFixed(0) : '0'}%</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </motion.div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
+                                        )}
+                                    </motion.div>
+                                );
+                            })()}
 
                             {activeTab === 'calidad' && (
                                 <motion.div key="calidad" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="card-premium min-h-[450px] flex flex-col items-center justify-center p-20 text-center">
@@ -738,10 +1724,229 @@ export const StatMultirisModule: React.FC = () => {
                                     </div>
                                 </motion.div>
                             )}
+
+                            {activeTab === 'ranking' && (() => {
+                                // Normalizar: statsByInst usa 'value', statsByMedico usa 'volume'
+                                const rankData = (rankMode === 'instituciones' ? statsByInst : statsByMedico).map((item: any) => ({
+                                    ...item,
+                                    volume: item.volume || item.value || 0
+                                }));
+                                // Filtrar por tipo de paciente si aplica
+                                const rankByTipo = rankTipo === 'ALL' ? rankData.map((item: any) => {
+                                    return { ...item };
+                                }) : (() => {
+                                    // Recalcular stats por entidad filtrando por tipo_paciente
+                                    const groupField = rankMode === 'instituciones' ? 'institucion' : 'medico';
+                                    const tipoFiltered = filteredData.filter(d => d.tipo_paciente === rankTipo);
+                                    const grouped = tipoFiltered.reduce((acc, curr) => {
+                                        const key = getFormalName(curr[groupField], groupField === 'institucion' ? 'institucion' : 'medico');
+                                        if (!acc[key]) acc[key] = { name: key, volume: 0, adendas: 0, withinSla: 0, tatSum: 0 };
+                                        acc[key].volume += (curr.cantidad_examenes || 0);
+                                        acc[key].adendas += (curr.cantidad_adendas || 0);
+                                        acc[key].withinSla += (curr.cantidad_dentro_sla || 0);
+                                        acc[key].tatSum += ((curr.tat_promedio_minutos || 0) * (curr.cantidad_examenes || 0));
+                                        return acc;
+                                    }, {} as any);
+                                    return Object.values(grouped).map((g: any) => ({
+                                        ...g,
+                                        slaRate: g.volume > 0 ? ((g.withinSla / g.volume) * 100).toFixed(1) : '0',
+                                        avgTat: g.volume > 0 ? (g.tatSum / g.volume).toFixed(0) : '0'
+                                    }));
+                                })() as any[];
+
+                                // Calcular valor para la métrica elegida
+                                const getValue = (item: any): number => {
+                                    if (rankMetric === 'exams') return item.volume || 0;
+                                    if (rankMetric === 'addendas') return item.volume > 0 ? (item.adendas / item.volume) * 100 : 0;
+                                    if (rankMetric === 'sla') return Number(item.slaRate) || 0;
+                                    if (rankMetric === 'tat') return Number(item.avgTat) || 0;
+                                    return 0;
+                                };
+                                const formatValue = (v: number): string => {
+                                    if (rankMetric === 'exams') return v.toLocaleString();
+                                    if (rankMetric === 'addendas') return `${v.toFixed(2)}%`;
+                                    if (rankMetric === 'sla') return `${v.toFixed(1)}%`;
+                                    if (rankMetric === 'tat') return `${v.toFixed(0)}m`;
+                                    return String(v);
+                                };
+                                // Ranking: para TAT y Adendas, menor es mejor; para exams y SLA, mayor es mejor
+                                const isLowerBetter = rankMetric === 'tat' || rankMetric === 'addendas';
+                                const effectiveAsc = rankOrder === 'auto' ? isLowerBetter : rankOrder === 'asc';
+                                const sorted = [...rankByTipo].filter((d: any) => d.volume > 0).sort((a: any, b: any) => {
+                                    const va = getValue(a), vb = getValue(b);
+                                    return effectiveAsc ? va - vb : vb - va;
+                                });
+                                const maxVal = sorted.length > 0 ? Math.max(...sorted.map((s: any) => getValue(s)), 1) : 1;
+                                const metricLabels: Record<string, string> = { exams: 'Exámenes', addendas: '% Adendas', sla: '% SLA', tat: 'TAT Promedio' };
+                                const tipoFilterLabels: Record<string, string> = { ALL: 'Todos', U: 'Urgencias', A: 'Ambulatorio', H: 'Hospitalizado' };
+
+                                return (
+                                    <motion.div key="ranking" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+                                        {/* Controles del Ranking */}
+                                        <div className="card-premium">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/20">
+                                                        <Trophy className="w-6 h-6 text-yellow-500" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-white">Ranking Comparativo</h3>
+                                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{sorted.length} entidades · {metricLabels[rankMetric]} · {tipoFilterLabels[rankTipo]}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Toggles */}
+                                            <div className="flex flex-wrap gap-3 mb-6">
+                                                {/* Modo: Instituciones / Médicos */}
+                                                <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                    {(['instituciones', 'medicos'] as const).map(m => (
+                                                        <button key={m} onClick={() => setRankMode(m)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMode === m ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                            {m === 'instituciones' ? '🏥 Instituciones' : '👨‍⚕️ Médicos'}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {/* Métrica */}
+                                                <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                    {(['exams', 'addendas', 'sla', 'tat'] as const).map(met => (
+                                                        <button key={met} onClick={() => setRankMetric(met)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMetric === met ? 'bg-info text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                            {metricLabels[met]}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {/* Tipo Paciente */}
+                                                <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                    {(['ALL', 'U', 'A', 'H'] as const).map(tp => (
+                                                        <button key={tp} onClick={() => setRankTipo(tp)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankTipo === tp ? (tp === 'U' ? 'bg-danger text-white' : tp === 'A' ? 'bg-success text-black' : tp === 'H' ? 'bg-info text-black' : 'bg-white/20 text-white') : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                            {tipoFilterLabels[tp]}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {/* Orden */}
+                                                <button
+                                                    onClick={() => setRankOrder(prev => prev === 'auto' ? 'desc' : prev === 'desc' ? 'asc' : 'auto')}
+                                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all hover:bg-white/10"
+                                                    title={`Orden: ${rankOrder === 'auto' ? 'Automático' : rankOrder === 'asc' ? 'Ascendente' : 'Descendente'}`}
+                                                >
+                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-white/40'}>
+                                                        {rankOrder === 'asc' ? '↑' : rankOrder === 'desc' ? '↓' : '⇅'}
+                                                    </span>
+                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-white/40'}>
+                                                        {rankOrder === 'auto' ? 'Auto' : rankOrder === 'asc' ? 'Menor→Mayor' : 'Mayor→Menor'}
+                                                    </span>
+                                                </button>
+                                            </div>
+
+                                            {/* Barras Horizontales del Ranking */}
+                                            <div className="space-y-1.5 max-h-[600px] overflow-y-auto pr-2 no-scrollbar">
+                                                {sorted.map((item: any, idx: number) => {
+                                                    const val = getValue(item);
+                                                    const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+                                                    const isTop3 = idx < 3;
+                                                    const isBottom3 = idx >= sorted.length - 3 && sorted.length > 6;
+                                                    const barColor = isLowerBetter
+                                                        ? (isTop3 ? 'from-success/60 to-success' : isBottom3 ? 'from-danger/60 to-danger' : 'from-white/10 to-white/20')
+                                                        : (isTop3 ? 'from-success/60 to-success' : isBottom3 ? 'from-danger/60 to-danger' : 'from-white/10 to-white/20');
+                                                    const posColor = isTop3 ? 'text-success bg-success/10 border-success/20' : isBottom3 ? 'text-danger bg-danger/10 border-danger/20' : 'text-white/40 bg-white/5 border-white/10';
+                                                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+
+                                                    return (
+                                                        <motion.div
+                                                            key={item.name}
+                                                            initial={{ opacity: 0, x: -20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            transition={{ delay: idx * 0.02 }}
+                                                            className="flex items-center gap-3 group hover:bg-white/[0.02] rounded-xl px-3 py-2 transition-colors"
+                                                        >
+                                                            {/* Position badge */}
+                                                            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-[10px] font-black shrink-0 ${posColor}`}>
+                                                                {medal || `#${idx + 1}`}
+                                                            </div>
+
+                                                            {/* Name */}
+                                                            <div className="w-[160px] shrink-0 truncate">
+                                                                <span className="text-[10px] font-black uppercase tracking-tight text-white group-hover:text-prevenort-primary transition-colors">{item.name}</span>
+                                                            </div>
+
+                                                            {/* Bar */}
+                                                            <div className="flex-1 h-7 bg-white/5 rounded-lg overflow-hidden relative">
+                                                                <motion.div
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${Math.max(pct, 2)}%` }}
+                                                                    transition={{ duration: 0.8, delay: idx * 0.02, ease: 'easeOut' }}
+                                                                    className={`h-full bg-gradient-to-r ${barColor} rounded-lg`}
+                                                                />
+                                                            </div>
+
+                                                            {/* Value */}
+                                                            <div className="w-[80px] shrink-0 text-right">
+                                                                <span className={`text-sm font-black ${isTop3 ? 'text-success' : isBottom3 ? 'text-danger' : 'text-white/60'}`}>
+                                                                    {formatValue(val)}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Volume context (when not ranking by exams) */}
+                                                            {rankMetric !== 'exams' && (
+                                                                <div className="w-[50px] shrink-0 text-right">
+                                                                    <span className="text-[8px] font-bold text-white/20 uppercase">{item.volume.toLocaleString()} ex</span>
+                                                                </div>
+                                                            )}
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {sorted.length === 0 && (
+                                                <div className="text-center py-20 text-white/20">
+                                                    <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                                    <p className="text-sm font-black uppercase">Sin datos para este filtro</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Resumen Top/Bottom */}
+                                        {sorted.length >= 6 && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="card-premium">
+                                                    <h4 className="text-xs font-black uppercase tracking-widest text-success mb-4">🏆 Top 3 — Mejor {metricLabels[rankMetric]}</h4>
+                                                    <div className="space-y-3">
+                                                        {sorted.slice(0, 3).map((item: any, i: number) => (
+                                                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-success/5 border border-success/10">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="text-lg">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                                                                    <span className="text-[10px] font-black uppercase text-white">{item.name}</span>
+                                                                </div>
+                                                                <span className="text-sm font-black text-success">{formatValue(getValue(item))}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="card-premium">
+                                                    <h4 className="text-xs font-black uppercase tracking-widest text-danger mb-4">⚠️ Bottom 3 — {isLowerBetter ? 'Mayor' : 'Menor'} {metricLabels[rankMetric]}</h4>
+                                                    <div className="space-y-3">
+                                                        {sorted.slice(-3).reverse().map((item: any, i: number) => (
+                                                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-danger/5 border border-danger/10">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="w-6 h-6 rounded-full bg-danger/10 flex items-center justify-center text-[9px] font-black text-danger">#{sorted.length - 2 + i}</span>
+                                                                    <span className="text-[10px] font-black uppercase text-white">{item.name}</span>
+                                                                </div>
+                                                                <span className="text-sm font-black text-danger">{formatValue(getValue(item))}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })()}
                         </AnimatePresence>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };

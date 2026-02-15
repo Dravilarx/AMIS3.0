@@ -30,41 +30,31 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-                // Keywords to match sheet names flexibly (case-insensitive, partial match)
-                const targetKeywords = ['MULTIRIS', 'MUTIRIS', 'HDC', 'SORAN'];
+                // Only process the 'MULTIRIS' sheet as requested
+                const targetKey = 'MULTIRIS';
                 let allJsonData: any[] = [];
 
                 console.log('📊 Hojas encontradas en el archivo:', workbook.SheetNames);
 
-                // Extract data from target sheets using flexible matching
-                workbook.SheetNames.forEach(name => {
-                    const normalizedName = name.toUpperCase().trim();
-                    const isTarget = targetKeywords.some(keyword => normalizedName.includes(keyword));
+                const multirisSheetName = workbook.SheetNames.find(name =>
+                    name.toUpperCase().trim().includes(targetKey)
+                );
 
-                    if (isTarget) {
-                        const worksheet = workbook.Sheets[name];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        console.log(`✅ Hoja "${name}" => ${jsonData.length} filas capturadas`);
-                        if (jsonData.length > 0) {
-                            console.log('   Columnas:', Object.keys(jsonData[0] as any).join(', '));
-                        }
-                        const rowsWithSource = jsonData.map((row: any) => ({ ...row, _source_sheet: normalizedName }));
-                        allJsonData = [...allJsonData, ...rowsWithSource];
-                    } else {
-                        console.log(`⏭️ Hoja "${name}" ignorada (no coincide con keywords)`);
+                if (multirisSheetName) {
+                    const worksheet = workbook.Sheets[multirisSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    console.log(`✅ Hoja "${multirisSheetName}" => ${jsonData.length} filas capturadas`);
+
+                    if (jsonData.length > 0) {
+                        console.log('   Columnas:', Object.keys(jsonData[0] as any).join(', '));
                     }
-                });
 
-                // Fallback: if no specific sheets found, use ALL sheets
-                if (allJsonData.length === 0 && workbook.SheetNames.length > 0) {
-                    console.warn('⚠️ Ninguna hoja reconocida. Importando TODAS las hojas como fallback.');
-                    workbook.SheetNames.forEach(name => {
-                        const worksheet = workbook.Sheets[name];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        console.log(`📄 Fallback: Hoja "${name}" => ${jsonData.length} filas`);
-                        const rowsWithSource = jsonData.map((row: any) => ({ ...row, _source_sheet: name.toUpperCase().trim() }));
-                        allJsonData = [...allJsonData, ...rowsWithSource];
-                    });
+                    allJsonData = jsonData.map((row: any) => ({
+                        ...row,
+                        _source_sheet: multirisSheetName.toUpperCase().trim()
+                    }));
+                } else {
+                    console.error('❌ No se encontró la pestaña "MULTIRIS" en el archivo.');
                 }
 
                 console.log(`📊 Total registros consolidados: ${allJsonData.length}`);
@@ -82,7 +72,10 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                         radiologo_informado: row['Radiologo Informado'] || row['radiologo_informado'] || '',
                         radiologo_validado: row['Radiologo Validado'] || row['radiologo_validado'] || '',
                         addendum_text: row['Text Adenddum'] || row['text_adenddum'] || null,
-                        has_addendum: !!(row['Text Adenddum'] || row['text_adenddum']),
+                        has_addendum: (() => {
+                            const val = row['Text Adenddum'] || row['text_adenddum'];
+                            return !!val && val.toString().trim().length > 0 && val.toString().toUpperCase() !== 'NULL';
+                        })(),
                         accession_number: String(row['#Acc'] || row['accession_number'] || ''),
                         paciente_id: String(row['IdPaciente'] || row['id_paciente'] || ''),
                         paciente_nombre: row['Paciente'] || row['paciente'] || '',
@@ -102,14 +95,49 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
     });
 };
 
-export const getConsolidatedStats = async () => {
-    const { data, error } = await supabase
-        .from('stats_consolidated')
-        .select('*')
-        .order('fecha_reporte', { ascending: false });
+export const getConsolidatedStats = async (startDate?: string | null, endDate?: string | null) => {
+    let allData: any[] = [];
+    let from = 0;
+    const batchSize = 1000; // Match Supabase default limit
+    let keepFetching = true;
 
-    if (error) throw error;
-    return data;
+    while (keepFetching) {
+        let query = supabase
+            .from('stats_consolidated')
+            .select('*')
+            .order('fecha_reporte', { ascending: false })
+            .range(from, from + batchSize - 1);
+
+        // Add a dummy filter as cache buster if needed, but Supabase usually handles this well
+        // query = query.neq('id', '00000000-0000-0000-0000-000000000000'); 
+
+        if (startDate) {
+            query = query.gte('fecha_reporte', startDate);
+        }
+        if (endDate) {
+            query = query.lte('fecha_reporte', endDate);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            allData = [...allData, ...data];
+            // If we got exactly the batch size, there might be more
+            if (data.length === batchSize) {
+                from += batchSize;
+            } else {
+                keepFetching = false;
+            }
+        } else {
+            keepFetching = false;
+        }
+
+        // Safety break
+        if (from >= 100000) keepFetching = false;
+    }
+
+    return allData;
 };
 
 export const getSlaConfigs = async () => {
@@ -122,7 +150,7 @@ export const getSlaConfigs = async () => {
     return data;
 };
 
-export const saveSlaConfig = async (config: { id?: string, institucion: string | null, modalidad: string, tipo: string, target_minutes: number }) => {
+export const saveSlaConfig = async (config: { id?: string, institucion: string | null, modalidad: string | null, tipo: string, target_minutes: number }) => {
     const { data, error } = await supabase
         .from('multiris_sla_config')
         .upsert(config, { onConflict: 'institucion, modalidad, tipo' })
@@ -181,7 +209,7 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
     try {
         // 2. Auto-Discovery & Equivalence
         const uniqueInstitutions = Array.from(new Set(records.map(r => r.aetitle).filter(Boolean)));
-        const uniqueDoctors = Array.from(new Set(records.map(r => r.radiologo_validado).filter(Boolean)));
+        const uniqueDoctors = Array.from(new Set(records.map(r => r.radiologo_informado).filter(Boolean)));
 
         // Ensure mappings exist (Discovery)
         if (uniqueInstitutions.length > 0) {
@@ -201,7 +229,8 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
         const globalSlaMap = new Map<string, number>();
 
         allSlaConfigs?.forEach(c => {
-            const key = `${c.modalidad}|${c.tipo}`;
+            const modality = c.modalidad || 'TODAS';
+            const key = `${modality}|${c.tipo}`;
             if (c.institucion) {
                 institutionalSlaMap.set(`${c.institucion}|${key}`, c.target_minutes);
             } else {
@@ -231,7 +260,7 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             if (!r.fecha_validacion) return;
 
             const dateKey = new Date(r.fecha_validacion).toISOString().split('T')[0];
-            const key = `${dateKey}|${r.aetitle}|${r.radiologo_validado}|${r.modalidad}|${r.tipo}`;
+            const key = `${dateKey}|${r.aetitle}|${r.radiologo_informado}|${r.modalidad}|${r.tipo}`;
 
             let tatMinutes = 0;
             if (r.fecha_asignacion && r.fecha_validacion) {
@@ -240,17 +269,28 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
                 tatMinutes = Math.max(0, (end - start) / (1000 * 60));
             }
 
-            // SLA Lookup: Specific Institutional -> Global -> Default 24h
-            const modTipoKey = `${r.modalidad}|${r.tipo}`;
-            const instKey = `${r.aetitle}|${modTipoKey}`;
-            const targetSla = institutionalSlaMap.get(instKey) || globalSlaMap.get(modTipoKey) || 1440;
+            // --- INTUITION SLA LOOKUP PERFORMANCE MATRIX ---
+            // 1. Specific: Inst + Mod + Tipo
+            // 2. Mid: Inst + TODAS + Tipo
+            // 3. Fallback: 60 min (1h)
 
+            const findSla = () => {
+                const k1 = `${r.aetitle}|${r.modalidad}|${r.tipo}`;
+                if (institutionalSlaMap.has(k1)) return institutionalSlaMap.get(k1);
+
+                const k2 = `${r.aetitle}|TODAS|${r.tipo}`;
+                if (institutionalSlaMap.has(k2)) return institutionalSlaMap.get(k2);
+
+                return 60; // Default 1h (60 min)
+            };
+
+            const targetSla = findSla() || 60;
             const isWithinSla = tatMinutes <= targetSla;
 
             const existing = consolidatedMap.get(key) || {
                 fecha_reporte: dateKey,
                 institucion: r.aetitle,
-                medico: r.radiologo_validado,
+                medico: r.radiologo_informado,
                 modalidad: r.modalidad,
                 tipo_paciente: r.tipo,
                 cantidad_examenes: 0,
@@ -307,4 +347,67 @@ export const getMultirisStats = async () => {
 
     if (error) throw error;
     return data;
+};
+
+// --- Grupos de Médicos ---
+
+export interface MedicoGroup {
+    id?: string;
+    nombre: string;
+    descripcion?: string;
+    lider?: string;
+    miembros: string[];
+    color?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export const getGruposMedicos = async (): Promise<MedicoGroup[]> => {
+    const { data, error } = await supabase
+        .from('stat_multiris_grupos')
+        .select('*')
+        .order('nombre');
+    if (error) throw error;
+    return data || [];
+};
+
+export const saveGrupoMedico = async (grupo: MedicoGroup): Promise<MedicoGroup> => {
+    if (grupo.id) {
+        const { data, error } = await supabase
+            .from('stat_multiris_grupos')
+            .update({
+                nombre: grupo.nombre,
+                descripcion: grupo.descripcion || null,
+                lider: grupo.lider || null,
+                miembros: grupo.miembros,
+                color: grupo.color || '#f97316'
+            })
+            .eq('id', grupo.id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    } else {
+        const { data, error } = await supabase
+            .from('stat_multiris_grupos')
+            .insert({
+                nombre: grupo.nombre,
+                descripcion: grupo.descripcion || null,
+                lider: grupo.lider || null,
+                miembros: grupo.miembros,
+                color: grupo.color || '#f97316'
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+};
+
+export const deleteGrupoMedico = async (id: string): Promise<void> => {
+    const { error } = await supabase
+        .from('stat_multiris_grupos')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
 };
