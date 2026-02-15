@@ -624,171 +624,297 @@ export const StatMultirisModule: React.FC = () => {
                     </motion.div>
                 ) : view === 'config' ? (
                     <motion.div key="config" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-1">
-                                <div className="card-premium space-y-6 sticky top-24">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-xl bg-info/10 text-info">
-                                            <Plus className="w-5 h-5" />
-                                        </div>
-                                        <h3 className="text-lg font-black uppercase tracking-tight">Nueva Regla de SLA</h3>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest ml-1">Institución (Planilla)</label>
-                                            <select
-                                                value={newSla.institucion}
-                                                onChange={(e) => setNewSla({ ...newSla, institucion: e.target.value })}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
-                                            >
-                                                <option value="" disabled>Seleccionar Institución...</option>
-                                                {mappings.filter(m => m.category === 'institucion').map(m => (
-                                                    <option key={m.id} value={m.raw_name}>{m.raw_name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest ml-1">Modalidad</label>
-                                                <select
-                                                    value={newSla.modalidad}
-                                                    onChange={(e) => setNewSla({ ...newSla, modalidad: e.target.value })}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
-                                                >
-                                                    <option value="TODAS">TODAS (General)</option>
-                                                    {['CT', 'MR', 'DX', 'US', 'MG', 'XA'].map(m => <option key={m} value={m}>{m}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest ml-1">Tipo</label>
-                                                <select
-                                                    value={newSla.tipo}
-                                                    onChange={(e) => setNewSla({ ...newSla, tipo: e.target.value })}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold appearance-none bg-neutral-900"
-                                                >
-                                                    <option value="U">Urgencia (U) — incluye Mutual</option>
-                                                    <option value="A">Ambulatorio (A)</option>
-                                                    <option value="H">Hospitalizado (H) — incluye UPC, UTI</option>
-                                                    <option value="M">Mutual (M) — usa SLA de Urgencia</option>
-                                                    <option value="UPC">Unidad Paciente Crítico (UPC) — usa SLA de Hospital.</option>
-                                                    <option value="UTI">UTI — usa SLA de Hospitalizado</option>
-                                                    <option value="ONC">Oncológico (ONC)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest ml-1">Meta TAT (Minutos)</label>
+                        {/* --- MATRIZ SLA: Vista unificada sin fricción --- */}
+                        {(() => {
+                            // Construir mapa de SLAs existentes: key = "inst|tipo" => config
+                            const slaMap = new Map<string, any>();
+                            slaConfigs.forEach((c: any) => {
+                                const instKey = c.institucion || '__GLOBAL__';
+                                const key = `${instKey}|${c.tipo}`;
+                                slaMap.set(key, c);
+                            });
+
+                            // Obtener lista de todas las instituciones desde mappings
+                            const allInstitutions = mappings
+                                .filter((m: any) => m.category === 'institucion')
+                                .map((m: any) => m.raw_name)
+                                .sort();
+
+                            // Tipos de paciente configurables (columnas)
+                            const PATIENT_TYPES = [
+                                { key: 'U', label: 'Urgencia', shortLabel: 'URG', color: 'bg-red-500', textColor: 'text-red-400', dotColor: 'bg-red-400', desc: '' },
+                                { key: 'H', label: 'Hospitalizado', shortLabel: 'HOSP', color: 'bg-amber-500', textColor: 'text-amber-400', dotColor: 'bg-amber-400', desc: '' },
+                                { key: 'A', label: 'Ambulatorio', shortLabel: 'AMB', color: 'bg-emerald-500', textColor: 'text-emerald-400', dotColor: 'bg-emerald-400', desc: '' },
+                                { key: 'ONC', label: 'Oncológico', shortLabel: 'ONC', color: 'bg-violet-500', textColor: 'text-violet-400', dotColor: 'bg-violet-400', desc: '' },
+                                { key: 'MUT', label: 'Mutual', shortLabel: 'MUT', color: 'bg-rose-500', textColor: 'text-rose-400', dotColor: 'bg-rose-400', desc: '' },
+                                { key: 'UTI', label: 'UTI / UPC', shortLabel: 'UTI', color: 'bg-orange-500', textColor: 'text-orange-400', dotColor: 'bg-orange-400', desc: '' },
+                            ];
+
+                            // Obtener valor global fallback para un tipo
+                            const getGlobalValue = (tipo: string) => {
+                                const config = slaMap.get(`__GLOBAL__|${tipo}`);
+                                return config?.target_minutes || 0;
+                            };
+
+                            // Obtener valor institucional para un tipo
+                            const getInstValue = (inst: string, tipo: string) => {
+                                const config = slaMap.get(`${inst}|${tipo}`);
+                                return config?.target_minutes ?? null; // null = no configurado
+                            };
+
+                            // Handler para guardar celda inline
+                            const handleCellSave = async (institucion: string | null, tipo: string, value: number) => {
+                                try {
+                                    const existing = slaMap.get(`${institucion || '__GLOBAL__'}|${tipo}`);
+                                    if (value === 0 && existing) {
+                                        // Borrar la regla si ponen 0
+                                        await deleteSlaConfig(existing.id);
+                                    } else if (value > 0) {
+                                        await saveSlaConfig({
+                                            id: existing?.id,
+                                            institucion: institucion,
+                                            modalidad: null,
+                                            tipo,
+                                            target_minutes: value
+                                        });
+                                    }
+                                    loadConfigs();
+                                } catch (err: any) {
+                                    console.error('Error saving SLA:', err);
+                                }
+                            };
+
+                            // Componente celda editable inline
+                            const SlaCell = ({ institucion, tipo, globalFallback }: { institucion: string | null, tipo: string, globalFallback: number }) => {
+                                const isGlobal = institucion === null;
+                                const currentValue = isGlobal
+                                    ? getGlobalValue(tipo)
+                                    : getInstValue(institucion!, tipo);
+                                const hasOwnValue = currentValue !== null && currentValue > 0;
+                                const displayValue = hasOwnValue ? currentValue : (isGlobal ? 0 : globalFallback);
+                                const [editing, setEditing] = useState(false);
+                                const [tempValue, setTempValue] = useState(String(displayValue));
+
+                                const handleCommit = () => {
+                                    setEditing(false);
+                                    const numVal = parseInt(tempValue) || 0;
+                                    if (numVal !== (currentValue || 0)) {
+                                        handleCellSave(institucion, tipo, numVal);
+                                    }
+                                };
+
+                                const formatTime = (mins: number) => {
+                                    if (mins === 0) return '—';
+                                    if (mins < 60) return `${mins}m`;
+                                    const h = Math.floor(mins / 60);
+                                    const m = mins % 60;
+                                    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+                                };
+
+                                if (editing) {
+                                    return (
+                                        <div className="relative">
                                             <input
                                                 type="number"
-                                                value={newSla.target_minutes}
-                                                onChange={(e) => setNewSla({ ...newSla, target_minutes: parseInt(e.target.value) || 0 })}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-info outline-none transition-all font-bold"
+                                                autoFocus
+                                                value={tempValue}
+                                                onChange={(e) => setTempValue(e.target.value)}
+                                                onBlur={handleCommit}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') handleCommit(); if (e.key === 'Escape') setEditing(false); }}
+                                                className="w-full bg-info/10 border-2 border-info rounded-xl px-3 py-2.5 text-center text-sm font-black text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                min={0}
+                                                step={5}
                                             />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-info/60">min</span>
                                         </div>
-                                        <button
-                                            onClick={handleSaveSla}
-                                            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-all shadow-lg ${newSla.id ? 'bg-prevenort-primary shadow-orange-500/20' : 'bg-info shadow-cyan-500/20'} text-white`}
-                                        >
-                                            <Save className="w-4 h-4" /> {newSla.id ? 'Actualizar Regla' : 'Guardar Regla'}
-                                        </button>
-                                        {newSla.id && (
-                                            <button
-                                                onClick={() => setNewSla({ institucion: '', modalidad: 'TODAS', tipo: 'U', target_minutes: 120 })}
-                                                className="w-full py-3 text-[10px] font-black uppercase text-white/30 hover:text-white transition-colors"
-                                            >
-                                                Cancelar Edición
-                                            </button>
+                                    );
+                                }
+
+                                return (
+                                    <button
+                                        onClick={() => { setTempValue(String(hasOwnValue ? currentValue : 0)); setEditing(true); }}
+                                        className={`w-full rounded-xl px-3 py-2.5 text-center transition-all group/cell relative ${hasOwnValue
+                                            ? 'bg-white/[0.06] border border-white/10 hover:border-info/40 hover:bg-info/5'
+                                            : isGlobal
+                                                ? 'bg-white/[0.03] border border-dashed border-white/10 hover:border-info/40'
+                                                : 'bg-transparent border border-dashed border-white/[0.05] hover:border-white/20 hover:bg-white/[0.02]'
+                                            }`}
+                                    >
+                                        <span className={`text-sm font-black ${hasOwnValue ? 'text-white' : isGlobal ? 'text-white/20' : 'text-white/15'
+                                            }`}>
+                                            {formatTime(displayValue)}
+                                        </span>
+                                        {!isGlobal && !hasOwnValue && globalFallback > 0 && (
+                                            <span className="block text-[8px] font-bold text-white/20 mt-0.5">
+                                                ← global
+                                            </span>
                                         )}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="lg:col-span-2 space-y-4">
-                                <div className="card-premium h-[600px] overflow-hidden flex flex-col p-0">
-                                    <div className="p-8 border-b border-white/5">
-                                        <h3 className="text-xl font-black uppercase tracking-tight">SLAs Activos</h3>
-                                    </div>
-                                    <div className="overflow-y-auto flex-1 no-scrollbar p-8">
-                                        {/* Agrupamos y ordenamos los SLAs para una vista impecable */}
-                                        {Object.entries(
-                                            slaConfigs.reduce((acc: any, curr: any) => {
-                                                const key = curr.institucion || 'GLOBAL';
-                                                if (!acc[key]) acc[key] = [];
-                                                acc[key].push(curr);
-                                                return acc;
-                                            }, {})
-                                        )
-                                            .sort(([a], [b]) => {
-                                                if (a === 'GLOBAL') return -1;
-                                                if (b === 'GLOBAL') return 1;
-                                                return a.localeCompare(b);
-                                            })
-                                            .map(([inst, configs]: [string, any]) => {
-                                                // Ordenar configs por U, H, A
-                                                const typeOrder: Record<string, number> = { 'U': 1, 'H': 2, 'A': 3 };
-                                                const sortedConfigs = [...configs].sort((a, b) =>
-                                                    (typeOrder[a.tipo] || 99) - (typeOrder[b.tipo] || 99)
-                                                );
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                            <Edit3 className="w-3 h-3 text-info/60" />
+                                        </div>
+                                    </button>
+                                );
+                            };
 
-                                                return (
-                                                    <div key={inst} className="mb-10 last:mb-0">
-                                                        <div className="flex items-center gap-3 mb-4 sticky top-0 bg-neutral-950/80 backdrop-blur-md py-2 z-10">
-                                                            <Building2 className="w-5 h-5 text-prevenort-primary" />
-                                                            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white">
-                                                                {inst === 'GLOBAL' ? 'Reglas Globales (Fallback)' : inst}
-                                                            </h4>
-                                                            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 gap-2 pl-8">
-                                                            {sortedConfigs.map((config: any) => (
-                                                                <motion.div
-                                                                    key={config.id}
-                                                                    initial={{ opacity: 0 }}
-                                                                    animate={{ opacity: 1 }}
-                                                                    className="group flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all"
-                                                                >
-                                                                    <div className="flex items-center gap-6">
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Tipo de Paciente</span>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span className={`w-2 h-2 rounded-full ${config.tipo === 'U' ? 'bg-danger' : config.tipo === 'H' ? 'bg-warning' : 'bg-success'}`} />
-                                                                                <span className="text-sm font-bold text-white">
-                                                                                    {config.tipo === 'U' ? 'Urgencia (U)' : config.tipo === 'H' ? 'Hospitalizado (H)' : 'Ambulatorio (A)'}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="flex flex-col border-l border-white/5 pl-6">
-                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Modalidad</span>
-                                                                            <span className={`text-xs font-black ${!config.modalidad || config.modalidad === 'TODAS' ? 'text-info/60' : 'text-prevenort-primary'}`}>
-                                                                                {config.modalidad || 'TODAS (Cualquier Examen)'}
-                                                                            </span>
-                                                                        </div>
-
-                                                                        <div className="flex flex-col border-l border-white/5 pl-6">
-                                                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Meta TAT</span>
-                                                                            <span className="text-sm font-black text-white">{config.target_minutes} min</span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button onClick={() => handleEditSla(config)} className="p-3 text-white/40 hover:text-info hover:bg-info/10 rounded-xl transition-all">
-                                                                            <Settings className="w-4 h-4" />
-                                                                        </button>
-                                                                        <button onClick={() => handleDeleteSla(config.id)} className="p-3 text-white/40 hover:text-danger hover:bg-danger/10 rounded-xl transition-all">
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </button>
-                                                                    </div>
-                                                                </motion.div>
-                                                            ))}
-                                                        </div>
+                            return (
+                                <div className="card-premium p-0 overflow-hidden">
+                                    {/* Header */}
+                                    <div className="p-8 pb-4 border-b border-white/5">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <div className="p-2.5 rounded-2xl bg-info/10 text-info border border-info/20">
+                                                        <Target className="w-6 h-6" />
                                                     </div>
-                                                );
-                                            })}
+                                                    <h3 className="text-2xl font-black uppercase tracking-tight">Matriz SLA</h3>
+                                                </div>
+                                                <p className="text-xs text-white/30 font-bold ml-14">
+                                                    Haz clic en cualquier celda para editar · Los valores en <span className="text-white/50">0</span> eliminan la regla · Las celdas vacías heredan del valor <span className="text-info/60">global</span>
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[9px] font-black text-white/30 uppercase tracking-widest">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {slaConfigs.length} reglas activas
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Tabla Matriz */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            {/* Cabecera de columnas: Tipos de Paciente */}
+                                            <thead>
+                                                <tr className="border-b border-white/5">
+                                                    <th className="text-left px-8 py-4 w-[280px]">
+                                                        <span className="text-[10px] font-black text-white/25 uppercase tracking-[0.2em]">Institución</span>
+                                                    </th>
+                                                    {PATIENT_TYPES.map(pt => (
+                                                        <th key={pt.key} className="px-3 py-4 text-center min-w-[120px]">
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className={`w-2 h-2 rounded-full ${pt.dotColor}`} />
+                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${pt.textColor}`}>{pt.shortLabel}</span>
+                                                                </div>
+                                                                <span className="text-[8px] font-bold text-white/20">{pt.label}</span>
+                                                                {pt.desc && <span className="text-[7px] font-medium text-white/10">{pt.desc}</span>}
+                                                            </div>
+                                                        </th>
+                                                    ))}
+                                                    <th className="px-3 py-4 text-center min-w-[80px]">
+                                                        <span className="text-[10px] font-black text-white/15 uppercase tracking-widest">Estado</span>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {/* Fila GLOBAL (fallback) */}
+                                                <tr className="bg-gradient-to-r from-info/[0.04] to-transparent border-b-2 border-info/10">
+                                                    <td className="px-8 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-xl bg-info/10 border border-info/20 flex items-center justify-center">
+                                                                <ShieldAlert className="w-4 h-4 text-info" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-sm font-black text-info uppercase tracking-wide">Global</span>
+                                                                <span className="block text-[8px] font-bold text-info/40">Valores por defecto (fallback)</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    {PATIENT_TYPES.map(pt => (
+                                                        <td key={pt.key} className="px-3 py-3">
+                                                            <SlaCell institucion={null} tipo={pt.key} globalFallback={0} />
+                                                        </td>
+                                                    ))}
+                                                    <td className="px-3 py-3 text-center">
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-info/10 text-info text-[8px] font-black uppercase tracking-wider">
+                                                            <ShieldAlert className="w-2.5 h-2.5" /> Base
+                                                        </span>
+                                                    </td>
+                                                </tr>
+
+                                                {/* Filas de Instituciones */}
+                                                {allInstitutions.map((inst: string, idx: number) => {
+                                                    const configuredCount = PATIENT_TYPES.filter(pt => {
+                                                        const val = getInstValue(inst, pt.key);
+                                                        return val !== null && val > 0;
+                                                    }).length;
+
+                                                    return (
+                                                        <tr
+                                                            key={inst}
+                                                            className={`border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${idx % 2 === 0 ? 'bg-white/[0.01]' : ''}`}
+                                                        >
+                                                            <td className="px-8 py-3.5">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                                                                        <Building2 className="w-4 h-4 text-prevenort-primary/60" />
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <span className="text-xs font-black text-white uppercase tracking-wide truncate block">{getFormalName(inst, 'institucion')}</span>
+                                                                        {getFormalName(inst, 'institucion') !== inst && (
+                                                                            <span className="text-[8px] font-bold text-white/20">{inst}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            {PATIENT_TYPES.map(pt => (
+                                                                <td key={pt.key} className="px-3 py-2.5">
+                                                                    <SlaCell institucion={inst} tipo={pt.key} globalFallback={getGlobalValue(pt.key)} />
+                                                                </td>
+                                                            ))}
+                                                            <td className="px-3 py-3 text-center">
+                                                                {configuredCount === 0 ? (
+                                                                    <span className="text-[9px] font-bold text-white/15">Solo global</span>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center gap-0.5">
+                                                                        {Array.from({ length: PATIENT_TYPES.length }).map((_, i) => (
+                                                                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < configuredCount ? 'bg-info' : 'bg-white/10'}`} />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+
+                                                {/* Si no hay instituciones */}
+                                                {allInstitutions.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={PATIENT_TYPES.length + 2} className="px-8 py-12 text-center">
+                                                            <div className="flex flex-col items-center gap-3">
+                                                                <Upload className="w-8 h-8 text-white/10" />
+                                                                <p className="text-xs font-bold text-white/20">
+                                                                    No hay instituciones descubiertas aún.
+                                                                    <br />
+                                                                    <span className="text-white/10">Ingesta un archivo Multiris para descubrir las instituciones automáticamente.</span>
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Footer con leyenda */}
+                                    <div className="px-8 py-4 border-t border-white/5 bg-white/[0.01]">
+                                        <div className="flex flex-wrap items-center gap-6 text-[8px] font-bold text-white/20 uppercase tracking-wider">
+                                            <span className="flex items-center gap-1.5">
+                                                <div className="w-4 h-3 rounded bg-white/[0.06] border border-white/10" /> Valor propio
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <div className="w-4 h-3 rounded border border-dashed border-white/[0.05]" /> Hereda global
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Edit3 className="w-2.5 h-2.5 text-info/40" /> Clic para editar
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="text-white/40">0</span> = Elimina la regla
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
                     </motion.div>
                 ) : view === 'upload' ? (
                     <motion.div key="upload" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-2xl mx-auto">
