@@ -176,6 +176,134 @@ const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = '
     );
 };
 
+
+const ContinuityIndicator = ({ data }: { data: any[] }) => {
+    // 1. Get unique dates with data
+    const datesWithData = new Set(data.map(d => d.fecha_reporte));
+
+    // 2. Generate range of dates for current year until today
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const months = [
+        { name: 'Ene', index: 0 }, { name: 'Feb', index: 1 }, { name: 'Mar', index: 2 },
+        { name: 'Abr', index: 3 }, { name: 'May', index: 4 }, { name: 'Jun', index: 5 },
+        { name: 'Jul', index: 6 }, { name: 'Ago', index: 7 }, { name: 'Sep', index: 8 },
+        { name: 'Oct', index: 9 }, { name: 'Nov', index: 10 }, { name: 'Dic', index: 11 }
+    ];
+
+    const calendarData = months.map(m => {
+        const daysInMonth = new Date(currentYear, m.index + 1, 0).getDate();
+        const days = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(currentYear, m.index, d);
+            if (date > today) break;
+
+            const dateStr = date.toISOString().split('T')[0];
+            days.push({
+                date: dateStr,
+                day: d,
+                hasData: datesWithData.has(dateStr)
+            });
+        }
+        return { ...m, days };
+    }).filter(m => m.days.length > 0);
+
+    const missingDays = calendarData.flatMap(m => m.days).filter(d => !d.hasData);
+
+    return (
+        <div className="card-premium bg-white/[0.02] border-white/5 p-6 mb-8 w-full max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                        <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black uppercase tracking-tight text-white/90">Continuidad de Carga {currentYear}</h3>
+                        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Monitoreo de integridad de datos · Ingesta Diaria</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-5 bg-white/5 px-5 py-3 rounded-2xl border border-white/5">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-[4px] bg-success/40 border border-success/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]" />
+                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Cargado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-[4px] bg-danger/20 border border-danger/40 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]" />
+                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Faltante</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-8">
+                {calendarData.map((month, mi) => (
+                    <div key={mi} className="space-y-3">
+                        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] block ml-0.5 border-l-2 border-white/5 pl-2">{month.name}</span>
+                        <div className="grid grid-cols-7 gap-1">
+                            {month.days.map((day, di) => (
+                                <div
+                                    key={di}
+                                    title={`${day.date}${day.hasData ? ' (Cargado)' : ' (Faltante)'}`}
+                                    className={`aspect-square rounded-[3px] border transition-all duration-300 transform hover:scale-125 hover:z-10 cursor-help ${day.hasData
+                                        ? 'bg-success/30 border-success/40 hover:bg-success/50'
+                                        : 'bg-danger/10 border-danger/30 hover:bg-danger/30 shadow-[0_0_8px_rgba(239,68,68,0.1)]'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <AnimatePresence>
+                {missingDays.length > 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-10 p-5 rounded-3xl bg-danger/5 border border-danger/10 flex items-start gap-5 shadow-2xl shadow-red-900/5"
+                    >
+                        <div className="p-3 rounded-2xl bg-danger/10 text-danger border border-danger/20 flex-shrink-0">
+                            <ShieldAlert className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-black text-danger uppercase tracking-tight mb-2 flex items-center gap-2">
+                                Atención: Faltan {missingDays.length} días de información
+                                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping" />
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto no-scrollbar pr-2">
+                                {missingDays.map((d, i) => (
+                                    <span key={i} className="px-2.5 py-1 rounded-lg bg-danger/10 border border-danger/20 text-[10px] font-black text-danger/80 hover:bg-danger/20 transition-colors">
+                                        {d.date.split('-').reverse().slice(0, 2).join('/')}
+                                    </span>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-[9px] font-bold text-white/20 uppercase tracking-widest italic">
+                                * Se recomienda cargar las planillas faltantes para mantener la integridad de los reportes.
+                            </p>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mt-10 p-5 rounded-3xl bg-success/5 border border-success/10 flex items-center gap-5 shadow-2xl shadow-green-900/5"
+                    >
+                        <div className="p-3 rounded-2xl bg-success/10 text-success border border-success/20">
+                            <Trophy className="w-5 h-5 shadow-success" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-success uppercase tracking-tight">Sincronización Completa</p>
+                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1">No se detectan lagunas de datos. El sistema está 100% al día con la producción anual.</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
 // --- Módulo Principal ---
 
 export const StatMultirisModule: React.FC = () => {
@@ -873,48 +1001,51 @@ export const StatMultirisModule: React.FC = () => {
                         })()}
                     </motion.div>
                 ) : view === 'upload' ? (
-                    <motion.div key="upload" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-2xl mx-auto">
-                        <div
-                            className={`card-premium bg-prevenort-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6 transition-all duration-300 ${isDragging
-                                ? 'border-prevenort-primary bg-prevenort-primary/5 scale-[1.02] shadow-[0_0_40px_rgba(249,115,22,0.15)]'
-                                : 'border-white/10 hover:border-white/20'
-                                }`}
-                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setIsDragging(false);
-                                const file = e.dataTransfer.files?.[0];
-                                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
-                                    handleFileDrop(file);
-                                }
-                            }}
-                        >
-                            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center transition-all ${isDragging ? 'bg-prevenort-primary/20 scale-110' : 'bg-prevenort-primary/10'}`}>
-                                {uploadStatus.status === 'uploading'
-                                    ? <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" />
-                                    : isDragging
-                                        ? <Upload className="w-10 h-10 text-prevenort-primary animate-bounce" />
-                                        : <FileSpreadsheet className="w-10 h-10 text-prevenort-primary" />
-                                }
-                            </div>
-                            <h2 className="text-2xl font-black mb-2 uppercase">Ingesta de Producción</h2>
-                            {isDragging && (
-                                <p className="text-sm font-black uppercase tracking-widest text-prevenort-primary animate-pulse">Suelta el archivo aquí</p>
-                            )}
-                            {!isDragging && (
-                                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Arrastra tu planilla aquí o haz clic en el botón</p>
-                            )}
-                            {uploadStatus.status === 'error' && <div className="bg-danger/10 text-danger px-4 py-3 rounded-xl border border-danger/20 text-xs font-bold">{uploadStatus.message}</div>}
-                            {uploadStatus.status === 'success' && <div className="bg-success/10 text-success px-4 py-3 rounded-xl border border-success/20 text-xs font-bold">{uploadStatus.message}</div>}
-                            <label className="relative cursor-pointer group">
-                                <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={uploadStatus.status === 'uploading'} />
-                                <div className="px-8 py-4 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest group-hover:scale-105 transition-transform flex items-center gap-3">
-                                    {uploadStatus.status === 'uploading' ? 'Auto-descubriendo...' : 'Subir Planilla'}
+                    <motion.div key="upload" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full">
+                        <ContinuityIndicator data={consolidatedData} />
+                        <div className="max-w-2xl mx-auto">
+                            <div
+                                className={`card-premium bg-prevenort-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6 transition-all duration-300 ${isDragging
+                                    ? 'border-prevenort-primary bg-prevenort-primary/5 scale-[1.02] shadow-[0_0_40px_rgba(249,115,22,0.15)]'
+                                    : 'border-white/10 hover:border-white/20'
+                                    }`}
+                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setIsDragging(false);
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
+                                        handleFileDrop(file);
+                                    }
+                                }}
+                            >
+                                <div className={`w-20 h-20 rounded-3xl flex items-center justify-center transition-all ${isDragging ? 'bg-prevenort-primary/20 scale-110' : 'bg-prevenort-primary/10'}`}>
+                                    {uploadStatus.status === 'uploading'
+                                        ? <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" />
+                                        : isDragging
+                                            ? <Upload className="w-10 h-10 text-prevenort-primary animate-bounce" />
+                                            : <FileSpreadsheet className="w-10 h-10 text-prevenort-primary" />
+                                    }
                                 </div>
-                            </label>
+                                <h2 className="text-2xl font-black mb-2 uppercase">Ingesta de Producción</h2>
+                                {isDragging && (
+                                    <p className="text-sm font-black uppercase tracking-widest text-prevenort-primary animate-pulse">Suelta el archivo aquí</p>
+                                )}
+                                {!isDragging && (
+                                    <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Arrastra tu planilla aquí o haz clic en el botón</p>
+                                )}
+                                {uploadStatus.status === 'error' && <div className="bg-danger/10 text-danger px-4 py-3 rounded-xl border border-danger/20 text-xs font-bold">{uploadStatus.message}</div>}
+                                {uploadStatus.status === 'success' && <div className="bg-success/10 text-success px-4 py-3 rounded-xl border border-success/20 text-xs font-bold">{uploadStatus.message}</div>}
+                                <label className="relative cursor-pointer group">
+                                    <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={uploadStatus.status === 'uploading'} />
+                                    <div className="px-8 py-4 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest group-hover:scale-105 transition-transform flex items-center gap-3">
+                                        {uploadStatus.status === 'uploading' ? 'Auto-descubriendo...' : 'Subir Planilla'}
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </motion.div>
                 ) : (
