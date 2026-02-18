@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     BarChart3,
     ShieldAlert,
@@ -310,6 +310,19 @@ export const StatMultirisModule: React.FC = () => {
     const [view, setView] = useState<'dashboard' | 'upload' | 'config' | 'mappings'>('dashboard');
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'general' | 'instituciones' | 'medicos' | 'grupos' | 'calidad' | 'ranking'>('general');
+
+    // Datos maestros
+    const [consolidatedData, setConsolidatedData] = useState<any[]>([]);
+    const [filteredData, setFilteredData] = useState<any[]>([]);
+    const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
+    const [mappings, setMappings] = useState<any[]>([]);
+
+    // Datos maestros para sugerencias de equivalencias
+    const { institutions } = useInstitutions();
+    const { professionals } = useProfessionals();
+    const institutionSuggestions = useMemo(() => institutions.map(i => i.commercialName || i.legalName).filter(Boolean) as string[], [institutions]);
+    const professionalSuggestions = useMemo(() => professionals.map(p => `${p.lastName} ${p.name}`.trim()).filter(Boolean), [professionals]);
+
     // Grupos de médicos
     const [grupos, setGrupos] = useState<MedicoGroup[]>([]);
     const [editingGrupo, setEditingGrupo] = useState<MedicoGroup | null>(null);
@@ -318,22 +331,25 @@ export const StatMultirisModule: React.FC = () => {
     const [rankMetric, setRankMetric] = useState<'exams' | 'addendas' | 'sla' | 'tat'>('exams');
     const [rankTipo, setRankTipo] = useState<'ALL' | 'U' | 'A' | 'H' | 'ONC'>('ALL');
 
-    // Datos maestros para sugerencias de equivalencias
-    const { institutions } = useInstitutions();
-    const { professionals } = useProfessionals();
-    const institutionSuggestions = institutions.map(i => i.commercialName || i.legalName).filter(Boolean) as string[];
-    const professionalSuggestions = professionals.map(p => `${p.lastName} ${p.name}`.trim()).filter(Boolean);
     const [rankOrder, setRankOrder] = useState<'auto' | 'asc' | 'desc'>('auto');
     const [filterModalidad, setFilterModalidad] = useState<string>('TODAS');
     const [filterInstitucion, setFilterInstitucion] = useState<string>('TODAS');
     const [dateRange, setDateRange] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
-    const [trendGrouping, setTrendGrouping] = useState<'day' | 'week' | 'month' | 'quarter'>('day');
-    const [trendChartType, setTrendChartType] = useState<'bar' | 'dot' | 'line'>('bar');
+    const [trendGrouping, setTrendGrouping] = useState<'day' | 'week' | 'month' | 'quarter'>('week');
+    const [selectedYears, setSelectedYears] = useState<number[]>([new Date().getFullYear()]);
 
-    const [consolidatedData, setConsolidatedData] = useState<any[]>([]);
-    const [filteredData, setFilteredData] = useState<any[]>([]);
-    const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
-    const [mappings, setMappings] = useState<any[]>([]);
+    const availableYears = useMemo(() => {
+        const years = new Set(consolidatedData.map(d => new Date(d.fecha_reporte).getFullYear()));
+        if (years.size === 0) return [new Date().getFullYear()];
+        return Array.from(years).sort((a, b) => b - a);
+    }, [consolidatedData]);
+
+    useEffect(() => {
+        if (availableYears.length > 0 && selectedYears.length === 0) {
+            setSelectedYears([availableYears[0]]);
+        }
+    }, [availableYears]);
+
     const [selectedInst, setSelectedInst] = useState<string>('TODAS');
     const [selectedMedico, setSelectedMedico] = useState<string>('TODAS');
 
@@ -508,12 +524,7 @@ export const StatMultirisModule: React.FC = () => {
     }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number }>);
     const tipoKeys = Object.keys(byTipo).sort((a, b) => byTipo[b].exams - byTipo[a].exams).slice(0, 3); // Top 3
 
-    // Distribución por Modalidad
-    const statsByMod = Object.values(filteredData.reduce((acc, curr) => {
-        if (!acc[curr.modalidad]) acc[curr.modalidad] = { name: curr.modalidad, value: 0 };
-        acc[curr.modalidad].value += curr.cantidad_examenes;
-        return acc;
-    }, {} as any)) as any[];
+
 
     // Agrupamiento por Institución (usando Equivalencia)
     const statsByInst = Object.values(filteredData.reduce((acc, curr) => {
@@ -547,38 +558,80 @@ export const StatMultirisModule: React.FC = () => {
     })) as any[];
 
     // Agrupación temporal para Análisis Progresivo
-    const getGroupKey = (dateStr: string): string => {
-        if (trendGrouping === 'day') return dateStr;
+    const getPeriodKey = (dateStr: string): string => {
         const d = new Date(dateStr + 'T00:00:00');
+        if (trendGrouping === 'month') return String(d.getMonth() + 1).padStart(2, '0');
+        if (trendGrouping === 'quarter') return `Q${Math.floor(d.getMonth() / 3) + 1}`;
         if (trendGrouping === 'week') {
             const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
             const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
             const weekNum = Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-            return `${dt.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+            return `W${String(weekNum).padStart(2, '0')}`;
         }
-        if (trendGrouping === 'month') return dateStr.slice(0, 7);
-        // quarter
-        const q = Math.floor(d.getMonth() / 3) + 1;
-        return `${d.getFullYear()}-Q${q}`;
+        // Day of year
+        const start = new Date(d.getFullYear(), 0, 0);
+        const diff = d.getTime() - start.getTime();
+        const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+        return String(day).padStart(3, '0');
     };
-    const getGroupLabel = (key: string): string => {
-        if (trendGrouping === 'day') return key.split('-').slice(1).reverse().join('/');
-        if (trendGrouping === 'week') return `S${key.split('-W')[1]}`;
+
+    const getPeriodLabel = (p: string): string => {
         if (trendGrouping === 'month') {
-            const [y, m] = key.split('-');
             const mNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            return `${mNames[parseInt(m) - 1]} ${y.slice(2)}`;
+            return mNames[parseInt(p) - 1];
         }
-        return key.replace('-', ' ');
+        if (trendGrouping === 'week') return `S${p.slice(1)}`;
+        if (trendGrouping === 'day') return p;
+        return p;
     };
-    const statsTemporal = Object.values(filteredData.reduce((acc, curr) => {
-        const key = getGroupKey(curr.fecha_reporte);
-        if (!acc[key]) acc[key] = { date: key, exams: 0, addendas: 0 };
-        acc[key].exams += curr.cantidad_examenes;
-        acc[key].addendas += curr.cantidad_adendas;
-        return acc;
-    }, {} as any)).sort((a: any, b: any) => a.date.localeCompare(b.date)) as any[];
+
+    const timeSeriesData = useMemo(() => {
+        const result: Record<number, any[]> = {};
+
+        selectedYears.forEach(year => {
+            const rawPeriods: string[] = [];
+            if (trendGrouping === 'month') for (let m = 1; m <= 12; m++) rawPeriods.push(String(m).padStart(2, '0'));
+            else if (trendGrouping === 'quarter') for (let q = 1; q <= 4; q++) rawPeriods.push(`Q${q}`);
+            else if (trendGrouping === 'week') for (let w = 1; w <= 53; w++) rawPeriods.push(`W${String(w).padStart(2, '0')}`);
+            else if (trendGrouping === 'day') {
+                const d = new Date(year, 0, 1);
+                while (d.getFullYear() === year) {
+                    const start = new Date(year, 0, 0);
+                    const diff = d.getTime() - start.getTime();
+                    rawPeriods.push(String(Math.floor(diff / 86400000)).padStart(3, '0'));
+                    d.setDate(d.getDate() + 1);
+                }
+            }
+
+            const yearData = filteredData.filter(d => new Date(d.fecha_reporte).getFullYear() === year);
+            const dataMap = yearData.reduce((acc, curr) => {
+                const key = getPeriodKey(curr.fecha_reporte);
+                if (!acc[key]) acc[key] = { exams: 0, addendas: 0, slaOk: 0 };
+                acc[key].exams += curr.cantidad_examenes;
+                acc[key].addendas += curr.cantidad_adendas;
+                acc[key].slaOk += curr.cantidad_dentro_sla;
+                return acc;
+            }, {} as any);
+
+            // Evitar caída a cero en periodos futuros si es el año actual
+            const isCurrentYear = year === new Date().getFullYear();
+            let lastIdx = rawPeriods.length - 1;
+            if (isCurrentYear) {
+                lastIdx = rawPeriods.reduce((acc, p, idx) => dataMap[p]?.exams > 0 ? idx : acc, -1);
+            }
+
+            result[year] = rawPeriods.slice(0, lastIdx + 1).map(p => ({
+                period: p,
+                label: getPeriodLabel(p),
+                exams: dataMap[p]?.exams || 0,
+                addendas: dataMap[p]?.addendas || 0,
+                sla: dataMap[p]?.exams > 0 ? (dataMap[p].slaOk / dataMap[p].exams) * 100 : 0
+            }));
+        });
+
+        return result;
+    }, [filteredData, trendGrouping, selectedYears]);
 
     const hasData = consolidatedData.length > 0;
 
@@ -1128,17 +1181,17 @@ export const StatMultirisModule: React.FC = () => {
                                     color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
                                 }))}
                             />
+                            <StatCard title="Calidad (Adendas)" value={`${addendaPercentage}%`} icon={ShieldAlert} trend={Number(addendaPercentage) < 5 ? 'up' : 'down'} change="Calidad" subtitle={`${totalAddendas} totales`} color="danger"
+                                breakdown={tipoKeys.map(k => ({
+                                    label: tipoLabels[k] || k,
+                                    value: byTipo[k].exams > 0 ? `${((byTipo[k].addendas / byTipo[k].exams) * 100).toFixed(1)}%` : '0%',
+                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
+                                }))}
+                            />
                             <StatCard title="TAT Promedio" value={`${avgTat}m`} icon={Clock} trend="down" change="Velocidad" color="info"
                                 breakdown={tipoKeys.map(k => ({
                                     label: tipoLabels[k] || k,
                                     value: byTipo[k].exams > 0 ? `${(byTipo[k].tatSum / byTipo[k].exams).toFixed(0)}m` : '0m',
-                                    color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
-                                }))}
-                            />
-                            <StatCard title="Calidad (Adendas)" value={`${addendaPercentage}%`} icon={ShieldAlert} trend={Number(addendaPercentage) < 5 ? 'up' : 'down'} change="Tasa Adendas" subtitle={`${totalAddendas} totales`} color="danger"
-                                breakdown={tipoKeys.map(k => ({
-                                    label: tipoLabels[k] || k,
-                                    value: byTipo[k].exams > 0 ? `${((byTipo[k].addendas / byTipo[k].exams) * 100).toFixed(1)}%` : '0%',
                                     color: k === 'U' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : 'text-info/60'
                                 }))}
                             />
@@ -1180,18 +1233,6 @@ export const StatMultirisModule: React.FC = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Total Adendas</span>
-                                                    <div className="flex items-baseline gap-3">
-                                                        <div className="text-4xl font-black text-danger">{totalAddendas.toLocaleString()}</div>
-                                                        <div className="text-xl font-bold text-danger/50">{addendaPercentage}%</div>
-                                                    </div>
-                                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${addendaPercentage}%` }} className="h-full bg-danger" />
-                                                    </div>
-                                                    <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Tasa de corrección sobre volumen total</p>
-                                                </div>
-
                                                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                                                     <div>
                                                         <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">SLA Cumplido</span>
@@ -1202,152 +1243,104 @@ export const StatMultirisModule: React.FC = () => {
                                                         <div className="text-lg font-black text-info">{avgTat}m</div>
                                                     </div>
                                                 </div>
+
+                                                <div className="space-y-2 pt-4 border-t border-white/5">
+                                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Total Adendas</span>
+                                                    <div className="flex items-baseline gap-3">
+                                                        <div className="text-4xl font-black text-danger">{totalAddendas.toLocaleString()}</div>
+                                                        <div className="text-xl font-bold text-danger/50">{addendaPercentage}%</div>
+                                                    </div>
+                                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${addendaPercentage}%` }} className="h-full bg-danger" />
+                                                    </div>
+                                                    <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Tasa de corrección sobre volumen total</p>
+                                                </div>
                                             </div>
                                         </motion.div>
 
                                         {/* --- ANÁLISIS PROGRESIVO (TRENDS) --- */}
                                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 card-premium min-h-[450px] flex flex-col group">
                                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                                                <div>
-                                                    <h3 className="text-xl font-black uppercase tracking-tight">Análisis Progresivo</h3>
-                                                    <p className="text-[10px] font-bold text-white/20 uppercase mt-1">Evolución temporal · {statsTemporal.length} períodos</p>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-3">
-                                                    {/* Agrupación temporal */}
-                                                    <div className="flex rounded-xl overflow-hidden border border-white/10">
-                                                        {(['day', 'week', 'month', 'quarter'] as const).map(g => (
-                                                            <button key={g} onClick={() => setTrendGrouping(g)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
-                                                                {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : 'Trimestre'}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                    {/* Tipo de gráfico */}
-                                                    <div className="flex rounded-xl overflow-hidden border border-white/10">
-                                                        {(['bar', 'dot', 'line'] as const).map(ct => (
-                                                            <button key={ct} onClick={() => setTrendChartType(ct)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendChartType === ct ? 'bg-info text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
-                                                                {ct === 'bar' ? '▮ Barras' : ct === 'dot' ? '● Puntos' : '╱ Línea'}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                    {/* Leyenda */}
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="w-2 h-2 rounded-full bg-prevenort-primary" />
-                                                            <span className="text-[8px] font-black text-white/40 uppercase">Exámenes</span>
+                                                <div className="flex flex-col gap-4">
+                                                    <div className="flex flex-col md:flex-row items-center gap-6">
+                                                        <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                                                            <Activity className="w-5 h-5 text-prevenort-primary" />
+                                                            Análisis Progresivo
+                                                        </h3>
+                                                        {/* Selector de Años */}
+                                                        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                                                            {availableYears.map(year => (
+                                                                <button
+                                                                    key={year}
+                                                                    onClick={() => {
+                                                                        if (selectedYears.includes(year)) {
+                                                                            if (selectedYears.length > 1) setSelectedYears(selectedYears.filter(y => y !== year));
+                                                                        } else {
+                                                                            setSelectedYears([...selectedYears, year].sort((a, b) => b - a));
+                                                                        }
+                                                                    }}
+                                                                    className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYears.includes(year) ? 'bg-prevenort-primary text-black' : 'hover:bg-white/5 text-white/40'}`}
+                                                                >
+                                                                    {year}
+                                                                </button>
+                                                            ))}
                                                         </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="w-2 h-2 rounded-full bg-danger" />
-                                                            <span className="text-[8px] font-black text-white/40 uppercase">Adendas</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-4">
+                                                        {/* Agrupación Temporal */}
+                                                        <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                            {(['day', 'week', 'month', 'quarter'] as const).map(g => (
+                                                                <button key={g} onClick={() => setTrendGrouping(g)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                                    {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : 'Trimestre'}
+                                                                </button>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {!hasData ? <div className="flex-1 flex items-center justify-center opacity-10"><BarChart3 className="w-24 h-24" /></div> : (() => {
-                                                const maxExams = Math.max(...statsTemporal.map((x: any) => x.exams)) || 1;
-                                                const showLabels = statsTemporal.length <= 60;
-
-                                                if (trendChartType === 'bar') {
-                                                    return (
-                                                        <div className="flex-1 flex flex-col">
-                                                            <div className="flex-1 flex items-end gap-[2px] pt-10 px-2 pb-1 overflow-x-auto no-scrollbar">
-                                                                {statsTemporal.map((d: any, i: number) => (
-                                                                    <div key={i} className="flex-1 min-w-[6px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
-                                                                        <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxExams) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />
-                                                                        <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxExams) * 100}%` }} className="w-full bg-gradient-to-t from-prevenort-primary/20 to-prevenort-primary/60 rounded-t-[4px] hover:to-white transition-all cursor-pointer" />
-                                                                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-neutral-900 border border-white/10 text-white text-[9px] font-black px-3 py-2 rounded-xl transition-all scale-90 group-hover/bar:scale-100 pointer-events-none z-30 shadow-2xl min-w-[100px]">
-                                                                            <div className="flex justify-between gap-4 mb-1"><span className="text-white/40 uppercase">Período:</span><span>{getGroupLabel(d.date)}</span></div>
-                                                                            <div className="flex justify-between gap-4 text-prevenort-primary"><span className="text-white/40 uppercase">Exámenes:</span><span>{d.exams.toLocaleString()}</span></div>
-                                                                            <div className="flex justify-between gap-4 text-danger"><span className="text-white/40 uppercase">Adendas:</span><span>{d.addendas}</span></div>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            {showLabels && <div className="flex gap-[2px] px-2 overflow-x-auto no-scrollbar">
-                                                                {statsTemporal.map((d: any, i: number) => (
-                                                                    <div key={i} className="flex-1 min-w-[6px] text-center">
-                                                                        <span className="text-[6px] font-bold text-white/15 truncate block">{getGroupLabel(d.date)}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>}
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // Dot or Line chart
-                                                const padding = 40;
-                                                return (
-                                                    <div className="flex-1 relative overflow-x-auto no-scrollbar" style={{ minHeight: 300 }}>
-                                                        <svg width="100%" height="100%" viewBox={`0 0 ${Math.max(statsTemporal.length * 20, 400)} 300`} preserveAspectRatio="none" className="w-full h-full">
-                                                            {/* Grid lines */}
-                                                            {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-                                                                <line key={frac} x1={padding} y1={280 - frac * 240} x2={Math.max(statsTemporal.length * 20, 400) - 10} y2={280 - frac * 240} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                                                            ))}
-                                                            {/* Line paths */}
-                                                            {trendChartType === 'line' && (
-                                                                <>
-                                                                    <polyline fill="none" stroke="var(--color-prevenort-primary, #f97316)" strokeWidth="2" points={statsTemporal.map((d: any, i: number) => {
-                                                                        const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
-                                                                        const y = 280 - (d.exams / maxExams) * 240;
-                                                                        return `${x},${y}`;
-                                                                    }).join(' ')} />
-                                                                    <polyline fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" points={statsTemporal.map((d: any, i: number) => {
-                                                                        const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
-                                                                        const y = 280 - (d.addendas / maxExams) * 240;
-                                                                        return `${x},${y}`;
-                                                                    }).join(' ')} />
-                                                                </>
-                                                            )}
-                                                            {/* Dots */}
-                                                            {statsTemporal.map((d: any, i: number) => {
-                                                                const x = padding + i * ((Math.max(statsTemporal.length * 20, 400) - padding - 10) / Math.max(statsTemporal.length - 1, 1));
-                                                                const yExams = 280 - (d.exams / maxExams) * 240;
-                                                                const yAddendas = 280 - (d.addendas / maxExams) * 240;
-                                                                return (
-                                                                    <g key={i}>
-                                                                        <circle cx={x} cy={yExams} r={trendChartType === 'dot' ? 4 : 3} fill="var(--color-prevenort-primary, #f97316)" className="hover:r-6 transition-all cursor-pointer" opacity={0.8}>
-                                                                            <title>{`${getGroupLabel(d.date)}: ${d.exams.toLocaleString()} exámenes`}</title>
-                                                                        </circle>
-                                                                        <circle cx={x} cy={yAddendas} r={trendChartType === 'dot' ? 3.5 : 2.5} fill="#ef4444" opacity={0.7}>
-                                                                            <title>{`${getGroupLabel(d.date)}: ${d.addendas} adendas`}</title>
-                                                                        </circle>
-                                                                        {showLabels && i % Math.max(Math.floor(statsTemporal.length / 15), 1) === 0 && (
-                                                                            <text x={x} y={296} textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="7" fontWeight="bold">{getGroupLabel(d.date)}</text>
-                                                                        )}
-                                                                    </g>
-                                                                );
-                                                            })}
-                                                        </svg>
+                                            <div className="flex-1 space-y-12 overflow-y-auto no-scrollbar pr-2 mt-4">
+                                                {!hasData ? (
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                                                        <BarChart3 className="w-24 h-24" />
                                                     </div>
-                                                );
-                                            })()}
+                                                ) : (
+                                                    <>
+                                                        <StatChart
+                                                            title="Producción de Exámenes"
+                                                            metric="exams"
+                                                            data={timeSeriesData}
+                                                            years={selectedYears}
+                                                            grouping={trendGrouping}
+                                                            color="#f97316"
+                                                        />
+                                                        <StatChart
+                                                            title="Cantidad de Adendas"
+                                                            metric="addendas"
+                                                            data={timeSeriesData}
+                                                            years={selectedYears}
+                                                            grouping={trendGrouping}
+                                                            color="#ef4444"
+                                                        />
+                                                        <StatChart
+                                                            title="Cumplimiento SLA (%)"
+                                                            metric="sla"
+                                                            data={timeSeriesData}
+                                                            years={selectedYears}
+                                                            grouping={trendGrouping}
+                                                            color="#22c55e"
+                                                            isPercentage
+                                                        />
+                                                    </>
+                                                )}
+                                            </div>
                                         </motion.div>
                                     </div>
 
                                     {/* Mix Modalidades como fila inferior */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <div className="lg:col-span-1 card-premium flex flex-col">
-                                            <h3 className="text-xl font-black uppercase tracking-tight mb-8">Mix Modalidades</h3>
-                                            <div className="flex-1 flex flex-col justify-center gap-6">
-                                                {statsByMod.length === 0 ? <p className="text-center text-[10px] font-black uppercase text-white/10 tracking-widest">Sin datos para filtrar</p> :
-                                                    statsByMod.map((mod, i) => (
-                                                        <div key={i} className="space-y-3">
-                                                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                                                <span className="flex items-center gap-2">
-                                                                    <span className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`} />
-                                                                    {mod.name}
-                                                                </span>
-                                                                <span className="text-white">{mod.value}</span>
-                                                            </div>
-                                                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                                                <motion.div initial={{ width: 0 }} animate={{ width: `${(mod.value / totalExams) * 100}%` }} className={`h-full ${i === 0 ? 'bg-prevenort-primary' : i === 1 ? 'bg-info' : i === 2 ? 'bg-success' : 'bg-white/40'}`} />
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                }
-                                            </div>
-                                        </div>
-                                        <div className="lg:col-span-2 card-premium flex items-center justify-center p-8 text-center bg-gradient-to-br from-white/[0.02] to-transparent">
+
+                                        <div className="lg:col-span-3 card-premium flex items-center justify-center p-8 text-center bg-gradient-to-br from-white/[0.02] to-transparent">
                                             <div className="space-y-4">
                                                 <div className="p-4 rounded-3xl bg-white/5 inline-block">
                                                     <BarChart3 className="w-12 h-12 text-prevenort-primary/20" />
@@ -1418,17 +1411,17 @@ export const StatMultirisModule: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
-                                                    <p className="text-2xl font-black text-danger">{instAddendas} <span className="text-sm text-danger/50">{instAddRate}%</span></p>
-                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].addendas / instByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                     <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Dentro SLA</p>
                                                     <p className="text-2xl font-black text-success">{instSlaRate}%</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
                                                         {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].sla / instByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
+                                                    <p className="text-2xl font-black text-danger">{instAddendas} <span className="text-sm text-danger/50">{instAddRate}%</span></p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].addendas / instByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
                                                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
@@ -1448,9 +1441,9 @@ export const StatMultirisModule: React.FC = () => {
                                                             <tr className="border-b border-white/10">
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Institución</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
                                                             </tr>
                                                         </thead>
@@ -1459,9 +1452,9 @@ export const StatMultirisModule: React.FC = () => {
                                                                 <tr key={i} onClick={() => setSelectedInst(inst.name)} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group cursor-pointer">
                                                                     <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-white group-hover:text-prevenort-primary transition-colors">{inst.name}</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-white">{inst.value.toLocaleString()}</td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{inst.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-danger">{inst.adendas}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.addendaRate) < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{inst.addendaRate}%</span></td>
-                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{inst.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-info">{inst.avgTat}m</td>
                                                                 </tr>
                                                             ))}
@@ -1558,17 +1551,17 @@ export const StatMultirisModule: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
-                                                    <p className="text-2xl font-black text-danger">{medAddendas} <span className="text-sm text-danger/50">{medAddRate}%</span></p>
-                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].addendas / medByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                     <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Dentro SLA</p>
                                                     <p className="text-2xl font-black text-success">{medSlaRate}%</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
                                                         {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].sla / medByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                    <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Total Adendas</p>
+                                                    <p className="text-2xl font-black text-danger">{medAddendas} <span className="text-sm text-danger/50">{medAddRate}%</span></p>
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-white/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].addendas / medByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
                                                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
@@ -1588,9 +1581,9 @@ export const StatMultirisModule: React.FC = () => {
                                                             <tr className="border-b border-white/10">
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Radiólogo</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                 <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
                                                             </tr>
                                                         </thead>
@@ -1599,9 +1592,9 @@ export const StatMultirisModule: React.FC = () => {
                                                                 <tr key={i} onClick={() => setSelectedMedico(med.name)} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group cursor-pointer">
                                                                     <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-white group-hover:text-info transition-colors">{med.name}</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-white">{med.volume.toLocaleString()}</td>
+                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(med.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{med.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-danger">{med.adendas}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${med.volume > 0 && (med.adendas / med.volume) * 100 < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{med.volume > 0 ? ((med.adendas / med.volume) * 100).toFixed(2) : '0'}%</span></td>
-                                                                    <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(med.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{med.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-info">{med.avgTat}m</td>
                                                                 </tr>
                                                             ))}
@@ -1937,12 +1930,12 @@ export const StatMultirisModule: React.FC = () => {
                                                             <p className="text-2xl font-black text-white">{grpExams.toLocaleString()}</p>
                                                         </div>
                                                         <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Adendas</p>
-                                                            <p className="text-2xl font-black text-danger">{grpAddendas} <span className="text-sm text-danger/50">{grpAddRate}%</span></p>
-                                                        </div>
-                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                             <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">SLA</p>
                                                             <p className="text-2xl font-black text-success">{grpSlaRate}%</p>
+                                                        </div>
+                                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Adendas</p>
+                                                            <p className="text-2xl font-black text-danger">{grpAddendas} <span className="text-sm text-danger/50">{grpAddRate}%</span></p>
                                                         </div>
                                                         <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                             <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">TAT Promedio</p>
@@ -1957,9 +1950,9 @@ export const StatMultirisModule: React.FC = () => {
                                                                 <tr className="border-b border-white/10">
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40">Miembro</th>
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Exámenes</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">Adendas</th>
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% Adendas</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% SLA</th>
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">TAT Prom.</th>
                                                                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/40 text-right">% del Grupo</th>
                                                                 </tr>
@@ -1974,15 +1967,15 @@ export const StatMultirisModule: React.FC = () => {
                                                                             </span>
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right text-sm font-black text-white">{mem.exams.toLocaleString()}</td>
+                                                                        <td className="px-4 py-3 text-right">
+                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
+                                                                                {mem.slaRate}%
+                                                                            </span>
+                                                                        </td>
                                                                         <td className="px-4 py-3 text-right text-sm font-black text-danger">{mem.addendas}</td>
                                                                         <td className="px-4 py-3 text-right">
                                                                             <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.addRate) < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>
                                                                                 {mem.addRate}%
-                                                                            </span>
-                                                                        </td>
-                                                                        <td className="px-4 py-3 text-right">
-                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
-                                                                                {mem.slaRate}%
                                                                             </span>
                                                                         </td>
                                                                         <td className="px-4 py-3 text-right text-sm font-black text-info">{mem.avgTat}m</td>
@@ -2252,5 +2245,136 @@ export const StatMultirisModule: React.FC = () => {
                 )}
             </AnimatePresence>
         </div >
+    );
+};
+
+const StatChart = ({ title, metric, data, years, grouping, color, isPercentage }: any) => {
+    const [hoveredYearPoint, setHoveredYearPoint] = useState<any | null>(null);
+
+    // Encontrar el máximo global entre todos los años para el eje Y
+    const allDataPoints = years.flatMap((y: number) => data[y] || []);
+    const maxVal = Math.max(...allDataPoints.map((d: any) => d[metric]), 1);
+
+    let niceMax = isPercentage ? 100 : 100;
+    let step = 10;
+
+    if (isPercentage) {
+        niceMax = 100;
+        step = 25;
+    } else {
+        if (maxVal > 50) step = 25;
+        if (maxVal > 100) step = 50;
+        if (maxVal > 250) step = 100;
+        if (maxVal > 500) step = 200;
+        if (maxVal > 1000) step = 500;
+        if (maxVal > 2500) step = 1000;
+        if (maxVal > 10000) step = 2000;
+        if (maxVal > 25000) step = 5000;
+
+        niceMax = Math.ceil(maxVal / step) * step;
+    }
+
+    const numSteps = Math.ceil(niceMax / step);
+    const gridLines = Array.from({ length: numSteps + 1 }, (_, i) => i * step);
+
+    const yearColors = [color, '#38bdf8', '#a855f7', '#fbbf24', '#f472b6'];
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center px-2">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-white/60">{title}</h4>
+                <div className="flex gap-4">
+                    {years.map((y: number, idx: number) => (
+                        <div key={y} className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: yearColors[idx % yearColors.length] }} />
+                            <span className="text-[8px] font-black text-white/40">{y}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="relative h-[200px] overflow-x-auto no-scrollbar">
+                <div style={{ minWidth: grouping === 'day' ? '3000px' : '100%', height: '100%' }}>
+                    <svg width="100%" height="100%" viewBox={`0 0 ${grouping === 'day' ? 3000 : 1000} 200`} preserveAspectRatio="none" className="overflow-visible">
+                        {/* Grid Lines */}
+                        {gridLines.map(v => {
+                            const y = 170 - (v / niceMax) * 150;
+                            return (
+                                <g key={v}>
+                                    <line x1="45" y1={y} x2={grouping === 'day' ? 2980 : 980} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                                    <text x="5" y={y + 3} fill="white" fontSize="8" fontWeight="900" opacity="0.3" className="tabular-nums">{v}{isPercentage ? '%' : ''}</text>
+                                </g>
+                            );
+                        })}
+
+                        {years.map((y: number, idx: number) => {
+                            const yearData = data[y] || [];
+                            if (yearData.length === 0) return null;
+
+                            const plotWidth = (grouping === 'day' ? 3000 : 1000) - 100;
+                            const points = yearData.map((d: any, i: number) => {
+                                const x = 60 + (i * (plotWidth / (yearData.length - 1 || 1)));
+                                const pY = 170 - (d[metric] / niceMax) * 150;
+                                return { x, y: pY, data: d };
+                            });
+
+                            const linePath = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                            const currentColor = yearColors[idx % yearColors.length];
+
+                            return (
+                                <g key={y}>
+                                    <path d={linePath} fill="none" stroke={currentColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity={years.length > 1 ? 0.7 : 1} />
+                                    {points.map((p: any, i: number) => (
+                                        <g key={i} onMouseEnter={() => setHoveredYearPoint({ ...p, year: y })} onMouseLeave={() => setHoveredYearPoint(null)}>
+                                            <circle cx={p.x} cy={p.y} r={hoveredYearPoint?.data === p.data && hoveredYearPoint?.year === y ? 5 : 3} fill={currentColor} stroke="#000" strokeWidth="1" />
+                                            <rect x={p.x - 5} y="20" width="10" height="150" fill="transparent" className="cursor-pointer" />
+                                        </g>
+                                    ))}
+                                </g>
+                            );
+                        })}
+
+                        {/* Labels X solo en el primer año base */}
+                        {(() => {
+                            const baseYear = years[0];
+                            const baseData = data[baseYear] || [];
+                            const plotWidth = (grouping === 'day' ? 3000 : 1000) - 100;
+                            return baseData.map((d: any, i: number) => {
+                                let showLabel = false;
+                                if (grouping === 'month' || grouping === 'quarter') showLabel = true;
+                                else if (grouping === 'week') showLabel = i % 4 === 0 || i === baseData.length - 1;
+                                else if (grouping === 'day') showLabel = i % 30 === 0 || i === baseData.length - 1;
+
+                                if (!showLabel) return null;
+                                const x = 60 + (i * (plotWidth / (baseData.length - 1 || 1)));
+                                return (
+                                    <text key={i} x={x} y="195" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" opacity="0.2" className="uppercase letter-spacing-widest">
+                                        {d.label}
+                                    </text>
+                                );
+                            });
+                        })()}
+
+                        <AnimatePresence>
+                            {hoveredYearPoint && (
+                                <foreignObject
+                                    x={hoveredYearPoint.x + 10 > (grouping === 'day' ? 2900 : 900) ? hoveredYearPoint.x - 130 : hoveredYearPoint.x + 10}
+                                    y={hoveredYearPoint.y - 40}
+                                    width="120" height="50"
+                                    className="pointer-events-none"
+                                >
+                                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-neutral-900 border border-white/10 p-2 rounded-xl shadow-2xl backdrop-blur-md">
+                                        <p className="text-[7px] font-black text-white/40 uppercase">{hoveredYearPoint.year} - {hoveredYearPoint.data.label}</p>
+                                        <div className="flex justify-between items-center text-[10px] font-black" style={{ color: yearColors[years.indexOf(hoveredYearPoint.year)] }}>
+                                            <span className="uppercase">{title.split(' ')[0]}:</span>
+                                            <span>{hoveredYearPoint.data[metric].toLocaleString()}{isPercentage ? '%' : ''}</span>
+                                        </div>
+                                    </motion.div>
+                                </foreignObject>
+                            )}
+                        </AnimatePresence>
+                    </svg>
+                </div>
+            </div>
+        </div>
     );
 };
