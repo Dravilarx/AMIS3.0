@@ -109,6 +109,34 @@ export const useIdeas = () => {
         }
     };
 
+    const deleteIdea = async (id: string) => {
+        try {
+            const { error: dbError } = await supabase
+                .from('brainstorming_analysis')
+                .delete()
+                .eq('id', id);
+            if (dbError) throw dbError;
+            setAnalyses(prev => prev.filter(a => a.id !== id));
+            return { success: true };
+        } catch (err: any) {
+            return { success: false, error: err.message };
+        }
+    };
+
+    const updateIdeaStatus = async (id: string, status: string) => {
+        try {
+            const { error: dbError } = await supabase
+                .from('brainstorming_analysis')
+                .update({ status })
+                .eq('id', id);
+            if (dbError) throw dbError;
+            setAnalyses(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+            return { success: true };
+        } catch (err: any) {
+            return { success: false, error: err.message };
+        }
+    };
+
     useEffect(() => {
         fetchAnalyses();
     }, []);
@@ -119,6 +147,8 @@ export const useIdeas = () => {
         error,
         processNewIdea,
         processTextIdea,
+        deleteIdea,
+        updateIdeaStatus,
         refresh: fetchAnalyses
     };
 };

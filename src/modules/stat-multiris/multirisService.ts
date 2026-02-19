@@ -350,6 +350,19 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
     }
 };
 
+// --- Purge and Management ---
+
+export const deleteProductionData = async () => {
+    // Purgar datos de producción y estadísticas consolidadas
+    const { error: err1 } = await supabase.from('multiris_production').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (err1) throw err1;
+
+    const { error: err2 } = await supabase.from('stats_consolidated').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (err2) throw err2;
+
+    return { success: true };
+};
+
 export const getMultirisStats = async () => {
     const { data, error } = await supabase
         .from('multiris_production')
@@ -422,3 +435,4 @@ export const deleteGrupoMedico = async (id: string): Promise<void> => {
         .eq('id', id);
     if (error) throw error;
 };
+

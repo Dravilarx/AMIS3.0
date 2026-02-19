@@ -38,7 +38,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 isLocked: d.is_locked,
                 isValidated: d.is_validated,
                 aiObservation: d.ai_observation,
-                expiryDate: d.expiry_date
+                expiryDate: d.expiry_date,
+                status: d.status as any
             }));
 
             setDocuments(mappedData);
@@ -213,6 +214,34 @@ export const useDocuments = (_options?: { limit?: number }) => {
         }
     };
 
+    const deleteDocument = async (id: string, url: string) => {
+        try {
+            // 1. Obtener la ruta del archivo en Storage
+            const filePath = url?.split('/storage/v1/object/public/documents/')[1]?.split('?')[0];
+
+            if (filePath) {
+                const { error: storageError } = await supabase.storage
+                    .from('documents')
+                    .remove([filePath]);
+                if (storageError) console.error('Error deleting from storage:', storageError);
+            }
+
+            // 2. Eliminar de la base de datos
+            const { error: dbError } = await supabase
+                .from('documents')
+                .delete()
+                .eq('id', id);
+
+            if (dbError) throw dbError;
+
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error deleting document:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     const duplicateDocument = async (doc: Document) => {
         try {
             // 1. Clonar el archivo en Storage
@@ -270,6 +299,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
         uploadDocument,
         createNativeDocument,
         archiveDocument,
+        deleteDocument,
         duplicateDocument
     };
 };

@@ -14,8 +14,10 @@ import {
     Layout,
     Copy,
     Activity,
-    Trash2
+    Trash2,
+    AlertTriangle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import type {
     MedicalProcedure,
@@ -58,6 +60,10 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
     onDeleteBattery
 }) => {
     const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'requirements' | 'messaging'>('catalog');
+
+    const [confirmDeleteProc, setConfirmDeleteProc] = useState<MedicalProcedure | null>(null);
+    const [confirmDeleteBatt, setConfirmDeleteBatt] = useState<RequirementBattery | null>(null);
+    const [confirmDeleteReq, setConfirmDeleteReq] = useState<MedicalRequirement | null>(null);
 
     // Procedure Editing State
     const [editingProc, setEditingProc] = useState<Partial<MedicalProcedure> | null>(null);
@@ -170,16 +176,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                 <Copy className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={async () => {
-                                                    if (confirm(`¿Está seguro de eliminar el procedimiento "${proc.name}"? Esta acción no se puede deshacer.`)) {
-                                                        const res = await onDeleteProcedure?.(proc.id);
-                                                        if (res?.success) {
-                                                            alert('Procedimiento eliminado con éxito');
-                                                        } else {
-                                                            alert('No se pudo eliminar: ' + (res?.error || 'El procedimiento tiene citas o indicaciones asociadas'));
-                                                        }
-                                                    }
-                                                }}
+                                                onClick={() => setConfirmDeleteProc(proc)}
                                                 className="p-2 hover:bg-danger/10 rounded-lg text-prevenort-text/20 hover:text-danger transition-all"
                                                 title="Eliminar"
                                             >
@@ -243,12 +240,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={async () => {
-                                                        if (confirm(`¿Eliminar batería "${battery.name}"?`)) {
-                                                            const res = await onDeleteBattery?.(battery.id);
-                                                            if (res?.success) alert('Batería eliminada');
-                                                        }
-                                                    }}
+                                                    onClick={() => setConfirmDeleteBatt(battery)}
                                                     className="text-prevenort-text/20 hover:text-danger transition-all"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -315,12 +307,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                                 <Edit2 className="w-3 h-3" />
                                                             </button>
                                                             <button
-                                                                onClick={async () => {
-                                                                    if (confirm(`¿Eliminar ítem "${req.name}"?`)) {
-                                                                        const res = await onDeleteRequirement?.(req.id);
-                                                                        if (res?.success) alert('Ítem eliminado');
-                                                                    }
-                                                                }}
+                                                                onClick={() => setConfirmDeleteReq(req)}
                                                                 className="p-1.5 hover:bg-danger/10 rounded-lg text-prevenort-text/20 hover:text-danger transition-all"
                                                             >
                                                                 <Trash2 className="w-3 h-3" />
@@ -804,6 +791,122 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                     </div>
                 )
             }
+            {/* UI de Confirmación de Borrado */}
+            <AnimatePresence>
+                {confirmDeleteProc && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                        >
+                            <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle className="w-10 h-10 text-danger" />
+                            </div>
+                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Procedimiento?</h3>
+                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
+                                Estás a punto de eliminar <span className="text-prevenort-text">"{confirmDeleteProc.name}"</span>. Esta acción es irreversible y podría afectar citas existentes.
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onDeleteProcedure?.(confirmDeleteProc.id);
+                                        if (res?.success) {
+                                            setConfirmDeleteProc(null);
+                                        } else {
+                                            alert('Error: ' + (res?.error || 'No se pudo eliminar el procedimiento'));
+                                        }
+                                    }}
+                                    className="w-full py-4 bg-danger text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Confirmar Eliminación
+                                </button>
+                                <button
+                                    onClick={() => setConfirmDeleteProc(null)}
+                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {confirmDeleteBatt && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                        >
+                            <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle className="w-10 h-10 text-danger" />
+                            </div>
+                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Batería?</h3>
+                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
+                                ¿Estás seguro de eliminar la batería <span className="text-prevenort-text">"{confirmDeleteBatt.name}"</span>?
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onDeleteBattery?.(confirmDeleteBatt.id);
+                                        if (res?.success) setConfirmDeleteBatt(null);
+                                        else alert('Error al eliminar batería');
+                                    }}
+                                    className="w-full py-4 bg-danger text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Confirmar Eliminación
+                                </button>
+                                <button
+                                    onClick={() => setConfirmDeleteBatt(null)}
+                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {confirmDeleteReq && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                        >
+                            <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle className="w-10 h-10 text-danger" />
+                            </div>
+                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Requisito?</h3>
+                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
+                                ¿Eliminar el requisito <span className="text-prevenort-text">"{confirmDeleteReq.name}"</span>?
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={async () => {
+                                        const res = await onDeleteRequirement?.(confirmDeleteReq.id);
+                                        if (res?.success) setConfirmDeleteReq(null);
+                                        else alert('Error al eliminar requisito');
+                                    }}
+                                    className="w-full py-4 bg-danger text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Confirmar Eliminación
+                                </button>
+                                <button
+                                    onClick={() => setConfirmDeleteReq(null)}
+                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };

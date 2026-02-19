@@ -24,7 +24,13 @@ import {
     Crown,
     X,
     Edit3,
-    Check
+    Check,
+    AlertTriangle,
+    Link as LinkIcon,
+    Unlink,
+    CircleCheck,
+    CircleAlert,
+    Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -38,7 +44,8 @@ import {
     saveNameMapping,
     getGruposMedicos,
     saveGrupoMedico,
-    deleteGrupoMedico
+    deleteGrupoMedico,
+    deleteProductionData
 } from './multirisService';
 import type { MedicoGroup } from './multirisService';
 import { useInstitutions } from '../../hooks/useInstitutions';
@@ -355,6 +362,8 @@ export const StatMultirisModule: React.FC = () => {
 
     const [uploadStatus, setUploadStatus] = useState<{ status: 'idle' | 'uploading' | 'success' | 'error', message?: string }>({ status: 'idle' });
     const [isDragging, setIsDragging] = useState(false);
+    const [confirmDeleteGrupo, setConfirmDeleteGrupo] = useState<string | null>(null);
+    const [confirmPurge, setConfirmPurge] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -438,6 +447,39 @@ export const StatMultirisModule: React.FC = () => {
         }
     };
 
+    const handlePurgeData = async () => {
+        setConfirmPurge(true);
+    };
+
+    const executePurge = async () => {
+        setConfirmPurge(false);
+
+        try {
+            setLoading(true);
+            await deleteProductionData();
+            await loadData();
+            alert('Base de datos purgada con éxito. El tablero se ha reiniciado.');
+        } catch (error: any) {
+            console.error('Error al purgar:', error);
+            alert('Error al purgar datos: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteGrupo = async (id: string) => {
+        setConfirmDeleteGrupo(id);
+    };
+
+    const executeDeleteGrupo = async (id: string) => {
+        setConfirmDeleteGrupo(null);
+        try {
+            await deleteGrupoMedico(id);
+            await loadGrupos();
+            if (selectedGrupo === id) setSelectedGrupo(null);
+        } catch (e) { console.error('Error deleting grupo:', e); }
+    };
+
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -479,9 +521,21 @@ export const StatMultirisModule: React.FC = () => {
         }
     };
 
-    const handleUpdateMapping = async (id: string, formal_name: string) => {
+    const handleUpdateMapping = async (id: string, formal_name: string, category?: 'institucion' | 'medico') => {
         try {
-            await saveNameMapping({ id, formal_name });
+            let formal_id: string | null = null;
+
+            // Auto-vincular formal_id si es institución
+            if (category === 'institucion' && formal_name.trim()) {
+                const matchingInst = institutions.find(
+                    i => (i.commercialName || i.legalName) === formal_name ||
+                        i.legalName === formal_name ||
+                        i.commercialName === formal_name
+                );
+                formal_id = matchingInst?.id || null;
+            }
+
+            await saveNameMapping({ id, formal_name, formal_id });
             loadMappings();
         } catch (error: any) {
             alert('Error al actualizar mapeo: ' + error.message);
@@ -694,7 +748,7 @@ export const StatMultirisModule: React.FC = () => {
                 {view === 'mappings' ? (
                     <motion.div key="mappings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
                         <div className="card-premium">
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-2xl font-black uppercase tracking-tight">Sistema de Equivalencias</h3>
                                     <p className="text-xs text-prevenort-text/40 font-bold uppercase mt-1">Vincula nombres de la planilla con nombres formales de AMIS</p>
@@ -704,30 +758,110 @@ export const StatMultirisModule: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* --- Panel de Concordancia --- */}
+                            {(() => {
+                                const instMappings = mappings.filter((m: any) => m.category === 'institucion');
+                                const linked = instMappings.filter((m: any) => m.formal_id);
+                                const withName = instMappings.filter((m: any) => m.formal_name && m.formal_name !== m.raw_name);
+                                const noEquiv = instMappings.filter((m: any) => !m.formal_name || m.formal_name === m.raw_name);
+                                const nameButNoId = withName.filter((m: any) => !m.formal_id);
+                                const pct = instMappings.length > 0 ? Math.round((linked.length / instMappings.length) * 100) : 0;
+
+                                return (
+                                    <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-white/10">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 rounded-xl bg-info/10 text-info border border-info/20">
+                                                    <Info className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-black text-white uppercase tracking-wide">Concordancia Institucional</span>
+                                                    <span className="block text-[10px] font-bold text-white/30">
+                                                        {linked.length} de {instMappings.length} instituciones vinculadas a AMIS ({pct}%)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`text-3xl font-black ${pct >= 80 ? 'text-success' : pct >= 50 ? 'text-amber-400' : 'text-danger'}`}>{pct}%</span>
+                                            </div>
+                                        </div>
+                                        {/* Progress bar */}
+                                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-3">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-700 ${pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-amber-400' : 'bg-danger'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                                            <span className="flex items-center gap-1.5 text-success">
+                                                <CircleCheck className="w-3 h-3" /> {linked.length} vinculadas
+                                            </span>
+                                            {nameButNoId.length > 0 && (
+                                                <span className="flex items-center gap-1.5 text-amber-400">
+                                                    <CircleAlert className="w-3 h-3" /> {nameButNoId.length} nombre sin match
+                                                </span>
+                                            )}
+                                            {noEquiv.length > 0 && (
+                                                <span className="flex items-center gap-1.5 text-white/25">
+                                                    <Unlink className="w-3 h-3" /> {noEquiv.length} sin equivalencia
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-prevenort-primary">
                                         <Building2 className="w-4 h-4" /> Instituciones (Aetitle)
                                     </h4>
                                     <div className="space-y-3">
-                                        {mappings.filter(m => m.category === 'institucion').map(m => (
-                                            <div key={m.id} className="p-4 rounded-3xl bg-white/5 border border-white/10 group hover:border-prevenort-primary/30 transition-all">
-                                                <div className="flex flex-col gap-2">
-                                                    <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-white">{m.raw_name}</span></span>
-                                                    <div className="flex items-center gap-2">
-                                                        <SuggestionInput
-                                                            defaultValue={m.formal_name}
-                                                            suggestions={institutionSuggestions}
-                                                            placeholder="Nombre formal en AMIS..."
-                                                            onConfirm={(v) => handleUpdateMapping(m.id, v)}
-                                                        />
-                                                        <div className="p-2 bg-success/20 text-success rounded-xl">
-                                                            <UserCheck className="w-4 h-4" />
+                                        {mappings.filter(m => m.category === 'institucion').map(m => {
+                                            const isLinked = !!m.formal_id;
+                                            const hasEquiv = m.formal_name && m.formal_name !== m.raw_name;
+                                            const statusColor = isLinked ? 'bg-success/20 text-success border-success/20'
+                                                : hasEquiv ? 'bg-amber-400/20 text-amber-400 border-amber-400/20'
+                                                    : 'bg-white/5 text-white/20 border-white/10';
+                                            const StatusIcon = isLinked ? CircleCheck : hasEquiv ? CircleAlert : Unlink;
+                                            const statusTip = isLinked ? 'Vinculada a AMIS'
+                                                : hasEquiv ? 'Nombre asignado, no coincide con ninguna institución AMIS'
+                                                    : 'Sin equivalencia';
+
+                                            return (
+                                                <div key={m.id} className={`p-4 rounded-3xl bg-white/5 border transition-all ${isLinked ? 'border-success/15 hover:border-success/30' :
+                                                    hasEquiv ? 'border-amber-400/15 hover:border-amber-400/30' :
+                                                        'border-white/10 hover:border-prevenort-primary/30'
+                                                    }`}>
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-white">{m.raw_name}</span></span>
+                                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${statusColor}`} title={statusTip}>
+                                                                <StatusIcon className="w-2.5 h-2.5" />
+                                                                {isLinked ? 'Vinculada' : hasEquiv ? 'Sin match' : 'Pendiente'}
+                                                            </span>
                                                         </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <SuggestionInput
+                                                                defaultValue={m.formal_name}
+                                                                suggestions={institutionSuggestions}
+                                                                placeholder="Nombre formal en AMIS..."
+                                                                onConfirm={(v) => handleUpdateMapping(m.id, v, 'institucion')}
+                                                            />
+                                                            <div className={`p-2 rounded-xl border ${statusColor}`} title={statusTip}>
+                                                                <StatusIcon className="w-4 h-4" />
+                                                            </div>
+                                                        </div>
+                                                        {isLinked && (
+                                                            <div className="flex items-center gap-1.5 ml-1">
+                                                                <LinkIcon className="w-2.5 h-2.5 text-success/50" />
+                                                                <span className="text-[8px] font-bold text-success/50">ID: {m.formal_id.slice(0, 8)}...</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -1099,6 +1233,18 @@ export const StatMultirisModule: React.FC = () => {
                                     </div>
                                 </label>
                             </div>
+                            {/* Zona de Peligro - Purgar Datos */}
+                            <div className="mt-8 pt-8 border-t border-white/5 flex flex-col items-center">
+                                <p className="text-[10px] font-black uppercase text-danger/40 tracking-[0.2em] mb-4">Zona de Peligro</p>
+                                <button
+                                    onClick={handlePurgeData}
+                                    disabled={loading}
+                                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-[10px] font-black uppercase tracking-widest hover:bg-danger hover:text-white transition-all shadow-lg"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" /> Borrar Base de Datos Multiris
+                                </button>
+                                <p className="mt-2 text-[8px] font-bold text-white/10 uppercase tracking-widest italic">Esta acción no se puede deshacer · Elimina todo el historial cargado</p>
+                            </div>
                         </div>
                     </motion.div>
                 ) : (
@@ -1261,40 +1407,38 @@ export const StatMultirisModule: React.FC = () => {
                                         {/* --- ANÁLISIS PROGRESIVO (TRENDS) --- */}
                                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 card-premium min-h-[450px] flex flex-col group">
                                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                                                <div className="flex flex-col gap-4">
-                                                    <div className="flex flex-col md:flex-row items-center gap-6">
-                                                        <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-                                                            <Activity className="w-5 h-5 text-prevenort-primary" />
-                                                            Análisis Progresivo
-                                                        </h3>
-                                                        {/* Selector de Años */}
-                                                        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
-                                                            {availableYears.map(year => (
-                                                                <button
-                                                                    key={year}
-                                                                    onClick={() => {
-                                                                        if (selectedYears.includes(year)) {
-                                                                            if (selectedYears.length > 1) setSelectedYears(selectedYears.filter(y => y !== year));
-                                                                        } else {
-                                                                            setSelectedYears([...selectedYears, year].sort((a, b) => b - a));
-                                                                        }
-                                                                    }}
-                                                                    className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYears.includes(year) ? 'bg-prevenort-primary text-black' : 'hover:bg-white/5 text-white/40'}`}
-                                                                >
-                                                                    {year}
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                <div className="flex flex-col md:flex-row items-center gap-6">
+                                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                                                        <Activity className="w-5 h-5 text-prevenort-primary" />
+                                                        Análisis Progresivo
+                                                    </h3>
+                                                    {/* Selector de Años */}
+                                                    <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                                                        {availableYears.map(year => (
+                                                            <button
+                                                                key={year}
+                                                                onClick={() => {
+                                                                    if (selectedYears.includes(year)) {
+                                                                        if (selectedYears.length > 1) setSelectedYears(selectedYears.filter(y => y !== year));
+                                                                    } else {
+                                                                        setSelectedYears([...selectedYears, year].sort((a, b) => b - a));
+                                                                    }
+                                                                }}
+                                                                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYears.includes(year) ? 'bg-prevenort-primary text-black' : 'hover:bg-white/5 text-white/40'}`}
+                                                            >
+                                                                {year}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                    <div className="flex flex-wrap items-center gap-4">
-                                                        {/* Agrupación Temporal */}
-                                                        <div className="flex rounded-xl overflow-hidden border border-white/10">
-                                                            {(['day', 'week', 'month', 'quarter'] as const).map(g => (
-                                                                <button key={g} onClick={() => setTrendGrouping(g)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
-                                                                    {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : 'Trimestre'}
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-4">
+                                                    {/* Agrupación Temporal */}
+                                                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                                                        {(['day', 'week', 'month', 'quarter'] as const).map(g => (
+                                                            <button key={g} onClick={() => setTrendGrouping(g)} className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-prevenort-primary text-black' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+                                                                {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : 'Trimestre'}
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1659,15 +1803,6 @@ export const StatMultirisModule: React.FC = () => {
                                     } catch (e) { console.error('Error saving grupo:', e); }
                                 };
 
-                                const handleDelete = async (id: string) => {
-                                    if (!confirm('¿Eliminar este grupo permanentemente?')) return;
-                                    try {
-                                        await deleteGrupoMedico(id);
-                                        await loadGrupos();
-                                        if (selectedGrupo === id) setSelectedGrupo(null);
-                                    } catch (e) { console.error('Error deleting grupo:', e); }
-                                };
-
                                 const toggleMember = (name: string) => {
                                     if (!editingGrupo) return;
                                     const miembros = editingGrupo.miembros.includes(name)
@@ -1757,7 +1892,7 @@ export const StatMultirisModule: React.FC = () => {
                                                                 <button onClick={(e) => { e.stopPropagation(); startEditing(g); }} className="p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white transition-all">
                                                                     <Edit3 className="w-3 h-3" />
                                                                 </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(g.id!); }} className="p-1.5 rounded-lg hover:bg-danger/20 text-white/30 hover:text-danger transition-all">
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteGrupo(g.id!); }} className="p-1.5 rounded-lg hover:bg-danger/20 text-white/30 hover:text-danger transition-all">
                                                                     <Trash2 className="w-3 h-3" />
                                                                 </button>
                                                             </div>
@@ -2242,6 +2377,74 @@ export const StatMultirisModule: React.FC = () => {
                             })()}
                         </AnimatePresence>
                     </motion.div>
+                )}
+            </AnimatePresence>
+            {/* UI de Confirmación */}
+            <AnimatePresence>
+                {confirmPurge && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                        >
+                            <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle className="w-10 h-10 text-danger" />
+                            </div>
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Purgar Base de Datos?</h3>
+                            <p className="text-xs text-white/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
+                                Esta acción <span className="text-danger">ELIMINARÁ PERMANENTEMENTE</span> todo el historial de exámenes cargados. No se puede deshacer.
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={executePurge}
+                                    className="w-full py-4 bg-danger text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Confirmar Purga Total
+                                </button>
+                                <button
+                                    onClick={() => setConfirmPurge(false)}
+                                    className="w-full py-4 bg-white/5 text-white/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {confirmDeleteGrupo && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                        >
+                            <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle className="w-10 h-10 text-danger" />
+                            </div>
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Eliminar Grupo?</h3>
+                            <p className="text-xs text-white/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
+                                ¿Estás seguro de eliminar este grupo de trabajo? Los datos de los médicos se mantendrán pero el grupo desaparecerá.
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => executeDeleteGrupo(confirmDeleteGrupo)}
+                                    className="w-full py-4 bg-danger text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Eliminar Grupo
+                                </button>
+                                <button
+                                    onClick={() => setConfirmDeleteGrupo(null)}
+                                    className="w-full py-4 bg-white/5 text-white/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div >

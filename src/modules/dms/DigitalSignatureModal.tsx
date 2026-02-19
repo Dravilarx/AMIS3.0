@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     X,
     Check,
@@ -8,7 +8,8 @@ import {
     Type,
     PenTool,
     Loader2,
-    Eye
+    Eye,
+    Plus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -17,7 +18,7 @@ interface DigitalSignatureModalProps {
     documentUrl?: string;
     isPdf?: boolean;
     onClose: () => void;
-    onConfirm: (name: string, styleId: string, position?: { x: number, y: number, pageIndex: number }) => Promise<void>;
+    onConfirm: (name: string, styleId: string, signatures?: any[], size?: string, color?: string) => Promise<void>;
 }
 
 const SIGNATURE_STYLES = [
@@ -38,7 +39,8 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const [signerName, setSignerName] = useState('Marcelo Avila');
     const [selectedStyle, setSelectedStyle] = useState('1');
     const [isConfirming, setIsConfirming] = useState(false);
-    const [isNavigating, setIsNavigating] = useState(true); // Nuevo: Modo navegación vs firma
+    const [isNavigating, setIsNavigating] = useState(true); // Modo navegación vs firma
+    const [isAddingNew, setIsAddingNew] = useState(false);
 
     // Estados de personalización (Fase 1)
     const [signatureSize, setSignatureSize] = useState<'small' | 'medium' | 'large'>('medium');
@@ -47,6 +49,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     // Estado para posicionamiento múltiple
     const [signatures, setSignatures] = useState<Array<{ x: number, y: number, id: string }>>([]);
     const containerRef = useRef<HTMLDivElement>(null);
+    const docContentRef = useRef<HTMLDivElement>(null);
 
     const selectedFont = SIGNATURE_STYLES.find(s => s.id === selectedStyle)?.font || SIGNATURE_STYLES[0].font;
 
@@ -84,15 +87,18 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const handleContainerClick = (e: React.MouseEvent) => {
         if (!isPdf || step !== 2 || isNavigating || !containerRef.current) return;
 
+        // Si ya hay firmas y no estamos en modo "añadir nueva", no hacemos nada al hacer clic en el documento
+        // Esto evita crear firmas accidentales por clics sucesivos
+        if (signatures.length > 0 && !isAddingNew) return;
+
         const rect = containerRef.current.getBoundingClientRect();
         // Buscamos el elemento .doc-content para mayor precisión si existe
         const docContent = containerRef.current.querySelector('.doc-content');
         const targetRect = docContent ? docContent.getBoundingClientRect() : rect;
-        const scrollTop = containerRef.current.scrollTop;
 
         // Coordenadas relativas al contenido del documento
         const x = e.clientX - targetRect.left;
-        const y = (e.clientY - targetRect.top) + scrollTop;
+        const y = e.clientY - targetRect.top;
 
         // Calculamos el porcentaje (0-100) respecto al área real del documento
         const xPercent = (x / targetRect.width) * 100;
@@ -105,12 +111,13 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
             y: yPercent
         };
 
-        setSignatures(prev => [...prev, newSignature]);
+        setSignatures((prev: any[]) => [...prev, newSignature]);
+        setIsAddingNew(false); // Desactivar modo añadir tras colocar una
     };
 
     const removeSignature = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        setSignatures(prev => prev.filter(s => s.id !== id));
+        setSignatures((prev: any[]) => prev.filter(s => s.id !== id));
     };
 
     return (
@@ -246,8 +253,8 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                 <div className="bg-prevenort-surface/50 border border-prevenort-border rounded-2xl p-8 flex flex-col items-center justify-center min-h-[160px] relative">
                                     <span style={{ fontFamily: selectedFont }} className={cn(
                                         "drop-shadow-2xl text-center transition-all",
-                                        sizeMap[signatureSize],
-                                        colorMap[signatureColor]
+                                        sizeMap[signatureSize as keyof typeof sizeMap],
+                                        colorMap[signatureColor as keyof typeof colorMap]
                                     )}>
                                         {signerName || 'Marcelo Avila'}
                                     </span>
@@ -257,23 +264,45 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                         ) : (
                             <div className="flex flex-col h-full gap-3">
                                 <div className="flex items-center justify-between bg-prevenort-surface/50 p-2 rounded-xl border border-prevenort-border">
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setIsNavigating(true)}
+                                            onClick={() => {
+                                                setIsNavigating(true);
+                                                setIsAddingNew(false);
+                                            }}
                                             className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm", isNavigating ? "bg-info text-white" : "text-prevenort-text/40 hover:bg-prevenort-surface")}
                                         >
                                             <Eye className="w-3.5 h-3.5" /> MODO LECTURA
                                         </button>
                                         <button
-                                            onClick={() => setIsNavigating(false)}
-                                            className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm", !isNavigating ? "bg-success text-white" : "text-prevenort-text/40 hover:bg-prevenort-surface")}
+                                            onClick={() => {
+                                                setIsNavigating(false);
+                                                setIsAddingNew(false);
+                                            }}
+                                            className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm", !isNavigating && !isAddingNew ? "bg-success text-white" : "text-prevenort-text/40 hover:bg-prevenort-surface")}
                                         >
                                             <PenTool className="w-3.5 h-3.5" /> POSICIONAR MI FIRMA
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsNavigating(false);
+                                                setIsAddingNew(!isAddingNew);
+                                            }}
+                                            className={cn(
+                                                "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm",
+                                                isAddingNew ? "bg-info text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]" : "text-prevenort-text/40 hover:bg-prevenort-surface",
+                                                isNavigating && "opacity-50"
+                                            )}
+                                        >
+                                            <Plus className="w-3.5 h-3.5" /> {isAddingNew ? "CANCELAR" : "AÑADIR OTRA FIRMA"}
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-prevenort-text/30 font-bold bg-prevenort-surface px-3 py-1.5 rounded-full border border-prevenort-border">
                                         <Info className="w-3 h-3 text-info" />
-                                        {isNavigating ? "Desliza para buscar el lugar de firma" : "Toca el documento exactamente donde deseas firmar"}
+                                        {isNavigating ? "Desliza para buscar el lugar de firma" :
+                                            isAddingNew ? "Toca el documento para añadir una nueva firma" :
+                                                signatures.length === 0 ? "Toca el documento para posicionar tu firma" :
+                                                    "Arrastra tu firma para reacomodarla o haz clic en '+' para añadir otra"}
                                     </div>
                                 </div>
 
@@ -289,7 +318,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                     {documentUrl ? (
                                         <div className="relative min-h-full w-full bg-prevenort-surface/50 p-4 flex flex-col items-center">
                                             {/* Contenedor del PDF que determina el tamaño real */}
-                                            <div className="doc-content relative w-full max-w-4xl bg-white shadow-2xl min-h-[1200px]">
+                                            <div ref={docContentRef} className="doc-content relative w-full max-w-4xl bg-white shadow-2xl min-h-[1200px]">
                                                 <iframe
                                                     src={`${documentUrl}#toolbar=0&navpanes=0`}
                                                     className={cn(
@@ -312,10 +341,36 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             exit={{ opacity: 0, scale: 0.5 }}
                                                             style={{
+                                                                position: 'absolute',
                                                                 left: `${sig.x}%`,
-                                                                top: `${sig.y}%`
+                                                                top: `${sig.y}%`,
+                                                                transform: 'translate(-50%, -50%)',
+                                                                zIndex: 50,
+                                                                cursor: !isNavigating ? 'grab' : 'default'
                                                             }}
-                                                            className="absolute z-20 -translate-x-1/2 -translate-y-[90%] pointer-events-auto group/sig"
+                                                            drag={!isNavigating}
+                                                            dragMomentum={false}
+                                                            dragConstraints={docContentRef}
+                                                            dragElastic={0}
+                                                            onDragEnd={(_, info: PanInfo) => {
+                                                                if (!docContentRef.current || !containerRef.current) return;
+                                                                const rect = docContentRef.current.getBoundingClientRect();
+
+                                                                // Convertir posición de pantalla a porcentajes relativos al documento
+                                                                const x = info.point.x - rect.left;
+                                                                const y = info.point.y - rect.top;
+
+                                                                const xPercent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+                                                                const yPercent = Math.max(0, Math.min(100, (y / docContentRef.current.scrollHeight) * 100));
+
+                                                                setSignatures((prev: any[]) => prev.map(s =>
+                                                                    s.id === sig.id ? { ...s, x: xPercent, y: yPercent } : s
+                                                                ));
+                                                            }}
+                                                            className={cn(
+                                                                "absolute z-20 -translate-x-1/2 -translate-y-1/2 pointer-events-auto group/sig",
+                                                                !isNavigating ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+                                                            )}
                                                         >
                                                             <div className="bg-blue-600/90 backdrop-blur-md border border-white/50 shadow-[0_0_20px_rgba(37,99,235,0.4)] px-4 py-1.5 rounded-lg flex flex-col items-center relative min-w-[140px]">
                                                                 <span style={{ fontFamily: selectedFont }} className="text-xl text-white block whitespace-nowrap leading-none mb-1">
@@ -332,9 +387,10 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                                                         <X className="w-3 h-3" />
                                                                     </button>
                                                                 )}
+
+                                                                {/* Anchor dot - Centrado para coincidir con PDF */}
+                                                                <div className="w-2.5 h-2.5 bg-white rounded-full border-2 border-blue-600 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md" />
                                                             </div>
-                                                            {/* Indicador de Punto de Anclaje */}
-                                                            <div className="w-2.5 h-2.5 bg-white rounded-full border-2 border-blue-600 absolute left-1/2 -translate-x-1/2 top-full -mt-1 shadow-md" />
                                                         </motion.div>
                                                     ))}
                                                 </AnimatePresence>
