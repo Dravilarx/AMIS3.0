@@ -57,6 +57,9 @@ export interface Professional {
     status: 'active' | 'inhabilitado' | 'suspendido';
     isActive: boolean;
     registrationExpiry?: string;
+    photoUrl?: string; // Foto de perfil del profesional
+    infoStatus?: 'complete' | 'incomplete' | 'pending';
+    isVerified?: boolean;
 
     /** Datos para personal de salud */
     university?: string;
@@ -124,6 +127,7 @@ export interface BPMTask {
     projectId: string;
     title: string;
     assignedTo: string; // User ID or Professional ID
+    involvedIds?: string[]; // Team members involved in the task
     status: 'pending' | 'in-progress' | 'completed' | 'blocked';
     priority: 'low' | 'medium' | 'high' | 'critical';
     dueDate: string;

@@ -12,7 +12,8 @@ import {
     Loader2,
     CheckCircle2,
     Circle,
-    Trash2
+    Trash2,
+    Search
 } from 'lucide-react';
 
 import type { BPMTask, Professional, Project, SubTask } from '../../types/core';
@@ -61,8 +62,10 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
         aiSummary: '',
         attachments: [],
         subtasks: [],
+        involvedIds: [],
         progress: 0
     });
+    const [teamSearchTerm, setTeamSearchTerm] = useState('');
 
     const addSubTask = () => {
         const newSubTask: SubTask = {
@@ -101,6 +104,17 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
         }));
     };
 
+    const toggleInvolved = (profId: string) => {
+        setFormData(prev => {
+            const current = prev.involvedIds || [];
+            if (current.includes(profId)) {
+                return { ...prev, involvedIds: current.filter(id => id !== profId) };
+            } else {
+                return { ...prev, involvedIds: [...current, profId] };
+            }
+        });
+    };
+
     const completedCount = formData.subtasks?.filter(st => st.completed).length || 0;
     const totalCount = formData.subtasks?.length || 0;
     const currentProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -116,6 +130,7 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
                 status: defaultStatus || 'pending',
                 priority: 'medium',
                 dueDate: new Date().toISOString().split('T')[0],
+                involvedIds: [],
                 aiSummary: '',
                 attachments: []
             });
@@ -195,6 +210,70 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
                                         ))}
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest block">Equipo Involucrado ({(formData.involvedIds || []).length})</label>
+
+                            {(formData.involvedIds || []).length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {professionals.filter(p => (formData.involvedIds || []).includes(p.id)).map(p => (
+                                        <div key={p.id} className="text-[10px] bg-info/10 text-info border border-info/20 rounded-full px-2 py-1 flex items-center gap-1">
+                                            <span>{p.name} {p.lastName}</span>
+                                            <button type="button" onClick={() => toggleInvolved(p.id)} className="hover:text-danger hover:bg-danger/10 rounded-full p-0.5">
+                                                <X className="w-2.5 h-2.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="space-y-2 relative">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/40" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar por nombre para agregar al equipo..."
+                                        value={teamSearchTerm}
+                                        onChange={e => setTeamSearchTerm(e.target.value)}
+                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:border-info/50 outline-none text-prevenort-text transition-all"
+                                    />
+                                </div>
+
+                                {teamSearchTerm.trim() && (
+                                    <div className="max-h-40 overflow-y-auto custom-scrollbar border border-prevenort-border rounded-xl p-2 bg-prevenort-surface absolute z-10 w-full left-0 mt-[3rem] shadow-2xl">
+                                        <div className="flex flex-col gap-1">
+                                            {professionals
+                                                .filter(p => p.id !== formData.assignedTo)
+                                                .filter(p => `${p.name} ${p.lastName}`.toLowerCase().includes(teamSearchTerm.toLowerCase()))
+                                                .map(p => {
+                                                    const isSelected = (formData.involvedIds || []).includes(p.id);
+                                                    if (isSelected) return null;
+                                                    return (
+                                                        <div
+                                                            key={p.id}
+                                                            onClick={async () => {
+                                                                toggleInvolved(p.id);
+                                                                setTeamSearchTerm('');
+                                                            }}
+                                                            className="p-2 rounded-lg cursor-pointer flex items-center justify-between group transition-colors hover:bg-info/10 border border-transparent hover:border-info/20"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-6 h-6 rounded bg-prevenort-bg border border-prevenort-border flex items-center justify-center">
+                                                                    <User className="w-3 h-3 text-prevenort-text/40 group-hover:text-info" />
+                                                                </div>
+                                                                <span className="text-xs text-prevenort-text/80 group-hover:text-info group-hover:font-bold transition-all">{p.name} {p.lastName}</span>
+                                                            </div>
+                                                            <div className="w-4 h-4 rounded-full border border-prevenort-border flex items-center justify-center transition-all group-hover:border-info">
+                                                                <Plus className="w-2.5 h-2.5 text-info opacity-0 group-hover:opacity-100" />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Building2, UserCircle, Tag, Plus, Trash2, Save, Loader2, Hash } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn, formatRUT, formatPhone } from '../../lib/utils';
 import { useInstitutions } from '../../hooks/useInstitutions';
 import type { Institution, InstitutionContact, InstitutionType, InstitutionCategory, Criticality } from '../../types/institutions';
 import { INSTITUTION_CATEGORIES } from '../../types/institutions';
@@ -262,6 +262,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                         className={inputCls}
                                         value={form.rut}
                                         onChange={(e) => setField('rut', e.target.value)}
+                                        onBlur={(e) => setField('rut', formatRUT(e.target.value))}
                                         placeholder="76.XXX.XXX-X"
                                     />
                                 </div>
@@ -356,6 +357,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                                 className={inputCls}
                                                 value={contact.phone || ''}
                                                 onChange={(e) => handleContactChange(idx, 'phone', e.target.value)}
+                                                onBlur={(e) => handleContactChange(idx, 'phone', formatPhone(e.target.value))}
                                                 placeholder="+56 9 XXXX XXXX"
                                             />
                                         </div>

@@ -102,9 +102,16 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
 
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-[9px] font-mono">
-                                        <div className="flex items-center gap-1.5 text-prevenort-text/30 uppercase tracking-widest">
-                                            <User className="w-3 h-3" />
-                                            <span>{getProfessionalName(task.assignedTo)}</span>
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-1.5 text-prevenort-text/30 uppercase tracking-widest">
+                                                <User className="w-3 h-3" />
+                                                <span>{getProfessionalName(task.assignedTo)}</span>
+                                            </div>
+                                            {(task.involvedIds?.length || 0) > 0 && (
+                                                <div className="flex items-center gap-1 text-[8px] bg-info/10 text-info px-1.5 py-0.5 rounded-full w-fit">
+                                                    <span className="font-bold">+{task.involvedIds?.length} Equipo</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <span className={cn(
                                             "px-1.5 py-0.5 rounded-md border",

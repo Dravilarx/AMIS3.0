@@ -134,20 +134,25 @@ export const useMessaging = (channelId?: string) => {
     const sendMessage = async (content: string, type: Message['type'] = 'text', options?: { parentId?: string, replyTo?: Message['replyTo'] }) => {
         if (!channelId || !user) return;
 
-        // Optimistic UI for AI-HELPER
-        if (channelId === 'AI-HELPER') {
-            const userMsg: Message = {
-                id: Date.now().toString(),
-                senderId: user.id,
-                senderName: user.name,
-                content,
-                timestamp: new Date().toISOString(),
-                type,
-                ...options
-            };
-            setMessages(prev => [...prev, userMsg]);
+        // Generar ID único temporal optimista (UUID válido fallback compatible con string o crypto si aplica)
+        const optimisticId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(7);
 
-            // Trigger AI Response
+        const userMsg: Message = {
+            id: optimisticId,
+            senderId: user.id,
+            senderName: user.name,
+            content,
+            timestamp: new Date().toISOString(),
+            type,
+            parentId: options?.parentId,
+            replyTo: options?.replyTo
+        };
+
+        // 1. Optimistic UI update (render message immediately)
+        setMessages(prev => [...prev, userMsg]);
+
+        // 2. Comportamiento especial para asistente AI
+        if (channelId === 'AI-HELPER') {
             const aiResponse = await processChatWithAI(content);
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -162,17 +167,32 @@ export const useMessaging = (channelId?: string) => {
             return;
         }
 
-        const { error } = await supabase.from('messages').insert([{
-            channel_id: channelId,
-            sender_id: user.id,
-            sender_name: user.name,
-            content,
-            type,
-            parent_id: options?.parentId,
-            reply_to: options?.replyTo
-        }]);
+        // 3. Persistir contra Supabase (si falla, queda solo en estado local para demo mode)
+        try {
+            const { error, data } = await supabase.from('messages').insert([{
+                id: optimisticId, // Insertamos dictando el UUID al backend para no duplicar en las subscriptions RealTime
+                channel_id: channelId,
+                sender_id: user.id,
+                sender_name: user.name,
+                content,
+                type,
+                parent_id: options?.parentId,
+                reply_to: options?.replyTo
+            }]).select().single();
 
-        if (error) console.error('Error sending message:', error);
+            if (error) {
+                console.error('Error sending message (kept locally for demo mode):', error.message);
+                // NOTA: Para no romper la demo fallback, no hacemos rollback del state optimista.
+            } else if (data) {
+                // Sincronizar timestamp real
+                setMessages(prev => prev.map(m => m.id === optimisticId ? {
+                    ...m,
+                    timestamp: data.created_at
+                } : m));
+            }
+        } catch (err: any) {
+            console.error('Supabase exception sending message:', err.message);
+        }
     };
 
     const deleteMessage = async (id: string) => {

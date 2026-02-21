@@ -50,6 +50,9 @@ export const useProfessionals = () => {
                 },
                 competencies: p.competencies || [],
                 induction: p.induction,
+                photoUrl: p.photo_url,
+                infoStatus: p.info_status || 'incomplete',
+                isVerified: p.is_verified || false,
                 contracts: (p.contracts || []).map((c: any) => ({
                     company: c.company,
                     amount: Number(c.amount),
@@ -100,7 +103,10 @@ export const useProfessionals = () => {
                     region: orNull(professional.residence?.region),
                     country: orNull(professional.residence?.country),
                     competencies: professional.competencies,
-                    induction: professional.induction
+                    induction: professional.induction,
+                    photo_url: professional.photoUrl,
+                    info_status: professional.infoStatus || 'incomplete',
+                    is_verified: professional.isVerified || false
                 }])
                 .select()
                 .single();
@@ -164,7 +170,10 @@ export const useProfessionals = () => {
                     region: orNull(professional.residence?.region),
                     country: orNull(professional.residence?.country),
                     competencies: professional.competencies,
-                    induction: professional.induction
+                    induction: professional.induction,
+                    photo_url: professional.photoUrl,
+                    info_status: professional.infoStatus || 'incomplete',
+                    is_verified: professional.isVerified || false
                 })
                 .eq('id', id);
 
@@ -249,7 +258,10 @@ export const useProfessionals = () => {
                     city: dataToClone.residence?.city,
                     region: dataToClone.residence?.region,
                     country: dataToClone.residence?.country,
-                    competencies: dataToClone.competencies
+                    competencies: dataToClone.competencies,
+                    photo_url: dataToClone.photoUrl,
+                    info_status: 'incomplete', // Duplicate gets reset
+                    is_verified: false
                 }])
                 .select()
                 .single();

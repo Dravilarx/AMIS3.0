@@ -317,8 +317,15 @@ export const ProjectBPM: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <h5 className="font-bold text-prevenort-text group-hover:text-info transition-colors">{task.title}</h5>
-                                                    <p className="text-[10px] text-prevenort-text/40 font-mono">
-                                                        Responsable: {getProfessionalName(task.assignedTo)} | Vence: {task.dueDate}
+                                                    <p className="text-[10px] text-prevenort-text/40 font-mono flex items-center gap-2">
+                                                        <span>Responsable: {getProfessionalName(task.assignedTo)}</span>
+                                                        <span>|</span>
+                                                        <span>Vence: {task.dueDate}</span>
+                                                        {(task.involvedIds?.length || 0) > 0 && (
+                                                            <span className="text-info font-bold px-1.5 py-0.5 rounded-full bg-info/10">
+                                                                +{task.involvedIds!.length} Involucrados
+                                                            </span>
+                                                        )}
                                                         {task.subtasks && task.subtasks.length > 0 && (
                                                             <span className="ml-2 text-info/60 font-black">
                                                                 [{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} SUBTAREAS]

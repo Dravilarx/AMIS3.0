@@ -4,7 +4,8 @@ import { useBatteries } from '../dms/useBatteries';
 import { useDocuments } from '../../hooks/useDocuments';
 import { DocumentUploadModal } from '../dms/DocumentUploadModal';
 import { useHRManagers } from '../../hooks/useHRManagers';
-import { cn } from '../../lib/utils';
+import { useAuth } from '../../hooks/useAuth';
+import { cn, formatRUT, formatPhone } from '../../lib/utils';
 
 import type { Professional, HoldingCompany } from '../../types/core';
 
@@ -49,6 +50,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
         signatureType: '',
         competencies: [],
         contracts: [],
+        photoUrl: '',
+        infoStatus: 'incomplete',
+        isVerified: false,
         induction: {
             enabled: false,
             hasReadAndAccepted: false,
@@ -79,6 +83,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 signatureType: initialData.signatureType || '',
                 competencies: initialData.competencies,
                 contracts: initialData.contracts,
+                photoUrl: initialData.photoUrl || '',
+                infoStatus: initialData.infoStatus || 'incomplete',
+                isVerified: initialData.isVerified || false,
                 induction: initialData.induction || {
                     enabled: false,
                     hasReadAndAccepted: false,
@@ -108,6 +115,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 signatureType: '',
                 competencies: [],
                 contracts: [],
+                photoUrl: '',
+                infoStatus: 'incomplete',
+                isVerified: false,
                 induction: {
                     enabled: false,
                     hasReadAndAccepted: false,
@@ -132,6 +142,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadPrefill, setUploadPrefill] = useState<any>(null);
     const { managers } = useHRManagers();
+    const { user } = useAuth();
+
+    const isAlejandra = user?.email === 'alejandra.versalovic@amis.global';
 
     // Filtrar documentos del profesional actual
     const professionalDocuments = (documents || []).filter(d => d.targetId === initialData?.id);
@@ -183,6 +196,44 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
             ...formData,
             contracts: formData.contracts.filter((_, i) => i !== index)
         });
+    };
+
+    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 256;
+                const MAX_HEIGHT = 256;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                setFormData(prev => ({ ...prev, photoUrl: dataUrl }));
+            };
+            img.src = event.target?.result as string;
+        };
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -283,6 +334,38 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {activeTab === 'info' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                            {/* Photo Upload Profile Area */}
+                            <div className="flex flex-col items-center justify-center p-6 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                                <label className="relative cursor-pointer group">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-prevenort-border group-hover:border-prevenort-primary/50 flex items-center justify-center bg-prevenort-surface/50 transition-all">
+                                        {formData.photoUrl ? (
+                                            <img src={formData.photoUrl} alt="Foto" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center">
+                                                <UploadCloud className="w-6 h-6 text-prevenort-text/20 group-hover:text-prevenort-primary" />
+                                                <span className="text-[10px] text-prevenort-text/40 mt-1 uppercase tracking-widest font-bold">Foto</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={handlePhotoUpload}
+                                    />
+                                    {formData.photoUrl && (
+                                        <button
+                                            type="button"
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                            onClick={(e) => { e.preventDefault(); setFormData(prev => ({ ...prev, photoUrl: '' })); }}
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
+                                </label>
+                            </div>
+
                             {/* Sección 1: Cargo y Rol */}
                             <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
                                 <div className="flex items-center justify-between mb-2">
@@ -319,6 +402,33 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                                         </select>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Estatus de Info</label>
+                                        <select
+                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                            value={formData.infoStatus || 'incomplete'}
+                                            onChange={e => setFormData({ ...formData, infoStatus: e.target.value as any })}
+                                        >
+                                            <option value="incomplete">Incompleto</option>
+                                            <option value="pending">Pendiente Validación</option>
+                                            <option value="complete">Completo</option>
+                                        </select>
+                                    </div>
+                                    {isAlejandra && (
+                                        <div className="space-y-2 md:col-span-2 flex items-center gap-3 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+                                            <input
+                                                type="checkbox"
+                                                id="isVerified"
+                                                checked={formData.isVerified}
+                                                onChange={e => setFormData({ ...formData, isVerified: e.target.checked })}
+                                                className="w-4 h-4 rounded border-prevenort-border bg-prevenort-surface text-emerald-500 focus:ring-emerald-500/20"
+                                            />
+                                            <label htmlFor="isVerified" className="text-xs uppercase font-bold text-emerald-400 tracking-widest flex items-center gap-2 cursor-pointer">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                Validación Oficial por Alejandra Versalovic
+                                            </label>
+                                        </div>
+                                    )}
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Email Corporativo / Uso</label>
                                         <input
@@ -364,6 +474,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
                                             value={formData.nationalId}
                                             onChange={e => setFormData({ ...formData, nationalId: e.target.value })}
+                                            onBlur={e => setFormData({ ...formData, nationalId: formatRUT(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -390,6 +501,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
                                             value={formData.phone}
                                             onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                            onBlur={e => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">

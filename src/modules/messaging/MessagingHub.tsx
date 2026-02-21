@@ -9,7 +9,6 @@ import {
     Search as SearchIcon,
     Circle,
     Loader2,
-    Users,
     Paperclip,
     Plus,
     Bot,
@@ -25,15 +24,13 @@ import {
 import { cn } from '../../lib/utils';
 import { useMessaging } from '../../hooks/useMessaging';
 import { useAuth } from '../../hooks/useAuth';
-import { useProfessionals } from '../../hooks/useProfessionals';
+import { supabase } from '../../lib/supabase';
 
 export const MessagingHub: React.FC = () => {
     const { user } = useAuth();
     const { messages, channels, createChannel, deleteChannel } = useMessaging();
-    const { professionals } = useProfessionals();
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [input, setInput] = useState('');
-    const [tab, setTab] = useState<'channels' | 'people'>('channels');
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +41,16 @@ export const MessagingHub: React.FC = () => {
     const [duration, setDuration] = useState('24h');
     const [replyToMessage, setReplyToMessage] = useState<any | null>(null);
     const [selectedProfessionals, setSelectedProfessionals] = useState<string[]>([]);
+    const [attachment, setAttachment] = useState<File | null>(null);
+    const [isSending, setIsSending] = useState(false);
+
+    // Search unified state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // User tags info for group modal
+    const [selectedUsersInfo, setSelectedUsersInfo] = useState<{ id: string, name: string }[]>([]);
 
     // Seleccionar primer canal por defecto
     useEffect(() => {
@@ -59,6 +66,62 @@ export const MessagingHub: React.FC = () => {
         }
     }, [messages]);
 
+    // Buscador global de personas (Dinámico)
+    useEffect(() => {
+        if (searchTerm.trim().length <= 2) {
+            setSearchResults([]);
+            return;
+        }
+        const fetchUsers = async () => {
+            setIsSearching(true);
+            try {
+                // Separamos por espacios la búsqueda
+                const parts = searchTerm.toLowerCase().split(' ').filter(p => p.length > 0);
+                const queryText = `%${parts.join('%')}%`;
+
+                const [profilesRes, profsRes] = await Promise.all([
+                    supabase.from('profiles')
+                        .select('id, full_name, role, rut')
+                        .or(`full_name.ilike.${queryText},rut.ilike.${queryText}`)
+                        .limit(10),
+                    supabase.from('professionals')
+                        .select('id, name, last_name, role, national_id')
+                        .or(`name.ilike.${queryText},last_name.ilike.${queryText},national_id.ilike.${queryText}`)
+                        .limit(10)
+                ]);
+
+                const combinedProfiles: any[] = [];
+                if (profilesRes.data) {
+                    combinedProfiles.push(...profilesRes.data.map((p: any) => ({
+                        id: p.id,
+                        full_name: p.full_name,
+                        rut: p.rut,
+                        role: p.role || 'Admin/App',
+                        source: 'perfil'
+                    })));
+                }
+                if (profsRes.data) {
+                    combinedProfiles.push(...profsRes.data.map((p: any) => ({
+                        id: p.id,
+                        full_name: `${p.name} ${p.last_name}`,
+                        rut: p.national_id,
+                        role: p.role,
+                        source: 'clínico'
+                    })));
+                }
+                // deduplicate
+                const unique = Array.from(new Map(combinedProfiles.map(item => [item.id, item])).values());
+                setSearchResults(unique.slice(0, 15));
+            } catch (err) {
+                console.error('Error searching users:', err);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+        const debounce = setTimeout(fetchUsers, 400);
+        return () => clearTimeout(debounce);
+    }, [searchTerm]);
+
     const activeChannel = channels.find(c => c.id === activeChannelId);
     const {
         messages: channelMessages,
@@ -70,7 +133,7 @@ export const MessagingHub: React.FC = () => {
 
     const handleSelectPerson = async (p: any) => {
         // Encontrar o crear un canal directo con la persona
-        const personName = `${p.name} ${p.lastName}`;
+        const personName = p.full_name;
         const existingChannel = channels.find(c => c.type === 'direct' && c.name === personName);
 
         if (existingChannel) {
@@ -83,7 +146,31 @@ export const MessagingHub: React.FC = () => {
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !activeChannelId) return;
+        if ((!input.trim() && !attachment) || !activeChannelId || isSending) return;
+
+        setIsSending(true);
+        let sentContent = input.trim();
+
+        if (attachment) {
+            try {
+                const fileExt = attachment.name.split('.').pop();
+                const filePath = `chat_attachments/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+                const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, attachment);
+                let fileUrl = '';
+
+                if (!uploadError) {
+                    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
+                    fileUrl = publicUrl;
+                }
+
+                const attachMd = fileUrl ? `\n\n[📎 Archivo Adjunto: ${attachment.name}](${fileUrl})` : `\n\n[📎 Archivo Adjunto: ${attachment.name}]`;
+                sentContent += attachMd;
+            } catch (err) {
+                console.error('Error uploading file:', err);
+                sentContent += `\n\n[📎 Archivo Adjunto (Error): ${attachment.name}]`;
+            }
+        }
 
         const options = replyToMessage ? {
             replyTo: {
@@ -93,9 +180,11 @@ export const MessagingHub: React.FC = () => {
             }
         } : undefined;
 
-        await sendToChannel(input, 'text', options);
+        await sendToChannel(sentContent, attachment ? 'file' : 'text', options);
         setInput('');
+        setAttachment(null);
         setReplyToMessage(null);
+        setIsSending(false);
     };
 
     const handleCancelReply = () => {
@@ -108,13 +197,11 @@ export const MessagingHub: React.FC = () => {
         }
     }, [replyToMessage]);
 
-    const handleAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !activeChannelId) return;
-
-        // Simulación de envío de adjunto
-        const fileName = file.name;
-        await sendToChannel(`[Archivo Adjunto: ${fileName}]`, 'file');
+        if (!file) return;
+        setAttachment(file);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleCreate = async () => {
@@ -128,119 +215,89 @@ export const MessagingHub: React.FC = () => {
             setIsCreatingChannel(false);
             setIsCreatingGroup(false);
             setSelectedProfessionals([]);
+            setSelectedUsersInfo([]);
         }
     };
 
-    const toggleProfessionalSelection = (id: string) => {
-        setSelectedProfessionals(prev =>
-            prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
-        );
+    const toggleProfessionalSelection = (userObj: { id: string, name: string }) => {
+        setSelectedProfessionals(prev => {
+            if (prev.includes(userObj.id)) {
+                setSelectedUsersInfo(current => current.filter(u => u.id !== userObj.id));
+                return prev.filter(pId => pId !== userObj.id);
+            } else {
+                setSelectedUsersInfo(current => [...current, userObj]);
+                return [...prev, userObj.id];
+            }
+        });
     };
 
     return (
         <div className="flex h-[calc(100vh-12rem)] gap-4 animate-in fade-in duration-700 relative">
-            {/* Sidebar Channels & People */}
+            {/* Sidebar Messaging unified */}
             <div className="w-80 flex flex-col gap-4">
-                <div className="flex bg-prevenort-surface p-1 rounded-xl border border-prevenort-border">
-                    <button
-                        onClick={() => setTab('channels')}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] uppercase font-bold tracking-widest transition-all rounded-lg",
-                            tab === 'channels' ? "bg-prevenort-primary/10 text-prevenort-text" : "text-prevenort-text/40 hover:text-prevenort-text/60"
-                        )}
-                    >
-                        <Hash className="w-3 h-3" /> Canales
-                    </button>
-                    <button
-                        onClick={() => setTab('people')}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] uppercase font-bold tracking-widest transition-all rounded-lg",
-                            tab === 'people' ? "bg-prevenort-primary/10 text-prevenort-text" : "text-prevenort-text/40 hover:text-prevenort-text/60"
-                        )}
-                    >
-                        <Users className="w-3 h-3" /> Personas
-                    </button>
+                <div className="flex items-center justify-between p-2">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-prevenort-text">Mensajes</h2>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsCreatingGroup(true)}
+                            className="p-2 hover:bg-info/10 rounded-lg text-info/60 hover:text-info transition-all active:scale-95"
+                            title="Nuevo Grupo o Modalidad"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="relative">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
                     <input
                         type="text"
-                        placeholder={tab === 'channels' ? "Buscar canales..." : "Buscar colegas..."}
-                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-lg pl-10 pr-4 py-2 text-xs text-prevenort-text focus:outline-none focus:border-info/50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar colegas para chatear..."
+                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-lg pl-10 pr-4 py-3 text-sm text-prevenort-text focus:outline-none focus:border-info/50 transition-all shadow-sm"
                     />
+                    {isSearching && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="w-3 h-3 animate-spin text-info/50" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 space-y-1 overflow-auto custom-scrollbar">
-                    {tab === 'channels' ? (
+                    {searchTerm.length > 2 ? (
                         <>
-                            <div className="flex items-center justify-between px-2 mb-2">
-                                <span className="text-[10px] uppercase font-black text-info/60 tracking-[0.2em]">Canales</span>
-                                <button
-                                    onClick={() => setIsCreatingChannel(true)}
-                                    className="p-1 hover:bg-info/10 rounded-lg text-info/60 hover:text-info transition-all active:scale-95"
-                                    title="Nuevo Canal"
-                                >
-                                    <Plus className="w-3.5 h-3.5" />
-                                </button>
+                            <div className="px-2 mb-2">
+                                <span className="text-[10px] uppercase font-black text-success/60 tracking-[0.2em]">Resultados de Búsqueda</span>
                             </div>
-                            {channels.map(ch => (
+                            {searchResults.length === 0 && !isSearching ? (
+                                <p className="text-[10px] text-prevenort-text/40 text-center py-4">No se encontraron colegas.</p>
+                            ) : searchResults.map(user => (
                                 <div
-                                    key={ch.id}
-                                    onClick={() => setActiveChannelId(ch.id)}
-                                    className={cn(
-                                        "p-3 rounded-xl border cursor-pointer transition-all group",
-                                        activeChannelId === ch.id
-                                            ? "bg-info/10 border-info/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
-                                            : "bg-prevenort-surface border-transparent hover:border-prevenort-border"
-                                    )}
+                                    key={user.id}
+                                    onClick={() => {
+                                        handleSelectPerson(user);
+                                        setSearchTerm(''); // Clear after selecting
+                                    }}
+                                    className="p-3 rounded-xl border border-transparent bg-prevenort-surface cursor-pointer hover:border-prevenort-border transition-all flex items-center gap-3"
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <div className="flex items-center gap-2">
-                                            {ch.type === 'shift' ? <Clock className="w-3 h-3 text-warning" /> :
-                                                ch.type === 'project' ? <Hash className="w-3 h-3 text-info" /> :
-                                                    <Circle className="w-2 h-2 fill-purple-500 text-purple-500" />}
-                                            <span className="text-sm font-bold truncate max-w-[120px] text-prevenort-text">{ch.name}</span>
+                                    <div className="relative">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-prevenort-border bg-prevenort-surface">
+                                            <UserIcon className="w-4 h-4 text-prevenort-text/40" />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            {ch.id !== 'CH-001' && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm('¿Estás seguro de eliminar este canal/grupo?')) {
-                                                            deleteChannel(ch.id);
-                                                            if (activeChannelId === ch.id) setActiveChannelId('CH-001');
-                                                        }
-                                                    }}
-                                                    className="p-1.5 text-transparent group-hover:text-danger/60 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
-                                            )}
-                                            <span className="text-[9px] text-prevenort-text/20 font-mono">
-                                                {new Date(ch.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success border-2 border-prevenort-bg rounded-full" />
                                     </div>
-                                    {ch.isEphemeral && (
-                                        <div className="mt-2 flex items-center gap-1">
-                                            <span className="text-[8px] px-1.5 py-0.5 bg-warning/20 text-warning rounded font-black uppercase tracking-tighter">Efímero</span>
-                                        </div>
-                                    )}
+                                    <div>
+                                        <span className="text-sm font-bold text-prevenort-text">{user.full_name}</span>
+                                        <p className="text-[9px] text-prevenort-text/30 uppercase font-bold tracking-wider">{user.role}</p>
+                                    </div>
                                 </div>
                             ))}
                         </>
                     ) : (
                         <>
-                            <div className="flex items-center justify-between px-2 mb-2">
-                                <span className="text-[10px] uppercase font-black text-purple-500/60 tracking-[0.2em]">Colegas en Línea</span>
-                                <button
-                                    onClick={() => setIsCreatingGroup(true)}
-                                    className="p-1 hover:bg-purple-500/10 rounded-lg text-purple-400/60 hover:text-purple-400 transition-all active:scale-95"
-                                    title="Crear Grupo"
-                                >
-                                    <Plus className="w-3.5 h-3.5" />
-                                </button>
+                            <div className="px-2 mb-2">
+                                <span className="text-[10px] uppercase font-black text-info/60 tracking-[0.2em]">Conversaciones</span>
                             </div>
                             <div
                                 onClick={() => setActiveChannelId('AI-HELPER')}
@@ -261,38 +318,52 @@ export const MessagingHub: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            {professionals.map(p => (
+                            {channels.map(ch => (
                                 <div
-                                    key={p.id}
-                                    onClick={() => handleSelectPerson(p)}
+                                    key={ch.id}
+                                    onClick={() => setActiveChannelId(ch.id)}
                                     className={cn(
-                                        "p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3",
-                                        activeChannel?.name === `${p.name} ${p.lastName}`
+                                        "p-3 rounded-xl border cursor-pointer transition-all group",
+                                        activeChannelId === ch.id
                                             ? "bg-info/10 border-info/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
                                             : "bg-prevenort-surface border-transparent hover:border-prevenort-border"
                                     )}
                                 >
-                                    <div className="relative">
-                                        <div className={cn(
-                                            "w-8 h-8 rounded-lg flex items-center justify-center border transition-all",
-                                            activeChannel?.name === `${p.name} ${p.lastName}`
-                                                ? "bg-info/20 border-info/30"
-                                                : "bg-prevenort-surface border-prevenort-border"
-                                        )}>
-                                            <UserIcon className={cn(
-                                                "w-4 h-4",
-                                                activeChannel?.name === `${p.name} ${p.lastName}` ? "text-info" : "text-prevenort-text/40"
-                                            )} />
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                            {ch.type === 'direct' ? <UserIcon className={cn("w-3 h-3", activeChannelId === ch.id ? "text-info" : "text-prevenort-text/40")} /> :
+                                                ch.type === 'shift' ? <Clock className="w-3 h-3 text-warning" /> :
+                                                    ch.type === 'project' ? <Hash className="w-3 h-3 text-info" /> :
+                                                        <Circle className="w-2 h-2 fill-purple-500 text-purple-500" />}
+                                            <span className={cn("text-sm font-bold truncate max-w-[120px]", activeChannelId === ch.id ? "text-prevenort-text" : "text-prevenort-text/80")}>
+                                                {ch.name}
+                                            </span>
                                         </div>
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success border-2 border-prevenort-bg rounded-full" />
+                                        <div className="flex items-center gap-2">
+                                            {ch.id !== 'CH-001' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (confirm('¿Estás seguro de eliminar este canal o chat?')) {
+                                                            deleteChannel(ch.id);
+                                                            if (activeChannelId === ch.id) setActiveChannelId('CH-001');
+                                                        }
+                                                    }}
+                                                    className="p-1.5 text-transparent group-hover:text-danger/60 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                            <span className="text-[9px] text-prevenort-text/20 font-mono">
+                                                {new Date(ch.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className={cn(
-                                            "text-sm font-bold",
-                                            activeChannel?.name === `${p.name} ${p.lastName}` ? "text-prevenort-text" : "text-prevenort-text/80"
-                                        )}>{p.name} {p.lastName}</span>
-                                        <p className="text-[9px] text-prevenort-text/30 uppercase font-bold tracking-wider">{p.role}</p>
-                                    </div>
+                                    {ch.isEphemeral && (
+                                        <div className="mt-2 flex items-center gap-1">
+                                            <span className="text-[8px] px-1.5 py-0.5 bg-warning/20 text-warning rounded-md font-black uppercase tracking-tighter">Efímero</span>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </>
@@ -389,12 +460,41 @@ export const MessagingHub: React.FC = () => {
                                     {/* Burbuja del mensaje */}
                                     <div className="relative group/bubble">
                                         <div className={cn(
-                                            "p-4 border text-sm leading-relaxed shadow-lg backdrop-blur-sm transition-all",
+                                            "p-4 border text-sm leading-relaxed shadow-lg backdrop-blur-sm transition-all whitespace-pre-wrap break-words",
                                             m.senderId === user?.id
                                                 ? "bg-info/10 border-info/20 rounded-3xl rounded-tr-none text-prevenort-text"
                                                 : "bg-prevenort-surface border-prevenort-border rounded-3xl rounded-tl-none text-prevenort-text/80"
                                         )}>
-                                            {m.content}
+                                            {(() => {
+                                                if (m.content.includes('[📎 Archivo Adjunto')) {
+                                                    const parts = m.content.split('\n\n[📎');
+                                                    const textPart = parts[0];
+                                                    const attachPart = '[📎' + parts.slice(1).join('\n\n[📎');
+
+                                                    const linkMatch = attachPart.match(/\]\((.*?)\)/);
+                                                    const url = linkMatch ? linkMatch[1] : null;
+                                                    const nameMatch = attachPart.match(/Archivo Adjunto(?: \(Error\))?: (.*?)\]/);
+                                                    const name = nameMatch ? nameMatch[1] : 'Archivo Adjunto';
+
+                                                    return (
+                                                        <div className="flex flex-col gap-2">
+                                                            {textPart && <span>{textPart}</span>}
+                                                            {url ? (
+                                                                <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-info/10 hover:bg-info/20 rounded-xl border border-info/30 transition-colors font-medium text-xs break-all text-info mt-1">
+                                                                    <Paperclip className="w-4 h-4 shrink-0" />
+                                                                    <span className="truncate">{name}</span>
+                                                                </a>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2 p-3 bg-black/10 rounded-xl border border-black/5 font-medium text-xs opacity-60 mt-1">
+                                                                    <Paperclip className="w-4 h-4 shrink-0" />
+                                                                    <span className="truncate">{name} (Local/Simulado)</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                }
+                                                return m.content;
+                                            })()}
                                         </div>
 
                                         {/* Acciones Rápidas */}
@@ -455,6 +555,29 @@ export const MessagingHub: React.FC = () => {
                                 </div>
                             )}
 
+                            {/* Visualizador de Archivo Adjunto */}
+                            {attachment && (
+                                <div className="absolute bottom-full left-0 right-0 p-3 bg-prevenort-surface border-t border-prevenort-border flex items-center justify-between animate-in slide-in-from-bottom-2 duration-300 z-10">
+                                    <div className="flex items-center gap-3 overflow-hidden text-info">
+                                        <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
+                                            <Paperclip className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Archivo Adjunto Listo</span>
+                                            <p className="text-sm font-bold truncate">{attachment.name}</p>
+                                            <p className="text-[10px] opacity-60">{Math.round(attachment.size / 1024)} KB</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAttachment(null)}
+                                        className="p-2 hover:bg-danger/10 rounded-xl text-prevenort-text/40 hover:text-danger flex-shrink-0 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="relative group">
                                 <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                     <button
@@ -491,10 +614,10 @@ export const MessagingHub: React.FC = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={!input.trim()}
+                                        disabled={(!input.trim() && !attachment) || isSending}
                                         className="p-2.5 bg-info text-white rounded-xl hover:opacity-90 transition-all active:scale-95 disabled:opacity-20 shadow-lg shadow-info/20"
                                     >
-                                        <Send className="w-4 h-4" />
+                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     </button>
                                 </div>
                             </div>
@@ -597,11 +720,46 @@ export const MessagingHub: React.FC = () => {
                                 {isCreatingGroup && (
                                     <div className="space-y-3">
                                         <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest block">Seleccionar Colegas ({selectedProfessionals.length})</label>
+
+                                        {/* Tag list for selected users inside modal */}
+                                        {selectedUsersInfo.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                {selectedUsersInfo.map(u => (
+                                                    <div key={u.id} className="text-[10px] bg-info/10 text-info border border-info/20 rounded-full px-2 py-1 flex items-center gap-1">
+                                                        <span>{u.name}</span>
+                                                        <button onClick={() => toggleProfessionalSelection({ id: u.id, name: u.name })} className="hover:text-danger hover:bg-danger/10 rounded-full p-0.5">
+                                                            <X className="w-2.5 h-2.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Shared search term is active here too since it's global, but we can instruct them to use the main search box. 
+                                            Wait, it's a modal over the main interface, so the main search box is covered! 
+                                            We need a specific search box here. 
+                                            Let's use the same `searchTerm` for simplicity or a local one. 
+                                            Actually, since `searchTerm` auto-populates `searchResults` via useEffect, we can just render an input linked to `searchTerm`! 
+                                        */}
+                                        <div className="relative">
+                                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+                                            <input
+                                                type="text"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder="Buscar por nombre o RUT..."
+                                                className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-10 pr-4 py-3 text-xs text-prevenort-text focus:outline-none focus:border-info/50"
+                                            />
+                                        </div>
+
                                         <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1 pr-2">
-                                            {professionals.map(p => (
+                                            {searchTerm.length > 2 && searchResults.map(p => (
                                                 <div
                                                     key={p.id}
-                                                    onClick={() => toggleProfessionalSelection(p.id)}
+                                                    onClick={() => {
+                                                        toggleProfessionalSelection({ id: p.id, name: p.full_name });
+                                                        setSearchTerm(''); // Limpiar para buscar otro
+                                                    }}
                                                     className={cn(
                                                         "p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between group",
                                                         selectedProfessionals.includes(p.id)
@@ -613,7 +771,7 @@ export const MessagingHub: React.FC = () => {
                                                         <div className="w-6 h-6 rounded bg-prevenort-surface flex items-center justify-center border border-prevenort-border">
                                                             <UserIcon className="w-3 h-3 text-prevenort-text/40" />
                                                         </div>
-                                                        <span className="text-xs text-prevenort-text/80">{p.name} {p.lastName}</span>
+                                                        <span className="text-xs text-prevenort-text/80">{p.full_name}</span>
                                                     </div>
                                                     <div className={cn(
                                                         "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
@@ -625,6 +783,9 @@ export const MessagingHub: React.FC = () => {
                                                     </div>
                                                 </div>
                                             ))}
+                                            {searchTerm.length <= 2 && (
+                                                <p className="text-[10px] text-prevenort-text/30 text-center py-4 italic">Escribe al menos 3 caracteres para buscar...</p>
+                                            )}
                                         </div>
                                     </div>
                                 )}

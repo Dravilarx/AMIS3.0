@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown } from 'lucide-react';
+import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
 import { useProfessionals } from '../../hooks/useProfessionals';
@@ -21,6 +21,7 @@ export const ProfessionalMatrix: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProfessional, setCurrentProfessional] = useState<Professional | null>(null);
     const [isBulkOpen, setIsBulkOpen] = useState(false);
+    const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
     // ── Filtros ──
     const [filterRole, setFilterRole] = useState<string>('all');
@@ -509,12 +510,16 @@ export const ProfessionalMatrix: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-3 min-w-0" onClick={() => handleEdit(prof)}>
                                         <div className={cn(
-                                            "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold",
+                                            "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold overflow-hidden",
                                             isActive
                                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                                                 : "bg-red-500/10 text-red-400 border border-red-500/30"
                                         )}>
-                                            {prof.name[0]}
+                                            {prof.photoUrl ? (
+                                                <img src={prof.photoUrl} alt={prof.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                prof.name[0]
+                                            )}
                                         </div>
                                         <div className="min-w-0">
                                             <p className={cn(
@@ -581,14 +586,23 @@ export const ProfessionalMatrix: React.FC = () => {
                                 <div className="flex flex-col space-y-4" onClick={() => handleEdit(prof)}>
                                     <div className="flex items-start justify-between">
                                         <div className="relative">
-                                            <div className={cn(
-                                                "w-12 h-12 rounded-full bg-gradient-to-br from-prevenort-surface to-prevenort-surface/50 flex items-center justify-center text-xl font-bold text-prevenort-text",
-                                                isActive
-                                                    ? "border-2 border-emerald-500/50"
-                                                    : "border-2 border-red-500/50"
-                                            )}>
-                                                {prof.name[0]}
-                                            </div>
+                                            {prof.photoUrl ? (
+                                                <img
+                                                    src={prof.photoUrl}
+                                                    alt={prof.name}
+                                                    className={cn("w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity", isActive ? "border-2 border-emerald-500/50" : "border-2 border-red-500/50")}
+                                                    onClick={(e) => { e.stopPropagation(); setViewingPhoto(prof.photoUrl!); }}
+                                                />
+                                            ) : (
+                                                <div className={cn(
+                                                    "w-12 h-12 rounded-full bg-gradient-to-br from-prevenort-surface to-prevenort-surface/50 flex items-center justify-center text-xl font-bold text-prevenort-text",
+                                                    isActive
+                                                        ? "border-2 border-emerald-500/50"
+                                                        : "border-2 border-red-500/50"
+                                                )}>
+                                                    {prof.name[0]}
+                                                </div>
+                                            )}
                                             <span className={cn(
                                                 "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-prevenort-bg",
                                                 isActive ? "bg-emerald-500" : "bg-red-500"
@@ -603,6 +617,16 @@ export const ProfessionalMatrix: React.FC = () => {
                                             )}>
                                                 {isActive ? '● ACTIVO' : '● INACTIVO'}
                                             </span>
+                                            {prof.infoStatus === 'complete' ? (
+                                                <span className="text-[9px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Info Completa</span>
+                                            ) : (
+                                                <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Info Incompleta</span>
+                                            )}
+                                            {prof.isVerified && (
+                                                <span className="flex items-center gap-1 text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                    <CheckCircle2 className="w-3 h-3" /> Verificado
+                                                </span>
+                                            )}
                                             {prof.contracts?.[0] && (
                                                 <span className="text-[10px] font-bold text-info bg-info/10 px-2 py-0.5 rounded uppercase tracking-wider">
                                                     {prof.contracts[0].company}
@@ -736,6 +760,20 @@ export const ProfessionalMatrix: React.FC = () => {
                         return { total: rows.length, success, failed, errors };
                     }}
                 />
+            )}
+
+            {/* Modal superpuesto para ver foto grande */}
+            {viewingPhoto && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setViewingPhoto(null)}>
+                    <div className="relative max-w-2xl max-h-[80vh] bg-prevenort-surface rounded-2xl overflow-hidden border border-prevenort-border shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            <button onClick={() => setViewingPhoto(null)} className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <img src={viewingPhoto} alt="Fotografía del Profesional" className="w-full h-full object-contain max-h-[80vh] scale-100" />
+                    </div>
+                </div>
             )}
         </div>
     );

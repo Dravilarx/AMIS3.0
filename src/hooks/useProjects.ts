@@ -45,19 +45,35 @@ export const useProjects = () => {
     };
 
     const addProject = async (project: Partial<Project>) => {
-        const { error } = await supabase.from('projects').insert([{
+        // Obtenemos al usuario local si managerId falla
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const { data: insertedProject, error } = await supabase.from('projects').insert([{
             id: project.id,
             name: project.name,
             holding_id: project.holdingId,
-            manager_id: project.managerId,
+            manager_id: project.managerId || user?.id,
             status: project.status,
             progress: project.progress || 0,
             privacy_level: project.privacyLevel,
             start_date: project.startDate,
             tender_id: project.tenderId,
             tags: project.tags
-        }]);
-        if (!error) fetchProjects();
+        }]).select().single();
+
+        if (!error) {
+            fetchProjects();
+
+            // Generar el canal de comunicación automáticamente asociado al proyecto
+            if (insertedProject) {
+                await supabase.from('channels').insert([{
+                    name: insertedProject.name,
+                    type: 'project',
+                    is_ephemeral: false,
+                    created_by: insertedProject.manager_id || user?.id
+                }]);
+            }
+        }
         return { success: !error, error };
     };
 
