@@ -183,7 +183,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 </header>
 
                 <div className="p-10 flex-1">
-                    <div className="max-w-7xl mx-auto">
+                    <div className="w-full mx-auto">
                         {children}
                     </div>
                 </div>

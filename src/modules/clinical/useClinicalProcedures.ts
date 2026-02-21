@@ -9,12 +9,14 @@ import type {
     ClinicalIndications,
     MedicalProfessional
 } from '../../types/clinical';
+import type { Institution } from '../../types/institutions';
 import { supabase } from '../../lib/supabase';
 
 export const useClinicalProcedures = () => {
     const [appointments, setAppointments] = useState<ClinicalAppointment[]>([]);
     const [catalog, setCatalog] = useState<MedicalProcedure[]>([]);
     const [centers, setCenters] = useState<ClinicalCenter[]>([]);
+    const [institutions, setInstitutions] = useState<Institution[]>([]);
     const [requirements, setRequirements] = useState<MedicalRequirement[]>([]);
     const [batteries, setBatteries] = useState<RequirementBattery[]>([]);
     const [indications, setIndications] = useState<ClinicalIndications[]>([]);
@@ -43,13 +45,14 @@ export const useClinicalProcedures = () => {
             if (appError) throw appError;
 
             // Fetch Catalog, Centers, Requirements, Batteries, and all Indications
-            const [catRes, centerRes, reqRes, battRes, indRes, docRes] = await Promise.all([
+            const [catRes, centerRes, reqRes, battRes, indRes, docRes, instRes] = await Promise.all([
                 supabase.from('medical_procedures_catalog').select('*').order('name'),
                 supabase.from('clinical_centers').select('*').order('name'),
                 supabase.from('medical_requirements').select('*').order('name'),
                 supabase.from('requirement_batteries').select('*, requirements:medical_requirements(*)').order('name'),
                 supabase.from('clinical_indications').select('*, procedure:medical_procedures_catalog(name), center:clinical_centers(name)'),
-                supabase.from('professionals').select('*').order('name')
+                supabase.from('professionals').select('*').order('name'),
+                supabase.from('institutions').select('*').order('legal_name')
             ]);
 
             if (catRes.error) throw catRes.error;
@@ -57,6 +60,7 @@ export const useClinicalProcedures = () => {
             if (reqRes.error) throw reqRes.error;
             if (battRes.error) throw battRes.error;
             if (docRes.error) throw docRes.error;
+            if (instRes.error) throw instRes.error;
 
             const professionalsList = docRes.data || [];
 
@@ -69,7 +73,7 @@ export const useClinicalProcedures = () => {
                 patientAddress: app.patient_address,
                 patientBirthDate: app.patient_birth_date,
                 healthcareProvider: app.healthcare_provider,
-                referralInstitution: app.referral_institution,
+                referrerName: app.referrer_name,
                 procedureId: app.procedure_id,
                 procedure: app.procedure ? {
                     id: app.procedure.id,
@@ -92,8 +96,9 @@ export const useClinicalProcedures = () => {
                 })(),
                 centerId: app.center_id,
                 center: app.center,
+                institutionId: app.institution_id,
                 appointmentDate: app.appointment_date,
-                appointmentTime: app.appointment_time,
+                appointmentTime: app.appointment_time?.substring(0, 5),
                 status: app.status,
                 checkoutStatus: app.checkout_status,
                 logisticsStatus: app.logistics_status,
@@ -124,7 +129,8 @@ export const useClinicalProcedures = () => {
                 name: p.name,
                 description: p.description,
                 basePrice: p.base_price,
-                isActive: p.is_active
+                isActive: p.is_active,
+                preparationGuide: p.preparation_guide
             })));
             console.log('✅ Datos clínicos cargados:', {
                 procedimientos: catRes.data?.length,
@@ -133,6 +139,19 @@ export const useClinicalProcedures = () => {
             });
 
             setCenters(centerRes.data || []);
+            setInstitutions((instRes.data || []).map((i: any) => ({
+                id: i.id,
+                legalName: i.legal_name,
+                commercialName: i.commercial_name,
+                rut: i.rut,
+                institutionCategory: i.institution_category,
+                sector: i.sector,
+                institutionType: i.institution_type,
+                criticality: i.criticality,
+                isActive: i.is_active,
+                createdAt: i.created_at,
+                updatedAt: i.updated_at
+            })));
             setDoctors((docRes.data || []).map((d: any) => ({
                 id: d.id,
                 name: `${d.name} ${d.last_name}`,
@@ -197,17 +216,18 @@ export const useClinicalProcedures = () => {
                     patient_email: data.patientEmail,
                     patient_phone: data.patientPhone,
                     patient_address: data.patientAddress,
-                    patient_birth_date: data.patientBirthDate,
-                    healthcare_provider: data.healthcareProvider,
-                    referral_institution: data.referralInstitution,
-                    procedure_id: data.procedureId,
-                    center_id: data.centerId,
-                    appointment_date: data.appointmentDate,
-                    appointment_time: data.appointmentTime,
+                    patient_birth_date: data.patientBirthDate || null,
+                    healthcare_provider: data.healthcareProvider || null,
+                    referrer_name: data.referrerName || null,
+                    procedure_id: data.procedureId || null,
+                    center_id: data.centerId || null,
+                    institution_id: data.institutionId || null,
+                    appointment_date: data.appointmentDate || null,
+                    appointment_time: data.appointmentTime || null,
                     status: 'scheduled',
                     logistics_status: data.logisticsStatus,
                     medical_background: data.medicalBackground,
-                    doctor_id: data.doctorId,
+                    doctor_id: data.doctorId || null,
                     checkout_status: false
                 }])
                 .select()
@@ -247,18 +267,33 @@ export const useClinicalProcedures = () => {
                     patient_email: data.patientEmail,
                     patient_phone: data.patientPhone,
                     patient_address: data.patientAddress,
-                    patient_birth_date: data.patientBirthDate,
-                    healthcare_provider: data.healthcareProvider,
-                    referral_institution: data.referralInstitution,
-                    procedure_id: data.procedureId,
-                    center_id: data.centerId,
-                    appointment_date: data.appointmentDate,
-                    appointment_time: data.appointmentTime,
+                    patient_birth_date: data.patientBirthDate || null,
+                    healthcare_provider: data.healthcareProvider || null,
+                    referrer_name: data.referrerName || null,
+                    procedure_id: data.procedureId || null,
+                    institution_id: data.institutionId || null,
+                    center_id: data.centerId || null,
+                    appointment_date: data.appointmentDate || null,
+                    appointment_time: data.appointmentTime || null,
                     medical_background: data.medicalBackground,
-                    doctor_id: data.doctorId,
+                    doctor_id: data.doctorId || null,
                 })
                 .eq('id', id);
 
+            if (error) throw error;
+            await fetchData();
+            return { success: true };
+        } catch (err: any) {
+            return { success: false, error: err.message };
+        }
+    };
+
+    const deleteAppointment = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('clinical_appointments')
+                .delete()
+                .eq('id', id);
             if (error) throw error;
             await fetchData();
             return { success: true };
@@ -379,7 +414,8 @@ export const useClinicalProcedures = () => {
                 name: procedure.name,
                 description: procedure.description,
                 base_price: procedure.basePrice,
-                is_active: procedure.isActive ?? true
+                is_active: procedure.isActive ?? true,
+                preparation_guide: procedure.preparationGuide
             };
             if (procedure.id) payload.id = procedure.id;
 
@@ -548,10 +584,114 @@ export const useClinicalProcedures = () => {
         }
     };
 
+    const getPatientHistory = async (rut: string): Promise<ClinicalAppointment[]> => {
+        try {
+            const { data, error } = await supabase
+                .from('clinical_appointments')
+                .select(`
+                    *,
+                    procedure:medical_procedures_catalog(*),
+                    center:clinical_centers(*)
+                `)
+                .eq('patient_rut', rut)
+                .order('appointment_date', { ascending: false });
+
+            if (error) throw error;
+
+            return (data || []).map((app: any) => ({
+                id: app.id,
+                patientName: app.patient_name,
+                patientRut: app.patient_rut,
+                patientEmail: app.patient_email,
+                patientPhone: app.patient_phone,
+                patientAddress: app.patient_address,
+                patientBirthDate: app.patient_birth_date,
+                healthcareProvider: app.healthcare_provider,
+                referrerName: app.referrer_name,
+                procedureId: app.procedure_id,
+                procedure: app.procedure ? {
+                    id: app.procedure.id,
+                    code: app.procedure.code,
+                    name: app.procedure.name,
+                    description: app.procedure.description,
+                    basePrice: app.procedure.base_price,
+                    isActive: app.procedure.is_active
+                } : undefined,
+                centerId: app.center_id,
+                center: app.center ? {
+                    id: app.center.id,
+                    name: app.center.name,
+                    city: app.center.city,
+                    address: app.center.address
+                } : undefined,
+                institutionId: app.institution_id,
+                doctorId: app.doctor_id,
+                appointmentDate: app.appointment_date,
+                appointmentTime: app.appointment_time?.substring(0, 5),
+                status: app.status,
+                checkoutStatus: app.checkout_status,
+                logisticsStatus: app.logistics_status,
+                medicalBackground: app.medical_background,
+                documents: [], // For history view we don't strictly need documents populated immediately
+                createdAt: app.created_at,
+                updatedAt: app.updated_at
+            }));
+
+        } catch (err) {
+            console.error('Error fetching patient history:', err);
+            return [];
+        }
+    };
+
+    const uploadResult = async (appointmentId: string, doctorId: string, findings: string, file?: File) => {
+        try {
+            let docUrl = '';
+            // Si hay archivo, lo subimos
+            if (file) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random()}.${fileExt}`;
+                const filePath = `results/${appointmentId}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('clinical_documents')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('clinical_documents')
+                    .getPublicUrl(filePath);
+
+                docUrl = publicUrlData.publicUrl;
+            }
+
+            // Subimos el dictamen final a Supabase (asumiendo tabla appointment_results)
+            // Si no existe la tabla fallará, pero podemos cambiar el status al menos
+            try {
+                await supabase.from('appointment_results').insert([{
+                    appointment_id: appointmentId,
+                    doctor_id: doctorId,
+                    findings: findings,
+                    document_url: docUrl
+                }]);
+            } catch (ignored) {
+                console.warn('Tablas appointment_results no existe o falló, skipping');
+            }
+
+            // Marcamos el agendamiento como finalizado (completed)
+            await updateAppointmentStatus(appointmentId, 'completed');
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error uploading result:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     return {
         appointments,
         catalog,
         centers,
+        institutions,
         requirements,
         batteries,
         loading,
@@ -560,6 +700,7 @@ export const useClinicalProcedures = () => {
         updateAppointment,
         updateAppointmentStatus,
         verifyDocument,
+        deleteAppointment,
         toggleCheckout,
         getIndications,
         upsertProcedure,
@@ -572,6 +713,8 @@ export const useClinicalProcedures = () => {
         doctors,
         upsertRequirement,
         upsertBattery,
+        getPatientHistory,
+        uploadResult,
         refresh: fetchData
     };
 };

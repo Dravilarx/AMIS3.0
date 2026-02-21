@@ -4,7 +4,7 @@ import {
     ClipboardCheck,
     MessageSquare,
     Mail,
-    Copy,
+    Phone,
     CheckCircle2,
     AlertCircle,
     Clock,
@@ -17,7 +17,9 @@ import {
     Upload,
     ExternalLink,
     ShieldCheck,
-    XCircle
+    XCircle,
+    History,
+    UploadCloud
 } from 'lucide-react';
 import { type ClinicalAppointment, type ClinicalIndications } from '../../types/clinical';
 import { cn, formatRUT, formatName, formatPhone } from '../../lib/utils';
@@ -30,6 +32,8 @@ interface ProcedureDetailsPanelProps {
     onGetIndications: (procedureId: string, centerId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
     onUpdateStatus: (id: string, status: any) => Promise<{ success: boolean; error?: string }>;
     onEdit?: (appointment: ClinicalAppointment) => void;
+    onGetHistory: (rut: string) => Promise<ClinicalAppointment[]>;
+    onUploadResult: (appointmentId: string, doctorId: string, findings: string, file?: File) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
@@ -39,19 +43,32 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     onVerifyDoc,
     onGetIndications,
     onUpdateStatus,
-    onEdit
+    onEdit,
+    onGetHistory,
+    onUploadResult
 }) => {
     const [indications, setIndications] = useState<ClinicalIndications | null>(null);
     const [loadingInd, setLoadingInd] = useState(false);
     const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null);
     const [isFinishing, setIsFinishing] = useState(false);
     const [copiedType, setCopiedType] = useState<'wa' | 'email' | null>(null);
+    const [sentStatus, setSentStatus] = useState<{ wa: boolean, email: boolean }>({ wa: false, email: false });
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+    // Patient History states
+    const [history, setHistory] = useState<ClinicalAppointment[]>([]);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    // Upload Results states
+    const [uploadingResult, setUploadingResult] = useState(false);
+    const [resultFile, setResultFile] = useState<File | null>(null);
+    const [findings, setFindings] = useState('');
 
     useEffect(() => {
         if (isOpen && appointment) {
             setLoadingInd(true);
-            onGetIndications(appointment.procedureId, appointment.centerId)
+            onGetIndications(appointment.procedureId, appointment.centerId || '')
                 .then(res => {
                     if (res.success && res.data) setIndications(res.data);
                     else setIndications(null);
@@ -67,6 +84,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     const handleCopy = (text: string, type: 'wa' | 'email') => {
         navigator.clipboard.writeText(text);
         setCopiedType(type);
+        setSentStatus(prev => ({ ...prev, [type]: true }));
         setTimeout(() => setCopiedType(null), 2000);
     };
 
@@ -125,13 +143,17 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
         if (appointment.medicalBackground?.usesAnticoagulants) medicalAlerts.push('USA ANTICOAGULANTES');
         const alertText = medicalAlerts.length > 0 ? ` [ALERTA: ${medicalAlerts.join(' / ')}] ` : '';
 
+        const publicUrl = `${window.location.origin}/guia/${appointment.id}`;
+        const accessMessage = `\n\nPuedes acceder a la información detallada y de preparación para tu procedimiento en el siguiente enlace:\n${publicUrl}`;
+
         return text
-            .replace('{paciente}', formatName(appointment.patientName))
-            .replace('{procedimiento}', appointment.procedure?.name || '')
-            .replace('{fecha}', appointment.appointmentDate)
-            .replace('{hora}', appointment.appointmentTime)
-            .replace('{sede}', appointment.center?.name || '')
-            .replace('{alertas}', alertText);
+            .replace(/\\n/g, '\n') // Fix literal \n coming from DB
+            .replace(/{paciente}/g, formatName(appointment.patientName))
+            .replace(/{procedimiento}/g, appointment.procedure?.name || '')
+            .replace(/{fecha}/g, appointment.appointmentDate)
+            .replace(/{hora}/g, appointment.appointmentTime)
+            .replace(/{sede}/g, appointment.center?.name || '')
+            .replace(/{alertas}/g, alertText) + accessMessage;
     };
 
     const waText = indications?.whatsappFormat ? formatIndication(indications.whatsappFormat) : '';
@@ -151,6 +173,15 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    <a
+                        href={`/guia/${appointment.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 p-3 bg-prevenort-surface border border-prevenort-border/50 text-prevenort-text/60 hover:text-prevenort-primary rounded-2xl hover:border-prevenort-primary/40 transition-all shadow-sm group"
+                        title="Ver Guía Pública del Paciente"
+                    >
+                        <ExternalLink className="w-5 h-5 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform duration-300" />
+                    </a>
                     {onEdit && (
                         <button
                             onClick={() => onEdit(appointment)}
@@ -168,11 +199,11 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
 
             <div className="flex-1 overflow-y-auto p-8 space-y-12 scrollbar-hide pb-32">
                 {/* Patient Summary Card */}
-                <div className="flex items-center gap-6 p-8 bg-prevenort-bg border border-prevenort-border rounded-[2rem] shadow-sm">
+                <div className="flex items-center gap-6 p-8 bg-prevenort-bg border border-prevenort-border rounded-[2rem] shadow-sm relative overflow-hidden">
                     <div className="w-16 h-16 rounded-2xl bg-prevenort-surface border border-prevenort-border flex items-center justify-center shadow-sm">
                         <User className="w-8 h-8 text-prevenort-primary" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tight">{formatName(appointment.patientName)}</h3>
                         <p className="text-[11px] text-prevenort-text/40 font-bold uppercase tracking-wider mt-1">
                             {formatRUT(appointment.patientRut)} <span className="mx-2 opacity-30">|</span> {appointment.patientEmail}
@@ -181,6 +212,63 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-widest mt-2">{formatPhone(appointment.patientPhone)}</p>
                         )}
                     </div>
+                    <button
+                        onClick={async () => {
+                            setLoadingHistory(true);
+                            setIsHistoryOpen(true);
+                            try {
+                                const data = await onGetHistory(appointment.patientRut);
+                                setHistory(data);
+                            } finally {
+                                setLoadingHistory(false);
+                            }
+                        }}
+                        className="px-6 py-4 bg-prevenort-surface border border-prevenort-border hover:bg-prevenort-bg rounded-2xl transition-all shadow-sm flex items-center gap-3 group"
+                    >
+                        <History className="w-5 h-5 text-prevenort-text/40 group-hover:text-prevenort-primary transition-colors" />
+                        <div className="text-left hidden md:block">
+                            <p className="text-[10px] font-black text-prevenort-text uppercase tracking-widest">Historial</p>
+                            <p className="text-[9px] text-prevenort-text/40 font-bold uppercase tracking-tighter">Clínico AMIS</p>
+                        </div>
+                    </button>
+
+                    {/* Absolute History Overlay */}
+                    {isHistoryOpen && (
+                        <div className="absolute inset-0 bg-prevenort-surface/95 backdrop-blur-xl z-50 flex flex-col pt-8 pb-4 px-8 overflow-hidden rounded-[2rem] shadow-2xl animate-in zoom-in-95 duration-200 border border-prevenort-border">
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-3">
+                                    <History className="w-5 h-5 text-prevenort-primary" />
+                                    <h4 className="text-[11px] font-black text-prevenort-text uppercase tracking-[0.2em]">Historial del Paciente</h4>
+                                </div>
+                                <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/40 hover:text-danger transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pb-8">
+                                {loadingHistory ? (
+                                    <div className="flex justify-center p-12">
+                                        <Loader2 className="w-8 h-8 animate-spin text-prevenort-primary" />
+                                    </div>
+                                ) : history.length === 0 ? (
+                                    <p className="text-center text-[10px] uppercase font-black tracking-widest text-prevenort-text/20 p-8">No hay atenciones previas.</p>
+                                ) : (
+                                    history.map(h => (
+                                        <div key={h.id} className="p-4 bg-prevenort-bg border border-prevenort-border rounded-2xl flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[11px] font-black text-prevenort-text uppercase">{h.procedure?.name}</p>
+                                                <p className="text-[10px] text-prevenort-text/40 font-bold mt-1">
+                                                    {new Date(h.appointmentDate).toLocaleDateString('es-CL')} - {h.center?.name || 'Sede'}
+                                                </p>
+                                            </div>
+                                            <span className={cn("px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg", h.status === 'completed' ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>
+                                                {h.status}
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Grid Details */}
@@ -261,14 +349,14 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                     "p-6 rounded-[1.5rem] border transition-all group shadow-sm",
                                     doc.verified
                                         ? "bg-success/10 border-success/20"
-                                        : "bg-prevenort-surface border-prevenort-border hover:border-prevenort-primary/30"
+                                        : "bg-prevenort-primary/10 border-prevenort-primary/20 hover:border-prevenort-primary/30"
                                 )}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-5">
                                         <div className={cn(
                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
-                                            doc.verified ? "bg-success text-white" : "bg-prevenort-bg text-prevenort-text/20"
+                                            doc.verified ? "bg-success text-white shadow-success/20" : "bg-prevenort-primary shadow-lg shadow-orange-500/20 text-white"
                                         )}>
                                             {doc.verified ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                                         </div>
@@ -314,10 +402,26 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                             </>
                                         ) : (
                                             /* Not verified — show VALIDAR dropdown */
-                                            <div className="relative">
+                                            <div className="flex items-center gap-2 relative">
+                                                {doc.documentUrl && (
+                                                    <a
+                                                        href={doc.documentUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-3 rounded-2xl bg-prevenort-primary/10 text-prevenort-primary hover:bg-prevenort-primary hover:text-white transition-all shadow-sm animate-pulse"
+                                                        title="Documento subido por el paciente"
+                                                    >
+                                                        <ExternalLink className="w-5 h-5" />
+                                                    </a>
+                                                )}
                                                 <button
                                                     onClick={() => setOpenDropdownId(openDropdownId === doc.id ? null : doc.id)}
-                                                    className="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-prevenort-bg text-prevenort-text/40 hover:bg-prevenort-primary hover:text-white transition-all border border-prevenort-border hover:border-prevenort-primary"
+                                                    className={cn(
+                                                        "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border shadow-sm",
+                                                        openDropdownId === doc.id
+                                                            ? "bg-prevenort-primary text-white border-prevenort-primary"
+                                                            : "bg-prevenort-surface text-prevenort-text/40 border-prevenort-primary/30 hover:bg-prevenort-primary hover:text-white hover:border-prevenort-primary/50"
+                                                    )}
                                                 >
                                                     VALIDAR
                                                 </button>
@@ -388,23 +492,46 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                     ) : indications ? (
                         <div className="space-y-6">
                             {/* WhatsApp Short */}
-                            <div className="group relative bg-success/10 border border-success/20 rounded-[2.5rem] overflow-hidden hover:bg-success/20 transition-all shadow-sm">
+                            <div className={cn(
+                                "group relative border rounded-[2.5rem] overflow-hidden transition-all shadow-sm",
+                                sentStatus.wa
+                                    ? "bg-success/10 border-success/20 hover:bg-success/20"
+                                    : "bg-prevenort-primary/10 border-prevenort-primary/20 hover:bg-prevenort-primary/20"
+                            )}>
                                 <div className="p-8">
                                     <div className="flex items-center justify-between mb-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-2xl bg-success flex items-center justify-center shadow-lg shadow-success/20">
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
+                                                sentStatus.wa ? "bg-success shadow-success/20" : "bg-prevenort-primary shadow-orange-500/20"
+                                            )}>
                                                 <MessageSquare className="w-5 h-5 text-white" />
                                             </div>
-                                            <span className="text-[10px] font-black text-success uppercase tracking-[0.2em]">Canal WhatsApp</span>
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-[0.2em] transition-colors",
+                                                sentStatus.wa ? "text-success" : "text-prevenort-primary"
+                                            )}>Canal WhatsApp</span>
                                         </div>
                                         <button
-                                            onClick={() => handleCopy(waText, 'wa')}
-                                            className="p-3 bg-prevenort-surface border border-success/20 rounded-2xl transition-all shadow-sm text-prevenort-text/20 hover:text-success"
+                                            onClick={() => {
+                                                handleCopy(waText, 'wa');
+                                                window.open(`https://wa.me/${appointment.patientPhone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(waText)}`, '_blank');
+                                            }}
+                                            className={cn(
+                                                "p-3 bg-prevenort-surface border rounded-2xl transition-all shadow-sm flex items-center gap-2",
+                                                sentStatus.wa ? "border-success/20 text-success hover:bg-success/10" : "border-prevenort-primary/20 text-prevenort-primary hover:bg-prevenort-primary/10"
+                                            )}
                                         >
-                                            {copiedType === 'wa' ? <CheckCircle2 className="w-5 h-5 text-success" /> : <Copy className="w-5 h-5" />}
+                                            <span className="text-[10px] font-black uppercase tracking-widest px-2">
+                                                {sentStatus.wa ? 'Reenviar' : 'Enviar'}
+                                            </span>
+                                            {copiedType === 'wa' ? <CheckCircle2 className={cn("w-5 h-5", sentStatus.wa ? "text-success" : "text-prevenort-primary")} /> : <Phone className="w-4 h-4" />}
                                         </button>
                                     </div>
-                                    <div className="p-6 bg-prevenort-surface rounded-3xl border border-success/20 shadow-inner">
+                                    <div className={cn(
+                                        "p-6 bg-prevenort-surface rounded-3xl border shadow-inner transition-colors",
+                                        sentStatus.wa ? "border-success/20" : "border-prevenort-primary/20"
+                                    )}>
                                         <p className="text-[11px] text-prevenort-text/60 whitespace-pre-wrap font-medium leading-relaxed italic">
                                             {waText}
                                         </p>
@@ -413,23 +540,46 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             </div>
 
                             {/* Email Detailed */}
-                            <div className="group relative bg-prevenort-primary/10 border border-prevenort-primary/20 rounded-[2.5rem] overflow-hidden hover:bg-prevenort-primary/20 transition-all shadow-sm">
+                            <div className={cn(
+                                "group relative border rounded-[2.5rem] overflow-hidden transition-all shadow-sm",
+                                sentStatus.email
+                                    ? "bg-success/10 border-success/20 hover:bg-success/20"
+                                    : "bg-prevenort-primary/10 border-prevenort-primary/20 hover:bg-prevenort-primary/20"
+                            )}>
                                 <div className="p-8">
                                     <div className="flex items-center justify-between mb-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-2xl bg-prevenort-primary flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
+                                                sentStatus.email ? "bg-success shadow-success/20" : "bg-prevenort-primary shadow-orange-500/20"
+                                            )}>
                                                 <Mail className="w-5 h-5 text-white" />
                                             </div>
-                                            <span className="text-[10px] font-black text-prevenort-primary uppercase tracking-[0.2em]">Canal Email</span>
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-[0.2em] transition-colors",
+                                                sentStatus.email ? "text-success" : "text-prevenort-primary"
+                                            )}>Canal Email</span>
                                         </div>
                                         <button
-                                            onClick={() => handleCopy(emailText, 'email')}
-                                            className="p-3 bg-prevenort-surface border border-prevenort-primary/20 rounded-2xl transition-all shadow-sm text-prevenort-text/20 hover:text-prevenort-primary"
+                                            onClick={() => {
+                                                handleCopy(emailText, 'email');
+                                                window.open(`mailto:${appointment.patientEmail || ''}?subject=${encodeURIComponent(`Indicaciones de Preparación - ${appointment.procedure?.name}`)}&body=${encodeURIComponent(emailText)}`);
+                                            }}
+                                            className={cn(
+                                                "p-3 bg-prevenort-surface border rounded-2xl transition-all shadow-sm flex items-center gap-2",
+                                                sentStatus.email ? "border-success/20 text-success hover:bg-success/10" : "border-prevenort-primary/20 text-prevenort-primary hover:bg-prevenort-primary/10"
+                                            )}
                                         >
-                                            {copiedType === 'email' ? <CheckCircle2 className="w-5 h-5 text-prevenort-primary" /> : <Copy className="w-5 h-5" />}
+                                            <span className="text-[10px] font-black uppercase tracking-widest px-2">
+                                                {sentStatus.email ? 'Reenviar' : 'Enviar'}
+                                            </span>
+                                            {copiedType === 'email' ? <CheckCircle2 className={cn("w-5 h-5", sentStatus.email ? "text-success" : "text-prevenort-primary")} /> : <Mail className="w-4 h-4" />}
                                         </button>
                                     </div>
-                                    <div className="p-6 bg-prevenort-surface rounded-3xl border border-prevenort-primary/20 shadow-inner max-h-48 overflow-y-auto scrollbar-hide">
+                                    <div className={cn(
+                                        "p-6 bg-prevenort-surface rounded-3xl border shadow-inner max-h-48 overflow-y-auto scrollbar-hide transition-colors",
+                                        sentStatus.email ? "border-success/20" : "border-prevenort-primary/20"
+                                    )}>
                                         <p className="text-[11px] text-prevenort-text/60 whitespace-pre-wrap font-medium leading-relaxed">
                                             {emailText}
                                         </p>
@@ -444,6 +594,67 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             <button className="mt-6 px-8 py-3 bg-prevenort-surface border border-prevenort-border text-prevenort-text/40 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-prevenort-primary hover:text-white hover:border-prevenort-primary transition-all shadow-sm">Configurar Sede</button>
                         </div>
                     )}
+                </div>
+
+                {/* Section Result / Finale */}
+                <div className="space-y-6 pt-10 border-t border-prevenort-border">
+                    <div className="flex items-center justify-between border-b border-prevenort-border pb-3">
+                        <div className="flex items-center gap-3">
+                            <UploadCloud className="w-5 h-5 text-prevenort-primary" />
+                            <h4 className="text-[11px] font-black text-prevenort-text/40 uppercase tracking-[0.25em]">Resultados y Entrega Final</h4>
+                        </div>
+                    </div>
+
+                    <div className="p-8 bg-prevenort-surface border border-prevenort-border rounded-[2rem] shadow-sm space-y-6">
+                        <div className="space-y-2.5">
+                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Subir Archivo de Resultados (Opcional)</label>
+                            <input
+                                type="file"
+                                onChange={(e) => setResultFile(e.target.files?.[0] || null)}
+                                className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text focus:border-prevenort-primary transition-all file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:uppercase file:font-black file:tracking-widest file:bg-prevenort-primary/10 file:text-prevenort-primary hover:file:bg-prevenort-primary/20"
+                            />
+                        </div>
+                        <div className="space-y-2.5">
+                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Dictamen o Conclusiones</label>
+                            <textarea
+                                value={findings}
+                                onChange={(e) => setFindings(e.target.value)}
+                                className="w-full h-32 bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text focus:border-prevenort-primary transition-all"
+                                placeholder="Describa el resultado del procedimiento..."
+                            />
+                        </div>
+                        <button
+                            disabled={uploadingResult || appointment.status === 'completed'}
+                            onClick={async () => {
+                                setUploadingResult(true);
+                                try {
+                                    const res = await onUploadResult(
+                                        appointment.id,
+                                        appointment.doctorId,
+                                        findings,
+                                        resultFile || undefined
+                                    );
+                                    if (res.success) {
+                                        alert("Resultados guardados, procedimiento finalizado exitosamente.");
+                                        onClose();
+                                    } else {
+                                        alert("Error: " + res.error);
+                                    }
+                                } finally {
+                                    setUploadingResult(false);
+                                }
+                            }}
+                            className={cn(
+                                "w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3",
+                                appointment.status === 'completed'
+                                    ? "bg-success/20 text-success border border-success/30"
+                                    : "bg-prevenort-primary text-white hover:brightness-110 shadow-xl shadow-orange-500/20"
+                            )}
+                        >
+                            {uploadingResult ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                            {appointment.status === 'completed' ? 'Finalizado' : 'Guardar Resultados y Finalizar'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

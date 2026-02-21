@@ -15,9 +15,14 @@ import { AdminModule } from './modules/admin/AdminModule'
 import { InstitutionsDashboard } from './modules/institutions/InstitutionsDashboard'
 import { NewsFeed } from './modules/news/NewsFeed'
 import { StatMultirisModule } from './modules/stat-multiris/StatMultirisModule'
+import { PatientGuideView } from './modules/clinical/PatientGuideView'
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris'>('dashboard');
+
+  if (window.location.pathname.startsWith('/guia/')) {
+    return <PatientGuideView />;
+  }
 
 
   const renderView = () => {

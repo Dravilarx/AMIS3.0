@@ -18,7 +18,9 @@ import {
     Sparkles,
     Activity as ActivityIcon,
     Settings2,
-    Book
+    Book,
+    Pencil,
+    Trash2
 } from 'lucide-react';
 import { cn, formatRUT, formatName } from '../../lib/utils';
 import { useClinicalProcedures } from './useClinicalProcedures';
@@ -41,6 +43,7 @@ export const ClinicalWorkflowView: React.FC = () => {
         appointments,
         catalog,
         centers,
+        institutions,
         loading,
         error: fetchError,
         addAppointment,
@@ -58,8 +61,11 @@ export const ClinicalWorkflowView: React.FC = () => {
         deleteRequirement,
         deleteBattery,
         deleteIndications,
+        deleteAppointment,
         indications,
-        doctors
+        doctors,
+        getPatientHistory,
+        uploadResult
     } = useClinicalProcedures();
 
     const [activeTab, setActiveTab] = useState<string>('agenda');
@@ -68,7 +74,17 @@ export const ClinicalWorkflowView: React.FC = () => {
     const [selectedApp, setSelectedApp] = useState<ClinicalAppointment | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [doctorFilter, setDoctorFilter] = useState('');
-    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'worklist'>('list');
+
+    const handleDeleteAppointment = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.confirm('¿Está seguro de eliminar de forma permanente este agendamiento?')) return;
+        try {
+            await deleteAppointment(id);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const filteredAppointments = appointments.filter(app => {
         const search = searchTerm.toLowerCase();
@@ -203,6 +219,17 @@ export const ClinicalWorkflowView: React.FC = () => {
                                     Lista
                                 </button>
                                 <button
+                                    onClick={() => setViewMode('worklist')}
+                                    className={cn(
+                                        "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                        viewMode === 'worklist'
+                                            ? "bg-prevenort-primary text-white shadow-lg shadow-orange-500/20 border border-prevenort-primary"
+                                            : "text-prevenort-text/40 hover:text-prevenort-text"
+                                    )}
+                                >
+                                    Worklist
+                                </button>
+                                <button
                                     onClick={() => setViewMode('calendar')}
                                     className={cn(
                                         "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
@@ -328,6 +355,24 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                     </div>
                                                     <div className="flex gap-3">
                                                         <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedApp(app);
+                                                                setIsModalOpen(true);
+                                                            }}
+                                                            className="p-4 bg-prevenort-surface border border-prevenort-border rounded-2xl hover:bg-white hover:text-black transition-all shadow-sm group/btn"
+                                                            title="Editar Agendamiento"
+                                                        >
+                                                            <Pencil className="w-4 h-4 text-prevenort-text/40 group-hover/btn:text-black" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleDeleteAppointment(app.id, e)}
+                                                            className="p-4 bg-prevenort-surface border border-prevenort-border rounded-2xl hover:bg-danger hover:border-danger hover:text-white transition-all shadow-sm group/btn"
+                                                            title="Eliminar Agendamiento"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 text-prevenort-text/40 group-hover/btn:text-white" />
+                                                        </button>
+                                                        <button
                                                             onClick={(e) => { e.stopPropagation(); }}
                                                             className="p-4 bg-prevenort-surface border border-prevenort-border rounded-2xl hover:bg-white hover:text-black transition-all shadow-sm"
                                                         >
@@ -350,6 +395,92 @@ export const ClinicalWorkflowView: React.FC = () => {
                                         </div>
                                     ))
                                 )
+                            ) : viewMode === 'worklist' ? (
+                                <div className="xl:col-span-2 overflow-x-auto card-premium p-0 border-prevenort-border scrollbar-hide">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-prevenort-border bg-prevenort-surface">
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Paciente</th>
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Fecha/Hora</th>
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Procedimiento / Médico</th>
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Institución / Centro</th>
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Estado</th>
+                                                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40 text-right">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredAppointments.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="py-12 text-center text-slate-400 uppercase font-black tracking-[0.2em] text-[11px]">
+                                                        No hay agendamientos para mostrar
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                filteredAppointments.map(app => (
+                                                    <tr key={app.id} className="border-b border-prevenort-border/50 hover:bg-prevenort-bg/30 transition-colors">
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-[12px] font-black text-prevenort-text">{formatName(app.patientName)}</p>
+                                                            <p className="text-[10px] text-prevenort-text/40 font-bold">{formatRUT(app.patientRut)}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-[12px] font-black text-prevenort-text">{new Date(app.appointmentDate).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' })}</p>
+                                                            <p className="text-[10px] text-prevenort-primary font-bold">{app.appointmentTime}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-[11px] font-black text-prevenort-text truncate max-w-[200px]" title={app.procedure?.name}>{app.procedure?.name}</p>
+                                                            <p className="text-[10px] text-prevenort-text/40 truncate max-w-[200px]">{app.doctor?.name || 'S/E'}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-[11px] font-black text-prevenort-text truncate max-w-[150px]">{institutions.find(i => i.id === app.institutionId)?.legalName || 'Mutuales'}</p>
+                                                            <p className="text-[10px] text-prevenort-text/40">{app.center?.name || 'Centro AMIS'}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <div className={cn(
+                                                                "inline-flex px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm",
+                                                                app.status === 'scheduled' ? "border-info/20 text-info bg-info/10" :
+                                                                    app.status === 'requirements_pending' ? "border-warning/20 text-warning bg-warning/10" :
+                                                                        "border-success/20 text-success bg-success/10"
+                                                            )}>
+                                                                {app.status.replace('_', ' ')}
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-4 px-6 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedApp(app);
+                                                                        setIsDetailsOpen(true);
+                                                                    }}
+                                                                    className="p-2 border border-prevenort-border rounded-lg text-prevenort-primary hover:bg-prevenort-primary hover:text-white transition-colors"
+                                                                    title="Ver Expediente"
+                                                                >
+                                                                    <Book className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedApp(app);
+                                                                        setIsModalOpen(true);
+                                                                    }}
+                                                                    className="p-2 border border-prevenort-border rounded-lg hover:bg-white hover:text-black transition-colors"
+                                                                    title="Editar"
+                                                                >
+                                                                    <Pencil className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => handleDeleteAppointment(app.id, e)}
+                                                                    className="p-2 border border-prevenort-border rounded-lg hover:bg-danger hover:border-danger hover:text-white transition-colors text-danger"
+                                                                    title="Eliminar"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             ) : (
                                 <div className="xl:col-span-2">
                                     <ClinicalCalendar
@@ -586,6 +717,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                 catalog={catalog}
                 centers={centers}
                 doctors={doctors}
+                institutions={institutions}
             />
 
             <ProcedureDetailsPanel
@@ -602,6 +734,8 @@ export const ClinicalWorkflowView: React.FC = () => {
                     setIsDetailsOpen(false);
                     setIsModalOpen(true);
                 }}
+                onGetHistory={getPatientHistory}
+                onUploadResult={uploadResult}
             />
         </div>
     );

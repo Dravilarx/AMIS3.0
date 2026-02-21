@@ -15,7 +15,8 @@ import {
     Copy,
     Activity,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -270,10 +271,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                         </div>
 
                         <div className="space-y-6">
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter flex items-center gap-2">
-                                <Layout className="w-5 h-5 text-amber-500" />
-                                Requisitos Maestros
-                            </h3>
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter flex items-center gap-2">
+                                    <Layout className="w-5 h-5 text-amber-500" />
+                                    Requisitos Maestros
+                                </h3>
+                                <button
+                                    onClick={() => setEditingRequirement({ name: '', description: '', requirementType: 'document', isMandatory: false })}
+                                    className="px-6 py-2.5 bg-prevenort-primary/10 hover:bg-prevenort-primary text-prevenort-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Crear Requisito
+                                </button>
+                            </div>
                             <div className="bg-prevenort-bg/50 rounded-3xl overflow-hidden border border-prevenort-border">
                                 <table className="w-full text-left">
                                     <thead className="bg-prevenort-bg/80">
@@ -592,11 +602,36 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Descripción</label>
+                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center gap-2">
+                                        Descripción
+                                    </label>
                                     <textarea
                                         value={editingProc.description || ''}
                                         onChange={(e) => setEditingProc({ ...editingProc, description: e.target.value })}
                                         className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center gap-2">
+                                            Guía de Preparación Pública (Portal Paciente AMIS)
+                                        </label>
+                                        {editingProc.id && (
+                                            <a
+                                                href={`/guia/${editingProc.id}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-[9px] font-bold text-prevenort-primary hover:underline flex items-center gap-1 uppercase tracking-widest"
+                                            >
+                                                Ver Vista Pública <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <textarea
+                                        value={editingProc.preparationGuide || ''}
+                                        onChange={(e) => setEditingProc({ ...editingProc, preparationGuide: e.target.value })}
+                                        placeholder="Ej: Ayuno de 8 horas, llegar 15 minutos antes... (Soporta saltos de línea y Markdown básico)"
+                                        className="w-full h-32 bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-medium outline-none focus:border-prevenort-primary transition-all leading-relaxed"
                                     />
                                 </div>
                             </div>

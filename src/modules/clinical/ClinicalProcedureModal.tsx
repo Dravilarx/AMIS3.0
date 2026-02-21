@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, User, ClipboardList, Loader2, Save, Activity, Landmark } from 'lucide-react';
 import { type ClinicalAppointment, type MedicalProcedure, type ClinicalCenter, type MedicalProfessional } from '../../types/clinical';
 import { formatName, formatRUT, formatPhone } from '../../lib/utils';
+import { SmartCombobox } from '../../components/ui/SmartCombobox';
+import type { Institution } from '../../types/institutions';
 
 interface ClinicalProcedureModalProps {
     isOpen: boolean;
@@ -11,6 +13,7 @@ interface ClinicalProcedureModalProps {
     catalog: MedicalProcedure[];
     centers: ClinicalCenter[];
     doctors: MedicalProfessional[];
+    institutions: Institution[];
 }
 
 export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
@@ -20,8 +23,27 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
     initialData,
     catalog,
     centers,
-    doctors
+    doctors,
+    institutions
 }) => {
+    const doctorOptions = doctors.map(d => ({
+        id: d.id,
+        label: `${d.name}`,
+        sublabel: d.specialty
+    }));
+
+    const institutionOptions = institutions.map(i => ({
+        id: i.id,
+        label: i.legalName,
+        sublabel: i.institutionCategory.replace('_', ' ')
+    }));
+
+    const centerOptions = centers.map(c => ({
+        id: c.id,
+        label: c.name,
+        sublabel: c.city || 'Sede AMIS'
+    }));
+
     const [formData, setFormData] = useState<Partial<ClinicalAppointment>>({
         patientName: '',
         patientRut: '',
@@ -30,7 +52,8 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
         patientAddress: '',
         patientBirthDate: '',
         healthcareProvider: '',
-        referralInstitution: '',
+        referrerName: '',
+        institutionId: '',
         procedureId: '',
         centerId: '',
         appointmentDate: new Date().toISOString().split('T')[0],
@@ -62,7 +85,8 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                 patientAddress: '',
                 patientBirthDate: '',
                 healthcareProvider: '',
-                referralInstitution: '',
+                referrerName: '',
+                institutionId: institutions[0]?.id || '',
                 procedureId: catalog[0]?.id || '',
                 centerId: centers[0]?.id || '',
                 appointmentDate: new Date().toISOString().split('T')[0],
@@ -137,7 +161,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             <div className="space-y-2.5">
                                 <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Nombre Completo</label>
                                 <input
-                                    required
                                     value={formData.patientName}
                                     onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
                                     onBlur={(e) => setFormData({ ...formData, patientName: formatName(e.target.value) })}
@@ -258,7 +281,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             <div className="space-y-2.5">
                                 <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Procedimiento Médico</label>
                                 <select
-                                    required
                                     value={formData.procedureId}
                                     onChange={(e) => setFormData({ ...formData, procedureId: e.target.value })}
                                     className="input-premium"
@@ -270,24 +292,19 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Centro / Sede AMIS</label>
-                                <select
-                                    required
-                                    value={formData.centerId}
-                                    onChange={(e) => setFormData({ ...formData, centerId: e.target.value })}
-                                    className="input-premium"
-                                >
-                                    <option value="">Seleccione sede...</option>
-                                    {centers.map(center => (
-                                        <option key={center.id} value={center.id}>{center.name} - {center.city}</option>
-                                    ))}
-                                </select>
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Institución</label>
+                                <SmartCombobox
+                                    options={institutionOptions}
+                                    value={formData.institutionId || ''}
+                                    onChange={(val) => setFormData({ ...formData, institutionId: val })}
+                                    placeholder="Buscar institución..."
+                                    storageKey="amis_frequent_institutions"
+                                />
                             </div>
                             <div className="space-y-2.5">
                                 <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Fecha Programada</label>
                                 <input
                                     type="date"
-                                    required
                                     value={formData.appointmentDate}
                                     onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
                                     className="input-premium"
@@ -297,34 +314,42 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Hora Estimada</label>
                                 <input
                                     type="time"
-                                    required
                                     value={formData.appointmentTime}
                                     onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
                                     className="input-premium"
                                 />
                             </div>
-                            <div className="space-y-2.5 md:col-span-2">
+                            <div className="space-y-2.5">
                                 <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Médico / Especialista a Cargo</label>
-                                <select
-                                    required
-                                    value={formData.doctorId}
-                                    onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
-                                    className="input-premium"
-                                >
-                                    <option value="">Seleccione médico...</option>
-                                    {doctors.map(doc => (
-                                        <option key={doc.id} value={doc.id}>{doc.name} - {doc.specialty}</option>
-                                    ))}
-                                </select>
+                                <SmartCombobox
+                                    options={doctorOptions}
+                                    value={formData.doctorId || ''}
+                                    onChange={(val) => setFormData({ ...formData, doctorId: val })}
+                                    placeholder="Buscar médico por nombre o especialidad..."
+                                    storageKey="amis_frequent_doctors"
+                                />
+                            </div>
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Sede de Atención</label>
+                                <SmartCombobox
+                                    options={centerOptions}
+                                    value={formData.centerId || ''}
+                                    onChange={(val) => setFormData({ ...formData, centerId: val })}
+                                    placeholder="Buscar sede o ingresar nueva..."
+                                    storageKey="amis_frequent_centers"
+                                    allowCustomText={true}
+                                />
                             </div>
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Institución de Referencia</label>
-                            <input
-                                value={formData.referralInstitution}
-                                onChange={(e) => setFormData({ ...formData, referralInstitution: e.target.value })}
-                                className="input-premium"
-                                placeholder="Clínica u Hospital de origen"
+                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Referente</label>
+                            <SmartCombobox
+                                options={[]}
+                                value={formData.referrerName || ''}
+                                onChange={(val) => setFormData({ ...formData, referrerName: val })}
+                                placeholder="Escriba el nombre del médico o institución..."
+                                storageKey="amis_frequent_referrers"
+                                allowCustomText={true}
                             />
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Sparkles, Target, FileText, Upload, Loader2, Radar, Clipboard, Zap, TrendingUp, Activity, Scale, BrainCircuit, FileSpreadsheet, MousePointer2, Trash2, Eye, MoreVertical, Table2, LayoutGrid, ArrowUpDown, ChevronDown, ExternalLink, BarChart3 } from 'lucide-react';
+import { Sparkles, Target, FileText, Upload, Loader2, Radar, Clipboard, Zap, TrendingUp, Activity, Scale, BrainCircuit, FileSpreadsheet, MousePointer2, Trash2, Eye, Table2, LayoutGrid, ArrowUpDown, ExternalLink, BarChart3 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useIdeas } from '../../hooks/useIdeas';
 
@@ -14,7 +14,6 @@ export const IdeaAnalyst: React.FC = () => {
     const [viewMode, setViewMode] = useState<'detail' | 'worklist'>('detail');
     const [sortField, setSortField] = useState<'date' | 'score' | 'decision'>('date');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-    const [contextMenu, setContextMenu] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 

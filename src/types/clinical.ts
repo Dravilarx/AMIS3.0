@@ -8,6 +8,7 @@ export interface MedicalProcedure {
     description: string;
     basePrice: number;
     isActive: boolean;
+    preparationGuide?: string;
 }
 
 export interface MedicalProfessional {
@@ -48,12 +49,13 @@ export interface ClinicalAppointment {
     patientAddress?: string;
     patientBirthDate?: string;
     healthcareProvider?: string; // Isapre, Fonasa
-    referralInstitution?: string;
+    referrerName?: string;
 
     procedureId: string;
     procedure?: MedicalProcedure;
-    centerId: string;
+    centerId?: string;
     center?: ClinicalCenter;
+    institutionId?: string;
 
     doctorId: string;
     doctor?: MedicalProfessional;
