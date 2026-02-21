@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     X,
@@ -12,6 +12,98 @@ import {
     Plus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+
+// Importación dinámica de pdfjs-dist se hace dentro del componente para evitar bloqueos
+const PdfPage = ({ pdf, pageNum }: { pdf: any, pageNum: number }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const renderPage = async () => {
+            if (!canvasRef.current || !pdf) return;
+            try {
+                const page = await pdf.getPage(pageNum);
+                // Escala de 2.0 para buena resolución al renderizar en el canvas,
+                // luego el CSS (w-full) lo escala para el contenedor.
+                const viewport = page.getViewport({ scale: 2.0 });
+                const canvas = canvasRef.current;
+                const context = canvas.getContext('2d');
+                if (!context) return;
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+            } catch (err) {
+                console.error(`Error al renderizar página ${pageNum}:`, err);
+            }
+        };
+        renderPage();
+    }, [pdf, pageNum]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="w-full h-auto block"
+        />
+    );
+};
+
+const PdfViewer = ({ url }: { url: string }) => {
+    const [pdf, setPdf] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+        const loadPdf = async () => {
+            try {
+                const pdfjsLib = await import('pdfjs-dist');
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+                const response = await fetch(url);
+                const buffer = await response.arrayBuffer();
+                const loadedPdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+                if (isMounted) {
+                    setPdf(loadedPdf);
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error('Error cargando PDF:', err);
+                if (isMounted) setLoading(false);
+            }
+        };
+        loadPdf();
+        return () => { isMounted = false; };
+    }, [url]);
+
+    if (loading) {
+        return (
+            <div className="py-32 flex flex-col items-center justify-center gap-4 text-prevenort-text/40">
+                <Loader2 className="w-8 h-8 animate-spin text-info" />
+                <span className="text-xs font-bold uppercase tracking-widest">Renderizando Documento Seguro...</span>
+            </div>
+        );
+    }
+
+    if (!pdf) {
+        return (
+            <div className="py-20 text-center">
+                <p className="text-danger font-bold">Error al cargar el documento PDF.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full flex flex-col pointer-events-none">
+            {Array.from({ length: pdf.numPages }, (_, i) => (
+                <PdfPage key={i} pdf={pdf} pageNum={i + 1} />
+            ))}
+        </div>
+    );
+};
 
 interface DigitalSignatureModalProps {
     documentTitle: string;
@@ -70,10 +162,8 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
         setIsConfirming(true);
         try {
             if (isPdf && signatures.length > 0) {
-                // @ts-ignore - Supress incorrect prop type error during quick fix
                 await onConfirm(signerName, selectedStyle, signatures, signatureSize, signatureColor);
             } else {
-                // @ts-ignore - Supress incorrect prop type error during quick fix
                 await onConfirm(signerName, selectedStyle, undefined, signatureSize, signatureColor);
             }
             onClose();
@@ -318,14 +408,18 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                     {documentUrl ? (
                                         <div className="relative min-h-full w-full bg-prevenort-surface/50 p-4 flex flex-col items-center">
                                             {/* Contenedor del PDF que determina el tamaño real */}
-                                            <div ref={docContentRef} className="doc-content relative w-full max-w-4xl bg-white shadow-2xl min-h-[1200px]">
-                                                <iframe
-                                                    src={`${documentUrl}#toolbar=0&navpanes=0`}
-                                                    className={cn(
-                                                        "absolute inset-0 w-full h-full border-none transition-all duration-300",
-                                                        !isNavigating ? "pointer-events-none opacity-40 grayscale" : "pointer-events-auto opacity-100"
-                                                    )}
-                                                />
+                                            <div ref={docContentRef} className="doc-content relative w-full max-w-4xl bg-white shadow-2xl flex flex-col items-center min-h-[800px]">
+                                                {isPdf ? (
+                                                    <PdfViewer url={documentUrl} />
+                                                ) : (
+                                                    <iframe
+                                                        src={`${documentUrl}#toolbar=0&navpanes=0`}
+                                                        className={cn(
+                                                            "w-full h-[1200px] border-none transition-all duration-300",
+                                                            !isNavigating ? "pointer-events-none opacity-40 grayscale" : "pointer-events-auto opacity-100"
+                                                        )}
+                                                    />
+                                                )}
 
                                                 {/* Overlay de captura solo en modo posicionar */}
                                                 {!isNavigating && (
