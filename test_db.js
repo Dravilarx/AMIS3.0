@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
 
-async function check() {
-  const id = 'a9b2d4c9-06b8-4bd1-8813-01e4a3541ab7';
-  const { data: appData } = await supabase.from('clinical_appointments').select('id').eq('id', id).single();
-  const { data: procData } = await supabase.from('medical_procedures_catalog').select('id').eq('id', id).single();
-  console.log('App:', appData);
-  console.log('Proc:', procData);
+async function run() {
+  const { data, error } = await supabase.from('profiles').select('*').limit(5);
+  console.log('PROFILES:', data ? data.length : 0);
+  
+  // also get employees?
+  const { data: d2 } = await supabase.from('company_employees').select('*').limit(5);
+  console.log('company_employees:', d2 ? d2.length : 0);
+  
+  const { data: d3 } = await supabase.from('company_profiles').select('*').limit(5);
+  console.log('company_profiles:', d3 ? d3.length : 0);
 }
-
-check();
+run();

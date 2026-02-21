@@ -33,6 +33,7 @@ import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
 import { DigitalSignatureModal } from './DigitalSignatureModal';
+import { RequestSignatureModal } from './RequestSignatureModal';
 import type { Document } from '../../types/communication';
 
 
@@ -56,13 +57,14 @@ export const SemanticDMS: React.FC = () => {
 
     // Verificación de permisos
     const { signNativeDocument, signPDFDocument } = useSignature();
-    const { canPerform } = useAuth();
+    const { canPerform, user } = useAuth();
 
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [showEditor, setShowEditor] = useState(false);
     const [signingDoc, setSigningDoc] = useState<Document | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Document | null>(null);
+    const [requestingDoc, setRequestingDoc] = useState<Document | null>(null);
 
     // Modos de Vista y Selección Masiva
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -292,149 +294,157 @@ export const SemanticDMS: React.FC = () => {
 
             {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-                    {filteredDocs.map((doc) => (
-                        <motion.div
-                            key={doc.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={cn(
-                                "group bg-prevenort-surface/40 border border-prevenort-border rounded-[2rem] p-8 flex flex-col h-full hover:bg-prevenort-surface transition-all duration-500 relative overflow-hidden",
-                                selectedIds.has(doc.id) && "ring-2 ring-info border-info/30 bg-info/5 shadow-lg shadow-info/10"
-                            )}
-                        >
-                            {/* Selector de Casilla */}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); toggleSelect(doc.id); }}
+                    {filteredDocs.map((doc) => {
+                        const isMySignaturePending = doc.requestedSigners?.includes(user?.id || '') && !doc.signed;
+
+                        return (
+                            <motion.div
+                                key={doc.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 className={cn(
-                                    "absolute top-6 left-6 z-20 transition-all duration-300",
-                                    selectedIds.has(doc.id) ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100 scale-100"
+                                    "group bg-prevenort-surface/40 border border-prevenort-border rounded-[2rem] p-8 flex flex-col h-full hover:bg-prevenort-surface transition-all duration-500 relative overflow-hidden",
+                                    selectedIds.has(doc.id) && "ring-2 ring-info border-info/30 bg-info/5 shadow-lg shadow-info/10",
+                                    isMySignaturePending && "ring-1 ring-amber-500/50"
                                 )}
                             >
-                                {selectedIds.has(doc.id) ? (
-                                    <CheckSquare className="w-5 h-5 text-info" />
-                                ) : (
-                                    <Square className="w-5 h-5 text-prevenort-text/20 hover:text-info/50" />
-                                )}
-                            </button>
-                            <div
-                                onClick={() => window.open(doc.url, '_blank')}
-                                className="relative overflow-hidden cursor-pointer"
-                            >
-                                <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            duplicateDocument(doc);
-                                        }}
-                                        className="p-1.5 bg-prevenort-surface hover:bg-info/20 rounded-lg text-prevenort-text/40 hover:text-info transition-all"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setConfirmDelete(doc);
-                                        }}
-                                        className="p-1.5 bg-prevenort-surface hover:bg-danger/20 rounded-lg text-prevenort-text/40 hover:text-danger transition-all"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                    <FileDown className="w-4 h-4 text-prevenort-text/20 mt-1.5" />
-                                </div>
-
-                                <div className={cn(
-                                    "w-12 h-12 rounded-xl flex items-center justify-center border",
-                                    doc.category === 'clinical' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                                        doc.category === 'legal' ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                                            doc.category === 'commercial' ? "bg-purple-500/10 border-purple-500/20 text-purple-400" :
-                                                "bg-orange-500/10 border-orange-500/20 text-orange-400"
-                                )}>
-                                    {getFileIcon(doc.type)}
-                                </div>
-
-
-                                <div className="flex flex-col flex-1">
-                                    <h4 className="font-bold text-sm text-prevenort-text/90 leading-tight mb-1">{doc.title}</h4>
-                                    <p className="text-[10px] text-prevenort-text/40 line-clamp-2 italic">{doc.contentSummary}</p>
-
-                                    {(doc.projectId || doc.taskId) && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {doc.projectId && (
-                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[8px] text-blue-400 font-bold uppercase">
-                                                    <Briefcase className="w-2.5 h-2.5" /> PROYECTO
-                                                </div>
-                                            )}
-                                            {doc.taskId && (
-                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/10 border border-orange-500/20 rounded text-[8px] text-orange-400 font-bold uppercase">
-                                                    <CheckSquare className="w-2.5 h-2.5" /> TAREA
-                                                </div>
-                                            )}
-                                        </div>
+                                {/* Selector de Casilla */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); toggleSelect(doc.id); }}
+                                    className={cn(
+                                        "absolute top-6 left-6 z-20 transition-all duration-300",
+                                        selectedIds.has(doc.id) ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100 scale-100"
                                     )}
-                                </div>
+                                >
+                                    {selectedIds.has(doc.id) ? (
+                                        <CheckSquare className="w-5 h-5 text-info" />
+                                    ) : (
+                                        <Square className="w-5 h-5 text-prevenort-text/20 hover:text-info/50" />
+                                    )}
+                                </button>
 
-
-                                <div className="mt-auto pt-4 border-t border-prevenort-border flex items-center justify-between">
-                                    <div className="flex flex-col gap-0.5">
-                                        <span className="text-[9px] font-mono text-prevenort-text/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
-                                        {doc.signerName && (
-                                            <span className="text-[8px] text-prevenort-text/30 italic">Por: {doc.signerName}</span>
-                                        )}
+                                {isMySignaturePending && (
+                                    <div className="absolute top-6 right-6 z-20 flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full animate-pulse">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        <span className="text-[8px] font-black tracking-widest uppercase">Requiere tu Firma</span>
                                     </div>
+                                )}
 
-                                    <div className="flex items-center gap-1.5">
+                                <div
+                                    onClick={() => window.open(doc.url, '_blank')}
+                                    className={cn(
+                                        "relative overflow-hidden cursor-pointer",
+                                        isMySignaturePending && "mt-4"
+                                    )}
+                                >
+                                    <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setSigningDoc(doc);
+                                                duplicateDocument(doc);
                                             }}
-                                            className={cn(
-                                                "flex items-center gap-1 px-2 py-1 border rounded-md transition-all group/btn",
-                                                doc.signed
-                                                    ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/10 text-emerald-500"
-                                                    : "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400"
-                                            )}
+                                            className="p-1.5 bg-prevenort-surface hover:bg-info/20 rounded-lg text-prevenort-text/40 hover:text-info transition-all"
                                         >
-                                            {doc.signed ? (
-                                                <>
-                                                    <ShieldCheck className="w-2.5 h-2.5" />
-                                                    <span className="text-[8px] font-bold uppercase tracking-tighter">Añadir Firma</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <PenTool className="w-2.5 h-2.5 group-hover/btn:scale-110 transition-transform" />
-                                                    <span className="text-[8px] font-bold uppercase tracking-tighter">Firmar</span>
-                                                </>
-                                            )}
+                                            <Copy className="w-4 h-4" />
                                         </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setConfirmDelete(doc);
+                                            }}
+                                            className="p-1.5 bg-prevenort-surface hover:bg-danger/20 rounded-lg text-prevenort-text/40 hover:text-danger transition-all"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <FileDown className="w-4 h-4 text-prevenort-text/20 mt-1.5" />
+                                    </div>
 
-                                        {!doc.signed && (
-                                            <select
-                                                onClick={(e) => e.stopPropagation()}
-                                                onChange={async (e) => {
-                                                    const role = e.target.value;
-                                                    if (role) {
-                                                        const res = await (useSignature() as any).requestSignature(doc.id, role);
-                                                        if (res.success) {
-                                                            alert('Firma solicitada al rol: ' + role);
-                                                        }
-                                                        e.target.value = '';
-                                                    }
-                                                }}
-                                                className="bg-prevenort-surface border border-prevenort-border rounded-md px-1 py-1 text-[8px] text-prevenort-text/40 focus:outline-none focus:border-warning/50"
-                                            >
-                                                <option value="">Solicitar...</option>
-                                                <option value="medical_director">Director Médico</option>
-                                                <option value="auditor">Auditor Jefe</option>
-                                                <option value="legal">Representante Legal</option>
-                                            </select>
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-xl flex items-center justify-center border",
+                                        doc.category === 'clinical' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                                            doc.category === 'legal' ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
+                                                doc.category === 'commercial' ? "bg-purple-500/10 border-purple-500/20 text-purple-400" :
+                                                    "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                                    )}>
+                                        {getFileIcon(doc.type)}
+                                    </div>
+
+
+                                    <div className="flex flex-col flex-1">
+                                        <h4 className="font-bold text-sm text-prevenort-text/90 leading-tight mb-1">{doc.title}</h4>
+                                        <p className="text-[10px] text-prevenort-text/40 line-clamp-2 italic">{doc.contentSummary}</p>
+
+                                        {(doc.projectId || doc.taskId) && (
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                {doc.projectId && (
+                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[8px] text-blue-400 font-bold uppercase">
+                                                        <Briefcase className="w-2.5 h-2.5" /> PROYECTO
+                                                    </div>
+                                                )}
+                                                {doc.taskId && (
+                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/10 border border-orange-500/20 rounded text-[8px] text-orange-400 font-bold uppercase">
+                                                        <CheckSquare className="w-2.5 h-2.5" /> TAREA
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
 
+
+                                    <div className="mt-auto pt-4 border-t border-prevenort-border flex items-center justify-between">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[9px] font-mono text-prevenort-text/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
+                                            {doc.signerName && (
+                                                <span className="text-[8px] text-prevenort-text/30 italic">Por: {doc.signerName}</span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSigningDoc(doc);
+                                                }}
+                                                className={cn(
+                                                    "flex items-center gap-1 px-2 py-1 border rounded-md transition-all group/btn",
+                                                    doc.signed
+                                                        ? "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/10 text-emerald-500"
+                                                        : "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400"
+                                                )}
+                                            >
+                                                {doc.signed ? (
+                                                    <>
+                                                        <ShieldCheck className="w-2.5 h-2.5" />
+                                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Añadir Firma</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <PenTool className="w-2.5 h-2.5 group-hover/btn:scale-110 transition-transform" />
+                                                        <span className="text-[8px] font-bold uppercase tracking-tighter">Firmar</span>
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {!doc.signed && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setRequestingDoc(doc);
+                                                    }}
+                                                    className="bg-prevenort-surface border border-prevenort-border hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-md px-2 py-1.5 text-[8px] font-bold uppercase tracking-widest text-prevenort-text/80 hover:text-emerald-400 transition-all"
+                                                    title="Solicitar firma a otras personas"
+                                                >
+                                                    Solicitar
+                                                </button>
+                                            )}
+                                        </div>
+
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="bg-prevenort-surface/20 border border-prevenort-border rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
@@ -459,6 +469,8 @@ export const SemanticDMS: React.FC = () => {
                     <div className="flex flex-col">
                         {filteredDocs.map((doc) => {
                             const isSelected = selectedIds.has(doc.id);
+                            const isMySignaturePending = doc.requestedSigners?.includes(user?.id || '') && !doc.signed;
+
                             return (
                                 <motion.div
                                     key={doc.id}
@@ -466,7 +478,8 @@ export const SemanticDMS: React.FC = () => {
                                     animate={{ opacity: 1 }}
                                     className={cn(
                                         "grid grid-cols-[60px_1fr_120px_120px_100px_140px] gap-4 px-8 py-4 border-b border-white/[0.03] items-center hover:bg-white/[0.02] transition-colors group cursor-pointer",
-                                        isSelected && "bg-info/5 border-info/10"
+                                        isSelected && "bg-info/5 border-info/10",
+                                        isMySignaturePending && !isSelected && "bg-amber-500/5"
                                     )}
                                     onClick={() => toggleSelect(doc.id)}
                                 >
@@ -495,7 +508,7 @@ export const SemanticDMS: React.FC = () => {
                                     <div className="text-[10px] font-mono text-prevenort-text/30">
                                         {new Date(doc.createdAt).toLocaleDateString()}
                                     </div>
-                                    <div className="flex justify-center">
+                                    <div className="flex justify-center flex-col items-center gap-1">
                                         <span className={cn(
                                             "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest",
                                             doc.signed
@@ -504,6 +517,9 @@ export const SemanticDMS: React.FC = () => {
                                         )}>
                                             {doc.signed ? 'Firmado' : 'Pendiente'}
                                         </span>
+                                        {isMySignaturePending && (
+                                            <span className="text-[7px] text-amber-500 font-bold uppercase tracking-tighter animate-pulse">Requiere Acción</span>
+                                        )}
                                     </div>
                                     <div className="flex items-center justify-end gap-1.5 pr-2">
                                         <button
@@ -516,6 +532,15 @@ export const SemanticDMS: React.FC = () => {
                                         >
                                             <PenTool className="w-3.5 h-3.5" />
                                         </button>
+                                        {!doc.signed && (
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestingDoc(doc); }}
+                                                className="p-1.5 border border-prevenort-border text-prevenort-text/60 bg-prevenort-surface hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 rounded-lg transition-all"
+                                                title="Solicitar Firma"
+                                            >
+                                                <Briefcase className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setConfirmDelete(doc); }}
                                             className="p-1.5 border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/10 rounded-lg transition-all"
@@ -631,6 +656,17 @@ export const SemanticDMS: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {requestingDoc && (
+                <RequestSignatureModal
+                    documentId={requestingDoc.id}
+                    onClose={() => setRequestingDoc(null)}
+                    onSuccess={() => {
+                        setRequestingDoc(null);
+                        refresh();
+                    }}
+                />
+            )}
         </div>
     );
 };

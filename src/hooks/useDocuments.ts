@@ -39,7 +39,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 isValidated: d.is_validated,
                 aiObservation: d.ai_observation,
                 expiryDate: d.expiry_date,
-                status: d.status as any
+                status: d.status as any,
+                requestedSigners: d.requested_signers
             }));
 
             setDocuments(mappedData);

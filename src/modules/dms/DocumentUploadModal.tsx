@@ -10,12 +10,12 @@ import {
     Globe,
     Loader2,
     FileText,
-    Sparkles,
-    PenTool
+    Sparkles
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import type { Document } from '../../types/communication';
+import { SmartCombobox } from '../../components/ui/SmartCombobox';
 
 interface DocumentUploadModalProps {
     onClose: () => void;
@@ -40,7 +40,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     const [requirementId] = useState(prefill?.requirementId || '');
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [requestedSigners, setRequestedSigners] = useState<string[]>([]);
 
     // Listas para selectores
     const [projects, setProjects] = useState<{ id: string, name: string }[]>([]);
@@ -102,8 +101,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                 file.type.includes('video') ? 'video' :
                     file.type.includes('spreadsheet') ? 'excel' :
                         file.name.endsWith('.md') ? 'markdown' : 'pdf',
-            requestedSigners: requestedSigners.length > 0 ? requestedSigners : undefined,
-            status: requestedSigners.length > 0 ? 'pending' : 'draft'
+            status: 'draft'
         };
 
         const result = await onUpload(file, metadata);
@@ -178,17 +176,21 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest ml-1">Categoría</label>
-                            <select
+                            <SmartCombobox
+                                options={[
+                                    { id: 'General', label: 'General' },
+                                    { id: 'Clínico / Médico', label: 'Clínico / Médico' },
+                                    { id: 'Legal / Contrato', label: 'Legal / Contrato' },
+                                    { id: 'Logística / Operativo', label: 'Logística / Operativo' },
+                                    { id: 'Comercial', label: 'Comercial' }
+                                ]}
                                 value={category}
-                                onChange={(e) => setCategory(e.target.value as any)}
-                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2.5 text-sm text-prevenort-text focus:border-info/40 outline-none appearance-none"
-                            >
-                                <option value="other">General</option>
-                                <option value="clinical">Clínico / Médico</option>
-                                <option value="legal">Legal / Contrato</option>
-                                <option value="logistics">Logística / Operativo</option>
-                                <option value="commercial">Comercial</option>
-                            </select>
+                                onChange={(val) => setCategory(val as any)}
+                                placeholder="Seleccionar o escribir nueva..."
+                                storageKey="dms.recentCategories"
+                                allowCustomText={true}
+                                className="!py-2.5 !border !border-prevenort-border !rounded-xl"
+                            />
                         </div>
                     </div>
 
@@ -292,37 +294,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                         </div>
                     </div>
 
-                    {/* NUEVA SECCIÓN: SOLICITAR FIRMAS */}
-                    <div className="space-y-4 pt-4 border-t border-prevenort-border">
-                        <div className="flex items-center gap-2 mb-2">
-                            <PenTool className="w-4 h-4 text-emerald-400" />
-                            <h4 className="text-xs font-black text-prevenort-text/60 uppercase tracking-widest">Flujo de Firmas</h4>
-                        </div>
-                        <div className="bg-prevenort-surface/50 border border-prevenort-border rounded-xl p-4">
-                            <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest block mb-3">Roles Requeridos para Firmar</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['ADM', 'MED', 'AUDITOR', 'ARCHITECT'].map(role => (
-                                    <button
-                                        key={role}
-                                        type="button"
-                                        onClick={() => {
-                                            setRequestedSigners(prev =>
-                                                prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
-                                            )
-                                        }}
-                                        className={cn(
-                                            "px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
-                                            requestedSigners.includes(role)
-                                                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                                                : "bg-prevenort-surface border-prevenort-border text-prevenort-text/40 hover:border-prevenort-text/20"
-                                        )}
-                                    >
-                                        {role === 'ADM' ? 'Administrador' : role === 'MED' ? 'Médico' : role === 'AUDITOR' ? 'Auditor' : 'Arquitecto'}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    {/* El flujo de firmas se ha trasladado a la vista de lista de documentos */}
 
                     <div className="flex gap-3 pt-4">
                         <button

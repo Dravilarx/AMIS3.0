@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
 // Importación dinámica de pdfjs-dist se hace dentro del componente para evitar bloqueos
 const PdfPage = ({ pdf, pageNum }: { pdf: any, pageNum: number }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,9 +63,6 @@ const PdfViewer = ({ url }: { url: string }) => {
         let isMounted = true;
         const loadPdf = async () => {
             try {
-                const pdfjsLib = await import('pdfjs-dist');
-                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-
                 const response = await fetch(url);
                 const buffer = await response.arrayBuffer();
                 const loadedPdf = await pdfjsLib.getDocument({ data: buffer }).promise;

@@ -66,11 +66,39 @@ export const useSignature = () => {
 
             if (uploadError) throw uploadError;
 
-            // 5. Actualizar metadata en DB
+            // Registrar esta firma en historial (Native no lo hacía antes)
+            await supabase
+                .from('document_signatures')
+                .insert({
+                    document_id: doc.id,
+                    signer_name: signerName,
+                    fingerprint,
+                    x_pos: 0,
+                    y_pos: 0,
+                    page_index: 0,
+                    signer_role: user?.role || 'operator',
+                    user_id: user?.id,
+                    size: 'medium',
+                    color: 'blue'
+                });
+
+            // Verificar si todos han firmado
+            const { data: signers } = await supabase
+                .from('document_signatures')
+                .select('user_id')
+                .eq('document_id', doc.id);
+
+            const existingSigners = new Set(signers?.map(s => s.user_id) || []);
+            if (user?.id) existingSigners.add(user.id);
+
+            const reqSigners = doc.requestedSigners || [];
+            const isFullySigned = reqSigners.length === 0 || reqSigners.every(req => existingSigners.has(req));
+
             const { error: dbError } = await supabase
                 .from('documents')
                 .update({
-                    signed: true,
+                    signed: isFullySigned,
+                    status: isFullySigned ? 'signed' : (doc.status === 'draft' ? 'pending' : doc.status),
                     signed_at: new Date().toISOString(),
                     signer_name: signerName,
                     signature_fingerprint: fingerprint
@@ -209,17 +237,29 @@ export const useSignature = () => {
 
             if (uploadError) throw uploadError;
 
-            // 6. Actualizar Documento Principal
+            // 6. Verificar firmas totales para actualizar Documento Principal
+            const { data: signersList } = await supabase
+                .from('document_signatures')
+                .select('user_id')
+                .eq('document_id', doc.id);
+
+            const existingSigners = new Set(signersList?.map(s => s.user_id) || []);
+            if (user?.id) existingSigners.add(user.id);
+
+            const reqSigners = doc.requestedSigners || [];
+            // Si el documento nace de "Solicitar firmantes", se completará solo si todos firmaron
+            const isFullySigned = reqSigners.length === 0 || reqSigners.every(req => existingSigners.has(req));
+
             const timestamp = Date.now();
             const newUrl = doc.url.split('?')[0] + `?v=${timestamp}`;
 
             const { error: updateError } = await supabase
                 .from('documents')
                 .update({
-                    signed: true,
+                    signed: isFullySigned,
                     url: newUrl,
                     signer_name: signerName,
-                    status: 'signed'
+                    status: isFullySigned ? 'signed' : (doc.status === 'draft' ? 'pending' : doc.status)
                 })
                 .eq('id', doc.id);
 
