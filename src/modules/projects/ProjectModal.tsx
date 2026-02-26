@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Layers, Briefcase, Lock, Globe, Shield, Tag, Link as LinkIcon, Loader2, Plus } from 'lucide-react';
+import { X, Layers, Briefcase, Lock, Globe, Shield, Tag, Link as LinkIcon, Loader2, Plus, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Project, HoldingCompany } from '../../types/core';
 import type { Tender } from '../../types/tenders';
@@ -28,6 +28,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 }) => {
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Project>>({
         name: '',
         holdingId: 'Portezuelo',
@@ -65,9 +66,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setErrorMsg(null);
         const result = await onSave(formData);
         setIsSubmitting(false);
-        if (result.success) onClose();
+        if (result.success) {
+            onClose();
+        } else {
+            setErrorMsg(result.error?.message || 'Error al guardar el proyecto');
+        }
     };
 
     const addTag = () => {
@@ -251,6 +257,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         </div>
                     </div>
 
+                    {errorMsg && (
+                        <div className="p-3 bg-danger/10 border border-danger/20 rounded-xl text-danger text-xs font-bold flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" />
+                            {errorMsg}
+                        </div>
+                    )}
                     <div className="flex gap-3 pt-6">
                         <button
                             type="button"

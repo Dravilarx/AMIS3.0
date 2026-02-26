@@ -48,6 +48,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
         team: '',
         username: '',
         signatureType: '',
+        associatedWith: '',
         competencies: [],
         contracts: [],
         photoUrl: '',
@@ -81,6 +82,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 team: initialData.team || '',
                 username: initialData.username || '',
                 signatureType: initialData.signatureType || '',
+                associatedWith: initialData.associatedWith || '',
                 competencies: initialData.competencies,
                 contracts: initialData.contracts,
                 photoUrl: initialData.photoUrl || '',
@@ -432,7 +434,6 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Email Corporativo / Uso</label>
                                         <input
-                                            required
                                             type="email"
                                             className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
                                             value={formData.email}
@@ -470,7 +471,6 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">RUT / DNI</label>
                                         <input
-                                            required
                                             className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
                                             value={formData.nationalId}
                                             onChange={e => setFormData({ ...formData, nationalId: e.target.value })}
@@ -522,6 +522,33 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             onChange={e => setFormData({ ...formData, residence: { ...formData.residence, region: e.target.value } })}
                                         />
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Equipo / Unidad</label>
+                                        <input
+                                            list="teams-list"
+                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            value={formData.team}
+                                            onChange={e => setFormData({ ...formData, team: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Asociado con</label>
+                                        <select
+                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            value={formData.associatedWith || ''}
+                                            onChange={e => setFormData({ ...formData, associatedWith: e.target.value })}
+                                        >
+                                            <option value="">Seleccionar radiólogo asociado (opcional)...</option>
+                                            {existingProfessionals
+                                                ?.filter(p => p.role === 'Radiólogo' && p.id !== initialData?.id && (p.team === 'AFTA PRES' || p.team === 'AMIS Chile' || p.team === 'AMIS CHILE'))
+                                                .sort((a, b) => ((a.lastName || '') + '').localeCompare((b.lastName || '') + ''))
+                                                .map(p => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.lastName ? `${p.lastName}, ` : ''}{p.name}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -569,15 +596,6 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
                                             value={formData.subSpecialty}
                                             onChange={e => setFormData({ ...formData, subSpecialty: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Equipo / Unidad</label>
-                                        <input
-                                            list="teams-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
-                                            value={formData.team}
-                                            onChange={e => setFormData({ ...formData, team: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -991,23 +1009,25 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                 </form>
 
                 {/* Modal de Carga Integrado */}
-                {showUploadModal && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                        <DocumentUploadModal
-                            prefill={uploadPrefill}
-                            onClose={() => setShowUploadModal(false)}
-                            onUpload={async (file, metadata) => {
-                                const res = await uploadDocument(file, metadata);
-                                if (res.success) {
-                                    setShowUploadModal(false);
-                                }
-                                return res;
-                            }}
-                        />
-                    </div>
-                )}
-            </div>
-        </div>
+                {
+                    showUploadModal && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                            <DocumentUploadModal
+                                prefill={uploadPrefill}
+                                onClose={() => setShowUploadModal(false)}
+                                onUpload={async (file, metadata) => {
+                                    const res = await uploadDocument(file, metadata);
+                                    if (res.success) {
+                                        setShowUploadModal(false);
+                                    }
+                                    return res;
+                                }}
+                            />
+                        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 };
 

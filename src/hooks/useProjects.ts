@@ -49,7 +49,7 @@ export const useProjects = () => {
         const { data: { user } } = await supabase.auth.getUser();
 
         const { data: insertedProject, error } = await supabase.from('projects').insert([{
-            id: project.id,
+            ...(project.id ? { id: project.id } : {}),
             name: project.name,
             holding_id: project.holdingId,
             manager_id: project.managerId || user?.id,
@@ -57,7 +57,7 @@ export const useProjects = () => {
             progress: project.progress || 0,
             privacy_level: project.privacyLevel,
             start_date: project.startDate,
-            tender_id: project.tenderId,
+            tender_id: project.tenderId || null,
             tags: project.tags
         }]).select().single();
 
@@ -73,6 +73,8 @@ export const useProjects = () => {
                     created_by: insertedProject.manager_id || user?.id
                 }]);
             }
+        } else {
+            console.error('Error insertando proyecto:', error);
         }
         return { success: !error, error };
     };
@@ -86,7 +88,7 @@ export const useProjects = () => {
             progress: updates.progress,
             privacy_level: updates.privacyLevel,
             start_date: updates.startDate,
-            tender_id: updates.tenderId,
+            tender_id: updates.tenderId || null,
             tags: updates.tags
         }).eq('id', id);
         if (!error) fetchProjects();

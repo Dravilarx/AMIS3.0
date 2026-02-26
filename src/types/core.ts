@@ -69,6 +69,7 @@ export interface Professional {
     team?: string;
     username?: string;
     signatureType?: string;
+    associatedWith?: string; // Radiology partner/group association
 
     /** Lugar de residencia para logística de turnos */
     residence: {

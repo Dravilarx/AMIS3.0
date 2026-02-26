@@ -12,12 +12,12 @@ import { BulkUploadModal, type ColumnDef } from '../../components/BulkUploadModa
 
 const CURRENT_SEDE_CITY = 'Santiago';
 
-type SortField = 'name' | 'role' | 'team' | 'city' | 'status';
+type SortField = 'name' | 'lastName' | 'role' | 'team' | 'city' | 'status';
 type SortDir = 'asc' | 'desc';
 
 export const ProfessionalMatrix: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProfessional, setCurrentProfessional] = useState<Professional | null>(null);
     const [isBulkOpen, setIsBulkOpen] = useState(false);
@@ -114,7 +114,8 @@ export const ProfessionalMatrix: React.FC = () => {
         result.sort((a, b) => {
             let valA = '', valB = '';
             switch (sortField) {
-                case 'name': valA = `${a.name} ${a.lastName}`.toLowerCase(); valB = `${b.name} ${b.lastName}`.toLowerCase(); break;
+                case 'name': valA = (`${a.name} ${a.lastName}`).toLowerCase(); valB = (`${b.name} ${b.lastName}`).toLowerCase(); break;
+                case 'lastName': valA = (`${a.lastName || ''} ${a.name}`).toLowerCase(); valB = (`${b.lastName || ''} ${b.name}`).toLowerCase(); break;
                 case 'role': valA = (a.role || '').toLowerCase(); valB = (b.role || '').toLowerCase(); break;
                 case 'team': valA = (a.team || '').toLowerCase(); valB = (b.team || '').toLowerCase(); break;
                 case 'city': valA = (a.residence?.city || '').toLowerCase(); valB = (b.residence?.city || '').toLowerCase(); break;
@@ -468,9 +469,14 @@ export const ProfessionalMatrix: React.FC = () => {
                                 }
                             </button>
                         </div>
-                        <button onClick={() => handleSortToggle('name')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors text-left">
-                            Nombre <SortIcon field="name" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => handleSortToggle('name')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors text-left">
+                                Nombre <SortIcon field="name" />
+                            </button>
+                            <button onClick={() => handleSortToggle('lastName')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors text-left text-[10px]">
+                                Apellido <SortIcon field="lastName" />
+                            </button>
+                        </div>
                         <button onClick={() => handleSortToggle('role')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
                             Rol <SortIcon field="role" />
                         </button>

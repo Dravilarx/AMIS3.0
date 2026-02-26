@@ -66,6 +66,7 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
         progress: 0
     });
     const [teamSearchTerm, setTeamSearchTerm] = useState('');
+    const [assignSearchTerm, setAssignSearchTerm] = useState('');
 
     const addSubTask = () => {
         const newSubTask: SubTask = {
@@ -141,6 +142,12 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!formData.assignedTo) {
+            alert('Por favor, asigna un responsable a esta tarea antes de guardar.');
+            return;
+        }
+
         setIsSubmitting(true);
         const result = await onSave(formData);
         setIsSubmitting(false);
@@ -194,22 +201,74 @@ export const BPMTaskModal: React.FC<BPMTaskModalProps> = ({
                                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Responsable</label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
-                                    <select
-                                        required
-                                        className="bg-prevenort-bg border border-prevenort-border rounded-xl w-full pl-10 pr-4 py-2.5 text-sm focus:border-info/50 outline-none text-prevenort-text appearance-none transition-all"
-                                        value={formData.assignedTo}
-                                        onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
-                                    >
-                                        <option value="">Asignar a...</option>
-                                        {professionals.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name} {p.lastName}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="space-y-2 relative">
+                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest flex justify-between">
+                                    <span>Responsable {!formData.assignedTo && <span className="text-danger">*</span>}</span>
+                                </label>
+                                {formData.assignedTo ? (
+                                    <div className="flex items-center justify-between bg-prevenort-bg border border-info/50 shadow-sm shadow-info/20 rounded-xl px-4 py-2.5 transition-all">
+                                        <div className="flex items-center gap-2 text-sm text-prevenort-text font-black">
+                                            <User className="w-4 h-4 text-info" />
+                                            {(() => {
+                                                const prof = professionals.find(p => p.id === formData.assignedTo);
+                                                return prof ? `${prof.name} ${prof.lastName}` : formData.assignedTo;
+                                            })()}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, assignedTo: '' })}
+                                            className="text-prevenort-text/40 hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors border border-transparent hover:border-danger/20"
+                                            title="Cambiar Responsable"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/40" />
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar nombre para asignar..."
+                                            value={assignSearchTerm}
+                                            onChange={e => setAssignSearchTerm(e.target.value)}
+                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:border-info/50 outline-none text-info font-bold transition-all placeholder:text-prevenort-text/30 placeholder:font-normal"
+                                        />
+
+                                        {assignSearchTerm.trim() && (
+                                            <div className="max-h-40 overflow-y-auto custom-scrollbar border border-prevenort-border rounded-xl p-2 bg-prevenort-surface absolute z-20 w-full left-0 mt-[0.5rem] shadow-2xl">
+                                                <div className="flex flex-col gap-1">
+                                                    {professionals
+                                                        .filter(p => `${p.name} ${p.lastName}`.toLowerCase().includes(assignSearchTerm.toLowerCase()))
+                                                        .slice(0, 10)
+                                                        .map(p => (
+                                                            <div
+                                                                key={p.id}
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, assignedTo: p.id });
+                                                                    setAssignSearchTerm('');
+                                                                }}
+                                                                className="p-2 rounded-lg cursor-pointer flex items-center justify-between group transition-colors hover:bg-info/10 border border-transparent hover:border-info/20"
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-6 h-6 rounded bg-prevenort-bg border border-prevenort-border flex items-center justify-center">
+                                                                        <User className="w-3 h-3 text-prevenort-text/40 group-hover:text-info" />
+                                                                    </div>
+                                                                    <span className="text-xs text-prevenort-text/80 group-hover:text-info group-hover:font-bold transition-all">{p.name} {p.lastName}</span>
+                                                                </div>
+                                                                <div className="w-4 h-4 rounded-full border border-prevenort-border flex items-center justify-center transition-all group-hover:border-info">
+                                                                    <Plus className="w-2.5 h-2.5 text-info opacity-0 group-hover:opacity-100" />
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    }
+                                                    {professionals.filter(p => `${p.name} ${p.lastName}`.toLowerCase().includes(assignSearchTerm.toLowerCase())).length === 0 && (
+                                                        <div className="p-2 text-xs text-center text-prevenort-text/40 font-mono">No se encontraron profesionales</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

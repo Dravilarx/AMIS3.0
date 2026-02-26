@@ -10,7 +10,9 @@ import {
     Sparkles,
     BarChart2,
     Layout,
-    List as ListIcon
+    List as ListIcon,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useProjects } from '../../hooks/useProjects';
@@ -24,7 +26,7 @@ import { BPMTaskModal } from './BPMTaskModal';
 import type { Project, BPMTask } from '../../types/core';
 
 export const ProjectBPM: React.FC = () => {
-    const { projects, loading: projectsLoading, error: projectsError, addProject, updateProject } = useProjects();
+    const { projects, loading: projectsLoading, error: projectsError, addProject, updateProject, archiveProject } = useProjects();
     const { tasks, addTask, updateTask, loading: tasksLoading } = useBPMTasks();
     const { tenders } = useTenders();
     const { professionals } = useProfessionals();
@@ -240,15 +242,30 @@ export const ProjectBPM: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEditProject(project);
-                                            }}
-                                            className="p-2 text-prevenort-text/20 hover:text-prevenort-text transition-colors"
-                                        >
-                                            <MoreVertical className="w-5 h-5" />
-                                        </button>
+                                        <div className="flex items-center gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditProject(project);
+                                                }}
+                                                className="p-2 text-prevenort-text/40 hover:text-info hover:bg-info/10 rounded-lg transition-colors border border-transparent hover:border-info/20"
+                                                title="Editar proyecto"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm(`¿Estás seguro de que deseas eliminar el proyecto "${project.name}" de forma permanente?`)) {
+                                                        archiveProject(project.id);
+                                                    }
+                                                }}
+                                                className="p-2 text-prevenort-text/40 hover:text-danger hover:bg-danger/10 rounded-lg transition-colors border border-transparent hover:border-danger/20"
+                                                title="Eliminar proyecto"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-4">
