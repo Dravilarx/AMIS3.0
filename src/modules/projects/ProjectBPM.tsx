@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     Layers,
     Plus,
-    MoreVertical,
     Lock,
     Globe,
     Shield,
