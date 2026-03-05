@@ -257,7 +257,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                             <div>
                                                 <p className="text-[11px] font-black text-prevenort-text uppercase">{h.procedure?.name}</p>
                                                 <p className="text-[10px] text-prevenort-text/40 font-bold mt-1">
-                                                    {new Date(h.appointmentDate).toLocaleDateString('es-CL')} - {h.center?.name || 'Sede'}
+                                                    {new Date(`${h.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} - {h.center?.name || 'Sede'}
                                                 </p>
                                             </div>
                                             <span className={cn("px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg", h.status === 'completed' ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>

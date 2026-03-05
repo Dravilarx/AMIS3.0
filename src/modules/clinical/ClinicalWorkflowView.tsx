@@ -319,7 +319,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             Fecha y Hora
                                                         </div>
                                                         <p className="text-[13px] font-black text-prevenort-text">
-                                                            {new Date(app.appointmentDate).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })} • <span className="text-prevenort-primary">{app.appointmentTime}</span>
+                                                            {new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })} • <span className="text-prevenort-primary">{app.appointmentTime}</span>
                                                         </p>
                                                     </div>
                                                     <div className="space-y-4 relative">
@@ -423,7 +423,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             <p className="text-[10px] text-prevenort-text/40 font-bold">{formatRUT(app.patientRut)}</p>
                                                         </td>
                                                         <td className="py-4 px-6">
-                                                            <p className="text-[12px] font-black text-prevenort-text">{new Date(app.appointmentDate).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' })}</p>
+                                                            <p className="text-[12px] font-black text-prevenort-text">{new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' })}</p>
                                                             <p className="text-[10px] text-prevenort-primary font-bold">{app.appointmentTime}</p>
                                                         </td>
                                                         <td className="py-4 px-6">
@@ -598,7 +598,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-slate-900 uppercase leading-tight">{formatName(app.patientName)}</p>
-                                                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-wider">{app.appointmentDate}</p>
+                                                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-wider">{new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                                                     </div>
                                                 </div>
                                             </td>

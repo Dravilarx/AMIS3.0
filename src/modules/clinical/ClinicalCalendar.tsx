@@ -24,7 +24,7 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
     }, []);
 
     const getAppointmentsForDay = (day: Date) => {
-        return appointments.filter(app => isSameDay(new Date(app.appointmentDate), day));
+        return appointments.filter(app => isSameDay(new Date(`${app.appointmentDate}T12:00:00`), day));
     };
 
     const getPositionStyle = (time: string) => {
