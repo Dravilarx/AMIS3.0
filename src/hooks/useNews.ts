@@ -81,7 +81,7 @@ export function useNews() {
 
             let query = supabase
                 .from('news_articles')
-                .select('*, profiles!news_articles_author_id_fkey(full_name)')
+                .select('*, profiles(full_name)')
                 .eq('is_published', true)
                 .order('is_pinned', { ascending: false })
                 .order('published_at', { ascending: false });
@@ -151,7 +151,7 @@ export function useNews() {
             const { data: { user } } = await supabase.auth.getUser();
             const { data, error } = await supabase
                 .from('news_articles')
-                .select('*, profiles!news_articles_author_id_fkey(full_name)')
+                .select('*, profiles(full_name)')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -291,7 +291,7 @@ export function useNews() {
     const fetchDrafts = async () => {
         const { data, error } = await supabase
             .from('news_articles')
-            .select('*, profiles!news_articles_author_id_fkey(full_name)')
+            .select('*, profiles(full_name)')
             .eq('is_published', false)
             .order('created_at', { ascending: false });
 

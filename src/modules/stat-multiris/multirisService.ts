@@ -263,8 +263,8 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             }
         });
 
-        // 4. Batch insert individual production data - Increased batch size for performance
-        const pBatchSize = 2500;
+        // 4. Batch insert individual production data - Lotes reducidos para evitar statement timeout
+        const pBatchSize = 500;
         for (let i = 0; i < records.length; i += pBatchSize) {
             const batch = records.slice(i, i + pBatchSize).map(r => ({
                 ...r,
@@ -356,7 +356,7 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             cantidad_dentro_sla: item.cantidad_dentro_sla
         }));
 
-        const cBatchSize = 1000;
+        const cBatchSize = 500;
         for (let i = 0; i < consolidatedDataList.length; i += cBatchSize) {
             const batch = consolidatedDataList.slice(i, i + cBatchSize);
             const { error: upsertError } = await supabase
