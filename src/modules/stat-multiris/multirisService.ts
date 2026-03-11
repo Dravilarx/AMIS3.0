@@ -38,31 +38,34 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-                const targetKey = 'MULTIRIS';
                 let allJsonData: any[] = [];
 
                 console.log('📊 Hojas encontradas en el archivo:', workbook.SheetNames);
 
-                const multirisSheetName = workbook.SheetNames.find(name =>
-                    name.toUpperCase().trim().includes(targetKey)
-                );
+                if (workbook.SheetNames.length === 0) {
+                    reject(new Error('El archivo no contiene ninguna hoja válida.'));
+                    return;
+                }
 
-                if (multirisSheetName) {
-                    const worksheet = workbook.Sheets[multirisSheetName];
+                for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    console.log(`✅ Hoja "${multirisSheetName}" => ${jsonData.length} filas capturadas`);
-
-                    allJsonData = jsonData.map((row: any) => ({
-                        ...row,
-                        _source_sheet: multirisSheetName.toUpperCase().trim()
-                    }));
-                } else {
-                    console.error('❌ No se encontró la pestaña "MULTIRIS" en el archivo. Procesando la primera hoja por defecto...');
-                    const firstSheet = workbook.SheetNames[0];
-                    if (firstSheet) {
-                        const worksheet = workbook.Sheets[firstSheet];
-                        allJsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length > 0) {
+                        console.log(`✅ Procesando hoja "${sheetName}" => ${jsonData.length} filas capturadas`);
+                        const mappedData = jsonData.map((row: any) => ({
+                            ...row,
+                            _source_sheet: sheetName.toUpperCase().trim()
+                        }));
+                        allJsonData = [...allJsonData, ...mappedData];
+                    } else {
+                        console.log(`⚠️ Hoja "${sheetName}" ignorada (sin datos).`);
                     }
+                }
+
+                if (allJsonData.length === 0) {
+                    reject(new Error('El archivo excel se leyó correctamente pero no se encontraron filas de datos en las hojas.'));
+                    return;
                 }
 
                 console.log(`📊 Total registros iniciales: ${allJsonData.length}`);
