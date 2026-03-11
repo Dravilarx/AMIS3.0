@@ -22,6 +22,14 @@ export interface MultirisRecord {
     raw_json: any;
 }
 
+const normalizeKey = (str: string) => {
+    return String(str)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // remove accents
+        .toLowerCase()
+        .trim();
+};
+
 export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -30,7 +38,6 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-                // Only process the 'MULTIRIS' sheet as requested
                 const targetKey = 'MULTIRIS';
                 let allJsonData: any[] = [];
 
@@ -45,47 +52,60 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
                     console.log(`✅ Hoja "${multirisSheetName}" => ${jsonData.length} filas capturadas`);
 
-                    if (jsonData.length > 0) {
-                        console.log('   Columnas:', Object.keys(jsonData[0] as any).join(', '));
-                    }
-
                     allJsonData = jsonData.map((row: any) => ({
                         ...row,
                         _source_sheet: multirisSheetName.toUpperCase().trim()
                     }));
                 } else {
-                    console.error('❌ No se encontró la pestaña "MULTIRIS" en el archivo.');
+                    console.error('❌ No se encontró la pestaña "MULTIRIS" en el archivo. Procesando la primera hoja por defecto...');
+                    const firstSheet = workbook.SheetNames[0];
+                    if (firstSheet) {
+                        const worksheet = workbook.Sheets[firstSheet];
+                        allJsonData = XLSX.utils.sheet_to_json(worksheet);
+                    }
                 }
 
-                console.log(`📊 Total registros consolidados: ${allJsonData.length}`);
+                console.log(`📊 Total registros iniciales: ${allJsonData.length}`);
+
+                const getVal = (row: any, aliases: string[], defaultValue: any = null) => {
+                    const rowKeys = Object.keys(row);
+                    for (const alias of aliases) {
+                        const normAlias = normalizeKey(alias);
+                        const match = rowKeys.find(k => normalizeKey(k) === normAlias);
+                        if (match && row[match] !== undefined && row[match] !== null && String(row[match]).trim() !== '') {
+                            return row[match];
+                        }
+                    }
+                    return defaultValue;
+                };
 
                 const records: MultirisRecord[] = allJsonData.map((row: any) => {
-                    // Normalize column names based on user provided list
+                    const addendaText = getVal(row, ['Text Adenddum', 'Texto Adenda', 'Adenda', 'Texto Adendum', 'Texto del Adendum', 'Text Adendum']);
                     return {
-                        modalidad: row['Modalidad'] || row['modalidad'] || '',
-                        tipo: row['Tipo'] || row['tipo'] || '',
-                        fecha_examen: row['Fecha Examen'] || row['fecha_examen'] || null,
-                        fecha_asignacion: row['Fecha Asignación'] || row['fecha_asignacion'] || null,
-                        fecha_validacion: row['Fecha Validación'] || row['fecha_validacion'] || null,
-                        aetitle: row['Aetitle'] || row['aetitle'] || '',
-                        radiologo_asignado: row['Radiologo Asignado'] || row['radiologo_asignado'] || '',
-                        radiologo_informado: row['Radiologo Informado'] || row['radiologo_informado'] || '',
-                        radiologo_validado: row['Radiologo Validado'] || row['radiologo_validado'] || '',
-                        addendum_text: row['Text Adenddum'] || row['text_adenddum'] || null,
-                        has_addendum: (() => {
-                            const val = row['Text Adenddum'] || row['text_adenddum'];
-                            return !!val && val.toString().trim().length > 0 && val.toString().toUpperCase() !== 'NULL';
-                        })(),
-                        accession_number: String(row['#Acc'] || row['accession_number'] || ''),
-                        paciente_id: String(row['IdPaciente'] || row['id_paciente'] || ''),
-                        paciente_nombre: row['Paciente'] || row['paciente'] || '',
-                        examen_nombre: row['Examen'] || row['examen'] || '',
-                        id_informe: String(row['IDINFORME'] || row['id_informe'] || ''),
-                        id_risexamen: String(row['id_risexamen'] || ''),
+                        modalidad: getVal(row, ['Modalidad', 'Mod'], ''),
+                        tipo: getVal(row, ['Tipo', 'Tipo Paciente', 'Atencion', 'Tipo atencion'], ''),
+                        fecha_examen: getVal(row, ['Fecha Examen', 'Fecha de Examen', 'Fecha Estudio', 'Fecha'], null),
+                        fecha_asignacion: getVal(row, ['Fecha Asignación', 'Fecha de Asignacion', 'F. Asignacion'], null),
+                        fecha_validacion: getVal(row, ['Fecha Validación', 'Fecha de Validacion', 'F. Validacion', 'Validacion'], null),
+                        aetitle: getVal(row, ['Aetitle', 'AE Title', 'Institucion', 'Centro', 'Sede'], ''),
+                        radiologo_asignado: getVal(row, ['Radiologo Asignado', 'Medico Asignado', 'Asignado a', 'Asignado'], ''),
+                        radiologo_informado: getVal(row, ['Radiologo Informado', 'Medico Informante', 'Informado por', 'Informante', 'Radiologo que Informa'], ''),
+                        radiologo_validado: getVal(row, ['Radiologo Validado', 'Medico Validador', 'Validado por', 'Validador'], ''),
+                        addendum_text: addendaText,
+                        has_addendum: !!addendaText && String(addendaText).toUpperCase() !== 'NULL',
+                        accession_number: String(getVal(row, ['#Acc', 'Accession Number', 'Nro Accession', 'Acc', 'Accession'], '')),
+                        paciente_id: String(getVal(row, ['IdPaciente', 'Id Paciente', 'Rut Paciente', 'Rut'], '')),
+                        paciente_nombre: getVal(row, ['Paciente', 'Nombre Paciente', 'Nombre'], ''),
+                        examen_nombre: getVal(row, ['Examen', 'Nombre Examen', 'Estudio', 'Descripcion', 'Procedimiento'], ''),
+                        id_informe: String(getVal(row, ['IDINFORME', 'Id Informe', 'Nro Informe'], '')),
+                        id_risexamen: String(getVal(row, ['id_risexamen', 'ID Ris Examen', 'Ris Examen', 'idrisexamen'], '')),
                         raw_json: row
                     };
                 });
-                resolve(records);
+                
+                // Excluir registros vacíos (sin access number ni validación)
+                const validRecords = records.filter(r => r.accession_number || r.fecha_validacion || r.radiologo_informado);
+                resolve(validRecords);
             } catch (error) {
                 reject(error);
             }
@@ -214,9 +234,11 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
         // Ensure mappings exist (Discovery)
         if (uniqueInstitutions.length > 0) {
             await supabase.rpc('ensure_multiris_mappings', { p_category: 'institucion', p_names: uniqueInstitutions });
-            // Ensure default SLAs for these institutions
-            for (const inst of uniqueInstitutions) {
-                await supabase.rpc('ensure_institutional_slas', { p_institucion: inst });
+            // Ensure default SLAs for these institutions using parallel execution chunks
+            const chunkSize = 20;
+            for (let i = 0; i < uniqueInstitutions.length; i += chunkSize) {
+                const chunk = uniqueInstitutions.slice(i, i + chunkSize);
+                await Promise.all(chunk.map(inst => supabase.rpc('ensure_institutional_slas', { p_institucion: inst })));
             }
         }
         if (uniqueDoctors.length > 0) {
@@ -238,10 +260,10 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             }
         });
 
-        // 4. Batch insert individual production data
-        const batchSize = 100;
-        for (let i = 0; i < records.length; i += batchSize) {
-            const batch = records.slice(i, i + batchSize).map(r => ({
+        // 4. Batch insert individual production data - Increased batch size for performance
+        const pBatchSize = 2500;
+        for (let i = 0; i < records.length; i += pBatchSize) {
+            const batch = records.slice(i, i + pBatchSize).map(r => ({
                 ...r,
                 upload_id: upload.id
             }));
@@ -318,26 +340,30 @@ export const uploadMultirisData = async (records: MultirisRecord[], filename: st
             consolidatedMap.set(key, existing);
         });
 
-        // 6. Upsert in stats_consolidated
-        const consolidatedData = Array.from(consolidatedMap.values()).map(item => ({
+        // 6. Upsert in stats_consolidated (Chunked to avoid payload size limit)
+        const consolidatedDataList = Array.from(consolidatedMap.values()).map(item => ({
             fecha_reporte: item.fecha_reporte,
             institucion: item.institucion,
             medico: item.medico,
             modalidad: item.modalidad,
             tipo_paciente: item.tipo_paciente,
             cantidad_examenes: item.cantidad_examenes,
-            tat_promedio_minutos: item.tat_total_minutos / item.cantidad_examenes,
+            tat_promedio_minutos: item.cantidad_examenes > 0 ? (item.tat_total_minutos / item.cantidad_examenes) : 0,
             cantidad_adendas: item.cantidad_adendas,
             cantidad_dentro_sla: item.cantidad_dentro_sla
         }));
 
-        const { error: upsertError } = await supabase
-            .from('stats_consolidated')
-            .upsert(consolidatedData, {
-                onConflict: 'fecha_reporte, institucion, medico, modalidad, tipo_paciente'
-            });
+        const cBatchSize = 1000;
+        for (let i = 0; i < consolidatedDataList.length; i += cBatchSize) {
+            const batch = consolidatedDataList.slice(i, i + cBatchSize);
+            const { error: upsertError } = await supabase
+                .from('stats_consolidated')
+                .upsert(batch, {
+                    onConflict: 'fecha_reporte, institucion, medico, modalidad, tipo_paciente'
+                });
 
-        if (upsertError) throw upsertError;
+            if (upsertError) throw upsertError;
+        }
 
         // 7. Mark as completed
         await supabase.from('multiris_uploads').update({ status: 'completed' }).eq('id', upload.id);
