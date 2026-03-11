@@ -82,14 +82,38 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                     return defaultValue;
                 };
 
+                const parseDateVal = (val: any): string | null => {
+                    if (!val) return null;
+                    if (val instanceof Date) {
+                        if (isNaN(val.getTime())) return null;
+                        return val.toISOString();
+                    }
+                    if (typeof val === 'string') {
+                        const str = val.trim();
+                        if (!str) return null;
+                        
+                        // Parsear manualmente DD-MM-YYYY o DD/MM/YYYY
+                        const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+                        if (dmyMatch) {
+                            const [, day, month, year, hh, mm, ss] = dmyMatch;
+                            const hour = hh || '00';
+                            const minute = mm || '00';
+                            const second = ss || '00';
+                            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second.padStart(2, '0')}`;
+                        }
+                        return str;
+                    }
+                    return String(val);
+                };
+
                 const records: MultirisRecord[] = allJsonData.map((row: any) => {
                     const addendaText = getVal(row, ['Text Adenddum', 'Texto Adenda', 'Adenda', 'Texto Adendum', 'Texto del Adendum', 'Text Adendum']);
                     return {
                         modalidad: getVal(row, ['Modalidad', 'Mod'], ''),
                         tipo: getVal(row, ['Tipo', 'Tipo Paciente', 'Atencion', 'Tipo atencion'], ''),
-                        fecha_examen: getVal(row, ['Fecha Examen', 'Fecha de Examen', 'Fecha Estudio', 'Fecha'], null),
-                        fecha_asignacion: getVal(row, ['Fecha Asignación', 'Fecha de Asignacion', 'F. Asignacion'], null),
-                        fecha_validacion: getVal(row, ['Fecha Validación', 'Fecha de Validacion', 'F. Validacion', 'Validacion'], null),
+                        fecha_examen: parseDateVal(getVal(row, ['Fecha Examen', 'Fecha de Examen', 'Fecha Estudio', 'Fecha'], null)),
+                        fecha_asignacion: parseDateVal(getVal(row, ['Fecha Asignación', 'Fecha de Asignacion', 'F. Asignacion'], null)),
+                        fecha_validacion: parseDateVal(getVal(row, ['Fecha Validación', 'Fecha de Validacion', 'F. Validacion', 'Validacion'], null)),
                         aetitle: getVal(row, ['Aetitle', 'AE Title', 'Institucion', 'Centro', 'Sede'], ''),
                         radiologo_asignado: getVal(row, ['Radiologo Asignado', 'Medico Asignado', 'Asignado a', 'Asignado'], ''),
                         radiologo_informado: getVal(row, ['Radiologo Informado', 'Medico Informante', 'Informado por', 'Informante', 'Radiologo que Informa'], ''),
@@ -119,45 +143,53 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
 };
 
 export const getConsolidatedStats = async (startDate?: string | null, endDate?: string | null) => {
-    let allData: any[] = [];
-    let from = 0;
-    const batchSize = 1000; // Match Supabase default limit
-    let keepFetching = true;
+    const batchSize = 1000;
+    
+    // 1. Obtener el count total primero
+    let countQuery = supabase
+        .from('stats_consolidated')
+        .select('*', { count: 'exact', head: true });
 
-    while (keepFetching) {
+    if (startDate) countQuery = countQuery.gte('fecha_reporte', startDate);
+    if (endDate) countQuery = countQuery.lte('fecha_reporte', endDate);
+
+    const { count, error: countError } = await countQuery;
+    if (countError) throw countError;
+    if (!count || count === 0) return [];
+
+    // Limitar safety break general
+    const totalRecords = Math.min(count, 1000000); 
+    const totalPages = Math.ceil(totalRecords / batchSize);
+    const promises = [];
+
+    // 2. Preparar todas las promesas de las páginas
+    for (let i = 0; i < totalPages; i++) {
         let query = supabase
             .from('stats_consolidated')
             .select('*')
             .order('fecha_reporte', { ascending: false })
-            .range(from, from + batchSize - 1);
+            .range(i * batchSize, (i + 1) * batchSize - 1);
 
-        // Add a dummy filter as cache buster if needed, but Supabase usually handles this well
-        // query = query.neq('id', '00000000-0000-0000-0000-000000000000'); 
+        if (startDate) query = query.gte('fecha_reporte', startDate);
+        if (endDate) query = query.lte('fecha_reporte', endDate);
 
-        if (startDate) {
-            query = query.gte('fecha_reporte', startDate);
-        }
-        if (endDate) {
-            query = query.lte('fecha_reporte', endDate);
-        }
+        promises.push(query);
+    }
 
-        const { data, error } = await query;
-        if (error) throw error;
+    let allData: any[] = [];
+    const concurrency = 15; // Ráfagas de 15 peticiones en paralelo
 
-        if (data && data.length > 0) {
-            allData = [...allData, ...data];
-            // If we got exactly the batch size, there might be more
-            if (data.length === batchSize) {
-                from += batchSize;
-            } else {
-                keepFetching = false;
+    // 3. Ejecutar las peticiones por lotes (throttle)
+    for (let i = 0; i < promises.length; i += concurrency) {
+        const chunk = promises.slice(i, i + concurrency);
+        const responses = await Promise.all(chunk);
+        
+        for (const res of responses) {
+            if (res.error) throw res.error;
+            if (res.data) {
+                allData.push(...res.data);
             }
-        } else {
-            keepFetching = false;
         }
-
-        // Safety break
-        if (from >= 100000) keepFetching = false;
     }
 
     return allData;

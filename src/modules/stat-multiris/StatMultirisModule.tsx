@@ -188,9 +188,24 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
     // 1. Get unique dates with data
     const datesWithData = new Set(data.map(d => d.fecha_reporte));
 
-    // 2. Generate range of dates for current year until today
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    // Años disponibles en la base de datos
+    const availableYearsList = Array.from(
+        new Set(data.map(d => parseInt(d.fecha_reporte.split('-')[0], 10)).filter(y => !isNaN(y)))
+    ).sort((a, b) => b - a);
+    
+    const systemYear = new Date().getFullYear();
+    if (availableYearsList.length === 0) availableYearsList.push(systemYear);
+
+    const [selectedYear, setSelectedYear] = useState<number>(systemYear);
+
+    // Ajustar año seleccionado si hay datos pero el actual no está
+    useEffect(() => {
+        if (availableYearsList.length > 0 && !availableYearsList.includes(selectedYear)) {
+            setSelectedYear(availableYearsList[0]);
+        }
+    }, [data, availableYearsList, selectedYear]);
+
+    // 2. Generate range of dates for selected year until today (or end of year if past)
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
@@ -202,13 +217,17 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
     ];
 
     const calendarData = months.map(m => {
-        const daysInMonth = new Date(currentYear, m.index + 1, 0).getDate();
+        const daysInMonth = new Date(selectedYear, m.index + 1, 0).getDate();
         const days = [];
         for (let d = 1; d <= daysInMonth; d++) {
-            const date = new Date(currentYear, m.index, d);
-            if (date > today) break;
+            const date = new Date(selectedYear, m.index, d);
+            if (date > today) break; // Don't show future days
 
-            const dateStr = date.toISOString().split('T')[0];
+            // Ensure consistent local timezone format YYYY-MM-DD
+            const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${selectedYear}-${monthStr}-${dayStr}`;
+
             days.push({
                 date: dateStr,
                 day: d,
@@ -228,8 +247,21 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                         <Calendar className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black uppercase tracking-tight text-prevenort-text/90">Continuidad de Carga {currentYear}</h3>
-                        <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest">Monitoreo de integridad de datos · Ingesta Diaria</p>
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-black uppercase tracking-tight text-prevenort-text/90">Continuidad de Carga</h3>
+                            <div className="flex gap-1">
+                                {availableYearsList.map(y => (
+                                    <button
+                                        key={y}
+                                        onClick={() => setSelectedYear(y)}
+                                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYear === y ? 'bg-amber-500 text-amber-950' : 'bg-prevenort-text/5 text-prevenort-text/40 hover:bg-prevenort-text/10'}`}
+                                    >
+                                        {y}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest mt-1.5">Monitoreo de integridad de datos · Ingesta Diaria</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-5 bg-prevenort-text/5 px-5 py-3 rounded-2xl border border-prevenort-text/5">
@@ -269,6 +301,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                         className="mt-10 p-5 rounded-3xl bg-danger/5 border border-danger/10 flex items-start gap-5 shadow-2xl shadow-red-900/5"
                     >
                         <div className="p-3 rounded-2xl bg-danger/10 text-danger border border-danger/20 flex-shrink-0">
@@ -276,7 +309,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-black text-danger uppercase tracking-tight mb-2 flex items-center gap-2">
-                                Atención: Faltan {missingDays.length} días de información
+                                Atención: Faltan {missingDays.length} días de información en {selectedYear}
                                 <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping" />
                             </p>
                             <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto no-scrollbar pr-2">
@@ -295,14 +328,15 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
                         className="mt-10 p-5 rounded-3xl bg-success/5 border border-success/10 flex items-center gap-5 shadow-2xl shadow-green-900/5"
                     >
                         <div className="p-3 rounded-2xl bg-success/10 text-success border border-success/20">
                             <Trophy className="w-5 h-5 shadow-success" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-success uppercase tracking-tight">Sincronización Completa</p>
-                            <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest mt-1">No se detectan lagunas de datos. El sistema está 100% al día con la producción anual.</p>
+                            <p className="text-sm font-black text-success uppercase tracking-tight">Sincronización Completa para {selectedYear}</p>
+                            <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest mt-1">No se detectan lagunas de datos en el historial correspondiente.</p>
                         </div>
                     </motion.div>
                 )}
