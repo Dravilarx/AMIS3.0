@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, Brain, UserCheck, Headphones } from 'lucide-react';
 
 import { cn } from '../lib/utils';
 
@@ -28,7 +28,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch';
 
     onNavigate: (view: any) => void;
 }
@@ -57,6 +57,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
         { id: 'projects', name: 'Proyectos BPM', icon: Layers },
         { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
+        { id: 'dispatch', name: 'Centro de Despacho', icon: Headphones },
         { id: 'dms', name: 'Archivo Digital', icon: FolderSearch },
         { id: 'ideation', name: 'Innovación', icon: Lightbulb },
         { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
@@ -100,6 +101,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             label="Consola Admin"
                             active={currentView === 'admin'}
                             onClick={() => onNavigate('admin')}
+                        />
+                        <SidebarItem
+                            icon={Brain}
+                            label="Cerebro IA"
+                            active={currentView === 'ai_knowledge'}
+                            onClick={() => onNavigate('ai_knowledge')}
+                        />
+                        <SidebarItem
+                            icon={UserCheck}
+                            label="Gestor de Accesos IA"
+                            active={currentView === 'ai_access'}
+                            onClick={() => onNavigate('ai_access')}
                         />
                     </div>
                 </nav>
