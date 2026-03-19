@@ -11,11 +11,16 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Con Magic Link JWT para acceso seguro.
 // ═══════════════════════════════════════════════════════════════
 
-const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_TOKEN") || "8657771895:AAEWbsty9UEYi3gsrbr63q1y6LD8nl9RhoI";
+// 🔐 Secrets: configurar via Supabase Dashboard > Settings > Edge Functions > Secrets
+const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_TOKEN") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const JWT_SECRET = Deno.env.get("JWT_SECRET") || "amis-3.0-magic-link-secret-key-2026";
+const JWT_SECRET = Deno.env.get("JWT_SECRET") ?? "";
 const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://app.amis.cl";
+
+// Validación de secrets críticos al arrancar
+if (!TELEGRAM_TOKEN) console.warn("⚠️ TELEGRAM_TOKEN no configurado. Canal Telegram deshabilitado.");
+if (!JWT_SECRET) console.warn("⚠️ JWT_SECRET no configurado. Magic Links no se firmarán correctamente.");
 
 // ─────────────────────────────────────────────────────────────
 // Misión 1: Generador de Magic Links (JWT)
@@ -171,8 +176,7 @@ async function dispatchInterconsultation(
   req: DispatchRequest,
 ): Promise<DispatchResult> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const results = { websocket: false, telegram: false };
-  const dispatchedVia: string[] = [];
+  const t0 = performance.now();
 
   console.log("═══════════════════════════════════════════════════");
   console.log("🚀 DESPACHO OMNICANAL INICIADO");
@@ -183,99 +187,137 @@ async function dispatchInterconsultation(
   console.log("═══════════════════════════════════════════════════");
 
   // ── Misión 1: Generar Magic Link ────────────────────────
+  const tMagic = performance.now();
   const magicLink = await generateMagicLink(
     req.studyId,
     req.radiologistId,
     req.caseId,
   );
+  console.log(`🔑 Magic Link generado en ${(performance.now() - tMagic).toFixed(0)}ms`);
 
-  // ── Canal 1: WebSocket (Supabase Realtime) ─────────────
-  // Insertar/actualizar en la tabla → Supabase Realtime
-  // propaga automáticamente via la publicación configurada
-  try {
-    const { error } = await supabase
-      .from("interconsultations")
-      .upsert(
-        {
-          case_id: req.caseId,
-          referente_nombre: req.referenteName,
-          referente_clinica: req.referenteClinica,
-          paciente_nombre: req.pacienteNombre,
-          estudio_tipo: req.estudioTipo,
-          estudio_id: req.studyId,
-          radiologo_id: req.radiologistId,
-          radiologo_nombre: req.radiologistName,
-          radiologo_telegram_chat_id: req.radiologistTelegramChatId || null,
-          message: req.message,
-          status: "dispatched",
-          sla_minutes: req.slaMinutes || 10,
-          magic_link_token: magicLink.token,
-          magic_link_expires_at: magicLink.expiresAt.toISOString(),
-          dispatched_via: ["websocket", "telegram"],
-        },
-        { onConflict: "case_id" },
+  // ── Construir mensaje Telegram (preparar antes del dispatch paralelo) ──
+  const telegramMessage = [
+    `🔔 *NUEVA INTERCONSULTA AMIS*`,
+    ``,
+    `📋 *Caso:* ${req.caseId}`,
+    `👤 *Paciente:* ${req.pacienteNombre}`,
+    `🔬 *Estudio:* ${req.estudioTipo}`,
+    `🏥 *Referente:* ${req.referenteName} (${req.referenteClinica})`,
+    ``,
+    `💬 *Consulta:*`,
+    `_"${req.message}"_`,
+    ``,
+    `⏱ *SLA:* ${req.slaMinutes || 10} minutos`,
+    ``,
+    `🔗 *Acceso rápido al estudio:*`,
+    `[📱 Abrir en AMIS Visor](${magicLink.url})`,
+    ``,
+    `_Responde aquí por Telegram o accede al RIS/PACS._`,
+  ].join("\n");
+
+  // ══════════════════════════════════════════════════════════
+  // 🔀 DISPATCH CONCURRENTE — Promise.allSettled
+  // Ambos canales se disparan en paralelo real.
+  // ══════════════════════════════════════════════════════════
+
+  const channelResults = await Promise.allSettled([
+    // ── Canal 1: WebSocket (Supabase Realtime via INSERT) ──
+    (async (): Promise<boolean> => {
+      const tWs = performance.now();
+      try {
+        const slaMin = req.slaMinutes || 10;
+        const now = new Date();
+        const slaDeadline = new Date(now.getTime() + slaMin * 60 * 1000);
+
+        const { error } = await supabase
+          .from("interconsultations")
+          .upsert(
+            {
+              case_id: req.caseId,
+              referente_nombre: req.referenteName,
+              referente_clinica: req.referenteClinica,
+              paciente_nombre: req.pacienteNombre,
+              estudio_tipo: req.estudioTipo,
+              estudio_id: req.studyId,
+              radiologo_id: req.radiologistId,
+              radiologo_nombre: req.radiologistName,
+              radiologo_telegram_chat_id: req.radiologistTelegramChatId || null,
+              message: req.message,
+              status: "dispatched",
+              sla_minutes: slaMin,
+              sla_deadline: slaDeadline.toISOString(),
+              magic_link_token: magicLink.token,
+              magic_link_expires_at: magicLink.expiresAt.toISOString(),
+              dispatched_via: ["websocket", "telegram"],
+            },
+            { onConflict: "case_id" },
+          );
+
+        const latency = (performance.now() - tWs).toFixed(0);
+        if (error) {
+          console.error(`❌ WebSocket canal error (${latency}ms):`, error.message);
+          return false;
+        }
+        console.log(`📡 Canal WebSocket: INSERT OK → Realtime propagará al RIS/PACS (${latency}ms)`);
+        return true;
+      } catch (e) {
+        console.error(`❌ WebSocket dispatch error (${(performance.now() - tWs).toFixed(0)}ms):`, e);
+        return false;
+      }
+    })(),
+
+    // ── Canal 2: Telegram ──────────────────────────────────
+    (async (): Promise<boolean> => {
+      const tTg = performance.now();
+      if (!req.radiologistTelegramChatId) {
+        console.log("⚠️ Radiólogo sin chat_id de Telegram. Solo despacho por WebSocket.");
+        return false;
+      }
+      const sent = await sendTelegramMessage(
+        req.radiologistTelegramChatId,
+        telegramMessage,
       );
+      const latency = (performance.now() - tTg).toFixed(0);
+      console.log(`📱 Canal Telegram: ${sent ? "ENVIADO" : "FALLÓ"} (${latency}ms)`);
+      return sent;
+    })(),
+  ]);
 
-    if (error) {
-      console.error("❌ Error inserting interconsultation:", error.message);
-    } else {
-      results.websocket = true;
-      dispatchedVia.push("websocket");
-      console.log("📡 Canal WebSocket: INSERT en tabla → Realtime propagará al RIS/PACS");
-    }
-  } catch (e) {
-    console.error("❌ WebSocket dispatch error:", e);
-  }
+  // ── Procesar resultados ─────────────────────────────────
+  const wsOk = channelResults[0].status === "fulfilled" && channelResults[0].value === true;
+  const tgOk = channelResults[1].status === "fulfilled" && channelResults[1].value === true;
 
-  // ── Canal 2: Telegram ──────────────────────────────────
-  if (req.radiologistTelegramChatId) {
-    const telegramMessage = [
-      `🔔 *NUEVA INTERCONSULTA AMIS*`,
-      ``,
-      `📋 *Caso:* ${req.caseId}`,
-      `👤 *Paciente:* ${req.pacienteNombre}`,
-      `🔬 *Estudio:* ${req.estudioTipo}`,
-      `🏥 *Referente:* ${req.referenteName} (${req.referenteClinica})`,
-      ``,
-      `💬 *Consulta:*`,
-      `_"${req.message}"_`,
-      ``,
-      `⏱ *SLA:* ${req.slaMinutes || 10} minutos`,
-      ``,
-      `🔗 *Acceso rápido al estudio:*`,
-      `[📱 Abrir en AMIS Visor](${magicLink.url})`,
-      ``,
-      `_Responde aquí por Telegram o accede al RIS/PACS._`,
-    ].join("\n");
+  const dispatchedVia: string[] = [];
+  if (wsOk) dispatchedVia.push("websocket");
+  if (tgOk) dispatchedVia.push("telegram");
 
-    const sent = await sendTelegramMessage(
-      req.radiologistTelegramChatId,
-      telegramMessage,
-    );
-
-    if (sent) {
-      results.telegram = true;
-      dispatchedVia.push("telegram");
-    }
-  } else {
-    console.log("⚠️ Radiólogo sin chat_id de Telegram. Solo despacho por WebSocket.");
-  }
-
-  // ── Actualizar canales usados ──────────────────────────
+  // ── Actualizar canales reales usados + audit trail ─────
   if (dispatchedVia.length > 0) {
+    const auditEntry = {
+      action: "dispatch",
+      channels: dispatchedVia,
+      timestamp: new Date().toISOString(),
+      latency_ms: Math.round(performance.now() - t0),
+    };
+
     await supabase
       .from("interconsultations")
-      .update({ dispatched_via: dispatchedVia })
+      .update({
+        dispatched_via: dispatchedVia,
+        escalation_history: [auditEntry],
+      })
       .eq("case_id", req.caseId);
   }
 
+  const totalLatency = (performance.now() - t0).toFixed(0);
   console.log("═══════════════════════════════════════════════════");
-  console.log(`✅ DESPACHO COMPLETADO: WS=${results.websocket} TG=${results.telegram}`);
+  console.log(`✅ DESPACHO COMPLETADO en ${totalLatency}ms: WS=${wsOk} TG=${tgOk}`);
+  console.log(`   Canales activos: [${dispatchedVia.join(", ")}]`);
   console.log("═══════════════════════════════════════════════════");
 
   return {
-    success: results.websocket || results.telegram,
-    channels: results,
+    success: wsOk || tgOk,
+    channels: { websocket: wsOk, telegram: tgOk },
     magicLink: {
       url: magicLink.url,
       expiresAt: magicLink.expiresAt.toISOString(),

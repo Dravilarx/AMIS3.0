@@ -16,15 +16,20 @@ import { InstitutionsDashboard } from './modules/institutions/InstitutionsDashbo
 import { NewsFeed } from './modules/news/NewsFeed'
 import { StatMultirisModule } from './modules/stat-multiris/StatMultirisModule'
 import { PatientGuideView } from './modules/clinical/PatientGuideView'
-import { AiKnowledgeBase } from './modules/ai-knowledge/AiKnowledgeBase'
 import { AiAccessManager } from './modules/ai-access/AiAccessManager'
 import { DispatchCenter } from './modules/dispatch/DispatchCenter'
+import { QuickViewBridge } from './modules/quick-view/QuickViewBridge'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_access' | 'dispatch'>('dashboard');
 
   if (window.location.pathname.startsWith('/guia/')) {
     return <PatientGuideView />;
+  }
+
+  // 🔗 Magic Link Bridge — Redirige al visor SESHAT tras validar JWT
+  if (window.location.pathname === '/quick-view') {
+    return <QuickViewBridge />;
   }
 
 
@@ -45,7 +50,6 @@ function App() {
       case 'institutions': return <InstitutionsDashboard />;
       case 'news': return <NewsFeed />;
       case 'stat_multiris': return <StatMultirisModule />;
-      case 'ai_knowledge': return <AiKnowledgeBase />;
       case 'ai_access': return <AiAccessManager />;
       case 'dispatch': return <DispatchCenter />;
 

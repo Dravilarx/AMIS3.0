@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, Brain, UserCheck, Headphones } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones } from 'lucide-react';
 
 import { cn } from '../lib/utils';
 
@@ -101,12 +101,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             label="Consola Admin"
                             active={currentView === 'admin'}
                             onClick={() => onNavigate('admin')}
-                        />
-                        <SidebarItem
-                            icon={Brain}
-                            label="Cerebro IA"
-                            active={currentView === 'ai_knowledge'}
-                            onClick={() => onNavigate('ai_knowledge')}
                         />
                         <SidebarItem
                             icon={UserCheck}
