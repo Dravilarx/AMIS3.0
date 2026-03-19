@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Headphones, AlertTriangle, Clock, CheckCircle2, X, User,
   RefreshCw, MessageCircle, Building2, ChevronRight,
@@ -93,7 +93,7 @@ export const DispatchCenter: React.FC = () => {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [reassigning, setReassigning] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // ── Sonido de alerta ──────────────────────────────────────
@@ -841,7 +841,7 @@ export const DispatchCenter: React.FC = () => {
                       const action = String(entry.action || '');
                       const isEscalation = action.includes('escalation');
                       const isTomo = action.includes('tomo');
-                      const isDispatch = action === 'dispatch';
+
                       const isReassign = action.includes('reassign');
 
                       return (
@@ -872,14 +872,14 @@ export const DispatchCenter: React.FC = () => {
                               {entry.timestamp ? new Date(String(entry.timestamp)).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
                             </span>
                           </div>
-                          {entry.channels && (
+                          {Boolean(entry.channels) && (
                             <p className="text-[10px] text-prevenort-text/50">
-                              Canales: {Array.isArray(entry.channels) ? (entry.channels as string[]).join(', ') : String(entry.channels)}
+                              Canales: {Array.isArray(entry.channels) ? (entry.channels as string[]).join(', ') : String(entry.channels as string)}
                             </p>
                           )}
-                          {entry.from_radiologist && (
+                          {Boolean(entry.from_radiologist) && (
                             <p className="text-[10px] text-prevenort-text/50">
-                              {String(entry.from_radiologist)} → {String(entry.to_radiologist || '')}
+                              {String(entry.from_radiologist as string)} → {String((entry.to_radiologist as string) || '')}
                             </p>
                           )}
                           {entry.latency_ms != null && (
