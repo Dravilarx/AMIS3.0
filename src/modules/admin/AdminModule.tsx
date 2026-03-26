@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils';
 import { useAdminProfiles } from '../../hooks/useAdminProfiles';
 import { useAuth } from '../../hooks/useAuth';
 import type { UserRole } from '../../hooks/useAuth';
+import { ClinicOnboarding } from './ClinicOnboarding';
 
 const MODULES = [
     { id: 'dashboard', name: 'Centro de Gestión' },
@@ -31,6 +32,9 @@ export const AdminModule: React.FC = () => {
     const { profiles, updateProfile, deleteProfile } = useAdminProfiles();
     const { user: _currentUser } = useAuth();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'internal' | 'b2b'>('internal');
+
+    const [showB2BModal, setShowB2BModal] = useState(false);
 
     const selectedProfile = profiles.find(p => p.id === selectedUserId);
 
@@ -53,15 +57,45 @@ export const AdminModule: React.FC = () => {
                     <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.3em]">Gestión de Accesos, Perfiles y Seguridad · AMIS Intelligence</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2.5 px-6 py-3 bg-prevenort-primary text-white hover:opacity-90 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-prevenort-primary/25">
-                        <UserPlus className="w-4 h-4" />
-                        Registrar Usuario
-                    </button>
+                    {activeTab === 'internal' ? (
+                        <button 
+                            onClick={() => alert('Para registrar empleados AMIS internamente, utiliza la Consola Supabase o el flujo de invitaciones SSO próximamente.')}
+                            className="flex items-center gap-2.5 px-6 py-3 bg-prevenort-primary text-white hover:opacity-90 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-prevenort-primary/25"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            Registrar Analista Interno
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={() => setShowB2BModal(true)}
+                            className="flex items-center gap-2.5 px-6 py-3 bg-prevenort-text text-prevenort-bg hover:opacity-90 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-prevenort-text/25"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            Alta Manual de Médico (B2B)
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Lista de Usuarios */}
+            {/* TAB SELECTOR */}
+            <div className="flex bg-prevenort-surface/50 border border-prevenort-border p-1.5 rounded-2xl w-fit">
+                <button 
+                  onClick={() => setActiveTab('internal')}
+                  className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'internal' ? 'bg-prevenort-bg text-prevenort-text shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
+                >
+                    Organigrama Interno
+                </button>
+                <button 
+                  onClick={() => setActiveTab('b2b')}
+                  className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'b2b' ? 'bg-prevenort-bg text-prevenort-text shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
+                >
+                    Whitelist Clínicas B2B
+                </button>
+            </div>
+
+            {activeTab === 'internal' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Lista de Usuarios */}
                 <div className="lg:col-span-1 space-y-4">
                     <div className="flex items-center gap-2.5 mb-6 px-2">
                         <div className="p-1.5 bg-prevenort-primary/10 rounded-lg">
@@ -236,7 +270,9 @@ export const AdminModule: React.FC = () => {
                     )}
                 </div>
             </div>
+            ) : (
+                <ClinicOnboarding isAddModalOpen={showB2BModal} onCloseModal={() => setShowB2BModal(false)} />
+            )}
         </div>
     );
 };
-

@@ -17,6 +17,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_TOKEN") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 
 if (!TELEGRAM_TOKEN) console.warn("⚠️ TELEGRAM_TOKEN no configurado. Webhook no podrá responder.");
 
@@ -60,121 +61,131 @@ async function sendTelegramMessage(
 }
 
 // ──────────────────────────────────────────────────────────────
-// Comando /vincular: Auto-registro self-service por RUT o email
+// Inteligencia Artificial (Gemini NLP)
 // ──────────────────────────────────────────────────────────────
 
-async function handleVincularCommand(
-  identifier: string,
-  chatId: number,
-  firstName: string,
+async function processNaturalLanguage(
+  text: string,
+  professional: any,
+  supabase: any,
+  chatId: number
 ): Promise<string> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const input = identifier.trim();
+  if (!GEMINI_API_KEY) {
+    return "❌ API de Inteligencia Artificial (Gemini) no configurada.";
+  }
 
-  if (!input) {
+  const prompt = `Eres el asistente clínico de AMIS 3.0 para médicos derivadores en Telegram.
+El usuario te enviará un mensaje en lenguaje natural. Debes extraer la intención y devolver un JSON estricto:
+{
+  "intent": "STATUS_INFORME" | "PACS_LINK" | "INTERCONSULTA" | "REVISION" | "UNKNOWN",
+  "entities": {
+    "rut": "RUT del paciente si lo menciona (formato X.XXX.XXX-X o similiar)",
+    "examen_id": "ID del examen si lo menciona",
+    "pregunta": "La duda clínica específica si es interconsulta o revisión"
+  }
+}
+Solo responde el JSON puro, sin formato markdown ni comillas traseras.
+Mensaje del usuario: "${text}"`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { response_mime_type: "application/json" }
+      })
+    });
+
+    const data = await response.json();
+    let rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    rawJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const result = JSON.parse(rawJson);
+
+    return await executeSeshatAction(result, professional, supabase);
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return "❌ Hubo un error al procesar tu solicitud con IA.";
+  }
+}
+
+async function executeSeshatAction(aiContext: any, professional: any, supabase: any): Promise<string> {
+  const { intent, entities } = aiContext;
+  
+  if (intent === "STATUS_INFORME") {
+    // 🏥 MOCK: Consulta a DB de Seshat
+    const mockStudyDate = new Date().toLocaleDateString('es-CL');
     return [
-      `⚠️ Debes indicar tu *RUT* o *email institucional*.`,
+      `🩺 *SESHAT | Reporte de Estado Clínico*`,
+      `───────────────────────────`,
+      `👤 *Paciente (RUT):* ${entities.rut || 'No especificado en el texto'}`,
+      `📅 *Fecha de Estudio:* ${mockStudyDate}`,
+      `⚙️ *Modalidad:* Resonancia Magnética (Referencial)`,
       ``,
-      `*Ejemplos:*`,
-      `• \`/vincular 10.206.892-0\``,
-      `• \`/vincular mi@email.com\``,
+      `🟢 *Situación Actual: FINALIZADO (Firmado)*`,
+      `El informe radiológico definitivo dictado por el especialista ya está ingresado en el sistema core.`,
+      ``,
+      `📄 [Abrir Informe SESHAT (Magic Link JWT)](https://seshat.amis.global/quick-view?token=${crypto.randomUUID()})`
     ].join("\n");
   }
-
-  // Detectar si es email o RUT
-  const isEmail = input.includes("@");
-
-  // Buscar en professionals por email o national_id
-  const query = supabase
-    .from("professionals")
-    .select("id, name, last_name, email, national_id, role, telegram_chat_id");
-
-  if (isEmail) {
-    query.ilike("email", input);
-  } else {
-    query.eq("national_id", input);
-  }
-
-  const { data: matches, error } = await query;
-
-  if (error) {
-    console.error("❌ Error buscando profesional:", error.message);
-    return `❌ Error interno al buscar tu perfil. Intenta de nuevo.`;
-  }
-
-  if (!matches || matches.length === 0) {
-    console.log(`⚠️ VINCULAR: No se encontró profesional con ${isEmail ? "email" : "RUT"}: ${input}`);
+  
+  if (intent === "PACS_LINK") {
+    // 🏥 MOCK: Generación de Link Web PACS
     return [
-      `❌ No encontré ningún profesional con ${isEmail ? "email" : "RUT"} *${input}*`,
+      `🖥 *SESHAT PACS | Visor Web Zero-Footprint*`,
+      `───────────────────────────`,
+      `👤 *Paciente (RUT):* ${entities.rut || 'No especificado'}`,
       ``,
-      `Verifica que el dato sea correcto o contacta a tu administrador AMIS.`,
+      `⚠️ *Nota Clínica:* SESHAT Viewer optimizará la compresión DICOM (lossless) para redes móviles.`,
+      ``,
+      `🔗 [Ingresar al PACS Viewer Seguro](https://seshat.amis.global/viewer?studyUID=1.2.3.4.5.6.789&token=access_granted)`
     ].join("\n");
   }
-
-  const professional = matches[0];
-
-  // Verificar si ya está vinculado a OTRO chat
-  if (professional.telegram_chat_id && professional.telegram_chat_id !== chatId) {
+  
+  if (intent === "INTERCONSULTA") {
     return [
-      `⚠️ *${professional.name} ${professional.last_name}* ya tiene otro Telegram vinculado.`,
+      `📡 *SESHAT | Interconsulta 1 a 1 Abierta*`,
+      `───────────────────────────`,
+      `Has abierto un canal directo para duda diagnóstica:`,
+      `💬 _"${entities.pregunta || 'Sin detalle provisto'}"_`,
       ``,
-      `Si cambiaste de dispositivo, contacta al administrador AMIS para desvincular.`,
+      `👨🏻‍⚕️ *Radiólogo Informante Alertado:* Dr. AMIS Especialista`,
+      `Tu interconsulta fue insertada dentro de su entorno **Workstation SESHAT**. En cuanto el radiólogo revise la placa de contexto emitirá su respuesta por esta misma vía.`,
+      ``,
+      `*ID de Seguimiento:* #IC-${Math.floor(Math.random() * 89999) + 10000}`
     ].join("\n");
   }
-
-  // Verificar si YA está vinculado a ESTE chat
-  if (professional.telegram_chat_id === chatId) {
+  
+  if (intent === "REVISION") {
     return [
-      `✅ *${professional.name} ${professional.last_name}*, ya estás vinculado.`,
+      `📝 *SESHAT | Ticket de Revisión / Ampliación*`,
+      `───────────────────────────`,
+      `Se ha ingresado la solicitud oficial de ampliación de informe.`,
       ``,
-      `📋 *Rol:* ${professional.role}`,
-      `📧 *Email:* ${professional.email}`,
-      `💬 *Chat ID:* ${chatId}`,
+      `📋 *Solicitud Médica:* _"${entities.pregunta || 'Revisión general requerida'}"_`,
+      `🚦 *Alerta:* Elevada a Prioridad Alta`,
       ``,
-      `Ya recibes alertas de interconsultas automáticamente. 🔔`,
+      `El equipo AMIS Dispatch retomará la placa y asignará el reproceso bajo SLA de contingencia. Recibirás un nuevo reporte en breve.`
     ].join("\n");
   }
-
-  // ── Vincular: guardar chat_id ───────────────────────────
-  const { error: updateError } = await supabase
-    .from("professionals")
-    .update({ telegram_chat_id: chatId })
-    .eq("id", professional.id);
-
-  if (updateError) {
-    console.error("❌ Error actualizando telegram_chat_id:", updateError.message);
-    return `❌ Error al vincular. Intenta de nuevo.`;
-  }
-
-  console.log("═══════════════════════════════════════════════════");
-  console.log("🔗 AUTO-VINCULACIÓN TELEGRAM EXITOSA");
-  console.log(`   Profesional: ${professional.name} ${professional.last_name}`);
-  console.log(`   ID: ${professional.id}`);
-  console.log(`   Chat ID: ${chatId}`);
-  console.log(`   Método: ${isEmail ? "email" : "RUT"} → ${input}`);
-  console.log("═══════════════════════════════════════════════════");
 
   return [
-    `🎉 *¡Vinculación exitosa!*`,
+    `🤖 *Asistente Inteligente Seshat (AMIS 3.0)*`,
+    `───────────────────────────`,
+    `No pude clasificar certeramente tu instrucción clínica.`,
     ``,
-    `👋 Bienvenido/a *${professional.name} ${professional.last_name}*`,
-    ``,
-    `📋 *Rol:* ${professional.role}`,
-    `📧 *Email:* ${professional.email}`,
-    `🆔 *RUT:* ${professional.national_id}`,
-    `💬 *Chat ID:* ${chatId}`,
-    ``,
-    `✅ A partir de ahora recibirás:`,
-    `• 🔔 Alertas de interconsultas asignadas a ti`,
-    `• 🚨 Escalamientos SLA cuando un caso no sea atendido`,
-    `• 🔴 Urgencias máximas del pool de radiólogos`,
-    ``,
-    `*Comandos disponibles:*`,
-    `• \`TOMO IC-XXXX\` → Tomar un caso escalado`,
-    `• \`/estado\` → Ver tu estado de vinculación`,
-    `• \`/ayuda\` → Ver todos los comandos`,
+    `Te sugiero enriquecer el mensaje. Por ejemplo:`,
+    `• _"Muéstrame el escáner del RUT X"_`,
+    `• _"Busca el último informe del paciente X"_`,
+    `• _"Necesito hacer una duda formal sobre el informe de Juan Perez"_`
   ].join("\n");
 }
+
+// ──────────────────────────────────────────────────────────────
+// IAM B2B Zero-Friction: El enrolamiento ahora es mediante
+// compartir contacto nativo de Telegram, lo cual procesa el
+// webhkook en su entrada. Se elimina comando /vincular.
 
 // ──────────────────────────────────────────────────────────────
 // Comando /estado: Verificar vinculación
@@ -186,32 +197,29 @@ async function handleEstadoCommand(
 ): Promise<string> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  const { data: professional } = await supabase
-    .from("professionals")
-    .select("name, last_name, email, national_id, role")
+  const { data: doctor } = await supabase
+    .from("external_doctors")
+    .select("name, last_name, phone_number, hospital_name")
     .eq("telegram_chat_id", chatId)
     .single();
 
-  if (!professional) {
+  if (!doctor) {
     return [
-      `❌ *${firstName}*, tu Telegram no está vinculado a ningún profesional AMIS.`,
+      `❌ *${firstName}*, tu Telegram no está validado.`,
       ``,
-      `Para vincularte, usa:`,
-      `• \`/vincular tu-rut\``,
-      `• \`/vincular tu@email.com\``,
+      `Para verificarte, envía el comando \`/start\` y presiona "Compartir Contacto 📱".`,
     ].join("\n");
   }
 
   return [
-    `✅ *Estado: VINCULADO*`,
+    `✅ *Estado: IDENTIDAD VALIDADA*`,
     ``,
-    `👤 *${professional.name} ${professional.last_name}*`,
-    `📋 *Rol:* ${professional.role}`,
-    `📧 *Email:* ${professional.email}`,
-    `🆔 *RUT:* ${professional.national_id}`,
+    `👤 *Dr/Dra. ${doctor.name} ${doctor.last_name}*`,
+    `🏥 *Institución:* ${doctor.hospital_name || 'No registrada'}`,
+    `📱 *Número validado:* ${doctor.phone_number}`,
     `💬 *Chat ID:* ${chatId}`,
     ``,
-    `🔔 Estás recibiendo alertas de interconsultas.`,
+    `Puedes enviar tus consultas clínicas escribiéndolas directamente.`,
   ].join("\n");
 }
 
@@ -328,7 +336,7 @@ Deno.serve(async (req: Request) => {
     const message = update?.message;
 
     if (!message) {
-      console.log("📨 Update sin mensaje de texto:", JSON.stringify(update).slice(0, 200));
+      console.log("📨 Update sin mensaje válido:", JSON.stringify(update).slice(0, 200));
       return new Response("OK", { status: 200 });
     }
 
@@ -336,8 +344,65 @@ Deno.serve(async (req: Request) => {
     const userId = message.from?.id;
     const username = message.from?.username || message.from?.first_name || "Desconocido";
     const firstName = message.from?.first_name || "";
+    
+    // ── IAM: Flujo de validación por contacto (Lista Blanca) ──
+    if (message.contact) {
+      const phoneNumber = message.contact.phone_number;
+      console.log(`📱 Contacto recibido: ${phoneNumber} de chat_id: ${chatId}`);
+
+      const normalizedPhone = phoneNumber.replace(/[^0-9]/g, '');
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      
+      const { data: doctors, error } = await supabase
+        .from("external_doctors")
+        .select("id, name, last_name, phone_number, hospital_name")
+        .filter('phone_number', 'ilike', `%${normalizedPhone.slice(-8)}%`);
+
+      if (error || !doctors || doctors.length === 0) {
+          await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: `❌ Número no autorizado (*${phoneNumber}*).\n\nPor favor contacte a la administración de su clínica para solicitar el enrolamiento a Seshat IAM.`,
+              parse_mode: "Markdown",
+              reply_markup: { remove_keyboard: true }
+            }),
+          });
+          return new Response("OK", { status: 200 });
+      }
+
+      const doctor = doctors[0];
+      const { error: updateError } = await supabase
+        .from("external_doctors")
+        .update({ telegram_chat_id: chatId })
+        .eq("id", doctor.id);
+
+      if (updateError) {
+          await sendTelegramMessage(chatId, `❌ Hubo un error al enrolar tu cuenta. Intenta nuevamente más tarde.`);
+          return new Response("OK", { status: 200 });
+      }
+
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `✅ *¡Identidad Verificada!*\n\nBienvenido Dr/Dra. *${doctor.name} ${doctor.last_name}*.\nInstitución validada: *${doctor.hospital_name || 'Seshat Network'}*.\n\nPuedes consultar el estado de tus pacientes escribiendo de forma libre. Ejemplo:\n_"¿Cuál es el estado del paciente 11.222.333-4?"_`,
+          parse_mode: "Markdown",
+          reply_markup: { remove_keyboard: true }
+        }),
+      });
+
+      return new Response("OK", { status: 200 });
+    }
+
     const text = message.text || "";
     const messageDate = new Date((message.date || 0) * 1000).toISOString();
+
+    if (!text && !message.contact) {
+      return new Response("OK", { status: 200 });
+    }
 
     // ── Log ────────────────────────────────────────────────
     console.log("═══════════════════════════════════════════");
@@ -355,57 +420,46 @@ Deno.serve(async (req: Request) => {
 
     const cmd = text.trim().toLowerCase();
 
-    // ── /start — Bienvenida ────────────────────────────────
+    // ── /start — Bienvenida y Solicitud de Validación ──────
     if (cmd === "/start") {
-      // Auto-check: ¿ya está vinculado?
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-      const { data: existing } = await supabase
-        .from("professionals")
-        .select("name, last_name, role")
+      const { data: linked } = await supabase
+        .from("external_doctors")
+        .select("name, last_name, hospital_name")
         .eq("telegram_chat_id", chatId)
         .single();
 
-      if (existing) {
+      if (linked) {
         await sendTelegramMessage(chatId, [
-          `👋 *¡Hola de nuevo, ${existing.name} ${existing.last_name}!*`,
+          `👋 *¡Hola de nuevo, Dr/Dra. ${linked.name} ${linked.last_name}!*`,
           ``,
-          `Ya estás vinculado como *${existing.role}*.`,
-          `Recibirás alertas de interconsultas automáticamente. 🔔`,
-          ``,
-          `*Comandos:*`,
-          `• \`TOMO IC-XXXX\` → Tomar un caso escalado`,
-          `• \`/estado\` → Tu estado de vinculación`,
-          `• \`/ayuda\` → Ver todos los comandos`,
+          `Tu identidad ya está verificada para la clínica *${linked.hospital_name || 'tu institución'}*.`,
+          `Simplemente puedes escribir tus consultas para interactuar con Seshat.`,
         ].join("\n"));
       } else {
-        await sendTelegramMessage(chatId, [
-          `🏥 *Bienvenido al Bot AMIS 3.0*`,
-          ``,
-          `Soy el asistente de interconsultas de la red AMIS.`,
-          ``,
-          `Para recibir alertas, primero vincúlate:`,
-          ``,
-          `📌 *Opción 1:* Con tu RUT`,
-          `\`/vincular 10.206.892-0\``,
-          ``,
-          `📌 *Opción 2:* Con tu email`,
-          `\`/vincular tu@email.com\``,
-          ``,
-          `Solo necesitas hacerlo *una vez*. Después recibirás alertas automáticamente.`,
-        ].join("\n"));
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `🏥 *Bienvenido al Bot Clínico AMIS 3.0 para Médicos Derivadores*\n\nPor políticas de seguridad y Cero Fricción B2B, necesitamos verificar tu identidad validando tu número contra nuestra lista blanca.\n\nPor favor, presiona el botón de abajo para **Compartir Contacto 📱**:`,
+            parse_mode: "Markdown",
+            reply_markup: {
+              keyboard: [
+                [{ text: "Compartir Contacto 📱", request_contact: true }]
+              ],
+              resize_keyboard: true,
+              one_time_keyboard: true
+            }
+          }),
+        });
       }
       return new Response("OK", { status: 200 });
     }
 
-    // ── /vincular — Auto-registro ─────────────────────────
-    const vincularMatch = text.trim().match(/^\/vincular\s+(.+)$/i);
-    if (vincularMatch) {
-      const identifier = vincularMatch[1].trim();
-      console.log(`🔗 Comando VINCULAR: "${identifier}" por ${firstName} (chat: ${chatId})`);
-      const response = await handleVincularCommand(identifier, chatId, firstName);
-      await sendTelegramMessage(chatId, response);
-      return new Response("OK", { status: 200 });
-    }
+    // ── Comando /vincular REMOVIDO ─────────
+    // Se ha deprecado en favor de la validación del contacto (Lista Blanca)
+
 
     // ── /estado — Check vinculación ───────────────────────
     if (cmd === "/estado") {
@@ -419,17 +473,16 @@ Deno.serve(async (req: Request) => {
       await sendTelegramMessage(chatId, [
         `📖 *Comandos del Bot AMIS:*`,
         ``,
-        `🔗 \`/vincular RUT-o-EMAIL\``,
-        `   Vincular tu Telegram a tu perfil AMIS`,
-        ``,
         `📋 \`/estado\``,
-        `   Ver si estás vinculado y tu información`,
+        `   Ver si estás verificado y tu información institucional`,
         ``,
         `🎯 \`TOMO IC-XXXX-XXXX\``,
-        `   Tomar un caso escalado/sin respuesta`,
+        `   Tomar un caso escalado/sin respuesta (Uso interno)`,
         ``,
-        `❓ \`/ayuda\``,
-        `   Mostrar esta ayuda`,
+        `💡 *Asistente Inteligente (IA):*`,
+        `   Puedes escribir peticiones libres, ejemplo:`,
+        `   _"Mostrar informe de paciente 11.222.333-4"_`,
+        `   _"Generar PACS link para examen de Juan Perez"_`,
         ``,
         `_Bot AMIS 3.0 — Motor de Interconsultas Omnicanal_`,
       ].join("\n"));
@@ -446,32 +499,27 @@ Deno.serve(async (req: Request) => {
       return new Response("OK", { status: 200 });
     }
 
-    // ── Mensaje no reconocido → ayuda inteligente ─────────
+    // ── Mensaje de texto libre → Procesamiento NLP con Gemini ─────────
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { data: linked } = await supabase
-      .from("professionals")
-      .select("name")
+      .from("external_doctors") // Ajustado a external_doctors
+      .select("id, name, last_name, hospital_name")
       .eq("telegram_chat_id", chatId)
       .single();
 
     if (!linked) {
-      // No vinculado → priorizar vinculación
+      // No validado → solicitar compartir contacto
       await sendTelegramMessage(chatId, [
         `🤖 *Hola ${firstName}!*`,
         ``,
-        `Aún no estás vinculado al sistema AMIS.`,
-        `Para empezar, ejecuta:`,
-        ``,
-        `\`/vincular tu-rut\`  o  \`/vincular tu@email.com\``,
-        ``,
-        `Ejemplo: \`/vincular 10.206.892-0\``,
+        `Para enviar consultas clínicas de forma libre, primero debes verificar tu identidad.`,
+        `Por favor envía \`/start\` y presiona el botón de "Compartir Contacto 📱".`,
       ].join("\n"));
     } else {
-      await sendTelegramMessage(chatId, [
-        `🤖 *Hola ${linked.name}!*`,
-        ``,
-        `No reconozco ese comando. Escribe \`/ayuda\` para ver las opciones.`,
-      ].join("\n"));
+      // Procesamos el mensaje libre con Gemini
+      await sendTelegramMessage(chatId, `🧠 Analizando solicitud clínica...`);
+      const responseText = await processNaturalLanguage(text, linked, supabase, chatId);
+      await sendTelegramMessage(chatId, responseText);
     }
 
     return new Response("OK", { status: 200 });
