@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Layout } from './components/Layout'
+import { AuthView } from './components/AuthView'
+import { useAuth } from './hooks/useAuth'
 import { DashboardModule } from './modules/dashboard/DashboardModule'
 import { TenderDashboard } from './modules/tenders/TenderDashboard'
 import { ProfessionalMatrix } from './modules/staffing/ProfessionalMatrix'
@@ -21,6 +23,7 @@ import { DispatchCenter } from './modules/dispatch/DispatchCenter'
 import { QuickViewBridge } from './modules/quick-view/QuickViewBridge'
 
 function App() {
+  const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_access' | 'dispatch'>('dashboard');
 
   if (window.location.pathname.startsWith('/guia/')) {
@@ -30,6 +33,11 @@ function App() {
   // 🔗 Magic Link Bridge — Redirige al visor SESHAT tras validar JWT
   if (window.location.pathname === '/quick-view') {
     return <QuickViewBridge />;
+  }
+
+  // Protector de Rutas: Si no hay usuario, retorna vista Login
+  if (!user) {
+    return <AuthView />;
   }
 
 

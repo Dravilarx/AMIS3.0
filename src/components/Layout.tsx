@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 import { cn } from '../lib/utils';
 
@@ -34,6 +35,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
+    const { signOut } = useAuth();
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
         const saved = localStorage.getItem('prevenort-theme');
         return (saved as 'dark' | 'light') || 'dark';
@@ -122,13 +124,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             <p className="text-[10px] text-prevenort-primary font-bold uppercase tracking-tight">DIRECTOR MÉDICO</p>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => alert('Próximamente: Preferencias')}
                             className="flex items-center justify-center p-2.5 rounded-xl border border-prevenort-border text-prevenort-text/40 hover:text-prevenort-primary hover:border-prevenort-primary/30 hover:bg-orange-500/5 transition-all"
                         >
                             <Settings className="w-4 h-4" />
                             <span className="ml-2 text-xs font-bold">Ajustes</span>
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await signOut();
+                                window.location.href = '/';
+                            }}
+                            className="flex items-center justify-center p-2.5 rounded-xl border border-danger/20 text-danger hover:bg-danger hover:text-white hover:border-danger transition-all"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span className="ml-2 text-xs font-bold">Salir</span>
                         </button>
                     </div>
                 </div>
