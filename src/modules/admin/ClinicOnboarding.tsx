@@ -3,6 +3,24 @@ import { supabase } from '../../lib/supabase';
 import { Upload, Download, CheckCircle, AlertTriangle, FileSpreadsheet, Loader2, Users, X, Save, DatabaseBackup, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+// ── Utilidades de Normalización ──────────────────────────────────
+
+/** Normaliza cualquier formato de RUT a xxxxxxxx-x (sin puntos) */
+const normalizeRut = (rut: string): string => {
+    const clean = rut.replace(/[^0-9kK]/gi, '').toUpperCase();
+    if (clean.length < 2) return rut;
+    return clean.slice(0, -1) + '-' + clean.slice(-1);
+};
+
+/** Formatea teléfono para display: +xxx xxxx xxxx */
+const formatPhoneDisplay = (phone: string): string => {
+    const digits = phone.replace(/[^0-9]/g, '');
+    if (digits.length === 11) {
+        return `+${digits.slice(0, 3)} ${digits.slice(3, 7)} ${digits.slice(7)}`;
+    }
+    return phone;
+};
+
 interface DoctorRow {
     rut: string;
     name: string;
@@ -90,7 +108,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
             const values = lines[i].split(',').map(v => v.trim());
             if (values.length >= 7) {
                 const row: DoctorRow = {
-                    rut: values[0],
+                    rut: normalizeRut(values[0]),
                     name: values[1],
                     last_name: values[2],
                     specialty: values[3],
@@ -180,7 +198,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
         setUploadStatus('idle');
 
         const payload = validDoctors.map(doc => ({
-            rut: doc.rut,
+            rut: normalizeRut(doc.rut),
             name: doc.name,
             last_name: doc.last_name,
             specialty: doc.specialty,
@@ -192,7 +210,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
         try {
             const { error } = await supabase
                 .from('external_doctors')
-                .upsert(payload, { onConflict: 'rut' });
+                .upsert(payload, { onConflict: 'phone_number' });
 
             if (error) throw error;
             
@@ -216,8 +234,8 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
             if (!validatePhoneNumber(formData.phone_number)) {
                 throw new Error("El teléfono debe seguir el formato +569...");
             }
-            const payload = { ...formData, phone_number: formData.phone_number.replace(/[^0-9+]/g, '') };
-            const { error } = await supabase.from('external_doctors').upsert(payload, { onConflict: 'rut' });
+            const payload = { ...formData, rut: normalizeRut(formData.rut), phone_number: formData.phone_number.replace(/[^0-9+]/g, '') };
+            const { error } = await supabase.from('external_doctors').upsert(payload, { onConflict: 'phone_number' });
             if (error) throw error;
             
             fetchExistingDoctors();
@@ -288,7 +306,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                                         <td className="px-4 py-4">
                                             <p className="font-bold text-prevenort-text">{doc.name} {doc.last_name}</p>
                                             <p className="text-[10px] text-prevenort-text/40 truncate">{doc.hospital_name}</p>
-                                            <p className="font-mono text-[9px] text-prevenort-text/60 mt-0.5">{doc.phone_number}</p>
+                                            <p className="font-mono text-[9px] text-prevenort-text/60 mt-0.5">{formatPhoneDisplay(doc.phone_number)}</p>
                                         </td>
                                         <td className="px-4 py-4 text-xs font-bold text-prevenort-text/70">{doc.specialty}</td>
                                         <td className="px-4 py-4">
@@ -359,7 +377,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                                         <td className="px-4 py-4">
                                             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-prevenort-text/5 border border-prevenort-border rounded-lg font-mono text-xs text-prevenort-text/80">
                                                 <CheckCircle className="w-3 h-3 text-success" />
-                                                {doc.phone_number}
+                                                {formatPhoneDisplay(doc.phone_number)}
                                             </span>
                                         </td>
                                     </tr>
