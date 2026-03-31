@@ -40,6 +40,8 @@ interface AuthContextType {
     canPerform: (module: keyof UserPermissions, action: keyof ModulePermission) => boolean;
     isSuperAdmin: () => boolean;
     signOut: () => Promise<void>;
+    isRecoveringPassword: boolean;
+    setRecoveringPassword: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,6 +117,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE: Record<UserRole, UserPermissions> = {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRecoveringPassword, setRecoveringPassword] = useState(false);
 
     useEffect(() => {
         // Initial session check
@@ -128,6 +131,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                setRecoveringPassword(true);
+            }
             if (event === 'SIGNED_IN' && session) {
                 fetchUserProfile(session.user);
             } else if (event === 'SIGNED_OUT') {
@@ -206,7 +212,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, hasModuleAccess, canPerform, isSuperAdmin, signOut }}>
+        <AuthContext.Provider value={{ user, loading, hasModuleAccess, canPerform, isSuperAdmin, signOut, isRecoveringPassword, setRecoveringPassword }}>
             {!loading && children}
         </AuthContext.Provider>
     );

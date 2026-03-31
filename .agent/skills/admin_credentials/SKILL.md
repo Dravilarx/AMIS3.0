@@ -10,7 +10,7 @@ description: Credenciales por defecto del superusuario de AMIS 3.0. Usar siempre
 | Campo       | Valor                            |
 |-------------|----------------------------------|
 | **Email**   | `marcelo.avila@amis.global`      |
-| **Password**| `Maj2030!`                       |
+| **Password**| `Amis2030!`                      |
 | **Rol**     | `SUPER_ADMIN`                    |
 | **Nombre**  | Marcelo Avila                    |
 
@@ -27,7 +27,7 @@ description: Credenciales por defecto del superusuario de AMIS 3.0. Usar siempre
 2. **Reseteo de contraseña**: Si se necesita resetear, ejecutar el siguiente SQL en Supabase:
    ```sql
    UPDATE auth.users 
-   SET encrypted_password = crypt('Maj2030!', gen_salt('bf'))
+   SET encrypted_password = crypt('Amis2030!', gen_salt('bf'))
    WHERE email = 'marcelo.avila@amis.global';
    ```
 3. **Protección**: El email `marcelo.avila@amis.global` está protegido en el código contra cambios de rol vía la UI de admin (ver `useAdminProfiles.ts`).

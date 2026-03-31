@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { ChangePasswordModal } from './ChangePasswordModal';
 
 import { cn } from '../lib/utils';
 
@@ -35,7 +36,8 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
-    const { signOut } = useAuth();
+    const { signOut, isRecoveringPassword } = useAuth();
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
         const saved = localStorage.getItem('prevenort-theme');
         return (saved as 'dark' | 'light') || 'dark';
@@ -126,11 +128,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={() => alert('Próximamente: Preferencias')}
+                            onClick={() => setIsChangePasswordOpen(true)}
                             className="flex items-center justify-center p-2.5 rounded-xl border border-prevenort-border text-prevenort-text/40 hover:text-prevenort-primary hover:border-prevenort-primary/30 hover:bg-orange-500/5 transition-all"
                         >
                             <Settings className="w-4 h-4" />
-                            <span className="ml-2 text-xs font-bold">Ajustes</span>
+                            <span className="ml-2 text-xs font-bold">Cambiar Clave</span>
                         </button>
                         <button
                             onClick={async () => {
@@ -207,6 +209,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                     </div>
                 </div>
             </main>
+
+            <ChangePasswordModal 
+                isOpen={isChangePasswordOpen || isRecoveringPassword}
+                onClose={() => setIsChangePasswordOpen(false)}
+                forceMode={isRecoveringPassword}
+            />
         </div>
     );
 };
