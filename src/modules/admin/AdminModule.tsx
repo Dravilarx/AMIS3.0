@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Shield, UserPlus, Trash2, CheckCircle2, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAdminProfiles } from '../../hooks/useAdminProfiles';
-import { useAuth } from '../../hooks/useAuth';
-import type { UserRole } from '../../hooks/useAuth';
+import { useAuth, type UserRole } from '../../hooks/useAuth';
 import { ClinicOnboarding } from './ClinicOnboarding';
+import { ProcedureHomologation } from './ProcedureHomologation';
+import { CriticalPathologies } from './CriticalPathologies';
 
 const MODULES = [
     { id: 'dashboard', name: 'Centro de Gestión' },
@@ -32,7 +33,7 @@ export const AdminModule: React.FC = () => {
     const { profiles, updateProfile, deleteProfile } = useAdminProfiles();
     const { user: _currentUser } = useAuth();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'internal' | 'b2b'>('internal');
+    const [activeTab, setActiveTab] = useState<'internal' | 'b2b' | 'homologation' | 'alertas'>('internal');
 
     const [showB2BModal, setShowB2BModal] = useState(false);
 
@@ -78,7 +79,7 @@ export const AdminModule: React.FC = () => {
             </div>
 
             {/* TAB SELECTOR */}
-            <div className="flex bg-prevenort-surface/50 border border-prevenort-border p-1.5 rounded-2xl w-fit">
+            <div className="flex bg-prevenort-surface/50 border border-prevenort-border p-1.5 rounded-2xl w-fit flex-wrap gap-1">
                 <button 
                   onClick={() => setActiveTab('internal')}
                   className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'internal' ? 'bg-prevenort-bg text-prevenort-text shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
@@ -90,6 +91,18 @@ export const AdminModule: React.FC = () => {
                   className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'b2b' ? 'bg-prevenort-bg text-prevenort-text shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
                 >
                     Whitelist Clínicas B2B
+                </button>
+                <button 
+                  onClick={() => setActiveTab('homologation')}
+                  className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'homologation' ? 'bg-info/10 text-info border border-info/20 shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
+                >
+                    Diccionario Clínico
+                </button>
+                <button 
+                  onClick={() => setActiveTab('alertas')}
+                  className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'alertas' ? 'bg-danger/10 text-danger border border-danger/20 shadow-sm' : 'text-prevenort-text/40 hover:text-prevenort-text/80')}
+                >
+                    Matriz de Alertas Rojas
                 </button>
             </div>
 
@@ -270,8 +283,12 @@ export const AdminModule: React.FC = () => {
                     )}
                 </div>
             </div>
-            ) : (
+            ) : activeTab === 'b2b' ? (
                 <ClinicOnboarding isAddModalOpen={showB2BModal} onCloseModal={() => setShowB2BModal(false)} />
+            ) : activeTab === 'homologation' ? (
+                <ProcedureHomologation />
+            ) : (
+                <CriticalPathologies />
             )}
         </div>
     );
