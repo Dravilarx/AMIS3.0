@@ -54,12 +54,12 @@
 }
 
 @theme {
-  --color-prevenort-primary: var(--brand-orange);
-  --color-prevenort-secondary: var(--brand-black);
-  --color-prevenort-bg: var(--brand-bg);
-  --color-prevenort-surface: var(--brand-surface);
-  --color-prevenort-border: var(--brand-border);
-  --color-prevenort-text: var(--brand-text);
+  --color-brand-primary: var(--brand-orange);
+  --color-brand-secondary: var(--brand-black);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-border: var(--brand-border);
+  --color-brand-text: var(--brand-text);
 
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
@@ -69,7 +69,7 @@
 }
 
 body {
-  @apply bg-prevenort-bg text-prevenort-text antialiased selection:bg-orange-500/30;
+  @apply bg-brand-bg text-brand-text antialiased selection:bg-orange-500/30;
   font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease;
 }

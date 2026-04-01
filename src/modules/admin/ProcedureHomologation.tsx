@@ -44,38 +44,38 @@ export const ProcedureHomologation: React.FC = () => {
                 <div className="w-full md:w-1/3 space-y-4">
                     <div className="flex items-center justify-between px-2">
                         <div className="flex items-center gap-2">
-                            <div className="p-2 bg-prevenort-primary/10 rounded-xl">
-                                <Library className="w-5 h-5 text-prevenort-primary" />
+                            <div className="p-2 bg-brand-primary/10 rounded-xl">
+                                <Library className="w-5 h-5 text-brand-primary" />
                             </div>
-                            <h3 className="text-xs font-black text-prevenort-text/80 uppercase tracking-widest">Catálogo Maestro</h3>
+                            <h3 className="text-xs font-black text-brand-text/80 uppercase tracking-widest">Catálogo Maestro</h3>
                         </div>
-                        <button className="p-2 hover:bg-prevenort-surface rounded-lg transition-colors text-prevenort-text/40 hover:text-prevenort-primary">
+                        <button className="p-2 hover:bg-brand-surface rounded-lg transition-colors text-brand-text/40 hover:text-brand-primary">
                             <Plus className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div className="card-premium h-[600px] flex flex-col p-4 bg-prevenort-surface/30">
+                    <div className="card-premium h-[600px] flex flex-col p-4 bg-brand-surface/30">
                         <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/40" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/40" />
                             <input 
                                 type="text" 
                                 placeholder="Buscar Código AMIS..." 
-                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl pl-10 pr-4 py-2 text-xs focus:ring-1 focus:ring-prevenort-primary outline-none"
+                                className="w-full bg-brand-surface border border-brand-border rounded-xl pl-10 pr-4 py-2 text-xs focus:ring-1 focus:ring-brand-primary outline-none"
                             />
                         </div>
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
                             {masterProcedures.map(p => (
-                                <div key={p.id} className="p-3 bg-prevenort-surface border border-prevenort-border rounded-xl hover:border-prevenort-primary/30 transition-colors cursor-pointer group">
+                                <div key={p.id} className="p-3 bg-brand-surface border border-brand-border rounded-xl hover:border-brand-primary/30 transition-colors cursor-pointer group">
                                     <div className="flex justify-between items-start mb-1">
-                                        <span className="text-[10px] font-black text-prevenort-primary uppercase tracking-widest">{p.codigo_amis}</span>
-                                        <span className="text-[8px] font-bold text-prevenort-text/40 bg-prevenort-bg px-2 rounded-full">{p.modalidad}</span>
+                                        <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">{p.codigo_amis}</span>
+                                        <span className="text-[8px] font-bold text-brand-text/40 bg-brand-bg px-2 rounded-full">{p.modalidad}</span>
                                     </div>
-                                    <p className="text-xs font-medium text-prevenort-text line-clamp-2">{p.titulo_oficial}</p>
+                                    <p className="text-xs font-medium text-brand-text line-clamp-2">{p.titulo_oficial}</p>
                                 </div>
                             ))}
                             {masterProcedures.length === 0 && !loading && (
-                                <div className="text-center py-10 text-prevenort-text/40 text-xs italic">Catálogo vacío. Inyecta seed data.</div>
+                                <div className="text-center py-10 text-brand-text/40 text-xs italic">Catálogo vacío. Inyecta seed data.</div>
                             )}
                         </div>
                     </div>
@@ -88,16 +88,16 @@ export const ProcedureHomologation: React.FC = () => {
                             <div className="p-2 bg-info/10 rounded-xl">
                                 <Link2 className="w-5 h-5 text-info" />
                             </div>
-                            <h3 className="text-xs font-black text-prevenort-text/80 uppercase tracking-widest">Diccionario de Homologación</h3>
+                            <h3 className="text-xs font-black text-brand-text/80 uppercase tracking-widest">Diccionario de Homologación</h3>
                         </div>
                         
                         {/* Selector de Institución */}
                         <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-prevenort-text/40" />
+                            <Building2 className="w-4 h-4 text-brand-text/40" />
                             <select 
                                 value={selectedInst} 
                                 onChange={(e) => setSelectedInst(e.target.value)}
-                                className="bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-1.5 text-xs font-black uppercase text-prevenort-text focus:outline-none focus:border-info"
+                                className="bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs font-black uppercase text-brand-text focus:outline-none focus:border-info"
                             >
                                 <option value="" disabled>Seleccione Clínica...</option>
                                 {institutions.map(inst => (
@@ -107,28 +107,28 @@ export const ProcedureHomologation: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="card-premium h-[600px] flex flex-col bg-prevenort-surface/30 p-0 overflow-hidden">
+                    <div className="card-premium h-[600px] flex flex-col bg-brand-surface/30 p-0 overflow-hidden">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-prevenort-border bg-prevenort-surface/80">
-                                    <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Cod. Externo (VPN)</th>
-                                    <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Traducción Oficial (AMIS)</th>
-                                    <th className="px-6 py-4 text-right text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Acciones</th>
+                                <tr className="border-b border-brand-border bg-brand-surface/80">
+                                    <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Cod. Externo (VPN)</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Traducción Oficial (AMIS)</th>
+                                    <th className="px-6 py-4 text-right text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-prevenort-border">
+                            <tbody className="divide-y divide-brand-border">
                                 {filteredMappings.map(m => (
-                                    <tr key={m.id} className="hover:bg-prevenort-primary/5 transition-colors group">
+                                    <tr key={m.id} className="hover:bg-brand-primary/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <Database className="w-4 h-4 text-warning" />
-                                                <span className="text-sm font-black text-prevenort-text">{m.codigo_externo}</span>
+                                                <span className="text-sm font-black text-brand-text">{m.codigo_externo}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] text-prevenort-primary font-bold uppercase">{m.master_procedures?.codigo_amis}</span>
-                                                <span className="text-xs text-prevenort-text/80">{m.master_procedures?.titulo_oficial}</span>
+                                                <span className="text-[10px] text-brand-primary font-bold uppercase">{m.master_procedures?.codigo_amis}</span>
+                                                <span className="text-xs text-brand-text/80">{m.master_procedures?.titulo_oficial}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -142,11 +142,11 @@ export const ProcedureHomologation: React.FC = () => {
                                     <tr>
                                         <td colSpan={3} className="px-6 py-20 text-center">
                                             <div className="inline-flex flex-col items-center">
-                                                <div className="p-4 bg-prevenort-border/50 rounded-full mb-4">
-                                                    <Link2 className="w-8 h-8 text-prevenort-text/20" />
+                                                <div className="p-4 bg-brand-border/50 rounded-full mb-4">
+                                                    <Link2 className="w-8 h-8 text-brand-text/20" />
                                                 </div>
-                                                <p className="text-xs font-bold text-prevenort-text/40 uppercase tracking-widest mb-1">Sin Mapeos Activos</p>
-                                                <p className="text-[10px] text-prevenort-text/30">Esta institución no tiene traducciones registradas en la Torre de Babel.</p>
+                                                <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest mb-1">Sin Mapeos Activos</p>
+                                                <p className="text-[10px] text-brand-text/30">Esta institución no tiene traducciones registradas en la Torre de Babel.</p>
                                             </div>
                                         </td>
                                     </tr>

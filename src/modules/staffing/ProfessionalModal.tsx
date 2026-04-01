@@ -243,23 +243,23 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
             <div className="card-premium w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-300">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 hover:bg-prevenort-surface rounded-full transition-colors"
+                    className="absolute top-4 right-4 p-2 hover:bg-brand-surface rounded-full transition-colors"
                 >
-                    <X className="w-5 h-5 text-prevenort-text/40" />
+                    <X className="w-5 h-5 text-brand-text/40" />
                 </button>
 
                 <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-prevenort-text">{initialData ? `${initialData.name} ${initialData.lastName}` : 'Nuevo Profesional'}</h2>
-                    <p className="text-prevenort-text/40 text-sm">Matriz Única del Holding Portezuelo</p>
+                    <h2 className="text-2xl font-bold text-brand-text">{initialData ? `${initialData.name} ${initialData.lastName}` : 'Nuevo Profesional'}</h2>
+                    <p className="text-brand-text/40 text-sm">Matriz Única del Holding Portezuelo</p>
                 </div>
 
                 {/* Tabs de Navegación del Modal */}
-                <div className="flex items-center gap-1 p-1 bg-prevenort-surface border border-prevenort-border rounded-xl mb-8">
+                <div className="flex items-center gap-1 p-1 bg-brand-surface border border-brand-border rounded-xl mb-8">
                     <button
                         onClick={() => setActiveTab('info')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
-                            activeTab === 'info' ? "bg-prevenort-text text-prevenort-bg shadow-lg" : "text-prevenort-text/40 hover:text-prevenort-text/60 hover:bg-prevenort-surface"
+                            activeTab === 'info' ? "bg-brand-text text-brand-bg shadow-lg" : "text-brand-text/40 hover:text-brand-text/60 hover:bg-brand-surface"
                         )}
                     >
                         <User className="w-3.5 h-3.5" />
@@ -269,7 +269,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         onClick={() => setActiveTab('academic')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
-                            activeTab === 'academic' ? "bg-prevenort-text text-prevenort-bg shadow-lg" : "text-prevenort-text/40 hover:text-prevenort-text/60 hover:bg-prevenort-surface"
+                            activeTab === 'academic' ? "bg-brand-text text-brand-bg shadow-lg" : "text-brand-text/40 hover:text-brand-text/60 hover:bg-brand-surface"
                         )}
                     >
                         <GraduationCap className="w-3.5 h-3.5" />
@@ -279,7 +279,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         onClick={() => setActiveTab('contracts')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
-                            activeTab === 'contracts' ? "bg-prevenort-text text-prevenort-bg shadow-lg" : "text-prevenort-text/40 hover:text-prevenort-text/60 hover:bg-prevenort-surface"
+                            activeTab === 'contracts' ? "bg-brand-text text-brand-bg shadow-lg" : "text-brand-text/40 hover:text-brand-text/60 hover:bg-brand-surface"
                         )}
                     >
                         <Layers className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         onClick={() => setActiveTab('induction')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
-                            activeTab === 'induction' ? "bg-prevenort-text text-prevenort-bg shadow-lg" : "text-prevenort-text/40 hover:text-prevenort-text/60 hover:bg-prevenort-surface"
+                            activeTab === 'induction' ? "bg-brand-text text-brand-bg shadow-lg" : "text-brand-text/40 hover:text-brand-text/60 hover:bg-brand-surface"
                         )}
                     >
                         <ShieldCheck className="w-3.5 h-3.5" />
@@ -299,7 +299,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         onClick={() => setActiveTab('expediente')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
-                            activeTab === 'expediente' ? "bg-prevenort-text text-prevenort-bg shadow-lg" : "text-prevenort-text/40 hover:text-prevenort-text/60 hover:bg-prevenort-surface"
+                            activeTab === 'expediente' ? "bg-brand-text text-brand-bg shadow-lg" : "text-brand-text/40 hover:text-brand-text/60 hover:bg-brand-surface"
                         )}
                     >
                         <FolderSearch className="w-3.5 h-3.5" />
@@ -338,15 +338,15 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
                             {/* Photo Upload Profile Area */}
-                            <div className="flex flex-col items-center justify-center p-6 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="flex flex-col items-center justify-center p-6 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <label className="relative cursor-pointer group">
-                                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-prevenort-border group-hover:border-prevenort-primary/50 flex items-center justify-center bg-prevenort-surface/50 transition-all">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-brand-border group-hover:border-brand-primary/50 flex items-center justify-center bg-brand-surface/50 transition-all">
                                         {formData.photoUrl ? (
                                             <img src={formData.photoUrl} alt="Foto" className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="flex flex-col items-center">
-                                                <UploadCloud className="w-6 h-6 text-prevenort-text/20 group-hover:text-prevenort-primary" />
-                                                <span className="text-[10px] text-prevenort-text/40 mt-1 uppercase tracking-widest font-bold">Foto</span>
+                                                <UploadCloud className="w-6 h-6 text-brand-text/20 group-hover:text-brand-primary" />
+                                                <span className="text-[10px] text-brand-text/40 mt-1 uppercase tracking-widest font-bold">Foto</span>
                                             </div>
                                         )}
                                     </div>
@@ -369,11 +369,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                             </div>
 
                             {/* Sección 1: Cargo y Rol */}
-                            <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="space-y-4 p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         <Briefcase className="w-4 h-4 text-blue-400" />
-                                        <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Información del Cargo</h3>
+                                        <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Información del Cargo</h3>
                                     </div>
                                     {/* Toggle Activo/Inactivo */}
                                     <button
@@ -395,9 +395,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Cargo / Rol Principal</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Cargo / Rol Principal</label>
                                         <select
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none appearance-none"
                                             value={formData.role}
                                             onChange={e => setFormData({ ...formData, role: e.target.value as any })}
                                         >
@@ -405,9 +405,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Estatus de Info</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Estatus de Info</label>
                                         <select
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none appearance-none"
                                             value={formData.infoStatus || 'incomplete'}
                                             onChange={e => setFormData({ ...formData, infoStatus: e.target.value as any })}
                                         >
@@ -423,7 +423,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                 id="isVerified"
                                                 checked={formData.isVerified}
                                                 onChange={e => setFormData({ ...formData, isVerified: e.target.checked })}
-                                                className="w-4 h-4 rounded border-prevenort-border bg-prevenort-surface text-emerald-500 focus:ring-emerald-500/20"
+                                                className="w-4 h-4 rounded border-brand-border bg-brand-surface text-emerald-500 focus:ring-emerald-500/20"
                                             />
                                             <label htmlFor="isVerified" className="text-xs uppercase font-bold text-emerald-400 tracking-widest flex items-center gap-2 cursor-pointer">
                                                 <CheckCircle2 className="w-4 h-4" />
@@ -432,10 +432,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                         </div>
                                     )}
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Email Corporativo / Uso</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Email Corporativo / Uso</label>
                                         <input
                                             type="email"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.email}
                                             onChange={e => setFormData({ ...formData, email: e.target.value })}
                                         />
@@ -444,97 +444,97 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                             </div>
 
                             {/* Sección 2: Datos Personales */}
-                            <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="space-y-4 p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <div className="flex items-center gap-2 mb-2">
                                     <User className="w-4 h-4 text-emerald-400" />
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Datos Personales</h3>
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Datos Personales</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Nombres</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Nombres</label>
                                         <input
                                             required
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Apellidos</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Apellidos</label>
                                         <input
                                             required
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.lastName}
                                             onChange={e => setFormData({ ...formData, lastName: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">RUT / DNI</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">RUT / DNI</label>
                                         <input
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.nationalId}
                                             onChange={e => setFormData({ ...formData, nationalId: e.target.value })}
                                             onBlur={e => setFormData({ ...formData, nationalId: formatRUT(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Nacionalidad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Nacionalidad</label>
                                         <input
                                             list="nationalities-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.nationality}
                                             onChange={e => setFormData({ ...formData, nationality: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Fecha Nacimiento</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Fecha Nacimiento</label>
                                         <input
                                             type="date"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.birthDate}
                                             onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Teléfono</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Teléfono</label>
                                         <input
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.phone}
                                             onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                             onBlur={e => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Ciudad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Ciudad</label>
                                         <input
                                             list="cities-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.residence.city}
                                             onChange={e => setFormData({ ...formData, residence: { ...formData.residence, city: e.target.value } })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Región</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Región</label>
                                         <input
                                             list="regions-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.residence.region}
                                             onChange={e => setFormData({ ...formData, residence: { ...formData.residence, region: e.target.value } })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Equipo / Unidad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Equipo / Unidad</label>
                                         <input
                                             list="teams-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.team}
                                             onChange={e => setFormData({ ...formData, team: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Asociado con</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Asociado con</label>
                                         <select
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.associatedWith || ''}
                                             onChange={e => setFormData({ ...formData, associatedWith: e.target.value })}
                                         >
@@ -557,43 +557,43 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                     {activeTab === 'academic' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Sección Académica */}
-                            <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="space-y-4 p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <div className="flex items-center gap-2 mb-2">
                                     <GraduationCap className="w-4 h-4 text-purple-400" />
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Académico & Profesional</h3>
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Académico & Profesional</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Universidad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Universidad</label>
                                         <input
                                             list="universities-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.university}
                                             onChange={e => setFormData({ ...formData, university: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">N° Registro (SIS / Colegio)</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">N° Registro (SIS / Colegio)</label>
                                         <input
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.registrationNumber}
                                             onChange={e => setFormData({ ...formData, registrationNumber: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Especialidad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Especialidad</label>
                                         <input
                                             list="specialties-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.specialty}
                                             onChange={e => setFormData({ ...formData, specialty: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Sub-especialidad</label>
+                                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Sub-especialidad</label>
                                         <input
                                             list="subspecialties-list"
-                                            className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                            className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                             value={formData.subSpecialty}
                                             onChange={e => setFormData({ ...formData, subSpecialty: e.target.value })}
                                         />
@@ -606,11 +606,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                     {activeTab === 'contracts' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Sección 4: Configuración Contractual */}
-                            <div className="space-y-4 p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="space-y-4 p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
                                         <Layers className="w-4 h-4 text-orange-400" />
-                                        <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Configuración Contractual</h3>
+                                        <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Configuración Contractual</h3>
                                     </div>
                                     <button
                                         type="button"
@@ -623,7 +623,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
 
                                 <div className="space-y-3">
                                     {formData.contracts.map((contract, i) => (
-                                        <div key={i} className="p-4 bg-prevenort-surface border border-prevenort-border rounded-xl space-y-4 relative group">
+                                        <div key={i} className="p-4 bg-brand-surface border border-brand-border rounded-xl space-y-4 relative group">
                                             <button
                                                 type="button"
                                                 onClick={() => removeContract(i)}
@@ -633,9 +633,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             </button>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div className="space-y-1">
-                                                    <label className="text-[9px] uppercase font-bold text-prevenort-text/20">Empresa Contratante</label>
+                                                    <label className="text-[9px] uppercase font-bold text-brand-text/20">Empresa Contratante</label>
                                                     <select
-                                                        className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-3 py-1.5 text-xs text-prevenort-text outline-none"
+                                                        className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none"
                                                         value={contract.company}
                                                         onChange={e => {
                                                             const newContracts = [...formData.contracts];
@@ -647,9 +647,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <label className="text-[9px] uppercase font-bold text-prevenort-text/20">Relación Laboral</label>
+                                                    <label className="text-[9px] uppercase font-bold text-brand-text/20">Relación Laboral</label>
                                                     <select
-                                                        className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-3 py-1.5 text-xs text-prevenort-text outline-none"
+                                                        className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none"
                                                         value={contract.type}
                                                         onChange={e => {
                                                             const newContracts = [...formData.contracts];
@@ -662,10 +662,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <label className="text-[9px] uppercase font-bold text-prevenort-text/20">Monto Mensual</label>
+                                                    <label className="text-[9px] uppercase font-bold text-brand-text/20">Monto Mensual</label>
                                                     <input
                                                         type="number"
-                                                        className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-3 py-1.5 text-xs text-prevenort-text outline-none"
+                                                        className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none"
                                                         value={contract.amount}
                                                         onChange={e => {
                                                             const newContracts = [...formData.contracts];
@@ -685,18 +685,18 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                     {activeTab === 'induction' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Control Master de Inducción */}
-                            <div className="p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
+                            <div className="p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
                                             "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                            formData.induction?.enabled ? "bg-info/10 text-info" : "bg-prevenort-surface text-prevenort-text/20"
+                                            formData.induction?.enabled ? "bg-info/10 text-info" : "bg-brand-surface text-brand-text/20"
                                         )}>
                                             <ShieldCheck className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-bold text-prevenort-text/90">Gestión de Inducción</h3>
-                                            <p className="text-[10px] text-prevenort-text/40 uppercase tracking-widest font-bold">Punto de Control Auditoría</p>
+                                            <h3 className="text-sm font-bold text-brand-text/90">Gestión de Inducción</h3>
+                                            <p className="text-[10px] text-brand-text/40 uppercase tracking-widest font-bold">Punto de Control Auditoría</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -709,7 +709,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                 induction: { ...formData.induction!, enabled: e.target.checked }
                                             })}
                                         />
-                                        <div className="w-11 h-6 bg-prevenort-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-prevenort-text after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-prevenort-text/20 after:border-prevenort-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-prevenort-primary peer-checked:after:bg-white"></div>
+                                        <div className="w-11 h-6 bg-brand-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-brand-text after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-brand-text/20 after:border-brand-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary peer-checked:after:bg-white"></div>
                                     </label>
                                 </div>
 
@@ -717,10 +717,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Inicio Inducción</label>
+                                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Inicio Inducción</label>
                                                 <input
                                                     type="date"
-                                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                                     value={formData.induction?.startDate || ''}
                                                     onChange={e => setFormData({
                                                         ...formData,
@@ -729,10 +729,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Fin Inducción</label>
+                                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Fin Inducción</label>
                                                 <input
                                                     type="date"
-                                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text focus:border-info/50 outline-none"
+                                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text focus:border-info/50 outline-none"
                                                     value={formData.induction?.endDate || ''}
                                                     onChange={e => setFormData({
                                                         ...formData,
@@ -751,7 +751,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                 </div>
                                                 <input
                                                     type="checkbox"
-                                                    className="w-4 h-4 rounded border-prevenort-border bg-prevenort-surface text-info focus:ring-info/20"
+                                                    className="w-4 h-4 rounded border-brand-border bg-brand-surface text-info focus:ring-info/20"
                                                     checked={formData.induction?.hasReadAndAccepted}
                                                     onChange={e => setFormData({
                                                         ...formData,
@@ -765,11 +765,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest flex items-center gap-2">
+                                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest flex items-center gap-2">
                                                     <UserCheck className="w-3 h-3" /> Encargado RRHH Responsable
                                                 </label>
                                                 <select
-                                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text outline-none"
+                                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text outline-none"
                                                     value={formData.induction?.assignedHRManagerId || ''}
                                                     onChange={e => setFormData({
                                                         ...formData,
@@ -800,8 +800,8 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
 
                                 {!formData.induction?.enabled && (
                                     <div className="text-center py-8">
-                                        <ShieldCheck className="w-12 h-12 text-prevenort-text/5 mx-auto mb-2" />
-                                        <p className="text-xs text-prevenort-text/20">La inducción está desactivada para este perfil profesional.</p>
+                                        <ShieldCheck className="w-12 h-12 text-brand-text/5 mx-auto mb-2" />
+                                        <p className="text-xs text-brand-text/20">La inducción está desactivada para este perfil profesional.</p>
                                     </div>
                                 )}
                             </div>
@@ -811,11 +811,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                     {activeTab === 'expediente' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Selector de Batería */}
-                            <div className="p-4 bg-prevenort-surface/50 border border-prevenort-border rounded-2xl">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest block mb-4">Asignar Batería Documental</label>
+                            <div className="p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest block mb-4">Asignar Batería Documental</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                                     <select
-                                        className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm text-prevenort-text outline-none"
+                                        className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm text-brand-text outline-none"
                                         value={selectedBatteryId}
                                         onChange={e => setSelectedBatteryId(e.target.value)}
                                     >
@@ -826,10 +826,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     {selectedBattery && (
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
-                                                <span className="text-prevenort-text/40">Cumplimiento</span>
+                                                <span className="text-brand-text/40">Cumplimiento</span>
                                                 <span className="text-info">{batteryProgress}%</span>
                                             </div>
-                                            <div className="w-full h-1.5 bg-prevenort-surface rounded-full overflow-hidden">
+                                            <div className="w-full h-1.5 bg-brand-surface rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-info transition-all duration-500"
                                                     style={{ width: `${batteryProgress}%` }}
@@ -846,16 +846,16 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     {selectedBattery.requirements.map(req => {
                                         const doc = professionalDocuments.find(d => d.requirementId === req.id);
                                         return (
-                                            <div key={req.id} className="flex items-center justify-between p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl group hover:border-prevenort-primary/20 transition-all">
+                                            <div key={req.id} className="flex items-center justify-between p-3 bg-brand-surface/50 border border-brand-border rounded-xl group hover:border-brand-primary/20 transition-all">
                                                 <div className="flex items-center gap-3">
                                                     {doc ? (
                                                         <CheckCircle2 className="w-5 h-5 text-success" />
                                                     ) : (
-                                                        <AlertCircle className={cn("w-5 h-5", req.isRequired ? "text-warning" : "text-prevenort-text/10")} />
+                                                        <AlertCircle className={cn("w-5 h-5", req.isRequired ? "text-warning" : "text-brand-text/10")} />
                                                     )}
                                                     <div className="flex flex-col">
-                                                        <p className="text-sm font-bold text-prevenort-text/90">{req.label}</p>
-                                                        <p className="text-[10px] text-prevenort-text/30 uppercase tracking-tighter">
+                                                        <p className="text-sm font-bold text-brand-text/90">{req.label}</p>
+                                                        <p className="text-[10px] text-brand-text/30 uppercase tracking-tighter">
                                                             {req.category} • {req.isRequired ? 'Obligatorio' : 'Opcional'}
                                                         </p>
                                                         {doc?.isValidated && (
@@ -878,7 +878,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                             <button
                                                                 type="button"
                                                                 onClick={() => window.open(doc.url, '_blank')}
-                                                                className="px-3 py-1.5 bg-prevenort-surface rounded-lg text-[10px] font-bold uppercase hover:bg-prevenort-primary/10 transition-all text-prevenort-text"
+                                                                className="px-3 py-1.5 bg-brand-surface rounded-lg text-[10px] font-bold uppercase hover:bg-brand-primary/10 transition-all text-brand-text"
                                                             >
                                                                 Ver
                                                             </button>
@@ -888,7 +888,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                                                 disabled={doc.isLocked}
                                                                 className={cn(
                                                                     "p-1.5 rounded-lg transition-colors",
-                                                                    doc.isLocked ? "text-prevenort-text/10 cursor-not-allowed" : "text-prevenort-text/20 hover:bg-danger/10 hover:text-danger"
+                                                                    doc.isLocked ? "text-brand-text/10 cursor-not-allowed" : "text-brand-text/20 hover:bg-danger/10 hover:text-danger"
                                                                 )}
                                                             >
                                                                 <Trash className="w-3.5 h-3.5" />
@@ -910,15 +910,15 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-12 border border-dashed border-prevenort-border rounded-2xl">
-                                    <FolderSearch className="w-8 h-8 text-prevenort-text/10 mx-auto mb-4" />
-                                    <p className="text-sm text-prevenort-text/40">Selecciona una batería para visualizar los requerimientos específicos de este perfil profesional.</p>
+                                <div className="text-center py-12 border border-dashed border-brand-border rounded-2xl">
+                                    <FolderSearch className="w-8 h-8 text-brand-text/10 mx-auto mb-4" />
+                                    <p className="text-sm text-brand-text/40">Selecciona una batería para visualizar los requerimientos específicos de este perfil profesional.</p>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    <div className="pt-6 border-t border-prevenort-border space-y-3">
+                    <div className="pt-6 border-t border-brand-border space-y-3">
                         {/* Confirmación de eliminación */}
                         {showDeleteConfirm && (
                             <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -928,7 +928,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     <button
                                         type="button"
                                         onClick={() => setShowDeleteConfirm(false)}
-                                        className="px-3 py-1.5 text-xs font-bold border border-prevenort-border rounded-lg hover:bg-prevenort-surface transition-all text-prevenort-text"
+                                        className="px-3 py-1.5 text-xs font-bold border border-brand-border rounded-lg hover:bg-brand-surface transition-all text-brand-text"
                                     >
                                         No
                                     </button>
@@ -980,7 +980,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2.5 border border-prevenort-border rounded-xl hover:bg-prevenort-surface transition-all text-sm font-medium text-prevenort-text"
+                                className="flex-1 px-4 py-2.5 border border-brand-border rounded-xl hover:bg-brand-surface transition-all text-sm font-medium text-brand-text"
                             >
                                 Cancelar
                             </button>
@@ -993,7 +993,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({ isOpen, on
                                     "flex-[2] px-4 py-2.5 rounded-xl transition-all text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2",
                                     isEditing
                                         ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]"
-                                        : "bg-prevenort-text text-prevenort-bg hover:opacity-90"
+                                        : "bg-brand-text text-brand-bg hover:opacity-90"
                                 )}
                             >
                                 {isSubmitting ? (

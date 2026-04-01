@@ -125,21 +125,21 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide shadow-2xl animate-in zoom-in-95 duration-300">
-                <div className="sticky top-0 z-10 p-8 border-b border-prevenort-border bg-prevenort-surface/95 backdrop-blur-xl">
+            <div className="relative bg-brand-surface border border-brand-border rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="sticky top-0 z-10 p-8 border-b border-brand-border bg-brand-surface/95 backdrop-blur-xl">
                     <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-prevenort-primary to-black flex items-center justify-center shadow-xl shadow-orange-500/20">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center shadow-xl shadow-orange-500/20">
                             <Activity className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-black text-prevenort-text tracking-tighter uppercase leading-none">
+                            <h3 className="text-2xl font-black text-brand-text tracking-tighter uppercase leading-none">
                                 {initialData ? 'Editar Agendamiento' : 'Nuevo Agendamiento AMIS'}
                             </h3>
-                            <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-[0.3em] mt-1.5">Inteligencia Clínica & Control Operativo</p>
+                            <p className="text-[10px] text-brand-primary font-black uppercase tracking-[0.3em] mt-1.5">Inteligencia Clínica & Control Operativo</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-prevenort-bg rounded-2xl transition-all group">
-                        <X className="w-6 h-6 text-prevenort-text/20 group-hover:text-prevenort-text" />
+                    <button onClick={onClose} className="p-3 hover:bg-brand-bg rounded-2xl transition-all group">
+                        <X className="w-6 h-6 text-brand-text/20 group-hover:text-brand-text" />
                     </button>
                 </div>
 
@@ -153,13 +153,13 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
 
                     {/* Section 1: Patient Information */}
                     <div className="space-y-8">
-                        <div className="flex items-center gap-3 border-b border-prevenort-border pb-3">
-                            <User className="w-5 h-5 text-prevenort-primary" />
-                            <h4 className="text-[11px] font-black text-prevenort-text/40 uppercase tracking-[0.25em]">Expediente del Paciente</h4>
+                        <div className="flex items-center gap-3 border-b border-brand-border pb-3">
+                            <User className="w-5 h-5 text-brand-primary" />
+                            <h4 className="text-[11px] font-black text-brand-text/40 uppercase tracking-[0.25em]">Expediente del Paciente</h4>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Nombre Completo</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">Nombre Completo</label>
                                 <input
                                     value={formData.patientName}
                                     onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
@@ -169,7 +169,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">RUT / Identificador</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">RUT / Identificador</label>
                                 <input
                                     required
                                     value={formData.patientRut}
@@ -180,7 +180,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Fecha Nacimiento</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">Fecha Nacimiento</label>
                                 <input
                                     type="date"
                                     value={formData.patientBirthDate}
@@ -189,7 +189,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Email de Contacto</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">Email de Contacto</label>
                                 <input
                                     type="email"
                                     value={formData.patientEmail}
@@ -199,7 +199,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Teléfono Móvil</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">Teléfono Móvil</label>
                                 <input
                                     value={formData.patientPhone}
                                     onChange={(e) => setFormData({ ...formData, patientPhone: e.target.value })}
@@ -209,7 +209,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/20 tracking-widest px-1">Sistema de Previsión</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/20 tracking-widest px-1">Sistema de Previsión</label>
                                 <select
                                     value={formData.healthcareProvider}
                                     onChange={(e) => setFormData({ ...formData, healthcareProvider: e.target.value })}
@@ -227,7 +227,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             </div>
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Domicilio Actual</label>
+                            <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Domicilio Actual</label>
                             <input
                                 value={formData.patientAddress}
                                 onChange={(e) => setFormData({ ...formData, patientAddress: e.target.value })}
@@ -237,11 +237,11 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                         </div>
 
                         {/* Medical Background Flags */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-prevenort-bg border border-prevenort-border/60 p-8 rounded-[2rem] shadow-sm">
-                            <div className="flex items-center justify-between p-5 bg-prevenort-surface rounded-2xl border border-prevenort-border shadow-sm transition-all hover:border-prevenort-primary/30">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-brand-bg border border-brand-border/60 p-8 rounded-[2rem] shadow-sm">
+                            <div className="flex items-center justify-between p-5 bg-brand-surface rounded-2xl border border-brand-border shadow-sm transition-all hover:border-brand-primary/30">
                                 <div>
-                                    <p className="text-xs font-black text-prevenort-text tracking-tight uppercase">Consume Aspirina</p>
-                                    <p className="text-[10px] text-prevenort-text/40 font-black uppercase tracking-wider mt-0.5">Control de Sangramiento</p>
+                                    <p className="text-xs font-black text-brand-text tracking-tight uppercase">Consume Aspirina</p>
+                                    <p className="text-[10px] text-brand-text/40 font-black uppercase tracking-wider mt-0.5">Control de Sangramiento</p>
                                 </div>
                                 <input
                                     type="checkbox"
@@ -250,13 +250,13 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                         ...formData,
                                         medicalBackground: { ...formData.medicalBackground!, usesAspirin: e.target.checked }
                                     })}
-                                    className="w-6 h-6 accent-prevenort-primary rounded-lg"
+                                    className="w-6 h-6 accent-brand-primary rounded-lg"
                                 />
                             </div>
-                            <div className="flex items-center justify-between p-5 bg-prevenort-surface rounded-2xl border border-prevenort-border shadow-sm transition-all hover:border-prevenort-primary/30">
+                            <div className="flex items-center justify-between p-5 bg-brand-surface rounded-2xl border border-brand-border shadow-sm transition-all hover:border-brand-primary/30">
                                 <div>
-                                    <p className="text-xs font-black text-prevenort-text tracking-tight uppercase">Anticoagulantes</p>
-                                    <p className="text-[10px] text-prevenort-text/40 font-black uppercase tracking-wider mt-0.5">Riesgo Quirúrgico</p>
+                                    <p className="text-xs font-black text-brand-text tracking-tight uppercase">Anticoagulantes</p>
+                                    <p className="text-[10px] text-brand-text/40 font-black uppercase tracking-wider mt-0.5">Riesgo Quirúrgico</p>
                                 </div>
                                 <input
                                     type="checkbox"
@@ -265,7 +265,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                         ...formData,
                                         medicalBackground: { ...formData.medicalBackground!, usesAnticoagulants: e.target.checked }
                                     })}
-                                    className="w-6 h-6 accent-prevenort-primary rounded-lg"
+                                    className="w-6 h-6 accent-brand-primary rounded-lg"
                                 />
                             </div>
                         </div>
@@ -273,13 +273,13 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
 
                     {/* Section 2: Clinical Data */}
                     <div className="space-y-8">
-                        <div className="flex items-center gap-3 border-b border-prevenort-border pb-3">
+                        <div className="flex items-center gap-3 border-b border-brand-border pb-3">
                             <ClipboardList className="w-5 h-5 text-success" />
-                            <h4 className="text-[11px] font-black text-prevenort-text/40 uppercase tracking-[0.25em]">Planificación Clínica</h4>
+                            <h4 className="text-[11px] font-black text-brand-text/40 uppercase tracking-[0.25em]">Planificación Clínica</h4>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Procedimiento Médico</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Procedimiento Médico</label>
                                 <select
                                     value={formData.procedureId}
                                     onChange={(e) => setFormData({ ...formData, procedureId: e.target.value })}
@@ -292,7 +292,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Institución</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Institución</label>
                                 <SmartCombobox
                                     options={institutionOptions}
                                     value={formData.institutionId || ''}
@@ -302,7 +302,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Fecha Programada</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Fecha Programada</label>
                                 <input
                                     type="date"
                                     value={formData.appointmentDate}
@@ -311,7 +311,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Hora Estimada</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Hora Estimada</label>
                                 <input
                                     type="time"
                                     value={formData.appointmentTime}
@@ -320,7 +320,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Médico / Especialista a Cargo</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Médico / Especialista a Cargo</label>
                                 <SmartCombobox
                                     options={doctorOptions}
                                     value={formData.doctorId || ''}
@@ -330,7 +330,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Sede de Atención</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Sede de Atención</label>
                                 <SmartCombobox
                                     options={centerOptions}
                                     value={formData.centerId || ''}
@@ -342,7 +342,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             </div>
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-prevenort-text/40 tracking-widest px-1">Referente</label>
+                            <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Referente</label>
                             <SmartCombobox
                                 options={[]}
                                 value={formData.referrerName || ''}
@@ -356,15 +356,15 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
 
                     {/* Section 3: Logistics */}
                     <div className="space-y-8">
-                        <div className="flex items-center gap-3 border-b border-prevenort-border pb-3">
+                        <div className="flex items-center gap-3 border-b border-brand-border pb-3">
                             <Landmark className="w-5 h-5 text-warning" />
-                            <h4 className="text-[11px] font-black text-prevenort-text/40 uppercase tracking-[0.25em]">Logística Operativa</h4>
+                            <h4 className="text-[11px] font-black text-brand-text/40 uppercase tracking-[0.25em]">Logística Operativa</h4>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-prevenort-bg border border-prevenort-border/60 rounded-[2rem] shadow-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-brand-bg border border-brand-border/60 rounded-[2rem] shadow-sm">
                             <div className="flex items-center justify-between gap-6 p-1">
                                 <div className="space-y-1">
-                                    <p className="text-xs font-black text-prevenort-text tracking-tight uppercase">Coordinación de Traslado</p>
-                                    <p className="text-[10px] text-prevenort-text/40 font-black uppercase tracking-wider">Flujo de Movilidad Externa</p>
+                                    <p className="text-xs font-black text-brand-text tracking-tight uppercase">Coordinación de Traslado</p>
+                                    <p className="text-[10px] text-brand-text/40 font-black uppercase tracking-wider">Flujo de Movilidad Externa</p>
                                 </div>
                                 <select
                                     value={formData.logisticsStatus?.transport}
@@ -372,7 +372,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                         ...formData,
                                         logisticsStatus: { ...formData.logisticsStatus!, transport: e.target.value as any }
                                     })}
-                                    className="bg-prevenort-surface border-2 border-prevenort-border rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase text-prevenort-primary focus:border-prevenort-primary outline-none transition-all shadow-sm"
+                                    className="bg-brand-surface border-2 border-brand-border rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase text-brand-primary focus:border-brand-primary outline-none transition-all shadow-sm"
                                 >
                                     <option value="not_required">No Requiere</option>
                                     <option value="required">Pendiente</option>
@@ -381,8 +381,8 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                             </div>
                             <div className="flex items-center justify-between gap-6 p-1">
                                 <div className="space-y-1">
-                                    <p className="text-xs font-black text-prevenort-text tracking-tight uppercase">Gestión de Viáticos</p>
-                                    <p className="text-[10px] text-prevenort-text/40 font-black uppercase tracking-wider">Asignación de Fondos Operativos</p>
+                                    <p className="text-xs font-black text-brand-text tracking-tight uppercase">Gestión de Viáticos</p>
+                                    <p className="text-[10px] text-brand-text/40 font-black uppercase tracking-wider">Asignación de Fondos Operativos</p>
                                 </div>
                                 <select
                                     value={formData.logisticsStatus?.perDiem}
@@ -390,7 +390,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                         ...formData,
                                         logisticsStatus: { ...formData.logisticsStatus!, perDiem: e.target.value as any }
                                     })}
-                                    className="bg-prevenort-surface border-2 border-prevenort-border rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase text-warning focus:border-warning outline-none transition-all shadow-sm"
+                                    className="bg-brand-surface border-2 border-brand-border rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase text-warning focus:border-warning outline-none transition-all shadow-sm"
                                 >
                                     <option value="not_required">No Aplica</option>
                                     <option value="required">Solicitado</option>
@@ -400,18 +400,18 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex gap-6 pt-12 sticky bottom-0 bg-prevenort-surface/90 backdrop-blur-md pb-6 mt-4">
+                    <div className="flex gap-6 pt-12 sticky bottom-0 bg-brand-surface/90 backdrop-blur-md pb-6 mt-4">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-8 py-5 bg-prevenort-bg text-prevenort-text/40 rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-prevenort-border transition-all border border-prevenort-border"
+                            className="flex-1 px-8 py-5 bg-brand-bg text-brand-text/40 rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-border transition-all border border-brand-border"
                         >
                             Descartar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-[2] px-8 py-5 bg-gradient-to-r from-prevenort-primary to-black text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="flex-[2] px-8 py-5 bg-gradient-to-r from-brand-primary to-black text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                         >
                             {loading ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -429,19 +429,19 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
             <style>{`
                 .input-premium {
                     width: 100%;
-                    background: var(--prevenort-bg);
-                    border: 2px solid var(--prevenort-border);
+                    background: var(--brand-bg);
+                    border: 2px solid var(--brand-border);
                     border-radius: 1.25rem;
                     padding: 0.9rem 1.4rem;
                     font-size: 0.875rem;
-                    color: var(--prevenort-text);
+                    color: var(--brand-text);
                     font-weight: 500;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
                 .input-premium:focus {
                     outline: none;
-                    background: var(--prevenort-surface);
-                    border-color: var(--prevenort-primary);
+                    background: var(--brand-surface);
+                    border-color: var(--brand-primary);
                     box-shadow: 0 0 20px rgba(249, 115, 22, 0.08);
                 }
                 .input-premium::placeholder {

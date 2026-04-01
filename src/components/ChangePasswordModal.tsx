@@ -54,19 +54,19 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-prevenort-surface border border-prevenort-border rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-prevenort-primary via-orange-400 to-prevenort-primary opacity-50" />
+            <div className="bg-brand-surface border border-brand-border rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary via-orange-400 to-brand-primary opacity-50" />
                 
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-6 flex-col text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-prevenort-primary/20 to-black/50 border border-prevenort-primary/30 flex items-center justify-center">
-                            <KeyRound className="w-6 h-6 text-prevenort-primary" />
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary/20 to-black/50 border border-brand-primary/30 flex items-center justify-center">
+                            <KeyRound className="w-6 h-6 text-brand-primary" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-prevenort-text tracking-tight">
+                            <h2 className="text-lg font-black text-brand-text tracking-tight">
                                 {forceMode ? 'RECUPERACIÓN DE CLAVE' : 'CAMBIAR CLAVE'}
                             </h2>
-                            <p className="text-[10px] font-bold text-prevenort-text/40 uppercase tracking-widest mt-1">
+                            <p className="text-[10px] font-bold text-brand-text/40 uppercase tracking-widest mt-1">
                                 {forceMode ? 'Ingresa tu nueva clave de acceso' : 'Actualiza tus credenciales'}
                             </p>
                         </div>
@@ -82,30 +82,30 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-prevenort-text/60 uppercase tracking-widest ml-1">Nueva Clave</label>
+                                <label className="text-[10px] font-black text-brand-text/60 uppercase tracking-widest ml-1">Nueva Clave</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/40 group-focus-within:text-prevenort-primary transition-colors" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/40 group-focus-within:text-brand-primary transition-colors" />
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Min. 6 caracteres"
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-11 pr-4 py-3.5 text-sm text-prevenort-text focus:bg-prevenort-surface focus:border-prevenort-primary/50 focus:ring-2 focus:ring-prevenort-primary/20 outline-none transition-all placeholder:text-prevenort-text/20 font-medium"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl pl-11 pr-4 py-3.5 text-sm text-brand-text focus:bg-brand-surface focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-brand-text/20 font-medium"
                                         required
                                     />
                                 </div>
                             </div>
                             
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-prevenort-text/60 uppercase tracking-widest ml-1">Confirmar Nueva Clave</label>
+                                <label className="text-[10px] font-black text-brand-text/60 uppercase tracking-widest ml-1">Confirmar Nueva Clave</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/40 group-focus-within:text-prevenort-primary transition-colors" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/40 group-focus-within:text-brand-primary transition-colors" />
                                     <input
                                         type="password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="Repetir clave..."
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-11 pr-4 py-3.5 text-sm text-prevenort-text focus:bg-prevenort-surface focus:border-prevenort-primary/50 focus:ring-2 focus:ring-prevenort-primary/20 outline-none transition-all placeholder:text-prevenort-text/20 font-medium"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl pl-11 pr-4 py-3.5 text-sm text-brand-text focus:bg-brand-surface focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:text-brand-text/20 font-medium"
                                         required
                                     />
                                 </div>
@@ -123,7 +123,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                                         type="button"
                                         onClick={onClose}
                                         disabled={loading}
-                                        className="flex-1 px-4 py-3.5 rounded-xl border border-prevenort-border text-prevenort-text hover:bg-prevenort-bg hover:border-prevenort-text/20 transition-all text-[11px] font-black uppercase tracking-wider"
+                                        className="flex-1 px-4 py-3.5 rounded-xl border border-brand-border text-brand-text hover:bg-brand-bg hover:border-brand-text/20 transition-all text-[11px] font-black uppercase tracking-wider"
                                     >
                                         Cancelar
                                     </button>
@@ -131,7 +131,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-[2] px-4 py-3.5 rounded-xl bg-prevenort-primary hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-[11px] font-black uppercase tracking-[0.1em]"
+                                    className="flex-[2] px-4 py-3.5 rounded-xl bg-brand-primary hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-[11px] font-black uppercase tracking-[0.1em]"
                                 >
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Actualizar Clave'}
                                 </button>

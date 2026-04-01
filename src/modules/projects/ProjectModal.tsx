@@ -91,23 +91,23 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-prevenort-surface border border-prevenort-border rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-300">
-                <div className="p-6 border-b border-prevenort-border flex items-center justify-between sticky top-0 bg-prevenort-surface/80 backdrop-blur-md z-10">
+            <div className="bg-brand-surface border border-brand-border rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="p-6 border-b border-brand-border flex items-center justify-between sticky top-0 bg-brand-surface/80 backdrop-blur-md z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center border border-info/20">
                             <Layers className="w-5 h-5 text-info" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                            <h2 className="text-xl font-black text-brand-text uppercase tracking-tighter">
                                 {initialData ? 'Editar Proyecto' : 'Nuevo Proyecto'}
                             </h2>
-                            <p className="text-[10px] text-prevenort-text/40 font-mono uppercase tracking-widest">
+                            <p className="text-[10px] text-brand-text/40 font-mono uppercase tracking-widest">
                                 Gestión de Iniciativas Portezuelo
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-prevenort-primary/5 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-prevenort-text/40" />
+                    <button onClick={onClose} className="p-2 hover:bg-brand-primary/5 rounded-full transition-colors">
+                        <X className="w-5 h-5 text-brand-text/40" />
                     </button>
                 </div>
 
@@ -118,17 +118,17 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Sección 1: Identificación */}
-                    <div className="space-y-4 p-4 bg-prevenort-bg border border-prevenort-border rounded-2xl">
+                    <div className="space-y-4 p-4 bg-brand-bg border border-brand-border rounded-2xl">
                         <div className="flex items-center gap-2 mb-2">
                             <Briefcase className="w-4 h-4 text-info" />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Identificación</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Identificación</h3>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Nombre del Proyecto</label>
+                            <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Nombre del Proyecto</label>
                             <input
                                 required
-                                className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-prevenort-text"
+                                className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-brand-text"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
@@ -136,9 +136,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Empresa Mandante</label>
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Empresa Mandante</label>
                                 <select
-                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-prevenort-text appearance-none"
+                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-brand-text appearance-none"
                                     value={formData.holdingId}
                                     onChange={e => setFormData({ ...formData, holdingId: e.target.value as HoldingCompany })}
                                 >
@@ -146,11 +146,11 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Fecha Inicio</label>
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Fecha Inicio</label>
                                 <input
                                     type="date"
                                     required
-                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-prevenort-text"
+                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-brand-text"
                                     value={formData.startDate}
                                     onChange={e => setFormData({ ...formData, startDate: e.target.value })}
                                 />
@@ -159,16 +159,16 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     </div>
 
                     {/* Sección 2: Configuración del Proyecto */}
-                    <div className="space-y-4 p-4 bg-prevenort-bg border border-prevenort-border rounded-2xl">
+                    <div className="space-y-4 p-4 bg-brand-bg border border-brand-border rounded-2xl">
                         <div className="flex items-center gap-2 mb-2">
                             <Shield className="w-4 h-4 text-success" />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Configuración avanzada</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Configuración avanzada</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Nivel de Privacidad</label>
-                                <div className="flex p-1 bg-prevenort-surface border border-prevenort-border rounded-lg">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Nivel de Privacidad</label>
+                                <div className="flex p-1 bg-brand-surface border border-brand-border rounded-lg">
                                     {PRIVACY_LEVELS.map(level => (
                                         <button
                                             key={level}
@@ -176,7 +176,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                             onClick={() => setFormData({ ...formData, privacyLevel: level })}
                                             className={cn(
                                                 "flex-1 py-1.5 text-[10px] font-black uppercase tracking-tighter rounded-md transition-all",
-                                                formData.privacyLevel === level ? "bg-prevenort-primary/10 text-prevenort-primary shadow-lg" : "text-prevenort-text/20 hover:text-prevenort-text/40"
+                                                formData.privacyLevel === level ? "bg-brand-primary/10 text-brand-primary shadow-lg" : "text-brand-text/20 hover:text-brand-text/40"
                                             )}
                                         >
                                             {level === 'public' && <Globe className="w-3 h-3 mx-auto mb-1" />}
@@ -188,9 +188,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Estado Inicial</label>
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Estado Inicial</label>
                                 <select
-                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-prevenort-text appearance-none"
+                                    className="bg-brand-surface border border-brand-border rounded-lg w-full px-4 py-2 text-sm focus:border-info/50 outline-none text-brand-text appearance-none"
                                     value={formData.status}
                                     onChange={e => setFormData({ ...formData, status: e.target.value as any })}
                                 >
@@ -200,11 +200,11 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Vincular Licitación (Opcional)</label>
+                            <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Vincular Licitación (Opcional)</label>
                             <div className="relative">
-                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20" />
                                 <select
-                                    className="bg-prevenort-surface border border-prevenort-border rounded-lg w-full pl-10 pr-4 py-2 text-sm focus:border-info/50 outline-none text-prevenort-text appearance-none"
+                                    className="bg-brand-surface border border-brand-border rounded-lg w-full pl-10 pr-4 py-2 text-sm focus:border-info/50 outline-none text-brand-text appearance-none"
                                     value={formData.tenderId || ''}
                                     onChange={e => setFormData({ ...formData, tenderId: e.target.value })}
                                 >
@@ -220,10 +220,10 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     </div>
 
                     {/* Sección 3: Taxonomía y Etiquetas */}
-                    <div className="space-y-4 p-4 bg-prevenort-bg border border-prevenort-border rounded-2xl">
+                    <div className="space-y-4 p-4 bg-brand-bg border border-brand-border rounded-2xl">
                         <div className="flex items-center gap-2 mb-2">
                             <Tag className="w-4 h-4 text-accent" />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-prevenort-text/60">Categorización</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Categorización</h3>
                         </div>
 
                         <div className="space-y-4">
@@ -231,7 +231,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                 <input
                                     list="project-tags-list"
                                     placeholder="Nueva etiqueta..."
-                                    className="flex-1 bg-prevenort-surface border border-prevenort-border rounded-lg px-4 py-2 text-sm outline-none text-prevenort-text"
+                                    className="flex-1 bg-brand-surface border border-brand-border rounded-lg px-4 py-2 text-sm outline-none text-brand-text"
                                     value={tagInput}
                                     onChange={e => setTagInput(e.target.value)}
                                     onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
@@ -239,7 +239,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                 <button
                                     type="button"
                                     onClick={addTag}
-                                    className="px-4 py-2 bg-prevenort-bg hover:bg-prevenort-primary/10 border border-prevenort-border rounded-lg text-xs font-bold transition-all text-prevenort-text/60"
+                                    className="px-4 py-2 bg-brand-bg hover:bg-brand-primary/10 border border-brand-border rounded-lg text-xs font-bold transition-all text-brand-text/60"
                                 >
                                     Agregar
                                 </button>
@@ -248,7 +248,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                                 {formData.tags?.map((tag, i) => (
                                     <span key={i} className="flex items-center gap-1 text-[10px] bg-info/10 border border-info/20 text-info px-2 py-1 rounded-md font-bold uppercase tracking-widest">
                                         #{tag}
-                                        <button type="button" onClick={() => removeTag(i)} className="hover:text-prevenort-text">
+                                        <button type="button" onClick={() => removeTag(i)} className="hover:text-brand-text">
                                             <X className="w-3 h-3" />
                                         </button>
                                     </span>
@@ -267,14 +267,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 border border-prevenort-border rounded-xl hover:bg-prevenort-primary/5 transition-all text-xs font-black uppercase tracking-widest text-prevenort-text/40"
+                            className="flex-1 px-4 py-3 border border-brand-border rounded-xl hover:bg-brand-primary/5 transition-all text-xs font-black uppercase tracking-widest text-brand-text/40"
                         >
                             Cancelar
                         </button>
                         <button
                             disabled={isSubmitting}
                             type="submit"
-                            className="flex-[2] px-4 py-3 bg-prevenort-primary text-white hover:opacity-90 rounded-xl transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-[2] px-4 py-3 bg-brand-primary text-white hover:opacity-90 rounded-xl transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> Crear Proyecto</>}
                         </button>

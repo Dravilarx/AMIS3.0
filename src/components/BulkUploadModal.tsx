@@ -538,14 +538,14 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-            <div className="relative w-full max-w-4xl bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+            <div className="relative w-full max-w-4xl bg-brand-bg border border-brand-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-prevenort-border flex-shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border flex-shrink-0">
                     <div className="flex items-center gap-3">
                         {icon}
                         <div>
                             <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">{subtitle}</span>
-                            <h3 className="text-lg font-black text-prevenort-text tracking-tight">{title}</h3>
+                            <h3 className="text-lg font-black text-brand-text tracking-tight">{title}</h3>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -556,18 +556,18 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                     <div className={cn(
                                         'w-2 h-2 rounded-full transition-all',
                                         step === s || (['upload', 'preview', 'processing', 'done'].indexOf(step) > i)
-                                            ? 'bg-blue-400' : 'bg-prevenort-border'
+                                            ? 'bg-blue-400' : 'bg-brand-border'
                                     )} />
                                     {i < 2 && <div className={cn(
                                         'w-6 h-0.5 transition-all',
                                         ['upload', 'preview', 'processing', 'done'].indexOf(step) > i
-                                            ? 'bg-blue-400' : 'bg-prevenort-border'
+                                            ? 'bg-blue-400' : 'bg-brand-border'
                                     )} />}
                                 </React.Fragment>
                             ))}
                         </div>
-                        <button onClick={onClose} className="p-2 bg-prevenort-surface hover:bg-prevenort-surface/80 rounded-xl transition-colors">
-                            <X className="w-4 h-4 text-prevenort-text/40" />
+                        <button onClick={onClose} className="p-2 bg-brand-surface hover:bg-brand-surface/80 rounded-xl transition-colors">
+                            <X className="w-4 h-4 text-brand-text/40" />
                         </button>
                     </div>
                 </div>
@@ -578,21 +578,21 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                     {step === 'upload' && (
                         <div className="space-y-5">
                             {/* Guía de columnas */}
-                            <div className="bg-prevenort-surface/50 border border-prevenort-border rounded-2xl overflow-hidden">
+                            <div className="bg-brand-surface/50 border border-brand-border rounded-2xl overflow-hidden">
                                 <button
                                     onClick={() => setShowColumnGuide(!showColumnGuide)}
-                                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-prevenort-surface/80 transition-colors"
+                                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-brand-surface/80 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
                                         <Info className="w-4 h-4 text-blue-400" />
-                                        <span className="text-xs font-black text-prevenort-text/60 uppercase tracking-wider">
+                                        <span className="text-xs font-black text-brand-text/60 uppercase tracking-wider">
                                             Formato de columnas requerido
                                         </span>
                                         <span className="text-[9px] px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 font-bold">
                                             {columns.filter(c => c.required).length} obligatoria{columns.filter(c => c.required).length !== 1 ? 's' : ''}
                                         </span>
                                     </div>
-                                    {showColumnGuide ? <ChevronUp className="w-4 h-4 text-prevenort-text/30" /> : <ChevronDown className="w-4 h-4 text-prevenort-text/30" />}
+                                    {showColumnGuide ? <ChevronUp className="w-4 h-4 text-brand-text/30" /> : <ChevronDown className="w-4 h-4 text-brand-text/30" />}
                                 </button>
 
                                 {showColumnGuide && (
@@ -622,27 +622,27 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                                             'flex flex-col gap-1 px-3 py-2 rounded-xl border text-xs',
                                                             col.required
                                                                 ? 'bg-blue-500/5 border-blue-500/15'
-                                                                : 'bg-prevenort-surface/30 border-prevenort-border/50'
+                                                                : 'bg-brand-surface/30 border-brand-border/50'
                                                         )}
                                                     >
                                                         <div className="flex items-center gap-2">
                                                             <code className={cn(
                                                                 'font-mono font-bold text-[10px] px-1.5 py-0.5 rounded',
-                                                                col.required ? 'bg-blue-500/15 text-blue-400' : 'bg-prevenort-surface text-prevenort-text/40'
+                                                                col.required ? 'bg-blue-500/15 text-blue-400' : 'bg-brand-surface text-brand-text/40'
                                                             )}>
                                                                 {col.excelHeader}
                                                             </code>
                                                             {col.required && (
                                                                 <span className="text-[8px] font-black text-red-400 uppercase">req</span>
                                                             )}
-                                                            <span className="text-prevenort-text/30 flex-1 truncate">{col.label}</span>
-                                                            <span className="text-prevenort-text/15 text-[9px] italic truncate max-w-[120px]">ej: {col.example}</span>
+                                                            <span className="text-brand-text/30 flex-1 truncate">{col.label}</span>
+                                                            <span className="text-brand-text/15 text-[9px] italic truncate max-w-[120px]">ej: {col.example}</span>
                                                         </div>
                                                         {variants.length > 1 && (
                                                             <div className="flex items-center gap-1 ml-0.5">
-                                                                <span className="text-[8px] text-prevenort-text/20">acepta:</span>
+                                                                <span className="text-[8px] text-brand-text/20">acepta:</span>
                                                                 {variants.map((v, i) => (
-                                                                    <code key={i} className="text-[8px] font-mono text-prevenort-text/25 bg-prevenort-surface/50 px-1 py-px rounded">
+                                                                    <code key={i} className="text-[8px] font-mono text-brand-text/25 bg-brand-surface/50 px-1 py-px rounded">
                                                                         {v}
                                                                     </code>
                                                                 ))}
@@ -675,7 +675,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                     'relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300',
                                     isDragging
                                         ? 'border-blue-400 bg-blue-500/5 scale-[1.01]'
-                                        : 'border-prevenort-border hover:border-prevenort-text/20 hover:bg-prevenort-surface/30'
+                                        : 'border-brand-border hover:border-brand-text/20 hover:bg-brand-surface/30'
                                 )}
                             >
                                 <input
@@ -688,21 +688,21 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
 
                                 <div className={cn(
                                     'w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center transition-all',
-                                    isDragging ? 'bg-blue-500/15 border border-blue-500/30' : 'bg-prevenort-surface border border-prevenort-border'
+                                    isDragging ? 'bg-blue-500/15 border border-blue-500/30' : 'bg-brand-surface border border-brand-border'
                                 )}>
-                                    <Upload className={cn('w-7 h-7 transition-colors', isDragging ? 'text-blue-400' : 'text-prevenort-text/20')} />
+                                    <Upload className={cn('w-7 h-7 transition-colors', isDragging ? 'text-blue-400' : 'text-brand-text/20')} />
                                 </div>
 
-                                <p className="text-sm font-bold text-prevenort-text/60 mb-1">
+                                <p className="text-sm font-bold text-brand-text/60 mb-1">
                                     {isDragging ? 'Suelte el archivo aquí' : 'Arrastre un archivo o haga clic para seleccionar'}
                                 </p>
-                                <p className="text-[10px] text-prevenort-text/25">
-                                    Formatos: <code className="bg-prevenort-surface px-1 rounded">.xlsx</code>{' '}
-                                    <code className="bg-prevenort-surface px-1 rounded">.csv</code>{' '}
-                                    <code className="bg-prevenort-surface px-1 rounded">.md</code>{' '}
-                                    <code className="bg-prevenort-surface px-1 rounded">.pdf</code>{' '}
-                                    <code className="bg-prevenort-surface px-1 rounded">.jpg/.png</code>{' '}
-                                    <span className="text-prevenort-text/15">(IA extrae automáticamente)</span>
+                                <p className="text-[10px] text-brand-text/25">
+                                    Formatos: <code className="bg-brand-surface px-1 rounded">.xlsx</code>{' '}
+                                    <code className="bg-brand-surface px-1 rounded">.csv</code>{' '}
+                                    <code className="bg-brand-surface px-1 rounded">.md</code>{' '}
+                                    <code className="bg-brand-surface px-1 rounded">.pdf</code>{' '}
+                                    <code className="bg-brand-surface px-1 rounded">.jpg/.png</code>{' '}
+                                    <span className="text-brand-text/15">(IA extrae automáticamente)</span>
                                 </p>
 
                                 {/* Formato badges */}
@@ -714,7 +714,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                         { icon: FileText, label: 'PDF', color: 'text-red-400' },
                                         { icon: Camera, label: 'Foto/Imagen', color: 'text-amber-400' },
                                     ].map(({ icon: Icon, label, color }) => (
-                                        <div key={label} className="flex items-center gap-1 text-[9px] text-prevenort-text/20">
+                                        <div key={label} className="flex items-center gap-1 text-[9px] text-brand-text/20">
                                             <Icon className={cn('w-3 h-3', color)} />
                                             <span>{label}</span>
                                         </div>
@@ -760,8 +760,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                                 <FileText className="w-4 h-4 text-purple-400" />}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-prevenort-text/70">{fileName}</p>
-                                        <p className="text-[9px] text-prevenort-text/30">
+                                        <p className="text-xs font-bold text-brand-text/70">{fileName}</p>
+                                        <p className="text-[9px] text-brand-text/30">
                                             {parsedRows.length} filas · {mappedCount}/{columns.length} columnas mapeadas
                                         </p>
                                     </div>
@@ -795,8 +795,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                             )}
 
                             {/* Mapeo de columnas */}
-                            <div className="bg-prevenort-surface/30 border border-prevenort-border rounded-xl p-3">
-                                <p className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest mb-2">Mapeo de columnas detectado</p>
+                            <div className="bg-brand-surface/30 border border-brand-border rounded-xl p-3">
+                                <p className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest mb-2">Mapeo de columnas detectado</p>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
                                     {columns.map(col => {
                                         const mappedFrom = Object.entries(headerMapping).find(([, v]) => v === col.key)?.[0];
@@ -807,7 +807,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                                     ? 'bg-emerald-500/5 border-emerald-500/15 text-emerald-400'
                                                     : col.required
                                                         ? 'bg-red-500/5 border-red-500/15 text-red-400'
-                                                        : 'bg-prevenort-surface/20 border-prevenort-border/30 text-prevenort-text/20'
+                                                        : 'bg-brand-surface/20 border-brand-border/30 text-brand-text/20'
                                             )}>
                                                 {mappedFrom ? (
                                                     <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
@@ -825,27 +825,27 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                             </div>
 
                             {/* Tabla de datos */}
-                            <div className="border border-prevenort-border rounded-xl overflow-hidden">
+                            <div className="border border-brand-border rounded-xl overflow-hidden">
                                 <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                                     <table className="w-full text-[10px]">
-                                        <thead className="bg-prevenort-surface/80 sticky top-0 z-10">
+                                        <thead className="bg-brand-surface/80 sticky top-0 z-10">
                                             <tr>
-                                                <th className="px-2 py-2 text-left font-black text-prevenort-text/30 uppercase tracking-wider">#</th>
-                                                <th className="px-2 py-2 text-center font-black text-prevenort-text/30 uppercase tracking-wider w-8">✓</th>
+                                                <th className="px-2 py-2 text-left font-black text-brand-text/30 uppercase tracking-wider">#</th>
+                                                <th className="px-2 py-2 text-center font-black text-brand-text/30 uppercase tracking-wider w-8">✓</th>
                                                 {columns.filter(c => headerMapping[Object.entries(headerMapping).find(([, v]) => v === c.key)?.[0] || ''] !== undefined || c.required).map(col => (
-                                                    <th key={col.key} className="px-2 py-2 text-left font-black text-prevenort-text/30 uppercase tracking-wider whitespace-nowrap">
+                                                    <th key={col.key} className="px-2 py-2 text-left font-black text-brand-text/30 uppercase tracking-wider whitespace-nowrap">
                                                         {col.label}
                                                     </th>
                                                 ))}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-prevenort-border/30">
+                                        <tbody className="divide-y divide-brand-border/30">
                                             {parsedRows.slice(0, 50).map((row, idx) => (
                                                 <tr key={idx} className={cn(
                                                     'transition-colors',
-                                                    !row._valid ? 'bg-red-500/3' : 'hover:bg-prevenort-surface/30'
+                                                    !row._valid ? 'bg-red-500/3' : 'hover:bg-brand-surface/30'
                                                 )}>
-                                                    <td className="px-2 py-1.5 text-prevenort-text/20 font-mono">{row._rowNum}</td>
+                                                    <td className="px-2 py-1.5 text-brand-text/20 font-mono">{row._rowNum}</td>
                                                     <td className="px-2 py-1.5 text-center">
                                                         {row._valid
                                                             ? <CheckCircle2 className="w-3 h-3 text-emerald-400 mx-auto" />
@@ -854,7 +854,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                                     </td>
                                                     {columns.filter(c => headerMapping[Object.entries(headerMapping).find(([, v]) => v === c.key)?.[0] || ''] !== undefined || c.required).map(col => (
                                                         <td key={col.key} className={cn(
-                                                            'px-2 py-1.5 text-prevenort-text/60 max-w-[150px] truncate',
+                                                            'px-2 py-1.5 text-brand-text/60 max-w-[150px] truncate',
                                                             col.required && !row[col.key] && 'text-red-400 italic'
                                                         )}>
                                                             {row[col.key] || (col.required ? '⚠ vacío' : '—')}
@@ -866,7 +866,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                     </table>
                                 </div>
                                 {parsedRows.length > 50 && (
-                                    <div className="px-3 py-2 bg-prevenort-surface/50 border-t border-prevenort-border text-[9px] text-prevenort-text/20 text-center">
+                                    <div className="px-3 py-2 bg-brand-surface/50 border-t border-brand-border text-[9px] text-brand-text/20 text-center">
                                         Mostrando 50 de {parsedRows.length} filas
                                     </div>
                                 )}
@@ -878,8 +878,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                     {step === 'processing' && (
                         <div className="flex flex-col items-center justify-center py-16">
                             <Loader2 className="w-12 h-12 text-blue-400 animate-spin mb-4" />
-                            <p className="text-sm font-bold text-prevenort-text/60">Procesando {validCount} registros...</p>
-                            <p className="text-[10px] text-prevenort-text/25 mt-1">Esto puede tomar unos segundos</p>
+                            <p className="text-sm font-bold text-brand-text/60">Procesando {validCount} registros...</p>
+                            <p className="text-[10px] text-brand-text/25 mt-1">Esto puede tomar unos segundos</p>
                         </div>
                     )}
 
@@ -899,24 +899,24 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                     }
                                 </div>
 
-                                <h4 className="text-lg font-black text-prevenort-text mb-2">
+                                <h4 className="text-lg font-black text-brand-text mb-2">
                                     {result.failed === 0 ? 'Carga Completada' : 'Carga con Observaciones'}
                                 </h4>
 
                                 <div className="flex items-center justify-center gap-6 mt-4">
                                     <div className="text-center">
                                         <p className="text-3xl font-black text-emerald-400 font-mono">{result.success}</p>
-                                        <p className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Exitosos</p>
+                                        <p className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest">Exitosos</p>
                                     </div>
-                                    <div className="w-px h-10 bg-prevenort-border" />
+                                    <div className="w-px h-10 bg-brand-border" />
                                     <div className="text-center">
-                                        <p className={cn('text-3xl font-black font-mono', result.failed > 0 ? 'text-red-400' : 'text-prevenort-text/20')}>{result.failed}</p>
-                                        <p className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Fallidos</p>
+                                        <p className={cn('text-3xl font-black font-mono', result.failed > 0 ? 'text-red-400' : 'text-brand-text/20')}>{result.failed}</p>
+                                        <p className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest">Fallidos</p>
                                     </div>
-                                    <div className="w-px h-10 bg-prevenort-border" />
+                                    <div className="w-px h-10 bg-brand-border" />
                                     <div className="text-center">
                                         <p className="text-3xl font-black text-blue-400 font-mono">{result.total}</p>
-                                        <p className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Total</p>
+                                        <p className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest">Total</p>
                                     </div>
                                 </div>
                             </div>
@@ -940,13 +940,13 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-prevenort-border flex-shrink-0">
-                    <div className="text-[9px] text-prevenort-text/15">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-brand-border flex-shrink-0">
+                    <div className="text-[9px] text-brand-text/15">
                         {step === 'preview' && `${validCount} registro${validCount !== 1 ? 's' : ''} listo${validCount !== 1 ? 's' : ''} para cargar`}
                     </div>
                     <div className="flex items-center gap-3">
                         {step === 'upload' && (
-                            <button onClick={onClose} className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors">
+                            <button onClick={onClose} className="px-4 py-2 text-xs font-bold text-brand-text/40 hover:text-brand-text/60 transition-colors">
                                 Cancelar
                             </button>
                         )}
@@ -954,7 +954,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                             <>
                                 <button
                                     onClick={() => { setStep('upload'); setParsedRows([]); setParseError(null); }}
-                                    className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors"
+                                    className="px-4 py-2 text-xs font-bold text-brand-text/40 hover:text-brand-text/60 transition-colors"
                                 >
                                     ← Volver
                                 </button>
@@ -964,8 +964,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                                     className={cn(
                                         'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-tight transition-all',
                                         validCount > 0
-                                            ? 'bg-prevenort-primary hover:bg-prevenort-primary/90 text-white shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30'
-                                            : 'bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed'
+                                            ? 'bg-brand-primary hover:bg-brand-primary/90 text-white shadow-xl shadow-brand-primary/20 border border-brand-primary/30'
+                                            : 'bg-brand-surface text-brand-text/20 cursor-not-allowed'
                                     )}
                                 >
                                     <Upload className="w-3.5 h-3.5" />
@@ -976,7 +976,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                         {step === 'done' && (
                             <button
                                 onClick={() => { onSuccess?.(); onClose(); }}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-tight transition-all shadow-xl shadow-prevenort-primary/20"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-tight transition-all shadow-xl shadow-brand-primary/20"
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 Finalizar

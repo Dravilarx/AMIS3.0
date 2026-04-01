@@ -150,7 +150,7 @@ export const InstitutionsDashboard: React.FC = () => {
 
     const getCriticalityBadge = (c: Criticality) => {
         const map: Record<Criticality, { label: string; cls: string }> = {
-            baja: { label: 'Baja', cls: 'text-prevenort-text/40 bg-prevenort-surface border-prevenort-border' },
+            baja: { label: 'Baja', cls: 'text-brand-text/40 bg-brand-surface border-brand-border' },
             media: { label: 'Media', cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
             alta: { label: 'Alta', cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
             critica: { label: 'Crítica', cls: 'text-red-400 bg-red-500/10 border-red-500/20' },
@@ -171,7 +171,7 @@ export const InstitutionsDashboard: React.FC = () => {
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-96">
             <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-            <p className="text-prevenort-text/40 font-mono text-sm">Cargando clientes institucionales...</p>
+            <p className="text-brand-text/40 font-mono text-sm">Cargando clientes institucionales...</p>
         </div>
     );
 
@@ -187,34 +187,34 @@ export const InstitutionsDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Gestión Institucional</span>
-                    <h2 className="text-3xl font-black text-prevenort-text tracking-tighter uppercase">Clientes Institucionales</h2>
+                    <h2 className="text-3xl font-black text-brand-text tracking-tighter uppercase">Clientes Institucionales</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     {/* Toggle vista */}
-                    <div className="flex border border-prevenort-border rounded-lg overflow-hidden">
+                    <div className="flex border border-brand-border rounded-lg overflow-hidden">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={cn("p-2 transition-colors", viewMode === 'grid' ? "bg-prevenort-primary/10 text-prevenort-text" : "bg-transparent text-prevenort-text/40 hover:text-prevenort-text")}
+                            className={cn("p-2 transition-colors", viewMode === 'grid' ? "bg-brand-primary/10 text-brand-text" : "bg-transparent text-brand-text/40 hover:text-brand-text")}
                         >
                             <LayoutGrid className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={cn("p-2 transition-colors", viewMode === 'list' ? "bg-prevenort-primary/10 text-prevenort-text" : "bg-transparent text-prevenort-text/40 hover:text-prevenort-text")}
+                            className={cn("p-2 transition-colors", viewMode === 'list' ? "bg-brand-primary/10 text-brand-text" : "bg-transparent text-brand-text/40 hover:text-brand-text")}
                         >
                             <List className="w-4 h-4" />
                         </button>
                     </div>
                     <button
                         onClick={() => setIsBulkModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-3 bg-prevenort-surface hover:bg-prevenort-surface/80 text-prevenort-text/60 rounded-xl font-black text-xs uppercase tracking-tight transition-all border border-prevenort-border hover:border-prevenort-text/20"
+                        className="flex items-center gap-2 px-4 py-3 bg-brand-surface hover:bg-brand-surface/80 text-brand-text/60 rounded-xl font-black text-xs uppercase tracking-tight transition-all border border-brand-border hover:border-brand-text/20"
                     >
                         <Upload className="w-4 h-4" />
                         Carga Masiva
                     </button>
                     <button
                         onClick={() => { setEditingInstitution(null); setIsModalOpen(true); }}
-                        className="flex items-center gap-2 px-5 py-3 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-tight transition-all shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30"
+                        className="flex items-center gap-2 px-5 py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-tight transition-all shadow-xl shadow-brand-primary/20 border border-brand-primary/30"
                     >
                         <Plus className="w-4 h-4" />
                         Nueva Institución
@@ -227,15 +227,15 @@ export const InstitutionsDashboard: React.FC = () => {
                 {[
                     { label: 'Clientes Activos', value: totalActive, icon: Building2, color: 'text-blue-400', glow: 'shadow-blue-500/10' },
                     { label: 'Contratos Vigentes', value: totalContracts, icon: FileText, color: 'text-emerald-400', glow: 'shadow-emerald-500/10' },
-                    { label: 'Por Vencer (< 90d)', value: expiringContracts, icon: AlertTriangle, color: expiringContracts > 0 ? 'text-amber-400' : 'text-prevenort-text/40', glow: 'shadow-amber-500/10' },
-                    { label: 'Criticidad Alta/Crítica', value: criticalCount, icon: Shield, color: criticalCount > 0 ? 'text-red-400' : 'text-prevenort-text/40', glow: 'shadow-red-500/10' },
+                    { label: 'Por Vencer (< 90d)', value: expiringContracts, icon: AlertTriangle, color: expiringContracts > 0 ? 'text-amber-400' : 'text-brand-text/40', glow: 'shadow-amber-500/10' },
+                    { label: 'Criticidad Alta/Crítica', value: criticalCount, icon: Shield, color: criticalCount > 0 ? 'text-red-400' : 'text-brand-text/40', glow: 'shadow-red-500/10' },
                 ].map(({ label, value, icon: Icon, color, glow }) => (
                     <div key={label} className={cn('card-premium group hover:scale-[1.02] transition-all', glow)}>
                         <div className="flex items-center justify-between mb-3">
                             <Icon className={cn('w-5 h-5', color)} />
                             <span className={cn('text-3xl font-black font-mono', color)}>{value}</span>
                         </div>
-                        <p className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest group-hover:text-prevenort-text/50 transition-colors">{label}</p>
+                        <p className="text-[9px] font-black text-brand-text/30 uppercase tracking-widest group-hover:text-brand-text/50 transition-colors">{label}</p>
                     </div>
                 ))}
             </div>
@@ -243,40 +243,40 @@ export const InstitutionsDashboard: React.FC = () => {
             {/* ── Filtros y Búsqueda ── */}
             <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1 group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20 group-hover:text-info transition-colors" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20 group-hover:text-info transition-colors" />
                     <input
                         type="text"
                         placeholder="Buscar por nombre, RUT, código, ciudad..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-info/50 transition-all hover:bg-prevenort-surface/80 text-prevenort-text/80"
+                        className="w-full bg-brand-surface border border-brand-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-info/50 transition-all hover:bg-brand-surface/80 text-brand-text/80"
                     />
                     {searchQuery && (
                         <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <X className="w-3.5 h-3.5 text-prevenort-text/30 hover:text-prevenort-text/60" />
+                            <X className="w-3.5 h-3.5 text-brand-text/30 hover:text-brand-text/60" />
                         </button>
                     )}
                 </div>
                 <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value as InstitutionType | 'all')}
-                    className="bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-xs text-prevenort-text/60 focus:outline-none focus:border-info/50 appearance-none"
+                    className="bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-xs text-brand-text/60 focus:outline-none focus:border-info/50 appearance-none"
                 >
-                    <option value="all" className="bg-prevenort-bg">Todos los tipos</option>
-                    <option value="publico" className="bg-prevenort-bg">Público</option>
-                    <option value="privado" className="bg-prevenort-bg">Privado</option>
-                    <option value="mixto" className="bg-prevenort-bg">Mixto</option>
+                    <option value="all" className="bg-brand-bg">Todos los tipos</option>
+                    <option value="publico" className="bg-brand-bg">Público</option>
+                    <option value="privado" className="bg-brand-bg">Privado</option>
+                    <option value="mixto" className="bg-brand-bg">Mixto</option>
                 </select>
                 <select
                     value={filterCriticality}
                     onChange={(e) => setFilterCriticality(e.target.value as Criticality | 'all')}
-                    className="bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-xs text-prevenort-text/60 focus:outline-none focus:border-info/50 appearance-none"
+                    className="bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-xs text-brand-text/60 focus:outline-none focus:border-info/50 appearance-none"
                 >
-                    <option value="all" className="bg-prevenort-bg">Toda criticidad</option>
-                    <option value="baja" className="bg-prevenort-bg">Baja</option>
-                    <option value="media" className="bg-prevenort-bg">Media</option>
-                    <option value="alta" className="bg-prevenort-bg">Alta</option>
-                    <option value="critica" className="bg-prevenort-bg">Crítica</option>
+                    <option value="all" className="bg-brand-bg">Toda criticidad</option>
+                    <option value="baja" className="bg-brand-bg">Baja</option>
+                    <option value="media" className="bg-brand-bg">Media</option>
+                    <option value="alta" className="bg-brand-bg">Alta</option>
+                    <option value="critica" className="bg-brand-bg">Crítica</option>
                 </select>
             </div>
 
@@ -309,7 +309,7 @@ export const InstitutionsDashboard: React.FC = () => {
                     <div className="flex-1" />
                     <button
                         onClick={() => setSelectedIds(new Set())}
-                        className="text-[10px] text-prevenort-text/40 hover:text-prevenort-text uppercase font-bold"
+                        className="text-[10px] text-brand-text/40 hover:text-brand-text uppercase font-bold"
                     >
                         Cancelar selección
                     </button>
@@ -319,31 +319,31 @@ export const InstitutionsDashboard: React.FC = () => {
 
             {/* ── VISTA LISTA (WORKLIST COMPACTA) ── */}
             {viewMode === 'list' ? (
-                <div className="bg-prevenort-surface/30 border border-prevenort-border rounded-2xl overflow-hidden">
+                <div className="bg-brand-surface/30 border border-brand-border rounded-2xl overflow-hidden">
                     {/* Header de tabla */}
-                    <div className="grid grid-cols-[40px_1fr_130px_130px_120px_100px_90px] gap-2 px-4 py-2.5 bg-prevenort-surface/50 border-b border-prevenort-border text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">
+                    <div className="grid grid-cols-[40px_1fr_130px_130px_120px_100px_90px] gap-2 px-4 py-2.5 bg-brand-surface/50 border-b border-brand-border text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">
                         <div className="flex items-center justify-center">
-                            <button onClick={toggleSelectAll} className="hover:text-prevenort-text transition-colors">
+                            <button onClick={toggleSelectAll} className="hover:text-brand-text transition-colors">
                                 {selectedIds.size === filteredAndSorted.length && filteredAndSorted.length > 0
                                     ? <CheckSquare className="w-4 h-4 text-info" />
                                     : <Square className="w-4 h-4" />
                                 }
                             </button>
                         </div>
-                        <button onClick={() => handleSortToggle('legalName')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('legalName')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Institución <SortIcon field="legalName" />
                         </button>
-                        <button onClick={() => handleSortToggle('institutionCategory')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('institutionCategory')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Categoría <SortIcon field="institutionCategory" />
                         </button>
-                        <button onClick={() => handleSortToggle('institutionType')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('institutionType')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Tipo <SortIcon field="institutionType" />
                         </button>
-                        <button onClick={() => handleSortToggle('city')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('city')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Ciudad <SortIcon field="city" />
                         </button>
                         <div>Contratos</div>
-                        <button onClick={() => handleSortToggle('criticality')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('criticality')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Criticidad <SortIcon field="criticality" />
                         </button>
                     </div>
@@ -351,8 +351,8 @@ export const InstitutionsDashboard: React.FC = () => {
                     {/* Filas */}
                     {filteredAndSorted.length === 0 ? (
                         <div className="p-12 text-center">
-                            <Building2 className="w-10 h-10 text-prevenort-text/10 mx-auto mb-3" />
-                            <p className="text-prevenort-text/30 text-sm italic">Sin resultados</p>
+                            <Building2 className="w-10 h-10 text-brand-text/10 mx-auto mb-3" />
+                            <p className="text-brand-text/30 text-sm italic">Sin resultados</p>
                         </div>
                     ) : filteredAndSorted.map(inst => {
                         const isSelected = selectedIds.has(inst.id);
@@ -361,28 +361,28 @@ export const InstitutionsDashboard: React.FC = () => {
                             <div
                                 key={inst.id}
                                 className={cn(
-                                    'grid grid-cols-[40px_1fr_130px_130px_120px_100px_90px] gap-2 px-4 py-2.5 border-b border-prevenort-border/30 items-center hover:bg-prevenort-surface/40 transition-colors cursor-pointer text-xs',
+                                    'grid grid-cols-[40px_1fr_130px_130px_120px_100px_90px] gap-2 px-4 py-2.5 border-b border-brand-border/30 items-center hover:bg-brand-surface/40 transition-colors cursor-pointer text-xs',
                                     isSelected && 'bg-info/5'
                                 )}
                             >
                                 <div className="flex items-center justify-center" onClick={(e) => { e.stopPropagation(); toggleSelect(inst.id); }}>
                                     {isSelected
                                         ? <CheckSquare className="w-4 h-4 text-info" />
-                                        : <Square className="w-4 h-4 text-prevenort-text/20 hover:text-prevenort-text/40" />
+                                        : <Square className="w-4 h-4 text-brand-text/20 hover:text-brand-text/40" />
                                     }
                                 </div>
                                 <div className="min-w-0" onClick={() => setSelectedId(inst.id)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-prevenort-text/80 truncate">{inst.legalName}</span>
+                                        <span className="font-bold text-brand-text/80 truncate">{inst.legalName}</span>
                                         {inst.institutionCode && (
-                                            <span className="text-[9px] font-mono text-prevenort-text/30 bg-prevenort-surface px-1.5 py-0.5 rounded border border-prevenort-border flex-shrink-0">{inst.institutionCode}</span>
+                                            <span className="text-[9px] font-mono text-brand-text/30 bg-brand-surface px-1.5 py-0.5 rounded border border-brand-border flex-shrink-0">{inst.institutionCode}</span>
                                         )}
                                     </div>
                                     {inst.commercialName && inst.commercialName !== inst.legalName && (
-                                        <p className="text-[10px] text-prevenort-text/25 truncate">{inst.commercialName}</p>
+                                        <p className="text-[10px] text-brand-text/25 truncate">{inst.commercialName}</p>
                                     )}
                                 </div>
-                                <div className="text-prevenort-text/50" onClick={() => setSelectedId(inst.id)}>
+                                <div className="text-brand-text/50" onClick={() => setSelectedId(inst.id)}>
                                     {cat && (
                                         <span className="flex items-center gap-1 text-[10px]">
                                             <span>{cat.icon}</span>
@@ -393,10 +393,10 @@ export const InstitutionsDashboard: React.FC = () => {
                                 <div onClick={() => setSelectedId(inst.id)}>
                                     {getTypeBadge(inst.institutionType)}
                                 </div>
-                                <div className="text-prevenort-text/50 truncate" onClick={() => setSelectedId(inst.id)}>
+                                <div className="text-brand-text/50 truncate" onClick={() => setSelectedId(inst.id)}>
                                     {inst.city || '—'}
                                 </div>
-                                <div className="text-prevenort-text/50 font-mono text-center" onClick={() => setSelectedId(inst.id)}>
+                                <div className="text-brand-text/50 font-mono text-center" onClick={() => setSelectedId(inst.id)}>
                                     {inst.activeContracts || 0}
                                 </div>
                                 <div onClick={() => setSelectedId(inst.id)}>
@@ -407,8 +407,8 @@ export const InstitutionsDashboard: React.FC = () => {
                     })}
 
                     {/* Footer */}
-                    <div className="px-4 py-2 bg-prevenort-surface/30 border-t border-prevenort-border">
-                        <span className="text-[10px] text-prevenort-text/25 font-bold">
+                    <div className="px-4 py-2 bg-brand-surface/30 border-t border-brand-border">
+                        <span className="text-[10px] text-brand-text/25 font-bold">
                             {filteredAndSorted.length} institución(es)
                             {searchQuery && ` • Búsqueda: "${searchQuery}"`}
                         </span>
@@ -418,9 +418,9 @@ export const InstitutionsDashboard: React.FC = () => {
                 /* ── VISTA GRID ── */
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {filteredAndSorted.length === 0 ? (
-                        <div className="col-span-full p-12 text-center card-premium border-prevenort-border">
-                            <Building2 className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4" />
-                            <p className="text-prevenort-text/40 italic text-sm">
+                        <div className="col-span-full p-12 text-center card-premium border-brand-border">
+                            <Building2 className="w-12 h-12 text-brand-text/10 mx-auto mb-4" />
+                            <p className="text-brand-text/40 italic text-sm">
                                 {searchQuery ? 'No se encontraron instituciones con ese criterio.' : 'No hay instituciones registradas aún.'}
                             </p>
                         </div>
@@ -442,7 +442,7 @@ export const InstitutionsDashboard: React.FC = () => {
                                 >
                                     {isSelected
                                         ? <CheckSquare className="w-4 h-4 text-info" />
-                                        : <Square className="w-4 h-4 text-prevenort-text/15 group-hover:text-prevenort-text/30 transition-colors" />
+                                        : <Square className="w-4 h-4 text-brand-text/15 group-hover:text-brand-text/30 transition-colors" />
                                     }
                                 </button>
 
@@ -456,26 +456,26 @@ export const InstitutionsDashboard: React.FC = () => {
                                 <div className="relative pl-6" onClick={() => setSelectedId(inst.id)}>
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-sm font-black text-prevenort-text/90 truncate group-hover:text-info transition-colors">
+                                            <h3 className="text-sm font-black text-brand-text/90 truncate group-hover:text-info transition-colors">
                                                 {inst.legalName}
                                             </h3>
                                             {inst.commercialName && inst.commercialName !== inst.legalName && (
-                                                <p className="text-[10px] text-prevenort-text/30 truncate">{inst.commercialName}</p>
+                                                <p className="text-[10px] text-brand-text/30 truncate">{inst.commercialName}</p>
                                             )}
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-prevenort-text/10 group-hover:text-prevenort-text/40 flex-shrink-0 transition-all group-hover:translate-x-0.5" />
+                                        <ChevronRight className="w-4 h-4 text-brand-text/10 group-hover:text-brand-text/40 flex-shrink-0 transition-all group-hover:translate-x-0.5" />
                                     </div>
 
                                     <div className="flex items-center gap-2 mb-4 flex-wrap">
                                         {inst.institutionCode && (
-                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border bg-prevenort-surface text-prevenort-text/60 border-prevenort-border font-mono">
+                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border bg-brand-surface text-brand-text/60 border-brand-border font-mono">
                                                 {inst.institutionCode}
                                             </span>
                                         )}
                                         {(() => {
                                             const cat = INSTITUTION_CATEGORIES.find(c => c.value === inst.institutionCategory);
                                             return cat ? (
-                                                <span className="text-[9px] flex items-center gap-1 text-prevenort-text/30">
+                                                <span className="text-[9px] flex items-center gap-1 text-brand-text/30">
                                                     <span>{cat.icon}</span>
                                                     <span className="font-bold">{cat.label}</span>
                                                 </span>
@@ -485,20 +485,20 @@ export const InstitutionsDashboard: React.FC = () => {
                                         {getCriticalityBadge(inst.criticality)}
                                     </div>
 
-                                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-prevenort-border/50">
+                                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-brand-border/50">
                                         <div className="text-center">
-                                            <p className="text-lg font-black text-prevenort-text/80 font-mono">{inst.activeContracts || 0}</p>
-                                            <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Contratos</p>
+                                            <p className="text-lg font-black text-brand-text/80 font-mono">{inst.activeContracts || 0}</p>
+                                            <p className="text-[8px] text-brand-text/20 uppercase tracking-widest">Contratos</p>
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-lg font-black text-prevenort-text/80 font-mono">{inst.contacts?.length || '—'}</p>
-                                            <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Contactos</p>
+                                            <p className="text-lg font-black text-brand-text/80 font-mono">{inst.contacts?.length || '—'}</p>
+                                            <p className="text-[8px] text-brand-text/20 uppercase tracking-widest">Contactos</p>
                                         </div>
                                         <div className="text-center">
-                                            <p className={cn('text-lg font-black font-mono', inst.city ? 'text-prevenort-text/80' : 'text-prevenort-text/20')}>
+                                            <p className={cn('text-lg font-black font-mono', inst.city ? 'text-brand-text/80' : 'text-brand-text/20')}>
                                                 {inst.city || '—'}
                                             </p>
-                                            <p className="text-[8px] text-prevenort-text/20 uppercase tracking-widest">Ciudad</p>
+                                            <p className="text-[8px] text-brand-text/20 uppercase tracking-widest">Ciudad</p>
                                         </div>
                                     </div>
                                 </div>

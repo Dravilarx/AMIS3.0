@@ -97,18 +97,18 @@ function SuggestionInput({ defaultValue, suggestions, placeholder, onConfirm }: 
                 onFocus={() => { setFocused(true); setShowDropdown(true); }}
                 onBlur={() => { setTimeout(() => { if (!focused) setShowDropdown(false); }, 200); onConfirm(value); }}
                 placeholder={placeholder}
-                className="w-full bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2 text-sm font-bold focus:border-success outline-none transition-all"
+                className="w-full bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2 text-sm font-bold focus:border-success outline-none transition-all"
             />
             {showDropdown && filtered.length > 0 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-prevenort-surface border border-prevenort-text/15 rounded-xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto no-scrollbar">
-                    <div className="px-3 py-1.5 text-[8px] font-black text-prevenort-text/20 uppercase tracking-widest border-b border-prevenort-text/5">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-brand-surface border border-brand-text/15 rounded-xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto no-scrollbar">
+                    <div className="px-3 py-1.5 text-[8px] font-black text-brand-text/20 uppercase tracking-widest border-b border-brand-text/5">
                         Sugerencias de AMIS
                     </div>
                     {filtered.map((s, i) => (
                         <button
                             key={i}
                             onMouseDown={(e) => { e.preventDefault(); handleSelect(s); }}
-                            className="w-full text-left px-4 py-2 text-xs font-bold text-prevenort-text/70 hover:bg-success/10 hover:text-success transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-xs font-bold text-brand-text/70 hover:bg-success/10 hover:text-success transition-colors flex items-center gap-2"
                         >
                             <span className="w-1.5 h-1.5 rounded-full bg-success/40" />
                             {s}
@@ -129,7 +129,7 @@ function SuggestionInput({ defaultValue, suggestions, placeholder, onConfirm }: 
 
 const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = 'primary', breakdown }: any) => {
     const colors = {
-        primary: 'bg-prevenort-primary/10 border-prevenort-primary/20 text-prevenort-primary shadow-orange-500/10',
+        primary: 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary shadow-orange-500/10',
         success: 'bg-success/10 border-success/20 text-success shadow-green-500/10',
         info: 'bg-info/10 border-info/20 text-info shadow-cyan-500/10',
         danger: 'bg-danger/10 border-danger/20 text-danger shadow-red-500/10'
@@ -148,31 +148,31 @@ const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = '
                 <div className={`p-4 rounded-2xl border ${colors[color as keyof typeof colors]} shadow-inner backdrop-blur-md`}>
                     <Icon className="w-6 h-6" />
                 </div>
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-prevenort-text/5 border border-prevenort-text/10 ${trend === 'up' ? 'text-success' : 'text-danger'}`}>
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-text/5 border border-brand-text/10 ${trend === 'up' ? 'text-success' : 'text-danger'}`}>
                     {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                     {change}
                 </div>
             </div>
 
             <div>
-                <p className="text-prevenort-text/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">{title}</p>
+                <p className="text-brand-text/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">{title}</p>
                 <div className="flex items-baseline gap-2">
-                    <h3 className="text-4xl font-black text-prevenort-text tracking-tight drop-shadow-sm leading-none">{value}</h3>
-                    {subtitle && <span className="text-[10px] text-prevenort-text/30 font-bold uppercase tracking-tighter truncate max-w-[100px]">{subtitle}</span>}
+                    <h3 className="text-4xl font-black text-brand-text tracking-tight drop-shadow-sm leading-none">{value}</h3>
+                    {subtitle && <span className="text-[10px] text-brand-text/30 font-bold uppercase tracking-tighter truncate max-w-[100px]">{subtitle}</span>}
                 </div>
                 {breakdown && breakdown.length > 0 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-3">
                         {breakdown.map((b: any, i: number) => (
                             <span key={i} className="text-[9px] font-black uppercase tracking-wider">
-                                <span className={b.color || 'text-prevenort-text/25'}>{b.label}:</span>{' '}
-                                <span className="text-prevenort-text/50">{b.value}</span>
+                                <span className={b.color || 'text-brand-text/25'}>{b.label}:</span>{' '}
+                                <span className="text-brand-text/50">{b.value}</span>
                             </span>
                         ))}
                     </div>
                 )}
             </div>
 
-            <div className="mt-6 h-1 w-full bg-prevenort-text/5 rounded-full overflow-hidden">
+            <div className="mt-6 h-1 w-full bg-brand-text/5 rounded-full overflow-hidden">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: trend === 'up' ? '70%' : '30%' }}
@@ -241,7 +241,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
     const missingDays = calendarData.flatMap(m => m.days).filter(d => !d.hasData);
 
     return (
-        <div className="card-premium bg-prevenort-text/[0.02] border-prevenort-text/5 p-6 mb-8 w-full max-w-4xl mx-auto">
+        <div className="card-premium bg-brand-text/[0.02] border-brand-text/5 p-6 mb-8 w-full max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
@@ -249,30 +249,30 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-black uppercase tracking-tight text-prevenort-text/90">Continuidad de Carga</h3>
+                            <h3 className="text-xl font-black uppercase tracking-tight text-brand-text/90">Continuidad de Carga</h3>
                             <div className="flex gap-1">
                                 {availableYearsList.map(y => (
                                     <button
                                         key={y}
                                         onClick={() => setSelectedYear(y)}
-                                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYear === y ? 'bg-amber-500 text-amber-950' : 'bg-prevenort-text/5 text-prevenort-text/40 hover:bg-prevenort-text/10'}`}
+                                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYear === y ? 'bg-amber-500 text-amber-950' : 'bg-brand-text/5 text-brand-text/40 hover:bg-brand-text/10'}`}
                                     >
                                         {y}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest mt-1.5">Monitoreo de integridad de datos · Ingesta Diaria</p>
+                        <p className="text-[10px] font-bold text-brand-text/30 uppercase tracking-widest mt-1.5">Monitoreo de integridad de datos · Ingesta Diaria</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-5 bg-prevenort-text/5 px-5 py-3 rounded-2xl border border-prevenort-text/5">
+                <div className="flex items-center gap-5 bg-brand-text/5 px-5 py-3 rounded-2xl border border-brand-text/5">
                     <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-[4px] bg-success/40 border border-success/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]" />
-                        <span className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest">Cargado</span>
+                        <span className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest">Cargado</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-[4px] bg-danger/20 border border-danger/40 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]" />
-                        <span className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest">Faltante</span>
+                        <span className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest">Faltante</span>
                     </div>
                 </div>
             </div>
@@ -280,7 +280,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-8">
                 {calendarData.map((month, mi) => (
                     <div key={mi} className="space-y-3">
-                        <span className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-[0.2em] block ml-0.5 border-l-2 border-prevenort-text/5 pl-2">{month.name}</span>
+                        <span className="text-[10px] font-black text-brand-text/20 uppercase tracking-[0.2em] block ml-0.5 border-l-2 border-brand-text/5 pl-2">{month.name}</span>
                         <div className="grid grid-cols-7 gap-1">
                             {month.days.map((day, di) => (
                                 <div
@@ -320,7 +320,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                                     </span>
                                 ))}
                             </div>
-                            <p className="mt-3 text-[9px] font-bold text-prevenort-text/20 uppercase tracking-widest italic">
+                            <p className="mt-3 text-[9px] font-bold text-brand-text/20 uppercase tracking-widest italic">
                                 * Se recomienda cargar las planillas faltantes para mantener la integridad de los reportes.
                             </p>
                         </div>
@@ -337,7 +337,7 @@ const ContinuityIndicator = ({ data }: { data: any[] }) => {
                         </div>
                         <div>
                             <p className="text-sm font-black text-success uppercase tracking-tight">Sincronización Completa para {selectedYear}</p>
-                            <p className="text-[10px] font-bold text-prevenort-text/30 uppercase tracking-widest mt-1">No se detectan lagunas de datos en el historial correspondiente.</p>
+                            <p className="text-[10px] font-bold text-brand-text/30 uppercase tracking-widest mt-1">No se detectan lagunas de datos en el historial correspondiente.</p>
                         </div>
                     </motion.div>
                 )}
@@ -805,20 +805,20 @@ export const StatMultirisModule: React.FC = () => {
     return (
         <div className="space-y-8 pb-10">
             {/* Header Section Premium */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative overflow-hidden p-8 rounded-[40px] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-prevenort-text/5">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative overflow-hidden p-8 rounded-[40px] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-brand-text/5">
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(255,100,0,0.05)_0%,transparent_50%)]" />
                 <div className="relative z-10">
                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                         <div className="flex items-center gap-4 mb-2">
-                            <h1 className="text-4xl font-black text-prevenort-text tracking-tight uppercase italic decoration-prevenort-primary decoration-4">Stat Multiris <span className="text-prevenort-primary">3.0</span></h1>
-                            <div className="px-3 py-1 rounded-full bg-prevenort-text/5 border border-prevenort-text/10 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest leading-none">
+                            <h1 className="text-4xl font-black text-brand-text tracking-tight uppercase italic decoration-brand-primary decoration-4">Stat Multiris <span className="text-brand-primary">3.0</span></h1>
+                            <div className="px-3 py-1 rounded-full bg-brand-text/5 border border-brand-text/10 text-[9px] font-black text-brand-text/40 uppercase tracking-widest leading-none">
                                 {consolidatedData.length.toLocaleString()} Segmentos Cargados
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Smart Data Merging Engine</span>
-                            <div className="h-1 w-1 rounded-full bg-prevenort-text/20" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-prevenort-text/40">Holding Portezuelo</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/40">Smart Data Merging Engine</span>
+                            <div className="h-1 w-1 rounded-full bg-brand-text/20" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/40">Holding Portezuelo</span>
                         </div>
                     </motion.div>
                 </div>
@@ -828,7 +828,7 @@ export const StatMultirisModule: React.FC = () => {
                         onClick={() => setView('mappings')}
                         className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${view === 'mappings'
                             ? 'bg-success text-white border-success shadow-lg shadow-green-500/30 -translate-y-1'
-                            : 'border-prevenort-text/5 bg-prevenort-text/5 hover:bg-prevenort-text/10 text-prevenort-text/60 hover:text-prevenort-text'
+                            : 'border-brand-text/5 bg-brand-text/5 hover:bg-brand-text/10 text-brand-text/60 hover:text-brand-text'
                             }`}
                     >
                         <Link2 className="w-4 h-4" />
@@ -838,7 +838,7 @@ export const StatMultirisModule: React.FC = () => {
                         onClick={() => setView('config')}
                         className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${view === 'config'
                             ? 'bg-info text-white border-info shadow-lg shadow-cyan-500/30 -translate-y-1'
-                            : 'border-prevenort-text/5 bg-prevenort-text/5 hover:bg-prevenort-text/10 text-prevenort-text/60 hover:text-prevenort-text'
+                            : 'border-brand-text/5 bg-brand-text/5 hover:bg-brand-text/10 text-brand-text/60 hover:text-brand-text'
                             }`}
                     >
                         <Settings className="w-4 h-4" />
@@ -847,8 +847,8 @@ export const StatMultirisModule: React.FC = () => {
                     <button
                         onClick={() => setView(view === 'dashboard' ? 'upload' : 'dashboard')}
                         className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${view === 'upload'
-                            ? 'bg-prevenort-primary text-white border-prevenort-primary shadow-lg shadow-orange-500/30 -translate-y-1'
-                            : 'border-prevenort-text/5 bg-prevenort-text/5 hover:bg-prevenort-text/10 text-prevenort-text/60 hover:text-prevenort-text'
+                            ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-orange-500/30 -translate-y-1'
+                            : 'border-brand-text/5 bg-brand-text/5 hover:bg-brand-text/10 text-brand-text/60 hover:text-brand-text'
                             }`}
                     >
                         {view === 'dashboard' ? <Upload className="w-4 h-4" /> : <BarChart3 className="w-4 h-4" />}
@@ -864,7 +864,7 @@ export const StatMultirisModule: React.FC = () => {
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-2xl font-black uppercase tracking-tight">Sistema de Equivalencias</h3>
-                                    <p className="text-xs text-prevenort-text/40 font-bold uppercase mt-1">Vincula nombres de la planilla con nombres formales de AMIS</p>
+                                    <p className="text-xs text-brand-text/40 font-bold uppercase mt-1">Vincula nombres de la planilla con nombres formales de AMIS</p>
                                 </div>
                                 <div className="p-3 rounded-2xl bg-success/10 text-success border border-success/20">
                                     <Link2 className="w-8 h-8" />
@@ -881,15 +881,15 @@ export const StatMultirisModule: React.FC = () => {
                                 const pct = instMappings.length > 0 ? Math.round((linked.length / instMappings.length) * 100) : 0;
 
                                 return (
-                                    <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-prevenort-text/10">
+                                    <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-brand-text/10">
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-xl bg-info/10 text-info border border-info/20">
                                                     <Info className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <span className="text-sm font-black text-prevenort-text uppercase tracking-wide">Concordancia Institucional</span>
-                                                    <span className="block text-[10px] font-bold text-prevenort-text/30">
+                                                    <span className="text-sm font-black text-brand-text uppercase tracking-wide">Concordancia Institucional</span>
+                                                    <span className="block text-[10px] font-bold text-brand-text/30">
                                                         {linked.length} de {instMappings.length} instituciones vinculadas a AMIS ({pct}%)
                                                     </span>
                                                 </div>
@@ -899,7 +899,7 @@ export const StatMultirisModule: React.FC = () => {
                                             </div>
                                         </div>
                                         {/* Progress bar */}
-                                        <div className="w-full h-2 bg-prevenort-text/5 rounded-full overflow-hidden mb-3">
+                                        <div className="w-full h-2 bg-brand-text/5 rounded-full overflow-hidden mb-3">
                                             <div
                                                 className={`h-full rounded-full transition-all duration-700 ${pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-amber-400' : 'bg-danger'}`}
                                                 style={{ width: `${pct}%` }}
@@ -915,7 +915,7 @@ export const StatMultirisModule: React.FC = () => {
                                                 </span>
                                             )}
                                             {noEquiv.length > 0 && (
-                                                <span className="flex items-center gap-1.5 text-prevenort-text/25">
+                                                <span className="flex items-center gap-1.5 text-brand-text/25">
                                                     <Unlink className="w-3 h-3" /> {noEquiv.length} sin equivalencia
                                                 </span>
                                             )}
@@ -926,7 +926,7 @@ export const StatMultirisModule: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
-                                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-prevenort-primary">
+                                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-brand-primary">
                                         <Building2 className="w-4 h-4" /> Instituciones (Aetitle)
                                     </h4>
                                     <div className="space-y-3">
@@ -935,20 +935,20 @@ export const StatMultirisModule: React.FC = () => {
                                             const hasEquiv = m.formal_name && m.formal_name !== m.raw_name;
                                             const statusColor = isLinked ? 'bg-success/20 text-success border-success/20'
                                                 : hasEquiv ? 'bg-amber-400/20 text-amber-400 border-amber-400/20'
-                                                    : 'bg-prevenort-text/5 text-prevenort-text/20 border-prevenort-text/10';
+                                                    : 'bg-brand-text/5 text-brand-text/20 border-brand-text/10';
                                             const StatusIcon = isLinked ? CircleCheck : hasEquiv ? CircleAlert : Unlink;
                                             const statusTip = isLinked ? 'Vinculada a AMIS'
                                                 : hasEquiv ? 'Nombre asignado, no coincide con ninguna institución AMIS'
                                                     : 'Sin equivalencia';
 
                                             return (
-                                                <div key={m.id} className={`p-4 rounded-3xl bg-prevenort-text/5 border transition-all ${isLinked ? 'border-success/15 hover:border-success/30' :
+                                                <div key={m.id} className={`p-4 rounded-3xl bg-brand-text/5 border transition-all ${isLinked ? 'border-success/15 hover:border-success/30' :
                                                     hasEquiv ? 'border-amber-400/15 hover:border-amber-400/30' :
-                                                        'border-prevenort-text/10 hover:border-prevenort-primary/30'
+                                                        'border-brand-text/10 hover:border-brand-primary/30'
                                                     }`}>
                                                     <div className="flex flex-col gap-2">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-prevenort-text">{m.raw_name}</span></span>
+                                                            <span className="text-[10px] font-black text-brand-text/30 uppercase">Nombre en Planilla: <span className="text-brand-text">{m.raw_name}</span></span>
                                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${statusColor}`} title={statusTip}>
                                                                 <StatusIcon className="w-2.5 h-2.5" />
                                                                 {isLinked ? 'Vinculada' : hasEquiv ? 'Sin match' : 'Pendiente'}
@@ -979,14 +979,14 @@ export const StatMultirisModule: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-prevenort-primary">
+                                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-brand-primary">
                                         <Users className="w-4 h-4" /> Médicos (Radiólogos)
                                     </h4>
                                     <div className="space-y-3 overflow-y-auto max-h-[600px] pr-2 no-scrollbar">
                                         {mappings.filter(m => m.category === 'medico').map(m => (
-                                            <div key={m.id} className="p-4 rounded-3xl bg-prevenort-text/5 border border-prevenort-text/10 group hover:border-prevenort-primary/30 transition-all">
+                                            <div key={m.id} className="p-4 rounded-3xl bg-brand-text/5 border border-brand-text/10 group hover:border-brand-primary/30 transition-all">
                                                 <div className="flex flex-col gap-2">
-                                                    <span className="text-[10px] font-black text-prevenort-text/30 uppercase">Nombre en Planilla: <span className="text-prevenort-text">{m.raw_name}</span></span>
+                                                    <span className="text-[10px] font-black text-brand-text/30 uppercase">Nombre en Planilla: <span className="text-brand-text">{m.raw_name}</span></span>
                                                     <div className="flex items-center gap-2">
                                                         <SuggestionInput
                                                             defaultValue={m.formal_name}
@@ -1105,7 +1105,7 @@ export const StatMultirisModule: React.FC = () => {
                                                 onChange={(e) => setTempValue(e.target.value)}
                                                 onBlur={handleCommit}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') handleCommit(); if (e.key === 'Escape') setEditing(false); }}
-                                                className="w-full bg-info/10 border-2 border-info rounded-xl px-3 py-2.5 text-center text-sm font-black text-prevenort-text outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-full bg-info/10 border-2 border-info rounded-xl px-3 py-2.5 text-center text-sm font-black text-brand-text outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 min={0}
                                                 step={5}
                                             />
@@ -1118,18 +1118,18 @@ export const StatMultirisModule: React.FC = () => {
                                     <button
                                         onClick={() => { setTempValue(String(hasOwnValue ? currentValue : 0)); setEditing(true); }}
                                         className={`w-full rounded-xl px-3 py-2.5 text-center transition-all group/cell relative ${hasOwnValue
-                                            ? 'bg-prevenort-text/[0.06] border border-prevenort-text/10 hover:border-info/40 hover:bg-info/5'
+                                            ? 'bg-brand-text/[0.06] border border-brand-text/10 hover:border-info/40 hover:bg-info/5'
                                             : isGlobal
-                                                ? 'bg-prevenort-text/[0.03] border border-dashed border-prevenort-text/10 hover:border-info/40'
-                                                : 'bg-transparent border border-dashed border-prevenort-text/[0.05] hover:border-prevenort-text/20 hover:bg-prevenort-text/[0.02]'
+                                                ? 'bg-brand-text/[0.03] border border-dashed border-brand-text/10 hover:border-info/40'
+                                                : 'bg-transparent border border-dashed border-brand-text/[0.05] hover:border-brand-text/20 hover:bg-brand-text/[0.02]'
                                             }`}
                                     >
-                                        <span className={`text-sm font-black ${hasOwnValue ? 'text-prevenort-text' : isGlobal ? 'text-prevenort-text/20' : 'text-prevenort-text/15'
+                                        <span className={`text-sm font-black ${hasOwnValue ? 'text-brand-text' : isGlobal ? 'text-brand-text/20' : 'text-brand-text/15'
                                             }`}>
                                             {formatTime(displayValue)}
                                         </span>
                                         {!isGlobal && !hasOwnValue && globalFallback > 0 && (
-                                            <span className="block text-[8px] font-bold text-prevenort-text/20 mt-0.5">
+                                            <span className="block text-[8px] font-bold text-brand-text/20 mt-0.5">
                                                 ← global
                                             </span>
                                         )}
@@ -1143,7 +1143,7 @@ export const StatMultirisModule: React.FC = () => {
                             return (
                                 <div className="card-premium p-0 overflow-hidden">
                                     {/* Header */}
-                                    <div className="p-8 pb-4 border-b border-prevenort-text/5">
+                                    <div className="p-8 pb-4 border-b border-brand-text/5">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-1">
@@ -1152,11 +1152,11 @@ export const StatMultirisModule: React.FC = () => {
                                                     </div>
                                                     <h3 className="text-2xl font-black uppercase tracking-tight">Matriz SLA</h3>
                                                 </div>
-                                                <p className="text-xs text-prevenort-text/30 font-bold ml-14">
-                                                    Haz clic en cualquier celda para editar · Los valores en <span className="text-prevenort-text/50">0</span> eliminan la regla · Las celdas vacías heredan del valor <span className="text-info/60">global</span>
+                                                <p className="text-xs text-brand-text/30 font-bold ml-14">
+                                                    Haz clic en cualquier celda para editar · Los valores en <span className="text-brand-text/50">0</span> eliminan la regla · Las celdas vacías heredan del valor <span className="text-info/60">global</span>
                                                 </p>
                                             </div>
-                                            <div className="flex items-center gap-2 text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest">
+                                            <div className="flex items-center gap-2 text-[9px] font-black text-brand-text/30 uppercase tracking-widest">
                                                 <Clock className="w-3.5 h-3.5" />
                                                 {slaConfigs.length} reglas activas
                                             </div>
@@ -1168,9 +1168,9 @@ export const StatMultirisModule: React.FC = () => {
                                         <table className="w-full">
                                             {/* Cabecera de columnas: Tipos de Paciente */}
                                             <thead>
-                                                <tr className="border-b border-prevenort-text/5">
+                                                <tr className="border-b border-brand-text/5">
                                                     <th className="text-left px-8 py-4 w-[280px]">
-                                                        <span className="text-[10px] font-black text-prevenort-text/25 uppercase tracking-[0.2em]">Institución</span>
+                                                        <span className="text-[10px] font-black text-brand-text/25 uppercase tracking-[0.2em]">Institución</span>
                                                     </th>
                                                     {PATIENT_TYPES.map(pt => (
                                                         <th key={pt.key} className="px-3 py-4 text-center min-w-[120px]">
@@ -1179,13 +1179,13 @@ export const StatMultirisModule: React.FC = () => {
                                                                     <span className={`w-2 h-2 rounded-full ${pt.dotColor}`} />
                                                                     <span className={`text-[10px] font-black uppercase tracking-widest ${pt.textColor}`}>{pt.shortLabel}</span>
                                                                 </div>
-                                                                <span className="text-[8px] font-bold text-prevenort-text/20">{pt.label}</span>
-                                                                {pt.desc && <span className="text-[7px] font-medium text-prevenort-text/10">{pt.desc}</span>}
+                                                                <span className="text-[8px] font-bold text-brand-text/20">{pt.label}</span>
+                                                                {pt.desc && <span className="text-[7px] font-medium text-brand-text/10">{pt.desc}</span>}
                                                             </div>
                                                         </th>
                                                     ))}
                                                     <th className="px-3 py-4 text-center min-w-[80px]">
-                                                        <span className="text-[10px] font-black text-prevenort-text/15 uppercase tracking-widest">Estado</span>
+                                                        <span className="text-[10px] font-black text-brand-text/15 uppercase tracking-widest">Estado</span>
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -1225,17 +1225,17 @@ export const StatMultirisModule: React.FC = () => {
                                                     return (
                                                         <tr
                                                             key={inst}
-                                                            className={`border-b border-prevenort-text/[0.03] hover:bg-prevenort-text/[0.02] transition-colors ${idx % 2 === 0 ? 'bg-prevenort-text/[0.01]' : ''}`}
+                                                            className={`border-b border-brand-text/[0.03] hover:bg-brand-text/[0.02] transition-colors ${idx % 2 === 0 ? 'bg-brand-text/[0.01]' : ''}`}
                                                         >
                                                             <td className="px-8 py-3.5">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-xl bg-prevenort-text/5 border border-prevenort-text/10 flex items-center justify-center flex-shrink-0">
-                                                                        <Building2 className="w-4 h-4 text-prevenort-primary/60" />
+                                                                    <div className="w-8 h-8 rounded-xl bg-brand-text/5 border border-brand-text/10 flex items-center justify-center flex-shrink-0">
+                                                                        <Building2 className="w-4 h-4 text-brand-primary/60" />
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <span className="text-xs font-black text-prevenort-text uppercase tracking-wide truncate block">{getFormalName(inst, 'institucion')}</span>
+                                                                        <span className="text-xs font-black text-brand-text uppercase tracking-wide truncate block">{getFormalName(inst, 'institucion')}</span>
                                                                         {getFormalName(inst, 'institucion') !== inst && (
-                                                                            <span className="text-[8px] font-bold text-prevenort-text/20">{inst}</span>
+                                                                            <span className="text-[8px] font-bold text-brand-text/20">{inst}</span>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -1247,11 +1247,11 @@ export const StatMultirisModule: React.FC = () => {
                                                             ))}
                                                             <td className="px-3 py-3 text-center">
                                                                 {configuredCount === 0 ? (
-                                                                    <span className="text-[9px] font-bold text-prevenort-text/15">Solo global</span>
+                                                                    <span className="text-[9px] font-bold text-brand-text/15">Solo global</span>
                                                                 ) : (
                                                                     <div className="flex items-center justify-center gap-0.5">
                                                                         {Array.from({ length: PATIENT_TYPES.length }).map((_, i) => (
-                                                                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < configuredCount ? 'bg-info' : 'bg-prevenort-text/10'}`} />
+                                                                            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < configuredCount ? 'bg-info' : 'bg-brand-text/10'}`} />
                                                                         ))}
                                                                     </div>
                                                                 )}
@@ -1265,11 +1265,11 @@ export const StatMultirisModule: React.FC = () => {
                                                     <tr>
                                                         <td colSpan={PATIENT_TYPES.length + 2} className="px-8 py-12 text-center">
                                                             <div className="flex flex-col items-center gap-3">
-                                                                <Upload className="w-8 h-8 text-prevenort-text/10" />
-                                                                <p className="text-xs font-bold text-prevenort-text/20">
+                                                                <Upload className="w-8 h-8 text-brand-text/10" />
+                                                                <p className="text-xs font-bold text-brand-text/20">
                                                                     No hay instituciones descubiertas aún.
                                                                     <br />
-                                                                    <span className="text-prevenort-text/10">Ingesta un archivo Multiris para descubrir las instituciones automáticamente.</span>
+                                                                    <span className="text-brand-text/10">Ingesta un archivo Multiris para descubrir las instituciones automáticamente.</span>
                                                                 </p>
                                                             </div>
                                                         </td>
@@ -1280,19 +1280,19 @@ export const StatMultirisModule: React.FC = () => {
                                     </div>
 
                                     {/* Footer con leyenda */}
-                                    <div className="px-8 py-4 border-t border-prevenort-text/5 bg-prevenort-text/[0.01]">
-                                        <div className="flex flex-wrap items-center gap-6 text-[8px] font-bold text-prevenort-text/20 uppercase tracking-wider">
+                                    <div className="px-8 py-4 border-t border-brand-text/5 bg-brand-text/[0.01]">
+                                        <div className="flex flex-wrap items-center gap-6 text-[8px] font-bold text-brand-text/20 uppercase tracking-wider">
                                             <span className="flex items-center gap-1.5">
-                                                <div className="w-4 h-3 rounded bg-prevenort-text/[0.06] border border-prevenort-text/10" /> Valor propio
+                                                <div className="w-4 h-3 rounded bg-brand-text/[0.06] border border-brand-text/10" /> Valor propio
                                             </span>
                                             <span className="flex items-center gap-1.5">
-                                                <div className="w-4 h-3 rounded border border-dashed border-prevenort-text/[0.05]" /> Hereda global
+                                                <div className="w-4 h-3 rounded border border-dashed border-brand-text/[0.05]" /> Hereda global
                                             </span>
                                             <span className="flex items-center gap-1.5">
                                                 <Edit3 className="w-2.5 h-2.5 text-info/40" /> Clic para editar
                                             </span>
                                             <span className="flex items-center gap-1.5">
-                                                <span className="text-prevenort-text/40">0</span> = Elimina la regla
+                                                <span className="text-brand-text/40">0</span> = Elimina la regla
                                             </span>
                                         </div>
                                     </div>
@@ -1305,9 +1305,9 @@ export const StatMultirisModule: React.FC = () => {
                         <ContinuityIndicator data={consolidatedData} />
                         <div className="max-w-2xl mx-auto">
                             <div
-                                className={`card-premium bg-prevenort-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6 transition-all duration-300 ${isDragging
-                                    ? 'border-prevenort-primary bg-prevenort-primary/5 scale-[1.02] shadow-[0_0_40px_rgba(249,115,22,0.15)]'
-                                    : 'border-prevenort-text/10 hover:border-prevenort-text/20'
+                                className={`card-premium bg-brand-surface border-dashed border-2 p-12 text-center flex flex-col items-center gap-6 transition-all duration-300 ${isDragging
+                                    ? 'border-brand-primary bg-brand-primary/5 scale-[1.02] shadow-[0_0_40px_rgba(249,115,22,0.15)]'
+                                    : 'border-brand-text/10 hover:border-brand-text/20'
                                     }`}
                                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
                                 onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
@@ -1322,62 +1322,62 @@ export const StatMultirisModule: React.FC = () => {
                                     }
                                 }}
                             >
-                                <div className={`w-20 h-20 rounded-3xl flex items-center justify-center transition-all ${isDragging ? 'bg-prevenort-primary/20 scale-110' : 'bg-prevenort-primary/10'}`}>
+                                <div className={`w-20 h-20 rounded-3xl flex items-center justify-center transition-all ${isDragging ? 'bg-brand-primary/20 scale-110' : 'bg-brand-primary/10'}`}>
                                     {uploadStatus.status === 'uploading'
-                                        ? <Loader2 className="w-10 h-10 text-prevenort-primary animate-spin" />
+                                        ? <Loader2 className="w-10 h-10 text-brand-primary animate-spin" />
                                         : isDragging
-                                            ? <Upload className="w-10 h-10 text-prevenort-primary animate-bounce" />
-                                            : <FileSpreadsheet className="w-10 h-10 text-prevenort-primary" />
+                                            ? <Upload className="w-10 h-10 text-brand-primary animate-bounce" />
+                                            : <FileSpreadsheet className="w-10 h-10 text-brand-primary" />
                                     }
                                 </div>
                                 <h2 className="text-2xl font-black mb-2 uppercase">Ingesta de Producción</h2>
                                 {isDragging && (
-                                    <p className="text-sm font-black uppercase tracking-widest text-prevenort-primary animate-pulse">Suelta el archivo aquí</p>
+                                    <p className="text-sm font-black uppercase tracking-widest text-brand-primary animate-pulse">Suelta el archivo aquí</p>
                                 )}
                                 {!isDragging && (
-                                    <p className="text-[10px] font-bold text-prevenort-text/20 uppercase tracking-widest">Arrastra tu planilla aquí o haz clic en el botón</p>
+                                    <p className="text-[10px] font-bold text-brand-text/20 uppercase tracking-widest">Arrastra tu planilla aquí o haz clic en el botón</p>
                                 )}
                                 {uploadStatus.status === 'error' && <div className="bg-danger/10 text-danger px-4 py-3 rounded-xl border border-danger/20 text-xs font-bold">{uploadStatus.message}</div>}
                                 {uploadStatus.status === 'success' && <div className="bg-success/10 text-success px-4 py-3 rounded-xl border border-success/20 text-xs font-bold">{uploadStatus.message}</div>}
                                 <label className="relative cursor-pointer group">
                                     <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={uploadStatus.status === 'uploading'} />
-                                    <div className="px-8 py-4 bg-white text-prevenort-bg rounded-2xl font-black text-sm uppercase tracking-widest group-hover:scale-105 transition-transform flex items-center gap-3">
+                                    <div className="px-8 py-4 bg-white text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest group-hover:scale-105 transition-transform flex items-center gap-3">
                                         {uploadStatus.status === 'uploading' ? 'Auto-descubriendo...' : 'Subir Planilla'}
                                     </div>
                                 </label>
                             </div>
                             {/* Zona de Peligro - Purgar Datos */}
-                            <div className="mt-8 pt-8 border-t border-prevenort-text/5 flex flex-col items-center">
+                            <div className="mt-8 pt-8 border-t border-brand-text/5 flex flex-col items-center">
                                 <p className="text-[10px] font-black uppercase text-danger/40 tracking-[0.2em] mb-4">Zona de Peligro</p>
                                 <button
                                     onClick={handlePurgeData}
                                     disabled={loading}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-[10px] font-black uppercase tracking-widest hover:bg-danger hover:text-prevenort-text transition-all shadow-lg"
+                                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-[10px] font-black uppercase tracking-widest hover:bg-danger hover:text-brand-text transition-all shadow-lg"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" /> Borrar Base de Datos Multiris
                                 </button>
-                                <p className="mt-2 text-[8px] font-bold text-prevenort-text/10 uppercase tracking-widest italic">Esta acción no se puede deshacer · Elimina todo el historial cargado</p>
+                                <p className="mt-2 text-[8px] font-bold text-brand-text/10 uppercase tracking-widest italic">Esta acción no se puede deshacer · Elimina todo el historial cargado</p>
                             </div>
                         </div>
                     </motion.div>
                 ) : (
                     <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                         {loading && (
-                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-prevenort-surface/50 backdrop-blur-sm rounded-[40px]">
-                                <Loader2 className="w-12 h-12 text-prevenort-primary animate-spin" />
+                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-brand-surface/50 backdrop-blur-sm rounded-[40px]">
+                                <Loader2 className="w-12 h-12 text-brand-primary animate-spin" />
                             </div>
                         )}
 
                         {/* Filtros Inteligentes */}
-                        <div className="flex flex-wrap items-center gap-4 bg-prevenort-text/[0.02] border border-prevenort-text/5 p-4 rounded-3xl backdrop-blur-sm">
-                            <div className="flex items-center gap-2 px-4 py-2 border-r border-prevenort-text/5">
-                                <Target className="w-4 h-4 text-prevenort-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-prevenort-text/40">Filtros</span>
+                        <div className="flex flex-wrap items-center gap-4 bg-brand-text/[0.02] border border-brand-text/5 p-4 rounded-3xl backdrop-blur-sm">
+                            <div className="flex items-center gap-2 px-4 py-2 border-r border-brand-text/5">
+                                <Target className="w-4 h-4 text-brand-primary" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Filtros</span>
                             </div>
 
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Presets de Año */}
-                                <div className="flex items-center gap-1.5 bg-prevenort-text/5 p-1 rounded-xl border border-prevenort-text/10 italic">
+                                <div className="flex items-center gap-1.5 bg-brand-text/5 p-1 rounded-xl border border-brand-text/10 italic">
                                     {[2024, 2025, '2026'].map(y => {
                                         const is2026 = y === '2026';
                                         const isActive = is2026 
@@ -1390,8 +1390,8 @@ export const StatMultirisModule: React.FC = () => {
                                                 onClick={() => handleYearPreset(is2026 ? '2026_CUM' : Number(y))}
                                                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all ${
                                                     isActive 
-                                                    ? 'bg-prevenort-primary text-prevenort-bg shadow-lg shadow-prevenort-primary/20' 
-                                                    : 'text-prevenort-text/40 hover:bg-prevenort-text/5 hover:text-prevenort-text/60'
+                                                    ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20' 
+                                                    : 'text-brand-text/40 hover:bg-brand-text/5 hover:text-brand-text/60'
                                                 }`}
                                             >
                                                 {is2026 ? 'ACUM. 2026' : y}
@@ -1400,27 +1400,27 @@ export const StatMultirisModule: React.FC = () => {
                                     })}
                                 </div>
 
-                                <div className="h-4 w-px bg-prevenort-text/10 mx-1" />
+                                <div className="h-4 w-px bg-brand-text/10 mx-1" />
                                 {/* Date Range Pickers */}
-                                <div className="flex items-center gap-2 bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2">
-                                    <Calendar className="w-3.5 h-3.5 text-prevenort-primary" />
+                                <div className="flex items-center gap-2 bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2">
+                                    <Calendar className="w-3.5 h-3.5 text-brand-primary" />
                                     <input
                                         type="date"
                                         value={dateRange.start || ''}
                                         onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-prevenort-text/60"
+                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-brand-text/60"
                                     />
-                                    <span className="text-prevenort-text/20">—</span>
+                                    <span className="text-brand-text/20">—</span>
                                     <input
                                         type="date"
                                         value={dateRange.end || ''}
                                         onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-prevenort-text/60"
+                                        className="bg-transparent text-[10px] font-black uppercase outline-none text-brand-text/60"
                                     />
                                     {(dateRange.start || dateRange.end) && (
                                         <button
                                             onClick={() => setDateRange({ start: null, end: null })}
-                                            className="ml-1 text-prevenort-text/30 hover:text-prevenort-text/70 transition-colors text-xs font-black"
+                                            className="ml-1 text-brand-text/30 hover:text-brand-text/70 transition-colors text-xs font-black"
                                             title="Limpiar fechas"
                                         >
                                             ✕
@@ -1428,12 +1428,12 @@ export const StatMultirisModule: React.FC = () => {
                                     )}
                                 </div>
 
-                                <div className="h-4 w-px bg-prevenort-text/10" />
+                                <div className="h-4 w-px bg-brand-text/10" />
 
                                 <select
                                     value={filterModalidad}
                                     onChange={(e) => setFilterModalidad(e.target.value)}
-                                    className="bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-prevenort-primary/50 text-prevenort-text/60 appearance-none min-w-[140px]"
+                                    className="bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-brand-primary/50 text-brand-text/60 appearance-none min-w-[140px]"
                                 >
                                     <option value="TODAS">Todas las Modalidades</option>
                                     {['CT', 'MR', 'DX', 'US', 'MG', 'XA'].map(m => <option key={m} value={m}>{m}</option>)}
@@ -1441,7 +1441,7 @@ export const StatMultirisModule: React.FC = () => {
                                 <select
                                     value={filterInstitucion}
                                     onChange={(e) => setFilterInstitucion(e.target.value)}
-                                    className="bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-prevenort-primary/50 text-prevenort-text/60 appearance-none min-w-[160px]"
+                                    className="bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-brand-primary/50 text-brand-text/60 appearance-none min-w-[160px]"
                                 >
                                     <option value="TODAS">Todos los Centros</option>
                                     {mappings.filter(m => m.category === 'institucion').map(m => (
@@ -1489,16 +1489,16 @@ export const StatMultirisModule: React.FC = () => {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-2 border-b border-prevenort-text/5 pb-px no-scrollbar">
+                        <div className="flex flex-wrap gap-2 border-b border-brand-text/5 pb-px no-scrollbar">
                             {(['general', 'instituciones', 'medicos', 'grupos', 'calidad', 'ranking'] as const).map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] relative transition-all ${activeTab === tab ? 'text-prevenort-primary' : 'text-prevenort-text/30 hover:text-prevenort-text/60'
+                                    className={`px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] relative transition-all ${activeTab === tab ? 'text-brand-primary' : 'text-brand-text/30 hover:text-brand-text/60'
                                         }`}
                                 >
                                     {tab === 'calidad' ? 'Radar de Calidad' : tab === 'ranking' ? '🏆 Ranking' : tab === 'grupos' ? '👥 Grupos' : tab}
-                                    {activeTab === tab && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-prevenort-primary rounded-t-full shadow-[0_-4px_10px_rgba(255,100,0,0.3)]" />}
+                                    {activeTab === tab && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-brand-primary rounded-t-full shadow-[0_-4px_10px_rgba(255,100,0,0.3)]" />}
                                 </button>
                             ))}
                         </div>
@@ -1511,11 +1511,11 @@ export const StatMultirisModule: React.FC = () => {
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                                             <div className="flex flex-col md:flex-row items-center gap-6">
                                                 <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-                                                    <Activity className="w-5 h-5 text-prevenort-primary" />
+                                                    <Activity className="w-5 h-5 text-brand-primary" />
                                                     Análisis Operativo
                                                 </h3>
                                                 {/* Selector de Años */}
-                                                <div className="flex items-center gap-2 bg-prevenort-text/5 p-1 rounded-xl border border-prevenort-text/10">
+                                                <div className="flex items-center gap-2 bg-brand-text/5 p-1 rounded-xl border border-brand-text/10">
                                                     {availableYears.map(year => (
                                                         <button
                                                             key={year}
@@ -1526,7 +1526,7 @@ export const StatMultirisModule: React.FC = () => {
                                                                     setSelectedYears([...selectedYears, year].sort((a, b) => b - a));
                                                                 }
                                                             }}
-                                                            className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYears.includes(year) ? 'bg-prevenort-primary text-prevenort-bg' : 'hover:bg-prevenort-text/5 text-prevenort-text/40'}`}
+                                                            className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedYears.includes(year) ? 'bg-brand-primary text-brand-bg' : 'hover:bg-brand-text/5 text-brand-text/40'}`}
                                                         >
                                                             {year}
                                                         </button>
@@ -1535,12 +1535,12 @@ export const StatMultirisModule: React.FC = () => {
                                             </div>
                                             <div className="flex flex-wrap items-center gap-4">
                                                 {/* Agrupación Temporal */}
-                                                <div className="flex rounded-xl overflow-hidden border border-prevenort-text/10 shadow-lg shadow-black/20">
+                                                <div className="flex rounded-xl overflow-hidden border border-brand-text/10 shadow-lg shadow-black/20">
                                                     {(['day', 'week', 'month', 'quarter', 'year'] as const).map(g => (
                                                         <button
                                                             key={g}
                                                             onClick={() => setTrendGrouping(g)}
-                                                            className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-white text-prevenort-bg shadow-[0_10px_20px_rgba(255,100,0,0.2)]' : 'bg-prevenort-text/5 text-prevenort-text/40 hover:bg-prevenort-text/10'}`}
+                                                            className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${trendGrouping === g ? 'bg-white text-brand-bg shadow-[0_10px_20px_rgba(255,100,0,0.2)]' : 'bg-brand-text/5 text-brand-text/40 hover:bg-brand-text/10'}`}
                                                         >
                                                             {g === 'day' ? 'Día' : g === 'week' ? 'Semana' : g === 'month' ? 'Mes' : g === 'quarter' ? 'Trimestre' : 'Año'}
                                                         </button>
@@ -1565,11 +1565,11 @@ export const StatMultirisModule: React.FC = () => {
 
                                         <div className="lg:col-span-3 card-premium flex items-center justify-center p-8 text-center bg-gradient-to-br from-white/[0.02] to-transparent">
                                             <div className="space-y-4">
-                                                <div className="p-4 rounded-3xl bg-prevenort-text/5 inline-block">
-                                                    <BarChart3 className="w-12 h-12 text-prevenort-primary/20" />
+                                                <div className="p-4 rounded-3xl bg-brand-text/5 inline-block">
+                                                    <BarChart3 className="w-12 h-12 text-brand-primary/20" />
                                                 </div>
                                                 <h4 className="text-lg font-black uppercase tracking-tighter">Insights Operativos</h4>
-                                                <p className="text-[10px] font-bold text-prevenort-text/20 uppercase max-w-xs leading-relaxed">
+                                                <p className="text-[10px] font-bold text-brand-text/20 uppercase max-w-xs leading-relaxed">
                                                     El {addendaPercentage}% de los informes requieren ajustes posteriores.
                                                     Mantener una tasa menor al 5% es crítico para la eficiencia administrativa.
                                                 </p>
@@ -1606,84 +1606,84 @@ export const StatMultirisModule: React.FC = () => {
                                     return acc;
                                 }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number; items: any[] }>);
                                 const instTipoKeys = Object.keys(instByTipo).sort((a, b) => instByTipo[b].exams - instByTipo[a].exams).slice(0, 3);
-                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-prevenort-text/40';
+                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-brand-text/40';
                                 return (
                                     <motion.div key="inst" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                         <div className="card-premium">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-3 rounded-2xl bg-prevenort-primary/10 border border-prevenort-primary/20">
-                                                        <Building2 className="w-6 h-6 text-prevenort-primary" />
+                                                    <div className="p-3 rounded-2xl bg-brand-primary/10 border border-brand-primary/20">
+                                                        <Building2 className="w-6 h-6 text-brand-primary" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-prevenort-text">Consolidado Institucional</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase tracking-widest">{statsByInst.length} centros activos</p>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-brand-text">Consolidado Institucional</h3>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase tracking-widest">{statsByInst.length} centros activos</p>
                                                     </div>
                                                 </div>
-                                                <select value={selectedInst} onChange={(e) => setSelectedInst(e.target.value)} className="bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-prevenort-text outline-none focus:border-prevenort-primary transition-colors cursor-pointer">
-                                                    <option value="TODAS" className="bg-prevenort-surface">Todas las Instituciones</option>
-                                                    {statsByInst.map((inst, i) => <option key={i} value={inst.name} className="bg-prevenort-surface">{inst.name}</option>)}
+                                                <select value={selectedInst} onChange={(e) => setSelectedInst(e.target.value)} className="bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-brand-text outline-none focus:border-brand-primary transition-colors cursor-pointer">
+                                                    <option value="TODAS" className="bg-brand-surface">Todas las Instituciones</option>
+                                                    {statsByInst.map((inst, i) => <option key={i} value={inst.name} className="bg-brand-surface">{inst.name}</option>)}
                                                 </select>
                                             </div>
 
                                             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Total Exámenes</p>
-                                                    <p className="text-2xl font-black text-prevenort-text">{instExams.toLocaleString()}</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Total Exámenes</p>
+                                                    <p className="text-2xl font-black text-brand-text">{instExams.toLocaleString()}</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{instByTipo[k].exams.toLocaleString()}</span></span>)}
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{instByTipo[k].exams.toLocaleString()}</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Dentro SLA</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Dentro SLA</p>
                                                     <p className="text-2xl font-black text-success">{instSlaRate}%</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].sla / instByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].sla / instByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Total Adendas</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Total Adendas</p>
                                                     <p className="text-2xl font-black text-danger">{instAddendas} <span className="text-sm text-danger/50">{instAddRate}%</span></p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].addendas / instByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{instByTipo[k].exams > 0 ? ((instByTipo[k].addendas / instByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">TAT Promedio</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">TAT Promedio</p>
                                                     <p className="text-2xl font-black text-info">{instExams > 0 ? (instFiltered.reduce((a,c) => a + (c.tat_promedio_minutos * c.cantidad_examenes), 0) / instExams).toFixed(1) : '0'}m</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{instByTipo[k].exams > 0 ? (instByTipo[k].tatSum / instByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{instByTipo[k].exams > 0 ? (instByTipo[k].tatSum / instByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Mediana TAT</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Mediana TAT</p>
                                                     <p className="text-2xl font-black text-info">{calculateWeightedMedian(instFiltered).toFixed(1)}m</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{instByTipo[k].exams > 0 ? calculateWeightedMedian(instByTipo[k].items).toFixed(0) : '0'}m</span></span>)}
+                                                        {instTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{instByTipo[k].exams > 0 ? calculateWeightedMedian(instByTipo[k].items).toFixed(0) : '0'}m</span></span>)}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Tabla Institucional */}
                                             {selectedInst === 'TODAS' && (
-                                                <div className="overflow-x-auto rounded-2xl border border-prevenort-text/5">
+                                                <div className="overflow-x-auto rounded-2xl border border-brand-text/5">
                                                     <table className="w-full text-left">
                                                         <thead>
-                                                            <tr className="border-b border-prevenort-text/10">
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40">Institución</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Exámenes</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% SLA</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Prom.</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Med.</th>
+                                                            <tr className="border-b border-brand-text/10">
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40">Institución</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% SLA</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Prom.</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Med.</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {statsByInst.map((inst, i) => (
-                                                                <tr key={i} onClick={() => setSelectedInst(inst.name)} className="border-b border-prevenort-text/5 hover:bg-prevenort-text/[0.03] transition-colors group cursor-pointer">
-                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-prevenort-text group-hover:text-prevenort-primary transition-colors">{inst.name}</span></td>
-                                                                    <td className="px-4 py-3 text-right text-sm font-black text-prevenort-text">{inst.value.toLocaleString()}</td>
+                                                                <tr key={i} onClick={() => setSelectedInst(inst.name)} className="border-b border-brand-text/5 hover:bg-brand-text/[0.03] transition-colors group cursor-pointer">
+                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-brand-text group-hover:text-brand-primary transition-colors">{inst.name}</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-brand-text">{inst.value.toLocaleString()}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{inst.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-danger">{inst.adendas}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(inst.addendaRate) < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{inst.addendaRate}%</span></td>
@@ -1703,22 +1703,22 @@ export const StatMultirisModule: React.FC = () => {
                                                 <div className="flex justify-between items-center mb-6">
                                                     <div>
                                                         <h3 className="text-lg font-black uppercase tracking-tight">Evolución Temporal {selectedInst !== 'TODAS' ? `· ${selectedInst}` : ''}</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
                                                     </div>
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-prevenort-primary" /><span className="text-[8px] font-black text-prevenort-text/40 uppercase">Exámenes</span></div>
-                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-prevenort-text/40 uppercase">Adendas</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-primary" /><span className="text-[8px] font-black text-brand-text/40 uppercase">Exámenes</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-brand-text/40 uppercase">Adendas</span></div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-end gap-[2px] h-[220px] overflow-x-auto no-scrollbar pb-4">
                                                     {instTemporal.map((d: any, i: number) => (
                                                         <div key={i} className="flex-1 min-w-[8px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
                                                             {d.addendas > 0 && <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxInstEx) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />}
-                                                            <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxInstEx) * 100}%` }} className="w-full bg-gradient-to-t from-prevenort-primary/30 to-prevenort-primary/70 rounded-t-[3px] hover:to-white transition-all cursor-pointer" />
-                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-prevenort-surface border border-prevenort-text/10 text-prevenort-text text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
-                                                                <div className="flex justify-between gap-3"><span className="text-prevenort-text/40">{d.date.slice(5)}</span></div>
-                                                                <div className="flex justify-between gap-3 text-prevenort-primary"><span className="text-prevenort-text/40">Ex:</span><span>{d.exams}</span></div>
-                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-prevenort-text/40">Ad:</span><span>{d.addendas}</span></div>}
+                                                            <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxInstEx) * 100}%` }} className="w-full bg-gradient-to-t from-brand-primary/30 to-brand-primary/70 rounded-t-[3px] hover:to-white transition-all cursor-pointer" />
+                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-brand-surface border border-brand-text/10 text-brand-text text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
+                                                                <div className="flex justify-between gap-3"><span className="text-brand-text/40">{d.date.slice(5)}</span></div>
+                                                                <div className="flex justify-between gap-3 text-brand-primary"><span className="text-brand-text/40">Ex:</span><span>{d.exams}</span></div>
+                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-brand-text/40">Ad:</span><span>{d.addendas}</span></div>}
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1756,7 +1756,7 @@ export const StatMultirisModule: React.FC = () => {
                                     return acc;
                                 }, {} as Record<string, { exams: number; sla: number; tatSum: number; addendas: number; items: any[] }>);
                                 const medTipoKeys = Object.keys(medByTipo).sort((a, b) => medByTipo[b].exams - medByTipo[a].exams).slice(0, 3);
-                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-prevenort-text/40';
+                                const tc = (k: string) => k === 'U' || k === 'M' ? 'text-danger/60' : k === 'A' ? 'text-success/60' : k === 'H' || k === 'UPC' || k === 'UTI' ? 'text-info/60' : k === 'ONC' ? 'text-fuchsia-400/60' : 'text-brand-text/40';
                                 return (
                                     <motion.div key="med" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-6">
                                         <div className="card-premium">
@@ -1766,74 +1766,74 @@ export const StatMultirisModule: React.FC = () => {
                                                         <UserCheck className="w-6 h-6 text-info" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-prevenort-text">Rendimiento Médico</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase tracking-widest">{statsByMedico.length} profesionales</p>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-brand-text">Rendimiento Médico</h3>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase tracking-widest">{statsByMedico.length} profesionales</p>
                                                     </div>
                                                 </div>
-                                                <select value={selectedMedico} onChange={(e) => setSelectedMedico(e.target.value)} className="bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-prevenort-text outline-none focus:border-info transition-colors cursor-pointer">
-                                                    <option value="TODAS" className="bg-prevenort-surface">Todos los Radiólogos</option>
-                                                    {statsByMedico.sort((a: any, b: any) => b.volume - a.volume).map((m, i) => <option key={i} value={m.name} className="bg-prevenort-surface">{m.name}</option>)}
+                                                <select value={selectedMedico} onChange={(e) => setSelectedMedico(e.target.value)} className="bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-brand-text outline-none focus:border-info transition-colors cursor-pointer">
+                                                    <option value="TODAS" className="bg-brand-surface">Todos los Radiólogos</option>
+                                                    {statsByMedico.sort((a: any, b: any) => b.volume - a.volume).map((m, i) => <option key={i} value={m.name} className="bg-brand-surface">{m.name}</option>)}
                                                 </select>
                                             </div>
 
                                             <div className="grid grid-cols-4 gap-4 mb-8">
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Total Exámenes</p>
-                                                    <p className="text-2xl font-black text-prevenort-text">{medExams.toLocaleString()}</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Total Exámenes</p>
+                                                    <p className="text-2xl font-black text-brand-text">{medExams.toLocaleString()}</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{medByTipo[k].exams.toLocaleString()}</span></span>)}
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{medByTipo[k].exams.toLocaleString()}</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Dentro SLA</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Dentro SLA</p>
                                                     <p className="text-2xl font-black text-success">{medSlaRate}%</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].sla / medByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].sla / medByTipo[k].exams) * 100).toFixed(0) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Total Adendas</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Total Adendas</p>
                                                     <p className="text-2xl font-black text-danger">{medAddendas} <span className="text-sm text-danger/50">{medAddRate}%</span></p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].addendas / medByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{medByTipo[k].exams > 0 ? ((medByTipo[k].addendas / medByTipo[k].exams) * 100).toFixed(1) : '0'}%</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">TAT Promedio</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">TAT Promedio</p>
                                                     <p className="text-2xl font-black text-info">{medExams > 0 ? (medFiltered.reduce((a,c) => a + (c.tat_promedio_minutos * c.cantidad_examenes), 0) / medExams).toFixed(1) : '0'}m</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{medByTipo[k].exams > 0 ? (medByTipo[k].tatSum / medByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{medByTipo[k].exams > 0 ? (medByTipo[k].tatSum / medByTipo[k].exams).toFixed(0) : '0'}m</span></span>)}
                                                     </div>
                                                 </div>
-                                                <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                    <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Mediana TAT</p>
+                                                <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                    <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Mediana TAT</p>
                                                     <p className="text-2xl font-black text-info">{calculateWeightedMedian(medFiltered).toFixed(1)}m</p>
                                                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2">
-                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-prevenort-text/40">{medByTipo[k].exams > 0 ? calculateWeightedMedian(medByTipo[k].items).toFixed(0) : '0'}m</span></span>)}
+                                                        {medTipoKeys.map(k => <span key={k} className="text-[8px] font-black uppercase"><span className={tc(k)}>{tipoLabels[k] || k}:</span> <span className="text-brand-text/40">{medByTipo[k].exams > 0 ? calculateWeightedMedian(medByTipo[k].items).toFixed(0) : '0'}m</span></span>)}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Tabla Médicos */}
                                             {selectedMedico === 'TODAS' && (
-                                                <div className="overflow-x-auto rounded-2xl border border-prevenort-text/5">
+                                                <div className="overflow-x-auto rounded-2xl border border-brand-text/5">
                                                     <table className="w-full text-left">
                                                         <thead>
-                                                            <tr className="border-b border-prevenort-text/10">
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40">Radiólogo</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Exámenes</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% SLA</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% Adendas</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Prom.</th>
-                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Med.</th>
+                                                            <tr className="border-b border-brand-text/10">
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40">Radiólogo</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Exámenes</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% SLA</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% Adendas</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Prom.</th>
+                                                                <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Med.</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {statsByMedico.sort((a: any, b: any) => b.volume - a.volume).map((m, i) => (
-                                                                <tr key={i} onClick={() => setSelectedMedico(m.name)} className="border-b border-prevenort-text/5 hover:bg-prevenort-text/[0.03] transition-colors group cursor-pointer">
-                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-prevenort-text group-hover:text-info transition-colors">{m.name}</span></td>
-                                                                    <td className="px-4 py-3 text-right text-sm font-black text-prevenort-text">{m.volume.toLocaleString()}</td>
+                                                                <tr key={i} onClick={() => setSelectedMedico(m.name)} className="border-b border-brand-text/5 hover:bg-brand-text/[0.03] transition-colors group cursor-pointer">
+                                                                    <td className="px-4 py-3"><span className="text-xs font-black uppercase tracking-tight text-brand-text group-hover:text-info transition-colors">{m.name}</span></td>
+                                                                    <td className="px-4 py-3 text-right text-sm font-black text-brand-text">{m.volume.toLocaleString()}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(m.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>{m.slaRate}%</span></td>
                                                                     <td className="px-4 py-3 text-right text-sm font-black text-danger">{m.adendas}</td>
                                                                     <td className="px-4 py-3 text-right"><span className={`text-xs font-black px-2 py-0.5 rounded-md ${m.volume > 0 && (m.adendas / m.volume) * 100 < 2 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{m.volume > 0 ? ((m.adendas / m.volume) * 100).toFixed(2) : '0'}%</span></td>
@@ -1853,11 +1853,11 @@ export const StatMultirisModule: React.FC = () => {
                                                 <div className="flex justify-between items-center mb-6">
                                                     <div>
                                                         <h3 className="text-lg font-black uppercase tracking-tight">Evolución Temporal {selectedMedico !== 'TODAS' ? `· ${selectedMedico}` : ''}</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase">Exámenes diarios en el periodo seleccionado</p>
                                                     </div>
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-info" /><span className="text-[8px] font-black text-prevenort-text/40 uppercase">Exámenes</span></div>
-                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-prevenort-text/40 uppercase">Adendas</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-info" /><span className="text-[8px] font-black text-brand-text/40 uppercase">Exámenes</span></div>
+                                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger" /><span className="text-[8px] font-black text-brand-text/40 uppercase">Adendas</span></div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-end gap-[2px] h-[220px] overflow-x-auto no-scrollbar pb-4">
@@ -1865,10 +1865,10 @@ export const StatMultirisModule: React.FC = () => {
                                                         <div key={i} className="flex-1 min-w-[8px] group/bar relative flex flex-col items-center justify-end h-full gap-0.5">
                                                             {d.addendas > 0 && <motion.div initial={{ height: 0 }} animate={{ height: `${(d.addendas / maxMedEx) * 100}%` }} className="w-full bg-danger rounded-t-[2px] z-10" />}
                                                             <motion.div initial={{ height: 0 }} animate={{ height: `${(d.exams / maxMedEx) * 100}%` }} className="w-full bg-gradient-to-t from-info/30 to-info/70 rounded-t-[3px] hover:to-white transition-all cursor-pointer" />
-                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-prevenort-surface border border-prevenort-text/10 text-prevenort-text text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
-                                                                <div className="flex justify-between gap-3"><span className="text-prevenort-text/40">{d.date.slice(5)}</span></div>
-                                                                <div className="flex justify-between gap-3 text-info"><span className="text-prevenort-text/40">Ex:</span><span>{d.exams}</span></div>
-                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-prevenort-text/40">Ad:</span><span>{d.addendas}</span></div>}
+                                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 bg-brand-surface border border-brand-text/10 text-brand-text text-[9px] font-black px-3 py-2 rounded-xl transition-all pointer-events-none z-30 shadow-2xl min-w-[90px]">
+                                                                <div className="flex justify-between gap-3"><span className="text-brand-text/40">{d.date.slice(5)}</span></div>
+                                                                <div className="flex justify-between gap-3 text-info"><span className="text-brand-text/40">Ex:</span><span>{d.exams}</span></div>
+                                                                {d.addendas > 0 && <div className="flex justify-between gap-3 text-danger"><span className="text-brand-text/40">Ad:</span><span>{d.addendas}</span></div>}
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1953,8 +1953,8 @@ export const StatMultirisModule: React.FC = () => {
                                                         <UsersRound className="w-6 h-6 text-purple-400" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-prevenort-text">Grupos de Trabajo</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase tracking-widest">{grupos.length} grupos configurados</p>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-brand-text">Grupos de Trabajo</h3>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase tracking-widest">{grupos.length} grupos configurados</p>
                                                     </div>
                                                 </div>
                                                 <button
@@ -1968,9 +1968,9 @@ export const StatMultirisModule: React.FC = () => {
                                             {/* Lista de grupos existentes */}
                                             {grupos.length === 0 && !editingGrupo && (
                                                 <div className="text-center py-16">
-                                                    <UsersRound className="w-16 h-16 text-prevenort-text/10 mx-auto mb-4" />
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-prevenort-text/20">No hay grupos creados</p>
-                                                    <p className="text-[9px] text-prevenort-text/10 mt-1">Crea un grupo para agrupar médicos y ver sus estadísticas consolidadas</p>
+                                                    <UsersRound className="w-16 h-16 text-brand-text/10 mx-auto mb-4" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/20">No hay grupos creados</p>
+                                                    <p className="text-[9px] text-brand-text/10 mt-1">Crea un grupo para agrupar médicos y ver sus estadísticas consolidadas</p>
                                                 </div>
                                             )}
 
@@ -1980,25 +1980,25 @@ export const StatMultirisModule: React.FC = () => {
                                                         key={g.id}
                                                         onClick={() => setSelectedGrupo(selectedGrupo === g.id ? null : g.id!)}
                                                         className={`p-5 rounded-2xl border cursor-pointer transition-all group/card ${selectedGrupo === g.id
-                                                            ? 'bg-prevenort-text/10 border-prevenort-text/20 shadow-lg'
-                                                            : 'bg-prevenort-text/[0.03] border-prevenort-text/5 hover:border-prevenort-text/15 hover:bg-prevenort-text/[0.05]'
+                                                            ? 'bg-brand-text/10 border-brand-text/20 shadow-lg'
+                                                            : 'bg-brand-text/[0.03] border-brand-text/5 hover:border-brand-text/15 hover:bg-brand-text/[0.05]'
                                                             }`}
                                                     >
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: g.color || '#f97316' }} />
-                                                                <h4 className="text-sm font-black uppercase tracking-tight text-prevenort-text">{g.nombre}</h4>
+                                                                <h4 className="text-sm font-black uppercase tracking-tight text-brand-text">{g.nombre}</h4>
                                                             </div>
                                                             <div className="flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                                                                <button onClick={(e) => { e.stopPropagation(); startEditing(g); }} className="p-1.5 rounded-lg hover:bg-prevenort-text/10 text-prevenort-text/30 hover:text-prevenort-text transition-all">
+                                                                <button onClick={(e) => { e.stopPropagation(); startEditing(g); }} className="p-1.5 rounded-lg hover:bg-brand-text/10 text-brand-text/30 hover:text-brand-text transition-all">
                                                                     <Edit3 className="w-3 h-3" />
                                                                 </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteGrupo(g.id!); }} className="p-1.5 rounded-lg hover:bg-danger/20 text-prevenort-text/30 hover:text-danger transition-all">
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteGrupo(g.id!); }} className="p-1.5 rounded-lg hover:bg-danger/20 text-brand-text/30 hover:text-danger transition-all">
                                                                     <Trash2 className="w-3 h-3" />
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        {g.descripcion && <p className="text-[9px] text-prevenort-text/30 mb-3 line-clamp-2">{g.descripcion}</p>}
+                                                        {g.descripcion && <p className="text-[9px] text-brand-text/30 mb-3 line-clamp-2">{g.descripcion}</p>}
                                                         <div className="flex items-center gap-2 mb-2">
                                                             {g.lider && (
                                                                 <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-warning/70">
@@ -2008,13 +2008,13 @@ export const StatMultirisModule: React.FC = () => {
                                                         </div>
                                                         <div className="flex flex-wrap gap-1">
                                                             {g.miembros.slice(0, 5).map(m => (
-                                                                <span key={m} className="px-2 py-0.5 rounded-md bg-prevenort-text/5 text-[7px] font-black uppercase tracking-widest text-prevenort-text/40">{m.split(' ').slice(0, 2).join(' ')}</span>
+                                                                <span key={m} className="px-2 py-0.5 rounded-md bg-brand-text/5 text-[7px] font-black uppercase tracking-widest text-brand-text/40">{m.split(' ').slice(0, 2).join(' ')}</span>
                                                             ))}
                                                             {g.miembros.length > 5 && (
-                                                                <span className="px-2 py-0.5 rounded-md bg-prevenort-text/5 text-[7px] font-black uppercase text-prevenort-text/20">+{g.miembros.length - 5}</span>
+                                                                <span className="px-2 py-0.5 rounded-md bg-brand-text/5 text-[7px] font-black uppercase text-brand-text/20">+{g.miembros.length - 5}</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-[8px] font-bold text-prevenort-text/15 uppercase tracking-widest mt-2">{g.miembros.length} miembros</p>
+                                                        <p className="text-[8px] font-bold text-brand-text/15 uppercase tracking-widest mt-2">{g.miembros.length} miembros</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -2027,7 +2027,7 @@ export const StatMultirisModule: React.FC = () => {
                                                     <h3 className="text-lg font-black uppercase tracking-tight text-purple-300">
                                                         {editingGrupo.id ? 'Editar Grupo' : 'Nuevo Grupo'}
                                                     </h3>
-                                                    <button onClick={() => setEditingGrupo(null)} className="p-2 rounded-xl hover:bg-prevenort-text/10 text-prevenort-text/30 hover:text-prevenort-text transition-all">
+                                                    <button onClick={() => setEditingGrupo(null)} className="p-2 rounded-xl hover:bg-brand-text/10 text-brand-text/30 hover:text-brand-text transition-all">
                                                         <X className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -2036,40 +2036,40 @@ export const StatMultirisModule: React.FC = () => {
                                                     {/* Columna izquierda: datos del grupo */}
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-1 block">Nombre del Grupo *</label>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-1 block">Nombre del Grupo *</label>
                                                             <input
                                                                 type="text"
                                                                 value={editingGrupo.nombre}
                                                                 onChange={(e) => setEditingGrupo({ ...editingGrupo, nombre: e.target.value })}
                                                                 placeholder="Ej: Equipo Neuroradiología Chile"
-                                                                className="w-full bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-3 text-sm font-bold text-prevenort-text outline-none focus:border-purple-500/50 transition-colors"
+                                                                className="w-full bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-3 text-sm font-bold text-brand-text outline-none focus:border-purple-500/50 transition-colors"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-1 block">Descripción</label>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-1 block">Descripción</label>
                                                             <textarea
                                                                 value={editingGrupo.descripcion || ''}
                                                                 onChange={(e) => setEditingGrupo({ ...editingGrupo, descripcion: e.target.value })}
                                                                 placeholder="Área, país, especialidad..."
                                                                 rows={2}
-                                                                className="w-full bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-3 text-sm font-bold text-prevenort-text/60 outline-none focus:border-purple-500/50 transition-colors resize-none"
+                                                                className="w-full bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-3 text-sm font-bold text-brand-text/60 outline-none focus:border-purple-500/50 transition-colors resize-none"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-1 block">Líder del Grupo</label>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-1 block">Líder del Grupo</label>
                                                             <select
                                                                 value={editingGrupo.lider || ''}
                                                                 onChange={(e) => setEditingGrupo({ ...editingGrupo, lider: e.target.value })}
-                                                                className="w-full bg-prevenort-text/5 border border-prevenort-text/10 rounded-xl px-4 py-3 text-sm font-bold text-prevenort-text/60 outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer"
+                                                                className="w-full bg-brand-text/5 border border-brand-text/10 rounded-xl px-4 py-3 text-sm font-bold text-brand-text/60 outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer"
                                                             >
-                                                                <option value="" className="bg-prevenort-surface">Sin líder asignado</option>
+                                                                <option value="" className="bg-brand-surface">Sin líder asignado</option>
                                                                 {editingGrupo.miembros.map(m => (
-                                                                    <option key={m} value={m} className="bg-prevenort-surface">{m}</option>
+                                                                    <option key={m} value={m} className="bg-brand-surface">{m}</option>
                                                                 ))}
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-1 block">Color</label>
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-1 block">Color</label>
                                                             <div className="flex gap-2">
                                                                 {groupColors.map(c => (
                                                                     <button
@@ -2083,18 +2083,18 @@ export const StatMultirisModule: React.FC = () => {
                                                         </div>
                                                         {/* Miembros seleccionados */}
                                                         <div>
-                                                            <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-2 block">
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-2 block">
                                                                 Miembros Seleccionados ({editingGrupo.miembros.length})
                                                             </label>
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {editingGrupo.miembros.length === 0 && (
-                                                                    <p className="text-[9px] text-prevenort-text/15 italic">Selecciona médicos de la lista →</p>
+                                                                    <p className="text-[9px] text-brand-text/15 italic">Selecciona médicos de la lista →</p>
                                                                 )}
                                                                 {editingGrupo.miembros.map(m => (
                                                                     <span key={m} className="flex items-center gap-1 px-2. py-1 rounded-lg bg-purple-500/20 border border-purple-500/30 text-[8px] font-black uppercase tracking-widest text-purple-200">
                                                                         {m === editingGrupo.lider && <Crown className="w-2.5 h-2.5 text-warning" />}
                                                                         {m}
-                                                                        <button onClick={() => toggleMember(m)} className="ml-1 text-prevenort-text/30 hover:text-danger transition-colors">
+                                                                        <button onClick={() => toggleMember(m)} className="ml-1 text-brand-text/30 hover:text-danger transition-colors">
                                                                             <X className="w-2.5 h-2.5" />
                                                                         </button>
                                                                     </span>
@@ -2105,19 +2105,19 @@ export const StatMultirisModule: React.FC = () => {
 
                                                     {/* Columna derecha: pool de médicos */}
                                                     <div>
-                                                        <label className="text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 mb-2 block">
+                                                        <label className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 mb-2 block">
                                                             Médicos Disponibles ({allMedNames.length})
                                                         </label>
-                                                        <div className="max-h-[360px] overflow-y-auto rounded-xl border border-prevenort-text/5 bg-prevenort-text/[0.02] no-scrollbar">
+                                                        <div className="max-h-[360px] overflow-y-auto rounded-xl border border-brand-text/5 bg-brand-text/[0.02] no-scrollbar">
                                                             {allMedNames.map(name => {
                                                                 const isSelected = editingGrupo.miembros.includes(name);
                                                                 return (
                                                                     <button
                                                                         key={name}
                                                                         onClick={() => toggleMember(name)}
-                                                                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left border-b border-prevenort-text/5 last:border-0 transition-all ${isSelected
+                                                                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left border-b border-brand-text/5 last:border-0 transition-all ${isSelected
                                                                             ? 'bg-purple-500/10 text-purple-200'
-                                                                            : 'text-prevenort-text/40 hover:bg-prevenort-text/[0.03] hover:text-prevenort-text/60'
+                                                                            : 'text-brand-text/40 hover:bg-brand-text/[0.03] hover:text-brand-text/60'
                                                                             }`}
                                                                     >
                                                                         <span className="text-[10px] font-black uppercase tracking-widest">{name}</span>
@@ -2130,14 +2130,14 @@ export const StatMultirisModule: React.FC = () => {
                                                 </div>
 
                                                 {/* Botón Guardar */}
-                                                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-prevenort-text/5">
-                                                    <button onClick={() => setEditingGrupo(null)} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-prevenort-text/40 hover:text-prevenort-text transition-colors">
+                                                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-brand-text/5">
+                                                    <button onClick={() => setEditingGrupo(null)} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-text/40 hover:text-brand-text transition-colors">
                                                         Cancelar
                                                     </button>
                                                     <button
                                                         onClick={handleSave}
                                                         disabled={!editingGrupo.nombre.trim() || editingGrupo.miembros.length === 0}
-                                                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-purple-500 text-prevenort-bg text-[10px] font-black uppercase tracking-widest hover:bg-purple-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-purple-500 text-brand-bg text-[10px] font-black uppercase tracking-widest hover:bg-purple-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                                     >
                                                         <Save className="w-3.5 h-3.5" /> {editingGrupo.id ? 'Actualizar' : 'Crear Grupo'}
                                                     </button>
@@ -2151,7 +2151,7 @@ export const StatMultirisModule: React.FC = () => {
                                                 <div className="card-premium">
                                                     <div className="flex items-center gap-3 mb-6">
                                                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: activeGroup.color || '#f97316' }} />
-                                                        <h3 className="text-xl font-black uppercase tracking-tight text-prevenort-text">{activeGroup.nombre}</h3>
+                                                        <h3 className="text-xl font-black uppercase tracking-tight text-brand-text">{activeGroup.nombre}</h3>
                                                         {activeGroup.lider && (
                                                             <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-warning/60">
                                                                 <Crown className="w-3 h-3" /> Líder: {activeGroup.lider}
@@ -2161,53 +2161,53 @@ export const StatMultirisModule: React.FC = () => {
 
                                                     {/* KPIs del grupo */}
                                                     <div className="grid grid-cols-4 gap-4 mb-8">
-                                                        <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                            <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Total Exámenes</p>
-                                                            <p className="text-2xl font-black text-prevenort-text">{grpExams.toLocaleString()}</p>
+                                                        <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                            <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Total Exámenes</p>
+                                                            <p className="text-2xl font-black text-brand-text">{grpExams.toLocaleString()}</p>
                                                         </div>
-                                                        <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                            <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">SLA</p>
+                                                        <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                            <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">SLA</p>
                                                             <p className="text-2xl font-black text-success">{grpSlaRate}%</p>
                                                         </div>
-                                                        <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                            <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Adendas</p>
+                                                        <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                            <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Adendas</p>
                                                             <p className="text-2xl font-black text-danger">{grpAddendas} <span className="text-sm text-danger/50">{grpAddRate}%</span></p>
                                                         </div>
-                                                        <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                            <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">TAT Promedio</p>
+                                                        <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                            <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">TAT Promedio</p>
                                                             <p className="text-2xl font-black text-info">{grpAvgTat}m</p>
                                                         </div>
-                                                        <div className="p-4 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/5">
-                                                            <p className="text-[9px] font-black uppercase text-prevenort-text/30 tracking-widest mb-1">Mediana TAT</p>
+                                                        <div className="p-4 rounded-2xl bg-brand-text/5 border border-brand-text/5">
+                                                            <p className="text-[9px] font-black uppercase text-brand-text/30 tracking-widest mb-1">Mediana TAT</p>
                                                             <p className="text-2xl font-black text-info">{grpMedianTat}m</p>
                                                         </div>
                                                     </div>
 
                                                     {/* Tabla de miembros */}
-                                                    <div className="overflow-x-auto rounded-2xl border border-prevenort-text/5">
+                                                    <div className="overflow-x-auto rounded-2xl border border-brand-text/5">
                                                         <table className="w-full text-left">
                                                             <thead>
-                                                                <tr className="border-b border-prevenort-text/10">
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40">Miembro</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Exámenes</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% SLA</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">Adendas</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% Adendas</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Prom.</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">TAT Med.</th>
-                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-prevenort-text/40 text-right">% del Grupo</th>
+                                                                <tr className="border-b border-brand-text/10">
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40">Miembro</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Exámenes</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% SLA</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">Adendas</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% Adendas</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Prom.</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">TAT Med.</th>
+                                                                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/40 text-right">% del Grupo</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {memberStats.map((mem, i) => (
-                                                                    <tr key={i} className="border-b border-prevenort-text/5 hover:bg-prevenort-text/[0.03] transition-colors">
+                                                                    <tr key={i} className="border-b border-brand-text/5 hover:bg-brand-text/[0.03] transition-colors">
                                                                         <td className="px-4 py-3">
-                                                                            <span className="text-xs font-black uppercase tracking-tight text-prevenort-text flex items-center gap-2">
+                                                                            <span className="text-xs font-black uppercase tracking-tight text-brand-text flex items-center gap-2">
                                                                                 {mem.isLeader && <Crown className="w-3.5 h-3.5 text-warning" />}
                                                                                 {mem.name}
                                                                             </span>
                                                                         </td>
-                                                                        <td className="px-4 py-3 text-right text-sm font-black text-prevenort-text">{mem.exams.toLocaleString()}</td>
+                                                                        <td className="px-4 py-3 text-right text-sm font-black text-brand-text">{mem.exams.toLocaleString()}</td>
                                                                         <td className="px-4 py-3 text-right">
                                                                             <span className={`text-xs font-black px-2 py-0.5 rounded-md ${Number(mem.slaRate) > 90 ? 'text-success bg-success/10' : 'text-warning bg-warning/10'}`}>
                                                                                 {mem.slaRate}%
@@ -2222,10 +2222,10 @@ export const StatMultirisModule: React.FC = () => {
                                                                         <td className="px-4 py-3 text-right text-sm font-black text-info">{mem.avgTat}m</td>
                                                                         <td className="px-4 py-3 text-right">
                                                                             <div className="flex items-center justify-end gap-2">
-                                                                                <div className="w-16 h-1.5 rounded-full bg-prevenort-text/5 overflow-hidden">
+                                                                                <div className="w-16 h-1.5 rounded-full bg-brand-text/5 overflow-hidden">
                                                                                     <div className="h-full rounded-full" style={{ width: `${grpExams > 0 ? (mem.exams / grpExams) * 100 : 0}%`, backgroundColor: activeGroup.color || '#f97316' }} />
                                                                                 </div>
-                                                                                <span className="text-[9px] font-black text-prevenort-text/40">{grpExams > 0 ? ((mem.exams / grpExams) * 100).toFixed(0) : '0'}%</span>
+                                                                                <span className="text-[9px] font-black text-brand-text/40">{grpExams > 0 ? ((mem.exams / grpExams) * 100).toFixed(0) : '0'}%</span>
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -2242,20 +2242,20 @@ export const StatMultirisModule: React.FC = () => {
 
                             {activeTab === 'calidad' && (
                                 <motion.div key="calidad" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="card-premium min-h-[450px] flex flex-col items-center justify-center p-20 text-center">
-                                    <div className="w-32 h-32 rounded-full border-2 border-dashed border-prevenort-primary/30 flex items-center justify-center relative mb-8 animate-spin-slow">
-                                        <ShieldAlert className="w-12 h-12 text-prevenort-primary animate-pulse" />
-                                        <div className="absolute top-0 w-4 h-4 rounded-full bg-prevenort-primary shadow-lg shadow-orange-500/50" />
+                                    <div className="w-32 h-32 rounded-full border-2 border-dashed border-brand-primary/30 flex items-center justify-center relative mb-8 animate-spin-slow">
+                                        <ShieldAlert className="w-12 h-12 text-brand-primary animate-pulse" />
+                                        <div className="absolute top-0 w-4 h-4 rounded-full bg-brand-primary shadow-lg shadow-orange-500/50" />
                                     </div>
                                     <h3 className="text-3xl font-black uppercase tracking-tight mb-4">Motor de Inteligencia Operativa</h3>
-                                    <p className="max-w-md text-prevenort-text/40 font-bold uppercase text-[10px] tracking-widest leading-relaxed">
+                                    <p className="max-w-md text-brand-text/40 font-bold uppercase text-[10px] tracking-widest leading-relaxed">
                                         Analizando patrones de producción cruzada, TAT por modalidad y tasa de recurrencia en adendas.
                                         El sistema de auto-descubrimiento ha mapeado el 100% de la red de prestadores.
                                     </p>
                                     <div className="mt-12 flex gap-4">
-                                        <div className="px-6 py-3 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/10 text-[10px] font-black uppercase tracking-widest text-warning">
+                                        <div className="px-6 py-3 rounded-2xl bg-brand-text/5 border border-brand-text/10 text-[10px] font-black uppercase tracking-widest text-warning">
                                             Alertas Críticas: 0
                                         </div>
-                                        <div className="px-6 py-3 rounded-2xl bg-prevenort-text/5 border border-prevenort-text/10 text-[10px] font-black uppercase tracking-widest text-success">
+                                        <div className="px-6 py-3 rounded-2xl bg-brand-text/5 border border-brand-text/10 text-[10px] font-black uppercase tracking-widest text-success">
                                             Estado: Saludable
                                         </div>
                                     </div>
@@ -2328,8 +2328,8 @@ export const StatMultirisModule: React.FC = () => {
                                                         <Trophy className="w-6 h-6 text-yellow-500" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-prevenort-text">Ranking Comparativo</h3>
-                                                        <p className="text-[10px] font-bold text-prevenort-text/20 uppercase tracking-widest">{sorted.length} entidades · {metricLabels[rankMetric]} · {tipoFilterLabels[rankTipo]}</p>
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight text-brand-text">Ranking Comparativo</h3>
+                                                        <p className="text-[10px] font-bold text-brand-text/20 uppercase tracking-widest">{sorted.length} entidades · {metricLabels[rankMetric]} · {tipoFilterLabels[rankTipo]}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2337,27 +2337,27 @@ export const StatMultirisModule: React.FC = () => {
                                             {/* Toggles */}
                                             <div className="flex flex-wrap gap-3 mb-6">
                                                 {/* Modo: Instituciones / Médicos */}
-                                                <div className="flex rounded-xl overflow-hidden border border-prevenort-text/10">
+                                                <div className="flex rounded-xl overflow-hidden border border-brand-text/10">
                                                     {(['instituciones', 'medicos'] as const).map(m => (
-                                                        <button key={m} onClick={() => setRankMode(m)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMode === m ? 'bg-prevenort-primary text-prevenort-bg' : 'bg-prevenort-text/5 text-prevenort-text/40 hover:text-prevenort-text/70'}`}>
+                                                        <button key={m} onClick={() => setRankMode(m)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMode === m ? 'bg-brand-primary text-brand-bg' : 'bg-brand-text/5 text-brand-text/40 hover:text-brand-text/70'}`}>
                                                             {m === 'instituciones' ? '🏥 Instituciones' : '👨‍⚕️ Médicos'}
                                                         </button>
                                                     ))}
                                                 </div>
 
                                                 {/* Métrica */}
-                                                <div className="flex rounded-xl overflow-hidden border border-prevenort-text/10">
+                                                <div className="flex rounded-xl overflow-hidden border border-brand-text/10">
                                                     {(['exams', 'addendas', 'sla', 'tat'] as const).map(met => (
-                                                        <button key={met} onClick={() => setRankMetric(met)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMetric === met ? 'bg-info text-prevenort-bg' : 'bg-prevenort-text/5 text-prevenort-text/40 hover:text-prevenort-text/70'}`}>
+                                                        <button key={met} onClick={() => setRankMetric(met)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankMetric === met ? 'bg-info text-brand-bg' : 'bg-brand-text/5 text-brand-text/40 hover:text-brand-text/70'}`}>
                                                             {metricLabels[met]}
                                                         </button>
                                                     ))}
                                                 </div>
 
                                                 {/* Tipo Paciente */}
-                                                <div className="flex flex-wrap rounded-xl overflow-hidden border border-prevenort-text/10">
+                                                <div className="flex flex-wrap rounded-xl overflow-hidden border border-brand-text/10">
                                                     {(['ALL', 'U', 'A', 'H', 'ONC'] as const).map(tp => (
-                                                        <button key={tp} onClick={() => setRankTipo(tp)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankTipo === tp ? (tp === 'U' ? 'bg-danger text-white' : tp === 'A' ? 'bg-success text-prevenort-bg' : tp === 'H' ? 'bg-info text-prevenort-bg' : tp === 'ONC' ? 'bg-fuchsia-500 text-white' : 'bg-prevenort-text/20 text-prevenort-text') : 'bg-prevenort-text/5 text-prevenort-text/40 hover:text-prevenort-text/70'}`}>
+                                                        <button key={tp} onClick={() => setRankTipo(tp)} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${rankTipo === tp ? (tp === 'U' ? 'bg-danger text-white' : tp === 'A' ? 'bg-success text-brand-bg' : tp === 'H' ? 'bg-info text-brand-bg' : tp === 'ONC' ? 'bg-fuchsia-500 text-white' : 'bg-brand-text/20 text-brand-text') : 'bg-brand-text/5 text-brand-text/40 hover:text-brand-text/70'}`}>
                                                             {tipoFilterLabels[tp]}
                                                         </button>
                                                     ))}
@@ -2366,13 +2366,13 @@ export const StatMultirisModule: React.FC = () => {
                                                 {/* Orden */}
                                                 <button
                                                     onClick={() => setRankOrder(prev => prev === 'auto' ? 'desc' : prev === 'desc' ? 'asc' : 'auto')}
-                                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-prevenort-text/10 text-[9px] font-black uppercase tracking-widest transition-all hover:bg-prevenort-text/10"
+                                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-brand-text/10 text-[9px] font-black uppercase tracking-widest transition-all hover:bg-brand-text/10"
                                                     title={`Orden: ${rankOrder === 'auto' ? 'Automático' : rankOrder === 'asc' ? 'Ascendente' : 'Descendente'}`}
                                                 >
-                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-prevenort-text/40'}>
+                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-brand-text/40'}>
                                                         {rankOrder === 'asc' ? '↑' : rankOrder === 'desc' ? '↓' : '⇅'}
                                                     </span>
-                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-prevenort-text/40'}>
+                                                    <span className={rankOrder !== 'auto' ? 'text-yellow-400' : 'text-brand-text/40'}>
                                                         {rankOrder === 'auto' ? 'Auto' : rankOrder === 'asc' ? 'Menor→Mayor' : 'Mayor→Menor'}
                                                     </span>
                                                 </button>
@@ -2388,7 +2388,7 @@ export const StatMultirisModule: React.FC = () => {
                                                     const barColor = isLowerBetter
                                                         ? (isTop3 ? 'from-success/60 to-success' : isBottom3 ? 'from-danger/60 to-danger' : 'from-white/10 to-white/20')
                                                         : (isTop3 ? 'from-success/60 to-success' : isBottom3 ? 'from-danger/60 to-danger' : 'from-white/10 to-white/20');
-                                                    const posColor = isTop3 ? 'text-success bg-success/10 border-success/20' : isBottom3 ? 'text-danger bg-danger/10 border-danger/20' : 'text-prevenort-text/40 bg-prevenort-text/5 border-prevenort-text/10';
+                                                    const posColor = isTop3 ? 'text-success bg-success/10 border-success/20' : isBottom3 ? 'text-danger bg-danger/10 border-danger/20' : 'text-brand-text/40 bg-brand-text/5 border-brand-text/10';
                                                     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
 
                                                     return (
@@ -2397,7 +2397,7 @@ export const StatMultirisModule: React.FC = () => {
                                                             initial={{ opacity: 0, x: -20 }}
                                                             animate={{ opacity: 1, x: 0 }}
                                                             transition={{ delay: idx * 0.02 }}
-                                                            className="flex items-center gap-3 group hover:bg-prevenort-text/[0.02] rounded-xl px-3 py-2 transition-colors"
+                                                            className="flex items-center gap-3 group hover:bg-brand-text/[0.02] rounded-xl px-3 py-2 transition-colors"
                                                         >
                                                             {/* Position badge */}
                                                             <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-[10px] font-black shrink-0 ${posColor}`}>
@@ -2406,11 +2406,11 @@ export const StatMultirisModule: React.FC = () => {
 
                                                             {/* Name */}
                                                             <div className="w-[160px] shrink-0 truncate">
-                                                                <span className="text-[10px] font-black uppercase tracking-tight text-prevenort-text group-hover:text-prevenort-primary transition-colors">{item.name}</span>
+                                                                <span className="text-[10px] font-black uppercase tracking-tight text-brand-text group-hover:text-brand-primary transition-colors">{item.name}</span>
                                                             </div>
 
                                                             {/* Bar */}
-                                                            <div className="flex-1 h-7 bg-prevenort-text/5 rounded-lg overflow-hidden relative">
+                                                            <div className="flex-1 h-7 bg-brand-text/5 rounded-lg overflow-hidden relative">
                                                                 <motion.div
                                                                     initial={{ width: 0 }}
                                                                     animate={{ width: `${Math.max(pct, 2)}%` }}
@@ -2421,7 +2421,7 @@ export const StatMultirisModule: React.FC = () => {
 
                                                             {/* Value */}
                                                             <div className="w-[80px] shrink-0 text-right">
-                                                                <span className={`text-sm font-black ${isTop3 ? 'text-success' : isBottom3 ? 'text-danger' : 'text-prevenort-text/60'}`}>
+                                                                <span className={`text-sm font-black ${isTop3 ? 'text-success' : isBottom3 ? 'text-danger' : 'text-brand-text/60'}`}>
                                                                     {formatValue(val)}
                                                                 </span>
                                                             </div>
@@ -2429,7 +2429,7 @@ export const StatMultirisModule: React.FC = () => {
                                                             {/* Volume context (when not ranking by exams) */}
                                                             {rankMetric !== 'exams' && (
                                                                 <div className="w-[50px] shrink-0 text-right">
-                                                                    <span className="text-[8px] font-bold text-prevenort-text/20 uppercase">{item.volume.toLocaleString()} ex</span>
+                                                                    <span className="text-[8px] font-bold text-brand-text/20 uppercase">{item.volume.toLocaleString()} ex</span>
                                                                 </div>
                                                             )}
                                                         </motion.div>
@@ -2438,7 +2438,7 @@ export const StatMultirisModule: React.FC = () => {
                                             </div>
 
                                             {sorted.length === 0 && (
-                                                <div className="text-center py-20 text-prevenort-text/20">
+                                                <div className="text-center py-20 text-brand-text/20">
                                                     <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                                     <p className="text-sm font-black uppercase">Sin datos para este filtro</p>
                                                 </div>
@@ -2455,7 +2455,7 @@ export const StatMultirisModule: React.FC = () => {
                                                             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-success/5 border border-success/10">
                                                                 <div className="flex items-center gap-3">
                                                                     <span className="text-lg">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                                                                    <span className="text-[10px] font-black uppercase text-prevenort-text">{item.name}</span>
+                                                                    <span className="text-[10px] font-black uppercase text-brand-text">{item.name}</span>
                                                                 </div>
                                                                 <span className="text-sm font-black text-success">{formatValue(getValue(item))}</span>
                                                             </div>
@@ -2469,7 +2469,7 @@ export const StatMultirisModule: React.FC = () => {
                                                             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-danger/5 border border-danger/10">
                                                                 <div className="flex items-center gap-3">
                                                                     <span className="w-6 h-6 rounded-full bg-danger/10 flex items-center justify-center text-[9px] font-black text-danger">#{sorted.length - 2 + i}</span>
-                                                                    <span className="text-[10px] font-black uppercase text-prevenort-text">{item.name}</span>
+                                                                    <span className="text-[10px] font-black uppercase text-brand-text">{item.name}</span>
                                                                 </div>
                                                                 <span className="text-sm font-black text-danger">{formatValue(getValue(item))}</span>
                                                             </div>
@@ -2493,13 +2493,13 @@ export const StatMultirisModule: React.FC = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-text/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                            className="w-full max-w-sm bg-brand-surface border border-brand-text/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
                         >
                             <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                                 <AlertTriangle className="w-10 h-10 text-danger" />
                             </div>
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Purgar Base de Datos?</h3>
-                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Purgar Base de Datos?</h3>
+                            <p className="text-xs text-brand-text/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
                                 Esta acción <span className="text-danger">ELIMINARÁ PERMANENTEMENTE</span> todo el historial de exámenes cargados. No se puede deshacer.
                             </p>
                             <div className="flex flex-col gap-3">
@@ -2511,7 +2511,7 @@ export const StatMultirisModule: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setConfirmPurge(false)}
-                                    className="w-full py-4 bg-prevenort-text/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-prevenort-text/10 hover:text-prevenort-text transition-all underline underline-offset-4 decoration-white/10"
+                                    className="w-full py-4 bg-brand-text/5 text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-text/10 hover:text-brand-text transition-all underline underline-offset-4 decoration-white/10"
                                 >
                                     Cancelar
                                 </button>
@@ -2526,13 +2526,13 @@ export const StatMultirisModule: React.FC = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-text/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                            className="w-full max-w-sm bg-brand-surface border border-brand-text/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
                         >
                             <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                                 <AlertTriangle className="w-10 h-10 text-danger" />
                             </div>
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Eliminar Grupo?</h3>
-                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter mb-4 pr-10 pl-10 leading-tight">¿Eliminar Grupo?</h3>
+                            <p className="text-xs text-brand-text/40 font-bold mb-8 leading-relaxed max-w-[240px] mx-auto">
                                 ¿Estás seguro de eliminar este grupo de trabajo? Los datos de los médicos se mantendrán pero el grupo desaparecerá.
                             </p>
                             <div className="flex flex-col gap-3">
@@ -2544,7 +2544,7 @@ export const StatMultirisModule: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setConfirmDeleteGrupo(null)}
-                                    className="w-full py-4 bg-prevenort-text/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-prevenort-text/10 hover:text-prevenort-text transition-all underline underline-offset-4 decoration-white/10"
+                                    className="w-full py-4 bg-brand-text/5 text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-text/10 hover:text-brand-text transition-all underline underline-offset-4 decoration-white/10"
                                 >
                                     Cancelar
                                 </button>

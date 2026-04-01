@@ -100,8 +100,8 @@ export const SmartCombobox: React.FC<SmartComboboxProps> = ({
         <div className="relative w-full" ref={containerRef}>
             <div
                 className={cn(
-                    "flex items-center w-full bg-prevenort-surface border-2 border-prevenort-border rounded-xl px-4 py-3 transition-all",
-                    isOpen ? "border-prevenort-primary shadow-[0_0_20px_rgba(249,115,22,0.08)]" : "",
+                    "flex items-center w-full bg-brand-surface border-2 border-brand-border rounded-xl px-4 py-3 transition-all",
+                    isOpen ? "border-brand-primary shadow-[0_0_20px_rgba(249,115,22,0.08)]" : "",
                     className
                 )}
                 onClick={() => setIsOpen(true)}
@@ -124,18 +124,18 @@ export const SmartCombobox: React.FC<SmartComboboxProps> = ({
                         }
                     }}
                     placeholder={placeholder}
-                    className="w-full bg-transparent border-none outline-none text-sm font-medium text-prevenort-text placeholder:text-prevenort-text/30"
+                    className="w-full bg-transparent border-none outline-none text-sm font-medium text-brand-text placeholder:text-brand-text/30"
                 />
-                <ChevronDown className={cn("w-4 h-4 text-prevenort-text/40 transition-transform", isOpen ? "rotate-180" : "")} />
+                <ChevronDown className={cn("w-4 h-4 text-brand-text/40 transition-transform", isOpen ? "rotate-180" : "")} />
             </div>
 
             {isOpen && (
-                <div className="absolute top-[calc(100%+0.5rem)] left-0 w-full bg-prevenort-surface border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden z-[100] max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-[calc(100%+0.5rem)] left-0 w-full bg-brand-surface border border-brand-border rounded-2xl shadow-2xl overflow-hidden z-[100] max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2">
 
                     {/* Frecuentes */}
                     {frequentOptions.length > 0 && searchTerm === '' && (
-                        <div className="p-2 border-b border-prevenort-border/50">
-                            <div className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase font-black tracking-widest text-prevenort-primary">
+                        <div className="p-2 border-b border-brand-border/50">
+                            <div className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase font-black tracking-widest text-brand-primary">
                                 <History className="w-3.5 h-3.5" />
                                 Frecuentes
                             </div>
@@ -144,10 +144,10 @@ export const SmartCombobox: React.FC<SmartComboboxProps> = ({
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleSelect(opt.id, opt.label)}
-                                    className="w-full text-left px-4 py-2.5 rounded-xl hover:bg-prevenort-bg transition-colors flex flex-col group"
+                                    className="w-full text-left px-4 py-2.5 rounded-xl hover:bg-brand-bg transition-colors flex flex-col group"
                                 >
-                                    <span className="text-sm font-bold text-prevenort-text group-hover:text-prevenort-primary">{opt.label}</span>
-                                    {opt.sublabel && <span className="text-[10px] text-prevenort-text/40 uppercase font-black">{opt.sublabel}</span>}
+                                    <span className="text-sm font-bold text-brand-text group-hover:text-brand-primary">{opt.label}</span>
+                                    {opt.sublabel && <span className="text-[10px] text-brand-text/40 uppercase font-black">{opt.sublabel}</span>}
                                 </button>
                             ))}
                         </div>
@@ -155,13 +155,13 @@ export const SmartCombobox: React.FC<SmartComboboxProps> = ({
 
                     {/* Todos los resultados */}
                     <div className="p-2">
-                        {searchTerm === '' && <div className="px-3 py-2 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Catálogo Completo</div>}
+                        {searchTerm === '' && <div className="px-3 py-2 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Catálogo Completo</div>}
 
                         {filteredOptions.length === 0 ? (
-                            <div className="px-4 py-6 text-center text-sm text-prevenort-text/40 font-bold flex flex-col gap-2 items-center">
+                            <div className="px-4 py-6 text-center text-sm text-brand-text/40 font-bold flex flex-col gap-2 items-center">
                                 <Search className="w-6 h-6 opacity-30" />
                                 {allowCustomText
-                                    ? <span>Presiona <kbd className="bg-prevenort-bg px-2 py-0.5 rounded text-[10px] uppercase">Enter</kbd> para agregar "{searchTerm}"</span>
+                                    ? <span>Presiona <kbd className="bg-brand-bg px-2 py-0.5 rounded text-[10px] uppercase">Enter</kbd> para agregar "{searchTerm}"</span>
                                     : "No se encontraron resultados"}
                             </div>
                         ) : (
@@ -170,10 +170,10 @@ export const SmartCombobox: React.FC<SmartComboboxProps> = ({
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleSelect(opt.id, opt.label)}
-                                    className="w-full text-left px-4 py-2.5 rounded-xl hover:bg-prevenort-bg transition-colors flex flex-col group"
+                                    className="w-full text-left px-4 py-2.5 rounded-xl hover:bg-brand-bg transition-colors flex flex-col group"
                                 >
-                                    <span className="text-sm font-bold text-prevenort-text group-hover:text-prevenort-primary">{opt.label}</span>
-                                    {opt.sublabel && <span className="text-[10px] text-prevenort-text/40 uppercase font-black">{opt.sublabel}</span>}
+                                    <span className="text-sm font-bold text-brand-text group-hover:text-brand-primary">{opt.label}</span>
+                                    {opt.sublabel && <span className="text-[10px] text-brand-text/40 uppercase font-black">{opt.sublabel}</span>}
                                 </button>
                             ))
                         )}

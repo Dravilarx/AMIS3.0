@@ -14,13 +14,18 @@ export interface UserPermissions {
     dashboard: ModulePermission;
     tenders: ModulePermission;
     staffing: ModulePermission;
+    shifts: ModulePermission;
     logistics: ModulePermission;
+    institutions: ModulePermission;
     clinical: ModulePermission;
     audit: ModulePermission;
     projects: ModulePermission;
     messaging: ModulePermission;
+    dispatch: ModulePermission;
     dms: ModulePermission;
     ideation: ModulePermission;
+    news: ModulePermission;
+    stat_multiris: ModulePermission;
     admin_access: boolean;
 }
 
@@ -51,65 +56,90 @@ const DEFAULT_PERMISSIONS_BY_ROLE: Record<UserRole, UserPermissions> = {
         dashboard: { read: true, create: true, update: true, delete: true },
         tenders: { read: true, create: true, update: true, delete: true },
         staffing: { read: true, create: true, update: true, delete: true },
+        shifts: { read: true, create: true, update: true, delete: true },
         logistics: { read: true, create: true, update: true, delete: true },
+        institutions: { read: true, create: true, update: true, delete: true },
         clinical: { read: true, create: true, update: true, delete: true },
         audit: { read: true, create: true, update: true, delete: true },
         projects: { read: true, create: true, update: true, delete: true },
         messaging: { read: true, create: true, update: true, delete: true },
+        dispatch: { read: true, create: true, update: true, delete: true },
         dms: { read: true, create: true, update: true, delete: true },
         ideation: { read: true, create: true, update: true, delete: true },
+        news: { read: true, create: true, update: true, delete: true },
+        stat_multiris: { read: true, create: true, update: true, delete: true },
         admin_access: true
     },
     'ADMIN': {
         dashboard: { read: true, create: true, update: true, delete: true },
         tenders: { read: true, create: true, update: true, delete: true },
         staffing: { read: true, create: true, update: true, delete: true },
+        shifts: { read: true, create: true, update: true, delete: true },
         logistics: { read: true, create: true, update: true, delete: true },
+        institutions: { read: true, create: true, update: true, delete: true },
         clinical: { read: true, create: true, update: true, delete: true },
         audit: { read: true, create: true, update: true, delete: true },
         projects: { read: true, create: true, update: true, delete: true },
         messaging: { read: true, create: true, update: true, delete: true },
+        dispatch: { read: true, create: true, update: true, delete: true },
         dms: { read: true, create: true, update: true, delete: true },
         ideation: { read: true, create: true, update: true, delete: true },
+        news: { read: true, create: true, update: true, delete: true },
+        stat_multiris: { read: true, create: true, update: true, delete: true },
         admin_access: false
     },
     'MANAGER': {
         dashboard: { read: true, create: true, update: true, delete: false },
         tenders: { read: true, create: true, update: true, delete: false },
         staffing: { read: true, create: true, update: true, delete: false },
+        shifts: { read: true, create: true, update: true, delete: true },
         logistics: { read: true, create: true, update: true, delete: false },
+        institutions: { read: true, create: true, update: true, delete: false },
         clinical: { read: true, create: true, update: true, delete: false },
         audit: { read: true, create: true, update: true, delete: false },
         projects: { read: true, create: true, update: true, delete: false },
         messaging: { read: true, create: true, update: true, delete: true },
+        dispatch: { read: true, create: true, update: true, delete: false },
         dms: { read: true, create: true, update: true, delete: false },
         ideation: { read: true, create: true, update: true, delete: true },
+        news: { read: true, create: true, update: true, delete: false },
+        stat_multiris: { read: true, create: true, update: true, delete: false },
         admin_access: false
     },
     'OPERATOR': {
         dashboard: { read: true, create: false, update: false, delete: false },
         tenders: { read: true, create: false, update: false, delete: false },
         staffing: { read: true, create: false, update: false, delete: false },
+        shifts: { read: true, create: true, update: true, delete: false },
         logistics: { read: true, create: true, update: true, delete: false },
+        institutions: { read: true, create: false, update: false, delete: false },
         clinical: { read: true, create: true, update: true, delete: false },
         audit: { read: true, create: false, update: false, delete: false },
         projects: { read: true, create: true, update: true, delete: false },
         messaging: { read: true, create: true, update: true, delete: false },
+        dispatch: { read: true, create: true, update: true, delete: false },
         dms: { read: true, create: false, update: false, delete: false },
         ideation: { read: true, create: true, update: true, delete: false },
+        news: { read: true, create: true, update: true, delete: false },
+        stat_multiris: { read: true, create: true, update: true, delete: false },
         admin_access: false
     },
     'VIEWER': {
         dashboard: { read: true, create: false, update: false, delete: false },
         tenders: { read: true, create: false, update: false, delete: false },
         staffing: { read: true, create: false, update: false, delete: false },
+        shifts: { read: true, create: false, update: false, delete: false },
         logistics: { read: true, create: false, update: false, delete: false },
+        institutions: { read: true, create: true, update: false, delete: false },
         clinical: { read: true, create: false, update: false, delete: false },
         audit: { read: true, create: false, update: false, delete: false },
         projects: { read: true, create: false, update: false, delete: false },
         messaging: { read: true, create: false, update: false, delete: false },
+        dispatch: { read: true, create: false, update: false, delete: false },
         dms: { read: true, create: true, update: false, delete: false },
         ideation: { read: true, create: false, update: false, delete: false },
+        news: { read: true, create: true, update: false, delete: false },
+        stat_multiris: { read: true, create: true, update: false, delete: false },
         admin_access: false
     }
 };
@@ -156,6 +186,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (error) throw error;
 
             const role = (profile?.role as UserRole) || 'VIEWER';
+            const defaultPerms = DEFAULT_PERMISSIONS_BY_ROLE[role];
+            const profilePerms = profile?.permissions || {};
 
             setUser({
                 id: authUser.id,
@@ -163,7 +195,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 email: authUser.email,
                 role: role,
                 avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
-                permissions: DEFAULT_PERMISSIONS_BY_ROLE[role]
+                permissions: { ...defaultPerms, ...profilePerms }
             });
         } catch (err) {
             console.error('Error fetching profile:', err);

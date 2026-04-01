@@ -19,8 +19,8 @@ function Card({ title, value, icon: Icon, trend, description }: CardProps) {
     return (
         <div className="card-premium group">
             <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-prevenort-bg border border-prevenort-border group-hover:bg-prevenort-primary/10 group-hover:border-prevenort-primary/20 transition-all">
-                    <Icon className="w-5 h-5 text-prevenort-text/40 group-hover:text-prevenort-primary" />
+                <div className="p-2.5 rounded-xl bg-brand-bg border border-brand-border group-hover:bg-brand-primary/10 group-hover:border-brand-primary/20 transition-all">
+                    <Icon className="w-5 h-5 text-brand-text/40 group-hover:text-brand-primary" />
                 </div>
                 {trend && (
                     <div className="flex items-center gap-1 text-[10px] font-black text-success bg-success/10 px-2.5 py-1 rounded-full border border-success/20">
@@ -30,10 +30,10 @@ function Card({ title, value, icon: Icon, trend, description }: CardProps) {
                 )}
             </div>
             <div>
-                <p className="text-[10px] uppercase font-black tracking-widest text-prevenort-text/40 mb-1.5">{title}</p>
-                <p className="text-3xl font-black text-prevenort-text tracking-tight">{value}</p>
+                <p className="text-[10px] uppercase font-black tracking-widest text-brand-text/40 mb-1.5">{title}</p>
+                <p className="text-3xl font-black text-brand-text tracking-tight">{value}</p>
                 {description && (
-                    <p className="text-[10px] text-prevenort-text/60 mt-2 font-medium italic">{description}</p>
+                    <p className="text-[10px] text-brand-text/60 mt-2 font-medium italic">{description}</p>
                 )}
             </div>
         </div>
@@ -59,12 +59,12 @@ export const DashboardModule: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-prevenort-text tracking-tight uppercase mb-1">Centro de Gestión Médica</h1>
-                    <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.3em]">Red AMIS ● Sincronización Clínica en Tiempo Real</p>
+                    <h1 className="text-4xl font-black text-brand-text tracking-tight uppercase mb-1">Centro de Gestión Médica</h1>
+                    <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em]">Red AMIS ● Sincronización Clínica en Tiempo Real</p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-prevenort-surface border border-prevenort-border rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border rounded-2xl shadow-sm">
                     <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-[10px] font-black text-prevenort-text/60 uppercase tracking-widest">Sistemas Operativos Activos</span>
+                    <span className="text-[10px] font-black text-brand-text/60 uppercase tracking-widest">Sistemas Operativos Activos</span>
                 </div>
             </div>
 
@@ -102,36 +102,36 @@ export const DashboardModule: React.FC = () => {
                     <div className="card-premium h-full">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-sm font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Monitor de Actividad Clínica</h3>
-                                <p className="text-[10px] text-prevenort-text/40 font-bold">Top 5 Instituciones por Prioridad</p>
+                                <h3 className="text-sm font-black text-brand-text/40 uppercase tracking-[0.2em]">Monitor de Actividad Clínica</h3>
+                                <p className="text-[10px] text-brand-text/40 font-bold">Top 5 Instituciones por Prioridad</p>
                             </div>
-                            <button className="text-[10px] font-black text-prevenort-primary hover:text-prevenort-text transition-colors uppercase tracking-widest px-4 py-2 bg-prevenort-primary/5 rounded-xl border border-prevenort-primary/10">Ver historial completo</button>
+                            <button className="text-[10px] font-black text-brand-primary hover:text-brand-text transition-colors uppercase tracking-widest px-4 py-2 bg-brand-primary/5 rounded-xl border border-brand-primary/10">Ver historial completo</button>
                         </div>
 
                         <div className="space-y-4">
                             {tenders.slice(0, 5).map((tender, i) => {
                                 const hasProject = projects.some(p => p.tenderId === tender.id);
                                 return (
-                                    <div key={i} className="group flex items-center justify-between p-5 bg-prevenort-surface hover:border-prevenort-primary/30 rounded-2xl border border-prevenort-border transition-all duration-300">
+                                    <div key={i} className="group flex items-center justify-between p-5 bg-brand-surface hover:border-brand-primary/30 rounded-2xl border border-brand-border transition-all duration-300">
                                         <div className="flex items-center gap-5">
                                             <div className={cn(
                                                 "w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs border shadow-sm",
                                                 tender.riesgoSLA.escala > 6
                                                     ? "bg-danger/10 border-danger/20 text-danger"
-                                                    : "bg-prevenort-primary/10 border-prevenort-primary/20 text-prevenort-primary"
+                                                    : "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
                                             )}>
                                                 {tender.id.split('-').pop()}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-3">
-                                                    <p className="font-extrabold text-sm text-prevenort-text">{tender.identificacion.tipoServicio}</p>
+                                                    <p className="font-extrabold text-sm text-brand-text">{tender.identificacion.tipoServicio}</p>
                                                     {hasProject && (
                                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-success/10 border border-success/20 rounded-lg text-[8px] font-black text-success uppercase tracking-tighter">
                                                             <LinkIcon className="w-2.5 h-2.5" /> PROTOCOLO ACTIVO
                                                         </div>
                                                     )}
                                                 </div>
-                                                <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-widest mt-1">Ref: {tender.id.slice(0, 8)}...</p>
+                                                <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-widest mt-1">Ref: {tender.id.slice(0, 8)}...</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -143,15 +143,15 @@ export const DashboardModule: React.FC = () => {
                                             )}>
                                                 Estado: {tender.riesgoSLA.escala > 6 ? 'Prioritario' : 'Normal'}
                                             </div>
-                                            <p className="text-[10px] text-prevenort-text/40 font-medium italic">Efectividad: {tender.economia.margenProyectado}%</p>
+                                            <p className="text-[10px] text-brand-text/40 font-medium italic">Efectividad: {tender.economia.margenProyectado}%</p>
                                         </div>
                                     </div>
                                 );
                             })}
                             {tenders.length === 0 && (
-                                <div className="text-center py-20 bg-prevenort-surface rounded-3xl border-2 border-dashed border-prevenort-border">
-                                    <AlertCircle className="w-10 h-10 text-prevenort-text/20 mx-auto mb-4" />
-                                    <p className="text-prevenort-text/40 text-sm font-semibold italic">No hay casos clínicos activos.</p>
+                                <div className="text-center py-20 bg-brand-surface rounded-3xl border-2 border-dashed border-brand-border">
+                                    <AlertCircle className="w-10 h-10 text-brand-text/20 mx-auto mb-4" />
+                                    <p className="text-brand-text/40 text-sm font-semibold italic">No hay casos clínicos activos.</p>
                                 </div>
                             )}
                         </div>
@@ -159,16 +159,16 @@ export const DashboardModule: React.FC = () => {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="card-premium border-prevenort-primary/10 bg-gradient-to-br from-prevenort-primary/10 to-transparent">
+                    <div className="card-premium border-brand-primary/10 bg-gradient-to-br from-brand-primary/10 to-transparent">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-prevenort-surface rounded-lg shadow-sm border border-prevenort-border">
-                                <Cpu className="w-5 h-5 text-prevenort-primary" />
+                            <div className="p-2 bg-brand-surface rounded-lg shadow-sm border border-brand-border">
+                                <Cpu className="w-5 h-5 text-brand-primary" />
                             </div>
-                            <h3 className="text-xs font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Analítica IA AMIS</h3>
+                            <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Analítica IA AMIS</h3>
                         </div>
-                        <div className="relative group p-4 bg-prevenort-surface/50 rounded-2xl border border-prevenort-border">
-                            <div className="absolute -left-0 top-0 bottom-0 w-1 bg-prevenort-primary rounded-full shadow-[0_0_15px_rgba(249,115,22,0.4)]" />
-                            <p className="text-xs text-prevenort-text/80 leading-relaxed font-semibold pl-4 italic">
+                        <div className="relative group p-4 bg-brand-surface/50 rounded-2xl border border-brand-border">
+                            <div className="absolute -left-0 top-0 bottom-0 w-1 bg-brand-primary rounded-full shadow-[0_0_15px_rgba(249,115,22,0.4)]" />
+                            <p className="text-xs text-brand-text/80 leading-relaxed font-semibold pl-4 italic">
                                 "El sistema ha detectado una alta demanda en la red norte. Se recomienda optimizar la asignación de turnos médicos para asegurar el cumplimiento de los protocolos de atención inmediata."
                             </p>
                         </div>
@@ -180,7 +180,7 @@ export const DashboardModule: React.FC = () => {
                                 <div className="p-2 bg-success/10 rounded-lg">
                                     <MessageSquare className="w-5 h-5 text-success" />
                                 </div>
-                                <h3 className="text-xs font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Comunicación Global</h3>
+                                <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Comunicación Global</h3>
                             </div>
                             <span className="flex items-center gap-1.5 text-[10px] font-black text-success">
                                 <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
@@ -189,12 +189,12 @@ export const DashboardModule: React.FC = () => {
                         </div>
                         <div className="space-y-5">
                             {messages.slice(-3).reverse().map((msg, i) => (
-                                <div key={i} className="flex flex-col gap-1.5 border-l-2 border-prevenort-border pl-4 transition-all hover:border-prevenort-primary/30">
+                                <div key={i} className="flex flex-col gap-1.5 border-l-2 border-brand-border pl-4 transition-all hover:border-brand-primary/30">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-black text-prevenort-primary uppercase tracking-tight">{msg.senderName}</span>
-                                        <span className="text-[10px] font-bold text-prevenort-text/40">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span className="text-[11px] font-black text-brand-primary uppercase tracking-tight">{msg.senderName}</span>
+                                        <span className="text-[10px] font-bold text-brand-text/40">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
-                                    <p className="text-xs text-prevenort-text/60 font-medium line-clamp-1">{msg.content}</p>
+                                    <p className="text-xs text-brand-text/60 font-medium line-clamp-1">{msg.content}</p>
                                 </div>
                             ))}
                         </div>
@@ -206,11 +206,11 @@ export const DashboardModule: React.FC = () => {
                                 <div className="p-2 bg-warning/10 rounded-lg">
                                     <Newspaper className="w-5 h-5 text-warning" />
                                 </div>
-                                <h3 className="text-xs font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Actualidad AMIS</h3>
+                                <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Actualidad AMIS</h3>
                             </div>
                             <button
                                 onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
-                                className="text-[10px] text-prevenort-primary hover:text-prevenort-text font-black transition-colors uppercase tracking-widest"
+                                className="text-[10px] text-brand-primary hover:text-brand-text font-black transition-colors uppercase tracking-widest"
                             >
                                 Todas →
                             </button>
@@ -219,11 +219,11 @@ export const DashboardModule: React.FC = () => {
                             {newsArticles.slice(0, 3).map((article) => (
                                 <div
                                     key={article.id}
-                                    className="flex gap-4 p-3 -mx-2 rounded-2xl hover:bg-prevenort-bg transition-all cursor-pointer group border border-transparent hover:border-prevenort-border"
+                                    className="flex gap-4 p-3 -mx-2 rounded-2xl hover:bg-brand-bg transition-all cursor-pointer group border border-transparent hover:border-brand-border"
                                     onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
                                 >
                                     {(article.imageUrls?.[0] || article.coverImageUrl) && (
-                                        <div className="flex-none w-16 h-16 rounded-xl overflow-hidden border border-prevenort-border shadow-sm">
+                                        <div className="flex-none w-16 h-16 rounded-xl overflow-hidden border border-brand-border shadow-sm">
                                             <img
                                                 src={article.imageUrls?.[0] || article.coverImageUrl}
                                                 alt=""
@@ -237,22 +237,22 @@ export const DashboardModule: React.FC = () => {
                                                 "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border shadow-sm",
                                                 article.category === 'urgente' ? "bg-danger/10 text-danger border-danger/20" :
                                                     article.category === 'evento' ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                                                        "bg-prevenort-primary/10 text-prevenort-primary border-prevenort-primary/20"
+                                                        "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
                                             )}>
                                                 {CATEGORY_ICONS[article.category]} {CATEGORY_LABELS[article.category]}
                                             </span>
-                                            <span className="text-[9px] font-bold text-prevenort-text/40">
+                                            <span className="text-[9px] font-bold text-brand-text/40">
                                                 {new Date(article.publishedAt || article.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-prevenort-text/90 font-black line-clamp-2 leading-snug group-hover:text-prevenort-primary transition-colors">
+                                        <p className="text-xs text-brand-text/90 font-black line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">
                                             {article.title}
                                         </p>
                                     </div>
                                 </div>
                             ))}
                             {newsArticles.length === 0 && (
-                                <p className="text-[11px] text-prevenort-text/40 font-medium italic text-center py-6">Sin novedades corporativas</p>
+                                <p className="text-[11px] text-brand-text/40 font-medium italic text-center py-6">Sin novedades corporativas</p>
                             )}
                         </div>
                     </div>

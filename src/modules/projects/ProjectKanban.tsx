@@ -22,7 +22,7 @@ interface ProjectKanbanProps {
 }
 
 const COLUMNS: { id: BPMTask['status']; title: string; icon: any; color: string }[] = [
-    { id: 'pending', title: 'Pendientes', icon: Clock, color: 'text-prevenort-text/40 border-prevenort-border' },
+    { id: 'pending', title: 'Pendientes', icon: Clock, color: 'text-brand-text/40 border-brand-border' },
     { id: 'in-progress', title: 'En Proceso', icon: Play, color: 'text-info border-info/20 bg-info/5' },
     { id: 'completed', title: 'Completados', icon: CheckCircle2, color: 'text-success border-success/20 bg-success/5' },
     { id: 'blocked', title: 'Bloqueados', icon: AlertCircle, color: 'text-danger border-danger/20 bg-danger/5' }
@@ -70,13 +70,13 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                         <div className="flex items-center gap-2">
                             <column.icon className="w-4 h-4" />
                             <span className="text-[10px] font-black uppercase tracking-widest">{column.title}</span>
-                            <span className="bg-prevenort-bg px-1.5 py-0.5 rounded text-[9px] font-mono text-prevenort-text/60">
+                            <span className="bg-brand-bg px-1.5 py-0.5 rounded text-[9px] font-mono text-brand-text/60">
                                 {tasksByStatus(column.id).length}
                             </span>
                         </div>
                         <button
                             onClick={() => onAddTask(column.id)}
-                            className="p-1 hover:bg-prevenort-primary/10 rounded-lg transition-colors text-prevenort-text/40 hover:text-prevenort-primary"
+                            className="p-1 hover:bg-brand-primary/10 rounded-lg transition-colors text-brand-text/40 hover:text-brand-primary"
                         >
                             <Plus className="w-4 h-4" />
                         </button>
@@ -92,10 +92,10 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                 className="group card-premium p-4 hover:border-info/20 cursor-grab active:cursor-grabbing transition-all space-y-4"
                             >
                                 <div className="flex justify-between items-start gap-2">
-                                    <h5 className="text-[11px] font-bold text-prevenort-text leading-tight group-hover:text-info transition-colors">
+                                    <h5 className="text-[11px] font-bold text-brand-text leading-tight group-hover:text-info transition-colors">
                                         {task.title}
                                     </h5>
-                                    <button className="p-1 text-prevenort-text/10 hover:text-prevenort-text transition-colors">
+                                    <button className="p-1 text-brand-text/10 hover:text-brand-text transition-colors">
                                         <MoreVertical className="w-3 h-3" />
                                     </button>
                                 </div>
@@ -103,7 +103,7 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-[9px] font-mono">
                                         <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-1.5 text-prevenort-text/30 uppercase tracking-widest">
+                                            <div className="flex items-center gap-1.5 text-brand-text/30 uppercase tracking-widest">
                                                 <User className="w-3 h-3" />
                                                 <span>{getProfessionalName(task.assignedTo)}</span>
                                             </div>
@@ -117,7 +117,7 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                             "px-1.5 py-0.5 rounded-md border",
                                             task.priority === 'critical' ? 'text-danger border-danger/20 bg-danger/5' :
                                                 task.priority === 'high' ? 'text-warning border-warning/20 bg-warning/5' :
-                                                    'text-prevenort-text/20 border-prevenort-border'
+                                                    'text-brand-text/20 border-brand-border'
                                         )}>
                                             {task.priority}
                                         </span>
@@ -125,7 +125,7 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
 
                                     {task.aiSummary && (
                                         <div className="p-2 bg-info/5 border border-info/10 rounded-lg">
-                                            <p className="text-[8px] text-prevenort-text/50 italic leading-relaxed line-clamp-2">
+                                            <p className="text-[8px] text-brand-text/50 italic leading-relaxed line-clamp-2">
                                                 "{task.aiSummary}"
                                             </p>
                                         </div>
@@ -133,11 +133,11 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
 
                                     {task.progress !== undefined && task.progress > 0 && (
                                         <div className="space-y-1 pt-1">
-                                            <div className="flex items-center justify-between text-[8px] font-mono text-prevenort-text/30">
+                                            <div className="flex items-center justify-between text-[8px] font-mono text-brand-text/30">
                                                 <span className="uppercase tracking-tighter">Progreso Tarea</span>
                                                 <span>{task.progress}%</span>
                                             </div>
-                                            <div className="h-1 w-full bg-prevenort-border/50 rounded-full overflow-hidden">
+                                            <div className="h-1 w-full bg-brand-border/50 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-info/50 transition-all duration-700"
                                                     style={{ width: `${task.progress}%` }}
@@ -147,24 +147,24 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-between pt-2 border-t border-prevenort-border">
+                                <div className="flex items-center justify-between pt-2 border-t border-brand-border">
                                     <div className="flex items-center gap-3">
                                         {task.attachments && task.attachments.length > 0 && (
-                                            <div className="flex items-center gap-1 text-[9px] text-prevenort-text/20">
-                                                <Paperclip className="w-3 h-3 text-prevenort-text/10" />
+                                            <div className="flex items-center gap-1 text-[9px] text-brand-text/20">
+                                                <Paperclip className="w-3 h-3 text-brand-text/10" />
                                                 <span>{task.attachments.length}</span>
                                             </div>
                                         )}
                                         {task.subtasks && task.subtasks.length > 0 && (
-                                            <div className="flex items-center gap-1 text-[9px] text-prevenort-text/20">
-                                                <CheckCircle2 className="w-3 h-3 text-prevenort-text/10" />
+                                            <div className="flex items-center gap-1 text-[9px] text-brand-text/20">
+                                                <CheckCircle2 className="w-3 h-3 text-brand-text/10" />
                                                 <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 uppercase tracking-tighter">
+                                    <div className="flex items-center gap-1.5 text-[9px] text-brand-text/30 uppercase tracking-tighter">
                                         <span>{task.dueDate}</span>
-                                        <ChevronRight className="w-3 h-3 text-prevenort-text/10" />
+                                        <ChevronRight className="w-3 h-3 text-brand-text/10" />
                                     </div>
                                 </div>
                             </div>
@@ -172,8 +172,8 @@ export const ProjectKanban: React.FC<ProjectKanbanProps> = ({ tasks, professiona
                     </div>
 
                     {tasksByStatus(column.id).length === 0 && (
-                        <div className="flex-1 border-2 border-dashed border-prevenort-border rounded-2xl flex items-center justify-center p-8 opacity-20">
-                            <span className="text-[9px] uppercase font-black tracking-widest text-center text-prevenort-text">Sin Tareas</span>
+                        <div className="flex-1 border-2 border-dashed border-brand-border rounded-2xl flex items-center justify-center p-8 opacity-20">
+                            <span className="text-[9px] uppercase font-black tracking-widest text-center text-brand-text">Sin Tareas</span>
                         </div>
                     )}
                 </div>

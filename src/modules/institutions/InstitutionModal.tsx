@@ -107,29 +107,29 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
         { id: 'clasificacion' as const, label: 'Clasificación', icon: Tag },
     ];
 
-    const inputCls = "w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-sm text-prevenort-text/80 placeholder-prevenort-text/20 focus:outline-none focus:border-info/50 focus:bg-prevenort-surface/80 transition-all";
-    const labelCls = "text-[9px] uppercase font-black text-prevenort-text/20 tracking-widest mb-1.5 block";
+    const inputCls = "w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-sm text-brand-text/80 placeholder-brand-text/20 focus:outline-none focus:border-info/50 focus:bg-brand-surface/80 transition-all";
+    const labelCls = "text-[9px] uppercase font-black text-brand-text/20 tracking-widest mb-1.5 block";
 
     // ── Vista de éxito con código generado ──
     if (generatedCode) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                <div className="relative w-full max-w-md bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 p-8 text-center">
+                <div className="relative w-full max-w-md bg-brand-bg border border-brand-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 p-8 text-center">
                     {/* Código generado grande */}
                     <div className="mb-6">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                             <Hash className="w-8 h-8 text-emerald-400" />
                         </div>
                         <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-2">Institución Registrada</p>
-                        <h3 className="text-lg font-black text-prevenort-text mb-4">{form.legalName}</h3>
+                        <h3 className="text-lg font-black text-brand-text mb-4">{form.legalName}</h3>
                     </div>
 
                     {/* Código grande con efecto */}
                     <div className="relative mb-6">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 rounded-2xl blur-xl" />
-                        <div className="relative bg-prevenort-surface border border-prevenort-border rounded-2xl p-6">
-                            <p className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest mb-2">Código Institucional</p>
+                        <div className="relative bg-brand-surface border border-brand-border rounded-2xl p-6">
+                            <p className="text-[9px] font-black text-brand-text/30 uppercase tracking-widest mb-2">Código Institucional</p>
                             <div className="flex items-center justify-center gap-3">
                                 <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-[0.15em]">
                                     {generatedCode}
@@ -137,14 +137,14 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                             </div>
                             <div className="flex items-center justify-center gap-2 mt-3">
                                 <span className="text-lg">{selectedCategory?.icon}</span>
-                                <span className="text-xs font-bold text-prevenort-text/40">{selectedCategory?.label}</span>
+                                <span className="text-xs font-bold text-brand-text/40">{selectedCategory?.label}</span>
                             </div>
                         </div>
                     </div>
 
                     <button
                         onClick={onSuccess}
-                        className="px-6 py-3 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-prevenort-primary/20"
+                        className="px-6 py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-brand-primary/20"
                     >
                         Continuar
                     </button>
@@ -159,15 +159,15 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative w-full max-w-2xl bg-prevenort-bg border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-2xl bg-brand-bg border border-brand-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-prevenort-border">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border">
                     <div className="flex items-center gap-3">
                         <div>
                             <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">
                                 {isEditing ? 'Editar' : 'Nueva'} Institución
                             </span>
-                            <h3 className="text-lg font-black text-prevenort-text tracking-tight">
+                            <h3 className="text-lg font-black text-brand-text tracking-tight">
                                 {isEditing ? institution?.legalName : 'Registrar Cliente Institucional'}
                             </h3>
                         </div>
@@ -180,9 +180,9 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 bg-prevenort-surface hover:bg-prevenort-surface/80 rounded-xl transition-colors"
+                        className="p-2 bg-brand-surface hover:bg-brand-surface/80 rounded-xl transition-colors"
                     >
-                        <X className="w-4 h-4 text-prevenort-text/40" />
+                        <X className="w-4 h-4 text-brand-text/40" />
                     </button>
                 </div>
 
@@ -196,7 +196,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                 'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all',
                                 activeTab === id
                                     ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                                    : 'text-prevenort-text/30 hover:text-prevenort-text/50 hover:bg-prevenort-surface'
+                                    : 'text-brand-text/30 hover:text-brand-text/50 hover:bg-brand-surface'
                             )}
                         >
                             <Icon className="w-3.5 h-3.5" />
@@ -223,14 +223,14 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                                 'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-bold border transition-all',
                                                 form.institutionCategory === value
                                                     ? 'bg-blue-600/15 text-blue-400 border-blue-500/30 shadow-lg shadow-blue-500/5'
-                                                    : 'bg-prevenort-surface/30 text-prevenort-text/25 border-prevenort-border hover:border-prevenort-text/15 hover:text-prevenort-text/40'
+                                                    : 'bg-brand-surface/30 text-brand-text/25 border-brand-border hover:border-brand-text/15 hover:text-brand-text/40'
                                             )}
                                         >
                                             <span className="text-base">{icon}</span>
                                             <span className="truncate w-full text-center leading-tight">{label}</span>
                                             <span className={cn(
                                                 'text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded',
-                                                form.institutionCategory === value ? 'bg-blue-500/20 text-blue-300' : 'text-prevenort-text/15'
+                                                form.institutionCategory === value ? 'bg-blue-500/20 text-blue-300' : 'text-brand-text/15'
                                             )}>{prefix}</span>
                                         </button>
                                     ))}
@@ -311,11 +311,11 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                     {/* Tab: Contactos */}
                     {activeTab === 'contactos' && (
                         <div className="space-y-3">
-                            <p className="text-[10px] text-prevenort-text/30 italic">Los contactos se pueden gestionar en detalle una vez creada la institución.</p>
+                            <p className="text-[10px] text-brand-text/30 italic">Los contactos se pueden gestionar en detalle una vez creada la institución.</p>
                             {contacts.map((contact, idx) => (
-                                <div key={idx} className="p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl space-y-3 relative group">
+                                <div key={idx} className="p-3 bg-brand-surface/50 border border-brand-border rounded-xl space-y-3 relative group">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest">Contacto #{idx + 1}</span>
+                                        <span className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest">Contacto #{idx + 1}</span>
                                         {contacts.length > 1 && (
                                             <button onClick={() => removeContactRow(idx)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Trash2 className="w-3.5 h-3.5 text-red-400/60 hover:text-red-400" />
@@ -383,12 +383,12 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                     value={form.sector}
                                     onChange={(e) => setField('sector', e.target.value)}
                                 >
-                                    <option value="salud" className="bg-prevenort-bg">Salud</option>
-                                    <option value="mineria" className="bg-prevenort-bg">Minería</option>
-                                    <option value="educacion" className="bg-prevenort-bg">Educación</option>
-                                    <option value="gobierno" className="bg-prevenort-bg">Gobierno</option>
-                                    <option value="industria" className="bg-prevenort-bg">Industria</option>
-                                    <option value="otro" className="bg-prevenort-bg">Otro</option>
+                                    <option value="salud" className="bg-brand-bg">Salud</option>
+                                    <option value="mineria" className="bg-brand-bg">Minería</option>
+                                    <option value="educacion" className="bg-brand-bg">Educación</option>
+                                    <option value="gobierno" className="bg-brand-bg">Gobierno</option>
+                                    <option value="industria" className="bg-brand-bg">Industria</option>
+                                    <option value="otro" className="bg-brand-bg">Otro</option>
                                 </select>
                             </div>
                             <div>
@@ -402,7 +402,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                                 'flex-1 py-3 rounded-xl text-xs font-bold border transition-all uppercase',
                                                 form.institutionType === t
                                                     ? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-                                                    : 'bg-prevenort-surface/50 text-prevenort-text/30 border-prevenort-border hover:border-prevenort-text/20'
+                                                    : 'bg-brand-surface/50 text-brand-text/30 border-brand-border hover:border-brand-text/20'
                                             )}
                                         >
                                             {t}
@@ -414,7 +414,7 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                 <label className={labelCls}>Nivel de Criticidad</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {([
-                                        { v: 'baja' as Criticality, label: 'Baja', color: 'border-prevenort-border text-prevenort-text/40' },
+                                        { v: 'baja' as Criticality, label: 'Baja', color: 'border-brand-border text-brand-text/40' },
                                         { v: 'media' as Criticality, label: 'Media', color: 'border-blue-500/30 text-blue-400' },
                                         { v: 'alta' as Criticality, label: 'Alta', color: 'border-amber-500/30 text-amber-400' },
                                         { v: 'critica' as Criticality, label: 'Crítica', color: 'border-red-500/30 text-red-400' },
@@ -425,8 +425,8 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                                             className={cn(
                                                 'py-3 rounded-xl text-xs font-bold border transition-all',
                                                 form.criticality === v
-                                                    ? cn('bg-prevenort-surface', color)
-                                                    : 'bg-prevenort-surface/30 text-prevenort-text/20 border-prevenort-border hover:border-prevenort-text/15'
+                                                    ? cn('bg-brand-surface', color)
+                                                    : 'bg-brand-surface/30 text-brand-text/20 border-brand-border hover:border-brand-text/15'
                                             )}
                                         >
                                             {label}
@@ -439,23 +439,23 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-prevenort-border">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-brand-border">
                     {/* Preview del código que se generará */}
                     <div className="flex items-center gap-2">
                         {!isEditing && selectedCategory && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-prevenort-surface/50 border border-prevenort-border rounded-xl">
-                                <Hash className="w-3 h-3 text-prevenort-text/20" />
-                                <span className="text-[10px] font-black text-prevenort-text/30 tracking-widest">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-surface/50 border border-brand-border rounded-xl">
+                                <Hash className="w-3 h-3 text-brand-text/20" />
+                                <span className="text-[10px] font-black text-brand-text/30 tracking-widest">
                                     {selectedCategory.prefix}-XXXX
                                 </span>
-                                <span className="text-[9px] text-prevenort-text/15">se generará automáticamente</span>
+                                <span className="text-[9px] text-brand-text/15">se generará automáticamente</span>
                             </div>
                         )}
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-xs font-bold text-prevenort-text/40 hover:text-prevenort-text/60 transition-colors"
+                            className="px-4 py-2 text-xs font-bold text-brand-text/40 hover:text-brand-text/60 transition-colors"
                         >
                             Cancelar
                         </button>
@@ -465,8 +465,8 @@ export const InstitutionModal: React.FC<InstitutionModalProps> = ({ institution,
                             className={cn(
                                 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-tight transition-all',
                                 saving || !form.legalName.trim()
-                                    ? 'bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed'
-                                    : 'bg-prevenort-primary hover:bg-prevenort-primary/90 text-white shadow-xl shadow-prevenort-primary/20 border border-prevenort-primary/30'
+                                    ? 'bg-brand-surface text-brand-text/20 cursor-not-allowed'
+                                    : 'bg-brand-primary hover:bg-brand-primary/90 text-white shadow-xl shadow-brand-primary/20 border border-brand-primary/30'
                             )}
                         >
                             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}

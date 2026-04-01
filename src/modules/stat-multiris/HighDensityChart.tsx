@@ -19,12 +19,12 @@ interface HighDensityChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-prevenort-surface border border-prevenort-text/10 p-4 rounded-2xl shadow-2xl backdrop-blur-md">
-                <p className="text-[10px] font-black text-prevenort-text/40 uppercase mb-2 tracking-widest">{label}</p>
+            <div className="bg-brand-surface border border-brand-text/10 p-4 rounded-2xl shadow-2xl backdrop-blur-md">
+                <p className="text-[10px] font-black text-brand-text/40 uppercase mb-2 tracking-widest">{label}</p>
                 <div className="space-y-1.5">
                     {payload.map((entry: any, index: number) => (
                         <div key={index} className="flex justify-between items-center gap-8">
-                            <span className="text-[10px] font-black text-prevenort-text/60 uppercase flex items-center gap-2">
+                            <span className="text-[10px] font-black text-brand-text/60 uppercase flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
                                 {entry.name}
                             </span>
@@ -114,7 +114,7 @@ export const HighDensityChart: React.FC<HighDensityChartProps> = ({ data, height
                                 {payload?.map((entry: any, index: number) => (
                                     <div key={index} className="flex items-center gap-2 group cursor-pointer">
                                         <div className="w-2 h-2 rounded-full transition-transform group-hover:scale-125" style={{ backgroundColor: entry.color }} />
-                                        <span className="text-[10px] font-black text-prevenort-text/30 uppercase tracking-[0.2em] group-hover:text-prevenort-text/50">{entry.value}</span>
+                                        <span className="text-[10px] font-black text-brand-text/30 uppercase tracking-[0.2em] group-hover:text-brand-text/50">{entry.value}</span>
                                     </div>
                                 ))}
                             </div>

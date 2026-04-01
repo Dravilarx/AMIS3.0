@@ -175,7 +175,7 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
                             </div>
                         )}
                         {!loading && profiles.length === 0 && searchTerm.length > 1 && (
-                            <p className="text-center text-prevenort-text/40 text-xs py-8">
+                            <p className="text-center text-brand-text/40 text-xs py-8">
                                 No se encontraron usuarios con ese criterio.
                             </p>
                         )}
@@ -213,7 +213,7 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-prevenort-border bg-prevenort-surface/50 flex gap-3">
+                <div className="p-6 border-t border-brand-border bg-brand-surface/50 flex gap-3">
                     <button
                         onClick={onClose}
                         className="flex-1 py-3 bg-white/5 border border-white/10 text-white rounded-xl text-xs font-bold uppercase hover:bg-white/10 transition-colors"
@@ -227,7 +227,7 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
                             "flex-[2] py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2",
                             selectedIds.size > 0 && !submitting
                                 ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                : "bg-prevenort-surface text-white/20 cursor-not-allowed"
+                                : "bg-brand-surface text-white/20 cursor-not-allowed"
                         )}
                     >
                         {submitting ? (

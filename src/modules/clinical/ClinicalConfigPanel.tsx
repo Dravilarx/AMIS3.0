@@ -114,7 +114,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Sub-navigation */}
-            <div className="flex gap-4 p-1.5 bg-prevenort-bg/80 rounded-2xl w-fit border border-prevenort-border backdrop-blur-sm shadow-inner">
+            <div className="flex gap-4 p-1.5 bg-brand-bg/80 rounded-2xl w-fit border border-brand-border backdrop-blur-sm shadow-inner">
                 {[
                     { id: 'catalog', name: 'Catálogo & Precios', icon: Book },
                     { id: 'requirements', name: 'Requisitos & Baterías', icon: ClipboardList },
@@ -126,8 +126,8 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                         className={cn(
                             "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
                             activeSubTab === tab.id
-                                ? "bg-prevenort-primary text-white shadow-lg shadow-orange-500/10 border border-prevenort-primary"
-                                : "text-prevenort-text/40 hover:text-prevenort-text hover:bg-prevenort-surface"
+                                ? "bg-brand-primary text-white shadow-lg shadow-orange-500/10 border border-brand-primary"
+                                : "text-brand-text/40 hover:text-brand-text hover:bg-brand-surface"
                         )}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -137,17 +137,17 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             </div>
 
             {/* Content Area */}
-            <div className="card-premium bg-prevenort-surface border-prevenort-border p-8 shadow-2xl shadow-orange-500/5">
+            <div className="card-premium bg-brand-surface border-brand-border p-8 shadow-2xl shadow-orange-500/5">
                 {activeSubTab === 'catalog' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">Gestión de Catálogo</h3>
-                                <p className="text-xs text-prevenort-text/40 font-mono mt-1 uppercase tracking-widest">Procedimientos, Códigos Prestacionales y Precios Base</p>
+                                <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter">Gestión de Catálogo</h3>
+                                <p className="text-xs text-brand-text/40 font-mono mt-1 uppercase tracking-widest">Procedimientos, Códigos Prestacionales y Precios Base</p>
                             </div>
                             <button
                                 onClick={() => setEditingProc({ name: '', code: '', basePrice: 0, description: '', isActive: true })}
-                                className="flex items-center gap-2 px-6 py-3 bg-prevenort-primary hover:bg-orange-600 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest text-white shadow-xl shadow-orange-600/20"
+                                className="flex items-center gap-2 px-6 py-3 bg-brand-primary hover:bg-orange-600 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest text-white shadow-xl shadow-orange-600/20"
                             >
                                 <Plus className="w-4 h-4" />
                                 Nuevo Procedimiento
@@ -156,43 +156,43 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {catalog.map(proc => (
-                                <div key={proc.id} className="group bg-prevenort-bg/50 border border-prevenort-border rounded-3xl p-6 hover:border-prevenort-primary/30 transition-all hover:bg-prevenort-surface hover:shadow-xl hover:shadow-orange-500/5">
+                                <div key={proc.id} className="group bg-brand-bg/50 border border-brand-border rounded-3xl p-6 hover:border-brand-primary/30 transition-all hover:bg-brand-surface hover:shadow-xl hover:shadow-orange-500/5">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 rounded-xl bg-orange-500/10 text-prevenort-primary border border-orange-500/20">
+                                        <div className="p-3 rounded-xl bg-orange-500/10 text-brand-primary border border-orange-500/20">
                                             <Book className="w-5 h-5" />
                                         </div>
                                         <div className="flex gap-1">
                                             <button
                                                 onClick={() => setEditingProc(proc)}
-                                                className="p-2 hover:bg-prevenort-bg rounded-lg text-prevenort-text/20 hover:text-prevenort-text transition-all"
+                                                className="p-2 hover:bg-brand-bg rounded-lg text-brand-text/20 hover:text-brand-text transition-all"
                                                 title="Editar"
                                             >
                                                 <Edit2 className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => handleDuplicateProcedure(proc)}
-                                                className="p-2 hover:bg-orange-500/10 rounded-lg text-prevenort-text/20 hover:text-prevenort-primary transition-all"
+                                                className="p-2 hover:bg-orange-500/10 rounded-lg text-brand-text/20 hover:text-brand-primary transition-all"
                                                 title="Duplicar"
                                             >
                                                 <Copy className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => setConfirmDeleteProc(proc)}
-                                                className="p-2 hover:bg-danger/10 rounded-lg text-prevenort-text/20 hover:text-danger transition-all"
+                                                className="p-2 hover:bg-danger/10 rounded-lg text-brand-text/20 hover:text-danger transition-all"
                                                 title="Eliminar"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
-                                    <h4 className="font-black text-prevenort-text uppercase tracking-tight text-lg leading-tight mb-2">{proc.name}</h4>
+                                    <h4 className="font-black text-brand-text uppercase tracking-tight text-lg leading-tight mb-2">{proc.name}</h4>
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center bg-prevenort-surface p-3 rounded-xl border border-prevenort-border">
-                                            <span className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-widest">Código</span>
-                                            <span className="text-xs font-mono text-prevenort-primary font-bold">{proc.code}</span>
+                                        <div className="flex justify-between items-center bg-brand-surface p-3 rounded-xl border border-brand-border">
+                                            <span className="text-[10px] font-black text-brand-text/20 uppercase tracking-widest">Código</span>
+                                            <span className="text-xs font-mono text-brand-primary font-bold">{proc.code}</span>
                                         </div>
-                                        <div className="flex justify-between items-center bg-prevenort-surface p-3 rounded-xl border border-prevenort-border">
-                                            <span className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-widest">Precio Base</span>
+                                        <div className="flex justify-between items-center bg-brand-surface p-3 rounded-xl border border-brand-border">
+                                            <span className="text-[10px] font-black text-brand-text/20 uppercase tracking-widest">Precio Base</span>
                                             <div className="flex items-center gap-1 text-success font-bold">
                                                 <DollarSign className="w-3 h-3" />
                                                 <span className="text-sm font-mono">{proc.basePrice.toLocaleString()}</span>
@@ -204,7 +204,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             "w-2 h-2 rounded-full",
                                             proc.isActive ? "bg-success" : "bg-danger"
                                         )} />
-                                        <span className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">
+                                        <span className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">
                                             {proc.isActive ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </div>
@@ -217,53 +217,53 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                 {activeSubTab === 'requirements' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                         <div className="space-y-6">
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter flex items-center gap-2">
-                                <ClipboardList className="w-5 h-5 text-prevenort-primary" />
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter flex items-center gap-2">
+                                <ClipboardList className="w-5 h-5 text-brand-primary" />
                                 Baterías de Requisitos
                             </h3>
                             <div className="grid gap-4">
                                 {batteries.map(battery => (
-                                    <div key={battery.id} className="bg-prevenort-bg/50 border border-prevenort-border rounded-3xl p-6 hover:border-prevenort-primary/30 transition-all hover:bg-prevenort-surface hover:shadow-lg hover:shadow-blue-500/5">
+                                    <div key={battery.id} className="bg-brand-bg/50 border border-brand-border rounded-3xl p-6 hover:border-brand-primary/30 transition-all hover:bg-brand-surface hover:shadow-lg hover:shadow-blue-500/5">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h4 className="font-black text-prevenort-text uppercase tracking-tight">{battery.name}</h4>
+                                            <h4 className="font-black text-brand-text uppercase tracking-tight">{battery.name}</h4>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => handleDuplicateBattery(battery)}
-                                                    className="text-prevenort-text/20 hover:text-prevenort-primary transition-all"
+                                                    className="text-brand-text/20 hover:text-brand-primary transition-all"
                                                     title="Duplicar Batería"
                                                 >
                                                     <Copy className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingBattery(battery)}
-                                                    className="text-prevenort-text/20 hover:text-prevenort-text transition-all"
+                                                    className="text-brand-text/20 hover:text-brand-text transition-all"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmDeleteBatt(battery)}
-                                                    className="text-prevenort-text/20 hover:text-danger transition-all"
+                                                    className="text-brand-text/20 hover:text-danger transition-all"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-prevenort-text/40 leading-relaxed mb-4">{battery.description}</p>
+                                        <p className="text-xs text-brand-text/40 leading-relaxed mb-4">{battery.description}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {battery.requirements?.map(req => (
-                                                <span key={req.id} className="px-2 py-1 bg-orange-500/10 text-prevenort-primary rounded-lg text-[10px] font-bold uppercase border border-orange-500/20">
+                                                <span key={req.id} className="px-2 py-1 bg-orange-500/10 text-brand-primary rounded-lg text-[10px] font-bold uppercase border border-orange-500/20">
                                                     {req.name}
                                                 </span>
                                             ))}
                                             {(!battery.requirements || battery.requirements.length === 0) && (
-                                                <span className="text-[10px] text-prevenort-text/20 italic font-mono uppercase tracking-widest">Sin requisitos vinculados</span>
+                                                <span className="text-[10px] text-brand-text/20 italic font-mono uppercase tracking-widest">Sin requisitos vinculados</span>
                                             )}
                                         </div>
                                     </div>
                                 ))}
                                 <button
                                     onClick={() => setEditingBattery({ name: '', description: '' })}
-                                    className="w-full py-5 border-2 border-dashed border-prevenort-border rounded-3xl text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.3em] hover:border-prevenort-primary/40 hover:text-prevenort-primary hover:bg-orange-500/5 transition-all"
+                                    className="w-full py-5 border-2 border-dashed border-brand-border rounded-3xl text-[10px] font-black text-brand-text/40 uppercase tracking-[0.3em] hover:border-brand-primary/40 hover:text-brand-primary hover:bg-orange-500/5 transition-all"
                                 >
                                     + Crear Nueva Batería
                                 </button>
@@ -272,53 +272,53 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter flex items-center gap-2">
+                                <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter flex items-center gap-2">
                                     <Layout className="w-5 h-5 text-amber-500" />
                                     Requisitos Maestros
                                 </h3>
                                 <button
                                     onClick={() => setEditingRequirement({ name: '', description: '', requirementType: 'document', isMandatory: false })}
-                                    className="px-6 py-2.5 bg-prevenort-primary/10 hover:bg-prevenort-primary text-prevenort-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
+                                    className="px-6 py-2.5 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Crear Requisito
                                 </button>
                             </div>
-                            <div className="bg-prevenort-bg/50 rounded-3xl overflow-hidden border border-prevenort-border">
+                            <div className="bg-brand-bg/50 rounded-3xl overflow-hidden border border-brand-border">
                                 <table className="w-full text-left">
-                                    <thead className="bg-prevenort-bg/80">
+                                    <thead className="bg-brand-bg/80">
                                         <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Requisito</th>
-                                            <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Tipo</th>
-                                            <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest text-center">Mandatorio</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Requisito</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Tipo</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest text-center">Mandatorio</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-prevenort-border">
+                                    <tbody className="divide-y divide-brand-border">
                                         {requirements.map(req => (
-                                            <tr key={req.id} className="hover:bg-prevenort-surface transition-colors">
+                                            <tr key={req.id} className="hover:bg-brand-surface transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-between gap-4">
                                                         <div>
-                                                            <p className="text-xs font-bold text-prevenort-text uppercase">{req.name}</p>
-                                                            <p className="text-[10px] text-prevenort-text/40 font-mono mt-1">{req.description}</p>
+                                                            <p className="text-xs font-bold text-brand-text uppercase">{req.name}</p>
+                                                            <p className="text-[10px] text-brand-text/40 font-mono mt-1">{req.description}</p>
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <button
                                                                 onClick={() => handleDuplicateRequirement(req)}
-                                                                className="p-1.5 hover:bg-prevenort-primary/10 rounded-lg text-prevenort-text/20 hover:text-prevenort-primary transition-all"
+                                                                className="p-1.5 hover:bg-brand-primary/10 rounded-lg text-brand-text/20 hover:text-brand-primary transition-all"
                                                                 title="Duplicar Ítem"
                                                             >
                                                                 <Copy className="w-3 h-3" />
                                                             </button>
                                                             <button
                                                                 onClick={() => setEditingRequirement(req)}
-                                                                className="p-1.5 hover:bg-prevenort-bg rounded-lg text-prevenort-text/20 hover:text-prevenort-text transition-all"
+                                                                className="p-1.5 hover:bg-brand-bg rounded-lg text-brand-text/20 hover:text-brand-text transition-all"
                                                             >
                                                                 <Edit2 className="w-3 h-3" />
                                                             </button>
                                                             <button
                                                                 onClick={() => setConfirmDeleteReq(req)}
-                                                                className="p-1.5 hover:bg-danger/10 rounded-lg text-prevenort-text/20 hover:text-danger transition-all"
+                                                                className="p-1.5 hover:bg-danger/10 rounded-lg text-brand-text/20 hover:text-danger transition-all"
                                                             >
                                                                 <Trash2 className="w-3 h-3" />
                                                             </button>
@@ -326,12 +326,12 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="px-2 py-1 bg-prevenort-bg border border-prevenort-border text-prevenort-text/40 rounded text-[9px] font-black uppercase tracking-widest">
+                                                    <span className="px-2 py-1 bg-brand-bg border border-brand-border text-brand-text/40 rounded text-[9px] font-black uppercase tracking-widest">
                                                         {req.requirementType}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    {req.isMandatory ? <CheckCircle2 className="w-4 h-4 text-success mx-auto" /> : <X className="w-4 h-4 text-prevenort-text/10 mx-auto" />}
+                                                    {req.isMandatory ? <CheckCircle2 className="w-4 h-4 text-success mx-auto" /> : <X className="w-4 h-4 text-brand-text/10 mx-auto" />}
                                                 </td>
                                             </tr>
                                         ))}
@@ -346,7 +346,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                     <div className="space-y-12">
                         {/* Repository List */}
                         <div className="space-y-6">
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter flex items-center gap-2">
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter flex items-center gap-2">
                                 <MessageSquare className="w-5 h-5 text-emerald-600" />
                                 Repositorio de Mensajes Maestro
                             </h3>
@@ -358,19 +358,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                         setSelectedCenterId('');
                                         setIndTemplates({ email: '', whatsapp: '' });
                                     }}
-                                    className="h-full min-h-[160px] border-2 border-dashed border-prevenort-border rounded-[2.5rem] flex flex-col items-center justify-center gap-4 hover:border-prevenort-primary/50 hover:bg-prevenort-primary/5 group transition-all"
+                                    className="h-full min-h-[160px] border-2 border-dashed border-brand-border rounded-[2.5rem] flex flex-col items-center justify-center gap-4 hover:border-brand-primary/50 hover:bg-brand-primary/5 group transition-all"
                                 >
-                                    <div className="w-12 h-12 rounded-2xl bg-prevenort-bg flex items-center justify-center group-hover:bg-prevenort-primary group-hover:text-white transition-all shadow-inner">
+                                    <div className="w-12 h-12 rounded-2xl bg-brand-bg flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-all shadow-inner">
                                         <Plus className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-prevenort-text/20 group-hover:text-prevenort-primary">Crear Nueva Plantilla</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-text/20 group-hover:text-brand-primary">Crear Nueva Plantilla</span>
                                 </button>
 
                                 {indications.map(ind => (
-                                    <div key={ind.id} className="group relative bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-6 hover:border-prevenort-primary/30 transition-all flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:shadow-blue-500/5">
+                                    <div key={ind.id} className="group relative bg-brand-surface border border-brand-border rounded-[2.5rem] p-6 hover:border-brand-primary/30 transition-all flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:shadow-blue-500/5">
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-start">
-                                                <div className="p-2 bg-prevenort-bg rounded-xl text-prevenort-primary border border-prevenort-border">
+                                                <div className="p-2 bg-brand-bg rounded-xl text-brand-primary border border-brand-border">
                                                     <Mail className="w-4 h-4" />
                                                 </div>
                                                 <div className="flex gap-2">
@@ -380,9 +380,9 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                             await onUpsertIndications(copyData);
                                                             alert('Plantilla duplicada');
                                                         }}
-                                                        className="p-2 bg-prevenort-bg hover:bg-prevenort-primary rounded-lg transition-all group/dup"
+                                                        className="p-2 bg-brand-bg hover:bg-brand-primary rounded-lg transition-all group/dup"
                                                     >
-                                                        <Copy className="w-3.5 h-3.5 text-prevenort-text/20 group-hover/dup:text-white" />
+                                                        <Copy className="w-3.5 h-3.5 text-brand-text/20 group-hover/dup:text-white" />
                                                     </button>
                                                     <button
                                                         onClick={() => {
@@ -395,9 +395,9 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                                 whatsapp: ind.whatsappFormat || ''
                                                             });
                                                         }}
-                                                        className="p-2 bg-prevenort-bg hover:bg-prevenort-primary rounded-lg transition-all group/edit"
+                                                        className="p-2 bg-brand-bg hover:bg-brand-primary rounded-lg transition-all group/edit"
                                                     >
-                                                        <Edit2 className="w-3.5 h-3.5 text-prevenort-text/20 group-hover/edit:text-white" />
+                                                        <Edit2 className="w-3.5 h-3.5 text-brand-text/20 group-hover/edit:text-white" />
                                                     </button>
                                                     <button
                                                         onClick={async () => {
@@ -405,19 +405,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                                 await onDeleteIndications(ind.id!);
                                                             }
                                                         }}
-                                                        className="p-2 bg-prevenort-bg hover:bg-danger rounded-lg transition-all group/del"
+                                                        className="p-2 bg-brand-bg hover:bg-danger rounded-lg transition-all group/del"
                                                     >
-                                                        <Trash2 className="w-3.5 h-3.5 text-prevenort-text/20 group-hover/del:text-white" />
+                                                        <Trash2 className="w-3.5 h-3.5 text-brand-text/20 group-hover/del:text-white" />
                                                     </button>
                                                 </div>
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-black text-prevenort-text leading-tight uppercase tracking-tight">{ind.procedureName}</h4>
-                                                <p className="text-[10px] text-prevenort-primary font-mono mt-1 uppercase tracking-widest">{ind.centerName}</p>
+                                                <h4 className="text-sm font-black text-brand-text leading-tight uppercase tracking-tight">{ind.procedureName}</h4>
+                                                <p className="text-[10px] text-brand-primary font-mono mt-1 uppercase tracking-widest">{ind.centerName}</p>
                                             </div>
                                             <div className="flex gap-2 pt-2">
-                                                <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", ind.emailFormat ? "bg-success/10 text-success border border-success/20" : "bg-prevenort-bg text-prevenort-text/20")}>EMAIL</span>
-                                                <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", ind.whatsappFormat ? "bg-success/10 text-success border border-success/20" : "bg-prevenort-bg text-prevenort-text/20")}>WHATSAPP</span>
+                                                <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", ind.emailFormat ? "bg-success/10 text-success border border-success/20" : "bg-brand-bg text-brand-text/20")}>EMAIL</span>
+                                                <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", ind.whatsappFormat ? "bg-success/10 text-success border border-success/20" : "bg-brand-bg text-brand-text/20")}>WHATSAPP</span>
                                             </div>
                                         </div>
                                     </div>
@@ -427,22 +427,22 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
                         {/* Editor Panel (Only show when editingInd is set) */}
                         {editingInd && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-10 bg-prevenort-bg border border-prevenort-border rounded-[3rem] shadow-xl shadow-blue-500/5">
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-10 bg-brand-bg border border-brand-border rounded-[3rem] shadow-xl shadow-blue-500/5">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">Editor de Plantilla</h3>
-                                    <button onClick={() => setEditingInd(null)} className="text-[10px] font-black text-prevenort-text/40 uppercase hover:text-prevenort-text tracking-widest px-6 py-2.5 bg-prevenort-surface border border-prevenort-border rounded-xl shadow-sm transition-all">Cerrar Editor</button>
+                                    <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter">Editor de Plantilla</h3>
+                                    <button onClick={() => setEditingInd(null)} className="text-[10px] font-black text-brand-text/40 uppercase hover:text-brand-text tracking-widest px-6 py-2.5 bg-brand-surface border border-brand-border rounded-xl shadow-sm transition-all">Cerrar Editor</button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-8 bg-prevenort-surface border border-prevenort-border rounded-[2rem] shadow-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-8 bg-brand-surface border border-brand-border rounded-[2rem] shadow-sm">
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
-                                            <Layout className="w-4 h-4 text-prevenort-primary" />
-                                            <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Procedimiento Destino</label>
+                                            <Layout className="w-4 h-4 text-brand-primary" />
+                                            <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Procedimiento Destino</label>
                                         </div>
                                         <select
                                             value={selectedProcId}
                                             onChange={(e) => setSelectedProcId(e.target.value)}
-                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-2xl px-5 py-4 text-sm text-prevenort-text focus:border-prevenort-primary outline-none transition-all appearance-none font-bold"
+                                            className="w-full bg-brand-bg border border-brand-border rounded-2xl px-5 py-4 text-sm text-brand-text focus:border-brand-primary outline-none transition-all appearance-none font-bold"
                                         >
                                             <option value="">Seleccionar Procedimiento...</option>
                                             {catalog.map(proc => <option key={proc.id} value={proc.id}>{proc.name}</option>)}
@@ -451,13 +451,13 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
-                                            <Activity className="w-4 h-4 text-prevenort-primary" />
-                                            <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em]">Sede de Atención</label>
+                                            <Activity className="w-4 h-4 text-brand-primary" />
+                                            <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Sede de Atención</label>
                                         </div>
                                         <select
                                             value={selectedCenterId}
                                             onChange={(e) => setSelectedCenterId(e.target.value)}
-                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-2xl px-5 py-4 text-sm text-prevenort-text focus:border-prevenort-primary outline-none transition-all appearance-none font-bold"
+                                            className="w-full bg-brand-bg border border-brand-border rounded-2xl px-5 py-4 text-sm text-brand-text focus:border-brand-primary outline-none transition-all appearance-none font-bold"
                                         >
                                             <option value="">Seleccionar Sede...</option>
                                             {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -470,15 +470,15 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     <div className="space-y-6 flex flex-col h-full">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-prevenort-bg rounded-2xl text-prevenort-primary border border-prevenort-border">
+                                                <div className="p-3 bg-brand-bg rounded-2xl text-brand-primary border border-brand-border">
                                                     <Mail className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-xs font-black text-prevenort-text uppercase tracking-widest">Plantilla Correo Electrónico</h4>
-                                                    <p className="text-[9px] text-prevenort-text/40 mt-1 uppercase font-bold tracking-tighter">Cuerpo del mensaje en HTML</p>
+                                                    <h4 className="text-xs font-black text-brand-text uppercase tracking-widest">Plantilla Correo Electrónico</h4>
+                                                    <p className="text-[9px] text-brand-text/40 mt-1 uppercase font-bold tracking-tighter">Cuerpo del mensaje en HTML</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1 px-3 py-1 bg-prevenort-bg text-prevenort-primary rounded-full text-[9px] font-bold border border-prevenort-border border-prevenort-border">
+                                            <div className="flex items-center gap-1 px-3 py-1 bg-brand-bg text-brand-primary rounded-full text-[9px] font-bold border border-brand-border border-brand-border">
                                                 <Info className="w-3 h-3" />
                                                 Usa {`{paciente}, {fecha}, {hora} y {sede}`}
                                             </div>
@@ -487,7 +487,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             value={indTemplates.email}
                                             onChange={(e) => setIndTemplates(prev => ({ ...prev, email: e.target.value }))}
                                             placeholder="Ej: Estimado/a {paciente}, le confirmamos su cita..."
-                                            className="w-full h-80 bg-prevenort-surface border border-prevenort-border rounded-3xl p-8 text-sm text-prevenort-text focus:border-prevenort-primary outline-none leading-relaxed transition-all font-mono shadow-inner"
+                                            className="w-full h-80 bg-brand-surface border border-brand-border rounded-3xl p-8 text-sm text-brand-text focus:border-brand-primary outline-none leading-relaxed transition-all font-mono shadow-inner"
                                         />
                                     </div>
 
@@ -495,12 +495,12 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     <div className="space-y-6 flex flex-col h-full">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-prevenort-bg rounded-2xl text-success border border-prevenort-border">
+                                                <div className="p-3 bg-brand-bg rounded-2xl text-success border border-brand-border">
                                                     <MessageSquare className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-xs font-black text-prevenort-text uppercase tracking-widest">Plantilla WhatsApp</h4>
-                                                    <p className="text-[9px] text-prevenort-text/40 mt-1 uppercase font-bold tracking-tighter">Mensaje corto y directo</p>
+                                                    <h4 className="text-xs font-black text-brand-text uppercase tracking-widest">Plantilla WhatsApp</h4>
+                                                    <p className="text-[9px] text-brand-text/40 mt-1 uppercase font-bold tracking-tighter">Mensaje corto y directo</p>
                                                 </div>
                                             </div>
                                             <div className="px-3 py-1 bg-success/10 border border-success/20 rounded-full text-[8px] font-black text-success uppercase tracking-widest">
@@ -511,7 +511,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             value={indTemplates.whatsapp}
                                             onChange={(e) => setIndTemplates(prev => ({ ...prev, whatsapp: e.target.value }))}
                                             placeholder="Ej: Hola {paciente}! Te recordamos tu cita de {procedimiento}..."
-                                            className="w-full h-80 bg-prevenort-surface border border-prevenort-border rounded-3xl p-8 text-sm text-prevenort-text focus:border-success outline-none leading-relaxed transition-all font-mono shadow-inner"
+                                            className="w-full h-80 bg-brand-surface border border-brand-border rounded-3xl p-8 text-sm text-brand-text focus:border-success outline-none leading-relaxed transition-all font-mono shadow-inner"
                                         />
                                     </div>
                                 </div>
@@ -519,7 +519,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 <div className="flex items-center justify-end gap-4 pt-8">
                                     <button
                                         onClick={() => setEditingInd(null)}
-                                        className="px-10 py-4 bg-prevenort-surface border border-prevenort-border hover:bg-prevenort-bg rounded-2xl text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest transition-all shadow-sm"
+                                        className="px-10 py-4 bg-brand-surface border border-brand-border hover:bg-brand-bg rounded-2xl text-[10px] font-black text-brand-text/40 uppercase tracking-widest transition-all shadow-sm"
                                     >
                                         Descartar
                                     </button>
@@ -541,7 +541,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                 alert('Plantilla guardada con éxito');
                                             }
                                         }}
-                                        className="px-10 py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 flex items-center gap-3"
+                                        className="px-10 py-4 bg-brand-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 flex items-center gap-3"
                                     >
                                         <Save className="w-4 h-4" />
                                         Guardar Configuración de Mensajes
@@ -556,64 +556,64 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             {/* Procedure Edit Modal */}
             {
                 editingProc && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-brand-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-brand-border flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                    <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter">
                                         {editingProc.id ? 'Editar Procedimiento' : 'Nuevo Procedimiento'}
                                     </h3>
-                                    <p className="text-[10px] text-prevenort-text/40 font-mono uppercase tracking-widest">Configuración Técnica y Precio</p>
+                                    <p className="text-[10px] text-brand-text/40 font-mono uppercase tracking-widest">Configuración Técnica y Precio</p>
                                 </div>
-                                <button onClick={() => setEditingProc(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                <button onClick={() => setEditingProc(null)} className="p-2 hover:bg-brand-bg rounded-full text-brand-text/20 hover:text-brand-text transition-all">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
                             <div className="p-8 space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre</label>
+                                        <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Nombre</label>
                                         <input
                                             type="text"
                                             value={editingProc.name || ''}
                                             onChange={(e) => setEditingProc({ ...editingProc, name: e.target.value })}
-                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                            className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Código</label>
+                                        <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Código</label>
                                         <input
                                             type="text"
                                             value={editingProc.code || ''}
                                             onChange={(e) => setEditingProc({ ...editingProc, code: e.target.value })}
-                                            className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                            className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Precio Base ($)</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Precio Base ($)</label>
                                     <input
                                         type="number"
                                         value={editingProc.basePrice === 0 ? '' : editingProc.basePrice}
                                         onChange={(e) => setEditingProc({ ...editingProc, basePrice: e.target.value === '' ? 0 : Number(e.target.value) })}
                                         onFocus={(e) => e.target.select()}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all font-mono"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all font-mono"
                                         placeholder="0"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center gap-2">
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest flex items-center gap-2">
                                         Descripción
                                     </label>
                                     <textarea
                                         value={editingProc.description || ''}
                                         onChange={(e) => setEditingProc({ ...editingProc, description: e.target.value })}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center gap-2">
+                                        <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest flex items-center gap-2">
                                             Guía de Preparación Pública (Portal Paciente AMIS)
                                         </label>
                                         {editingProc.id && (
@@ -621,7 +621,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                 href={`/guia/${editingProc.id}`}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="text-[9px] font-bold text-prevenort-primary hover:underline flex items-center gap-1 uppercase tracking-widest"
+                                                className="text-[9px] font-bold text-brand-primary hover:underline flex items-center gap-1 uppercase tracking-widest"
                                             >
                                                 Ver Vista Pública <ExternalLink className="w-3 h-3" />
                                             </a>
@@ -631,11 +631,11 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                         value={editingProc.preparationGuide || ''}
                                         onChange={(e) => setEditingProc({ ...editingProc, preparationGuide: e.target.value })}
                                         placeholder="Ej: Ayuno de 8 horas, llegar 15 minutos antes... (Soporta saltos de línea y Markdown básico)"
-                                        className="w-full h-32 bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-medium outline-none focus:border-prevenort-primary transition-all leading-relaxed"
+                                        className="w-full h-32 bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-medium outline-none focus:border-brand-primary transition-all leading-relaxed"
                                     />
                                 </div>
                             </div>
-                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border flex gap-4">
+                            <div className="p-8 bg-brand-bg/50 border-t border-brand-border flex gap-4">
                                 <button
                                     onClick={async () => {
                                         const res = await onUpsertProcedure(editingProc);
@@ -646,7 +646,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             alert('Error al guardar: ' + res.error);
                                         }
                                     }}
-                                    className="flex-1 py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                    className="flex-1 py-4 bg-brand-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
                                 >
                                     Guardar Procedimiento
                                 </button>
@@ -659,51 +659,51 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             {/* Requirement Edit Modal */}
             {
                 editingReq && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-brand-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-brand-border flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                    <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter">
                                         {editingReq.id ? 'Editar Requisito' : 'Nuevo Requisito'}
                                     </h3>
                                 </div>
-                                <button onClick={() => setEditingRequirement(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                <button onClick={() => setEditingRequirement(null)} className="p-2 hover:bg-brand-bg rounded-full text-brand-text/20 hover:text-brand-text transition-all">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
                             <div className="p-8 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre del Requisito</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Nombre del Requisito</label>
                                     <input
                                         type="text"
                                         value={editingReq.name || ''}
                                         onChange={(e) => setEditingRequirement({ ...editingReq, name: e.target.value })}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Tipo</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Tipo</label>
                                     <select
                                         value={editingReq.requirementType || 'document'}
                                         onChange={(e) => setEditingRequirement({ ...editingReq, requirementType: e.target.value as any })}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all appearance-none"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all appearance-none"
                                     >
                                         <option value="document">Documento</option>
                                         <option value="physical_exam">Examen Físico</option>
                                         <option value="equipment">Equipamiento</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-3 p-4 bg-prevenort-bg rounded-xl border border-prevenort-border">
+                                <div className="flex items-center gap-3 p-4 bg-brand-bg rounded-xl border border-brand-border">
                                     <input
                                         type="checkbox"
                                         checked={editingReq.isMandatory || false}
                                         onChange={(e) => setEditingRequirement({ ...editingReq, isMandatory: e.target.checked })}
-                                        className="w-4 h-4 rounded border-prevenort-border text-prevenort-primary focus:ring-prevenort-primary"
+                                        className="w-4 h-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
                                     />
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Es Mandatorio</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Es Mandatorio</label>
                                 </div>
                             </div>
-                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border">
+                            <div className="p-8 bg-brand-bg/50 border-t border-brand-border">
                                 <button
                                     onClick={async () => {
                                         const res = await onUpsertRequirement(editingReq);
@@ -714,7 +714,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             alert('Error: ' + res.error);
                                         }
                                     }}
-                                    className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                    className="w-full py-4 bg-brand-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
                                 >
                                     Guardar Requisito
                                 </button>
@@ -727,40 +727,40 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             {/* Battery Edit Modal */}
             {
                 editingBatt && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-prevenort-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="p-8 border-b border-prevenort-border flex justify-between items-center">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-brand-bg/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-8 border-b border-brand-border flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">
+                                    <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter">
                                         {editingBatt.id ? 'Editar Batería' : 'Nueva Batería'}
                                     </h3>
                                 </div>
-                                <button onClick={() => setEditingBattery(null)} className="p-2 hover:bg-prevenort-bg rounded-full text-prevenort-text/20 hover:text-prevenort-text transition-all">
+                                <button onClick={() => setEditingBattery(null)} className="p-2 hover:bg-brand-bg rounded-full text-brand-text/20 hover:text-brand-text transition-all">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
                             <div className="p-8 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Nombre de la Batería</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Nombre de la Batería</label>
                                     <input
                                         type="text"
                                         value={editingBatt.name || ''}
                                         onChange={(e) => setEditingBattery({ ...editingBatt, name: e.target.value })}
-                                        className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Descripción</label>
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Descripción</label>
                                     <textarea
                                         value={editingBatt.description || ''}
                                         onChange={(e) => setEditingBattery({ ...editingBatt, description: e.target.value })}
-                                        className="w-full h-24 bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold outline-none focus:border-prevenort-primary transition-all leading-relaxed"
+                                        className="w-full h-24 bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold outline-none focus:border-brand-primary transition-all leading-relaxed"
                                     />
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest flex items-center justify-between">
+                                    <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest flex items-center justify-between">
                                         <span>Vincular Requisitos Maestro</span>
-                                        <span className="text-prevenort-primary">{(editingBatt.requirements?.length || 0)} seleccionados</span>
+                                        <span className="text-brand-primary">{(editingBatt.requirements?.length || 0)} seleccionados</span>
                                     </label>
                                     <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                         {requirements.map(req => {
@@ -778,14 +778,14 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                     className={cn(
                                                         "flex items-center justify-between p-4 rounded-xl border transition-all text-left",
                                                         isSelected
-                                                            ? "bg-prevenort-primary/10 border-prevenort-primary/30 text-prevenort-text"
-                                                            : "bg-prevenort-bg border-prevenort-border text-prevenort-text/40 hover:border-prevenort-border/60"
+                                                            ? "bg-brand-primary/10 border-brand-primary/30 text-brand-text"
+                                                            : "bg-brand-bg border-brand-border text-brand-text/40 hover:border-brand-border/60"
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className={cn(
                                                             "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                                                            isSelected ? "bg-prevenort-primary border-prevenort-primary" : "border-prevenort-border"
+                                                            isSelected ? "bg-brand-primary border-brand-primary" : "border-brand-border"
                                                         )}>
                                                             {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
                                                         </div>
@@ -803,7 +803,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     </div>
                                 </div>
                             </div>
-                            <div className="p-8 bg-prevenort-bg/50 border-t border-prevenort-border">
+                            <div className="p-8 bg-brand-bg/50 border-t border-brand-border">
                                 <button
                                     onClick={async () => {
                                         const res = await onUpsertBattery({
@@ -817,7 +817,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             alert('Error: ' + res.error);
                                         }
                                     }}
-                                    className="w-full py-4 bg-prevenort-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
+                                    className="w-full py-4 bg-brand-primary hover:bg-blue-700 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20"
                                 >
                                     Guardar Batería y Vincular Requisitos
                                 </button>
@@ -829,19 +829,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             {/* UI de Confirmación de Borrado */}
             <AnimatePresence>
                 {confirmDeleteProc && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-brand-bg/80 backdrop-blur-md">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                            className="w-full max-w-sm bg-brand-surface border border-brand-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
                         >
                             <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                                 <AlertTriangle className="w-10 h-10 text-danger" />
                             </div>
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Procedimiento?</h3>
-                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
-                                Estás a punto de eliminar <span className="text-prevenort-text">"{confirmDeleteProc.name}"</span>. Esta acción es irreversible y podría afectar citas existentes.
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter mb-4">¿Eliminar Procedimiento?</h3>
+                            <p className="text-xs text-brand-text/40 font-bold mb-8 leading-relaxed">
+                                Estás a punto de eliminar <span className="text-brand-text">"{confirmDeleteProc.name}"</span>. Esta acción es irreversible y podría afectar citas existentes.
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
@@ -859,7 +859,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setConfirmDeleteProc(null)}
-                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                    className="w-full py-4 bg-white/5 text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
                                 >
                                     Cancelar
                                 </button>
@@ -869,19 +869,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                 )}
 
                 {confirmDeleteBatt && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-brand-bg/80 backdrop-blur-md">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                            className="w-full max-w-sm bg-brand-surface border border-brand-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
                         >
                             <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                                 <AlertTriangle className="w-10 h-10 text-danger" />
                             </div>
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Batería?</h3>
-                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
-                                ¿Estás seguro de eliminar la batería <span className="text-prevenort-text">"{confirmDeleteBatt.name}"</span>?
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter mb-4">¿Eliminar Batería?</h3>
+                            <p className="text-xs text-brand-text/40 font-bold mb-8 leading-relaxed">
+                                ¿Estás seguro de eliminar la batería <span className="text-brand-text">"{confirmDeleteBatt.name}"</span>?
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
@@ -896,7 +896,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setConfirmDeleteBatt(null)}
-                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                    className="w-full py-4 bg-white/5 text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
                                 >
                                     Cancelar
                                 </button>
@@ -906,19 +906,19 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                 )}
 
                 {confirmDeleteReq && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-prevenort-bg/80 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-brand-bg/80 backdrop-blur-md">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-prevenort-surface border border-prevenort-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
+                            className="w-full max-w-sm bg-brand-surface border border-brand-border rounded-[2.5rem] p-10 overflow-hidden shadow-2xl text-center relative"
                         >
                             <div className="w-20 h-20 bg-danger/10 border border-danger/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                                 <AlertTriangle className="w-10 h-10 text-danger" />
                             </div>
-                            <h3 className="text-xl font-black text-prevenort-text uppercase tracking-tighter mb-4">¿Eliminar Requisito?</h3>
-                            <p className="text-xs text-prevenort-text/40 font-bold mb-8 leading-relaxed">
-                                ¿Eliminar el requisito <span className="text-prevenort-text">"{confirmDeleteReq.name}"</span>?
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-tighter mb-4">¿Eliminar Requisito?</h3>
+                            <p className="text-xs text-brand-text/40 font-bold mb-8 leading-relaxed">
+                                ¿Eliminar el requisito <span className="text-brand-text">"{confirmDeleteReq.name}"</span>?
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
@@ -933,7 +933,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setConfirmDeleteReq(null)}
-                                    className="w-full py-4 bg-white/5 text-prevenort-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
+                                    className="w-full py-4 bg-white/5 text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all underline underline-offset-4 decoration-white/10"
                                 >
                                     Cancelar
                                 </button>

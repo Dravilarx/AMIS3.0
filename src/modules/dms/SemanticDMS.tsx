@@ -149,7 +149,7 @@ export const SemanticDMS: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
                 <Loader2 className="w-12 h-12 text-info animate-spin" />
-                <p className="text-prevenort-text/40 text-sm font-mono">Indexando repositorio documental...</p>
+                <p className="text-brand-text/40 text-sm font-mono">Indexando repositorio documental...</p>
             </div>
         );
     }
@@ -159,10 +159,10 @@ export const SemanticDMS: React.FC = () => {
             <div className="card-premium border-red-500/20 bg-red-500/5 p-12 text-center">
                 <AlertCircle className="w-12 h-12 text-red-500/40 mx-auto mb-4" />
                 <p className="text-red-400 font-bold mb-2">Fallo en la Red Documental</p>
-                <p className="text-prevenort-text/40 text-xs mb-6 font-mono">{error}</p>
+                <p className="text-brand-text/40 text-xs mb-6 font-mono">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="px-6 py-2 bg-prevenort-surface border border-prevenort-border hover:bg-prevenort-primary/10 rounded-xl transition-all text-xs uppercase tracking-widest font-bold text-prevenort-text"
+                    className="px-6 py-2 bg-brand-surface border border-brand-border hover:bg-brand-primary/10 rounded-xl transition-all text-xs uppercase tracking-widest font-bold text-brand-text"
                 >
                     Reiniciar Sincronización
                 </button>
@@ -174,19 +174,19 @@ export const SemanticDMS: React.FC = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-prevenort-text/90 tracking-tighter uppercase">Documentos</h2>
-                    <p className="text-xs text-prevenort-text/40 font-mono">Repositorio Inteligente de Activos Digitales</p>
+                    <h2 className="text-2xl font-black text-brand-text/90 tracking-tighter uppercase">Documentos</h2>
+                    <p className="text-xs text-brand-text/40 font-mono">Repositorio Inteligente de Activos Digitales</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {canPerform('dms', 'create') && (
                         <>
-                            <div className="flex border border-prevenort-border rounded-xl overflow-hidden bg-prevenort-surface">
+                            <div className="flex border border-brand-border rounded-xl overflow-hidden bg-brand-surface">
                                 <button
                                     onClick={() => setViewMode('grid')}
                                     className={cn(
                                         "p-2.5 transition-all",
-                                        viewMode === 'grid' ? "bg-info/20 text-info" : "text-prevenort-text/40 hover:text-prevenort-text"
+                                        viewMode === 'grid' ? "bg-info/20 text-info" : "text-brand-text/40 hover:text-brand-text"
                                     )}
                                     title="Vista Cuadrícula"
                                 >
@@ -196,7 +196,7 @@ export const SemanticDMS: React.FC = () => {
                                     onClick={() => setViewMode('list')}
                                     className={cn(
                                         "p-2.5 transition-all",
-                                        viewMode === 'list' ? "bg-info/20 text-info" : "text-prevenort-text/40 hover:text-prevenort-text"
+                                        viewMode === 'list' ? "bg-info/20 text-info" : "text-brand-text/40 hover:text-brand-text"
                                     )}
                                     title="Vista Lista (Worklist)"
                                 >
@@ -212,9 +212,9 @@ export const SemanticDMS: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setShowUploadModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-prevenort-surface border border-prevenort-border rounded-xl cursor-pointer hover:bg-prevenort-primary/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap text-prevenort-text"
+                                className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border rounded-xl cursor-pointer hover:bg-brand-primary/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap text-brand-text"
                             >
-                                <FileDown className="w-4 h-4 text-prevenort-text/40" />
+                                <FileDown className="w-4 h-4 text-brand-text/40" />
                                 <span>Subir Documentos</span>
                             </button>
                         </>
@@ -223,7 +223,7 @@ export const SemanticDMS: React.FC = () => {
                     {canPerform('dms', 'update') && (
                         <button
                             onClick={() => setShowConfigModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-prevenort-surface border border-prevenort-border rounded-xl cursor-pointer hover:bg-prevenort-primary/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap text-prevenort-text"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border rounded-xl cursor-pointer hover:bg-brand-primary/10 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap text-brand-text"
                             title="Configurar Baterías de Requerimientos"
                         >
                             <Settings2 className="w-4 h-4 text-amber-400" />
@@ -237,9 +237,9 @@ export const SemanticDMS: React.FC = () => {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Busca por concepto (ej: 'seguridad del paciente' o 'acuerdos legales')..."
-                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl pl-12 pr-12 py-3 text-sm text-prevenort-text focus:outline-none focus:border-info/50 transition-all shadow-2xl"
+                            className="w-full bg-brand-surface border border-brand-border rounded-xl pl-12 pr-12 py-3 text-sm text-brand-text focus:outline-none focus:border-info/50 transition-all shadow-2xl"
                         />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20 group-focus-within:text-info" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20 group-focus-within:text-info" />
                         <button
                             type="submit"
                             disabled={isSearching}
@@ -303,7 +303,7 @@ export const SemanticDMS: React.FC = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className={cn(
-                                    "group bg-prevenort-surface/40 border border-prevenort-border rounded-[2rem] p-8 flex flex-col h-full hover:bg-prevenort-surface transition-all duration-500 relative overflow-hidden",
+                                    "group bg-brand-surface/40 border border-brand-border rounded-[2rem] p-8 flex flex-col h-full hover:bg-brand-surface transition-all duration-500 relative overflow-hidden",
                                     selectedIds.has(doc.id) && "ring-2 ring-info border-info/30 bg-info/5 shadow-lg shadow-info/10",
                                     isMySignaturePending && "ring-1 ring-amber-500/50"
                                 )}
@@ -319,7 +319,7 @@ export const SemanticDMS: React.FC = () => {
                                     {selectedIds.has(doc.id) ? (
                                         <CheckSquare className="w-5 h-5 text-info" />
                                     ) : (
-                                        <Square className="w-5 h-5 text-prevenort-text/20 hover:text-info/50" />
+                                        <Square className="w-5 h-5 text-brand-text/20 hover:text-info/50" />
                                     )}
                                 </button>
 
@@ -343,7 +343,7 @@ export const SemanticDMS: React.FC = () => {
                                                 e.stopPropagation();
                                                 duplicateDocument(doc);
                                             }}
-                                            className="p-1.5 bg-prevenort-surface hover:bg-info/20 rounded-lg text-prevenort-text/40 hover:text-info transition-all"
+                                            className="p-1.5 bg-brand-surface hover:bg-info/20 rounded-lg text-brand-text/40 hover:text-info transition-all"
                                         >
                                             <Copy className="w-4 h-4" />
                                         </button>
@@ -352,11 +352,11 @@ export const SemanticDMS: React.FC = () => {
                                                 e.stopPropagation();
                                                 setConfirmDelete(doc);
                                             }}
-                                            className="p-1.5 bg-prevenort-surface hover:bg-danger/20 rounded-lg text-prevenort-text/40 hover:text-danger transition-all"
+                                            className="p-1.5 bg-brand-surface hover:bg-danger/20 rounded-lg text-brand-text/40 hover:text-danger transition-all"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        <FileDown className="w-4 h-4 text-prevenort-text/20 mt-1.5" />
+                                        <FileDown className="w-4 h-4 text-brand-text/20 mt-1.5" />
                                     </div>
 
                                     <div className={cn(
@@ -371,8 +371,8 @@ export const SemanticDMS: React.FC = () => {
 
 
                                     <div className="flex flex-col flex-1">
-                                        <h4 className="font-bold text-sm text-prevenort-text/90 leading-tight mb-1">{doc.title}</h4>
-                                        <p className="text-[10px] text-prevenort-text/40 line-clamp-2 italic">{doc.contentSummary}</p>
+                                        <h4 className="font-bold text-sm text-brand-text/90 leading-tight mb-1">{doc.title}</h4>
+                                        <p className="text-[10px] text-brand-text/40 line-clamp-2 italic">{doc.contentSummary}</p>
 
                                         {(doc.projectId || doc.taskId) && (
                                             <div className="mt-2 flex flex-wrap gap-2">
@@ -391,11 +391,11 @@ export const SemanticDMS: React.FC = () => {
                                     </div>
 
 
-                                    <div className="mt-auto pt-4 border-t border-prevenort-border flex items-center justify-between">
+                                    <div className="mt-auto pt-4 border-t border-brand-border flex items-center justify-between">
                                         <div className="flex flex-col gap-0.5">
-                                            <span className="text-[9px] font-mono text-prevenort-text/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
+                                            <span className="text-[9px] font-mono text-brand-text/20 uppercase">{doc.category} ● {new Date(doc.createdAt).toLocaleDateString()}</span>
                                             {doc.signerName && (
-                                                <span className="text-[8px] text-prevenort-text/30 italic">Por: {doc.signerName}</span>
+                                                <span className="text-[8px] text-brand-text/30 italic">Por: {doc.signerName}</span>
                                             )}
                                         </div>
 
@@ -432,7 +432,7 @@ export const SemanticDMS: React.FC = () => {
                                                         e.stopPropagation();
                                                         setRequestingDoc(doc);
                                                     }}
-                                                    className="bg-prevenort-surface border border-prevenort-border hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-md px-2 py-1.5 text-[8px] font-bold uppercase tracking-widest text-prevenort-text/80 hover:text-emerald-400 transition-all"
+                                                    className="bg-brand-surface border border-brand-border hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-md px-2 py-1.5 text-[8px] font-bold uppercase tracking-widest text-brand-text/80 hover:text-emerald-400 transition-all"
                                                     title="Solicitar firma a otras personas"
                                                 >
                                                     Solicitar
@@ -447,9 +447,9 @@ export const SemanticDMS: React.FC = () => {
                     })}
                 </div>
             ) : (
-                <div className="bg-prevenort-surface/20 border border-prevenort-border rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
+                <div className="bg-brand-surface/20 border border-brand-border rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
                     {/* Header Worklist */}
-                    <div className="grid grid-cols-[60px_1fr_120px_120px_100px_140px] gap-4 px-8 py-5 bg-prevenort-surface/50 border-b border-prevenort-border text-[10px] uppercase font-black text-prevenort-text/30 tracking-widest items-center">
+                    <div className="grid grid-cols-[60px_1fr_120px_120px_100px_140px] gap-4 px-8 py-5 bg-brand-surface/50 border-b border-brand-border text-[10px] uppercase font-black text-brand-text/30 tracking-widest items-center">
                         <div className="flex justify-center">
                             <button onClick={toggleSelectAll} className="hover:text-info transition-colors">
                                 {selectedIds.size === filteredDocs.length && filteredDocs.length > 0
@@ -493,19 +493,19 @@ export const SemanticDMS: React.FC = () => {
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className={cn(
                                             "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110",
-                                            doc.signed ? "bg-emerald-500/10 text-emerald-400" : "bg-prevenort-bg text-prevenort-text/40"
+                                            doc.signed ? "bg-emerald-500/10 text-emerald-400" : "bg-brand-bg text-brand-text/40"
                                         )}>
                                             {getFileIcon(doc.type)}
                                         </div>
                                         <div className="truncate">
-                                            <p className="text-sm font-bold text-prevenort-text group-hover:text-info transition-colors truncate">{doc.title}</p>
-                                            <p className="text-[9px] text-prevenort-text/20 uppercase tracking-tighter font-mono">{doc.signerName || 'Pendiente de firma'}</p>
+                                            <p className="text-sm font-bold text-brand-text group-hover:text-info transition-colors truncate">{doc.title}</p>
+                                            <p className="text-[9px] text-brand-text/20 uppercase tracking-tighter font-mono">{doc.signerName || 'Pendiente de firma'}</p>
                                         </div>
                                     </div>
-                                    <div className="text-[10px] font-black uppercase text-prevenort-text/40 tracking-wider">
+                                    <div className="text-[10px] font-black uppercase text-brand-text/40 tracking-wider">
                                         {doc.category}
                                     </div>
-                                    <div className="text-[10px] font-mono text-prevenort-text/30">
+                                    <div className="text-[10px] font-mono text-brand-text/30">
                                         {new Date(doc.createdAt).toLocaleDateString()}
                                     </div>
                                     <div className="flex justify-center flex-col items-center gap-1">
@@ -535,7 +535,7 @@ export const SemanticDMS: React.FC = () => {
                                         {!doc.signed && (
                                             <button
                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestingDoc(doc); }}
-                                                className="p-1.5 border border-prevenort-border text-prevenort-text/60 bg-prevenort-surface hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 rounded-lg transition-all"
+                                                className="p-1.5 border border-brand-border text-brand-text/60 bg-brand-surface hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 rounded-lg transition-all"
                                                 title="Solicitar Firma"
                                             >
                                                 <Briefcase className="w-3.5 h-3.5" />
@@ -558,8 +558,8 @@ export const SemanticDMS: React.FC = () => {
 
             {filteredDocs.length === 0 && (
                 <div className="py-20 text-center animate-in fade-in duration-700">
-                    <Search className="w-12 h-12 text-prevenort-text/5 mx-auto mb-4" />
-                    <p className="text-prevenort-text/40 text-sm italic">No se encontraron documentos relevantes para "{query}"</p>
+                    <Search className="w-12 h-12 text-brand-text/5 mx-auto mb-4" />
+                    <p className="text-brand-text/40 text-sm italic">No se encontraron documentos relevantes para "{query}"</p>
                 </div>
             )}
             {showUploadModal && (

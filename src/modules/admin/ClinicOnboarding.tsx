@@ -255,21 +255,21 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
         if (doctors.length > 0) {
             // VISTA IMPORTACIÓN CSV
             return (
-                <div className="card-premium space-y-6 animate-in slide-in-from-right-4 duration-500 bg-prevenort-surface border-prevenort-border">
+                <div className="card-premium space-y-6 animate-in slide-in-from-right-4 duration-500 bg-brand-surface border-brand-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-prevenort-text/5 rounded-xl">
-                                <FileSpreadsheet className="w-5 h-5 text-prevenort-text/60" />
+                            <div className="p-2 bg-brand-text/5 rounded-xl">
+                                <FileSpreadsheet className="w-5 h-5 text-brand-text/60" />
                             </div>
-                            <h2 className="text-lg font-black tracking-tight text-prevenort-text">Borrador de Importación</h2>
+                            <h2 className="text-lg font-black tracking-tight text-brand-text">Borrador de Importación</h2>
                         </div>
                         <div className="flex gap-4 items-center">
-                            <button onClick={() => setDoctors([])} className="text-[10px] font-black uppercase text-prevenort-text/40 hover:text-danger tracking-widest transition-colors">Cancelar</button>
+                            <button onClick={() => setDoctors([])} className="text-[10px] font-black uppercase text-brand-text/40 hover:text-danger tracking-widest transition-colors">Cancelar</button>
                             {validCount > 0 && (
                                 <button 
                                     onClick={handleBulkInsert}
                                     disabled={isProcessing}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-prevenort-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-prevenort-primary/90 transition-all shadow-md shadow-prevenort-primary/20 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-primary/90 transition-all shadow-md shadow-brand-primary/20 disabled:opacity-50"
                                 >
                                     {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     {isProcessing ? 'Sincronizando...' : `Guardar ${validCount} Registros`}
@@ -289,26 +289,26 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                         </div>
                     </div>
 
-                    <div className="bg-prevenort-bg border border-prevenort-border rounded-xl overflow-hidden max-h-[400px] overflow-y-auto shadow-inner">
+                    <div className="bg-brand-bg border border-brand-border rounded-xl overflow-hidden max-h-[400px] overflow-y-auto shadow-inner">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-prevenort-surface sticky top-0 z-10 shadow-sm border-b border-prevenort-border">
+                            <thead className="bg-brand-surface sticky top-0 z-10 shadow-sm border-b border-brand-border">
                                 <tr>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">RUT</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Profesional</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Especialidad</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Validación</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">RUT</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Profesional</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Especialidad</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Validación</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-prevenort-border">
+                            <tbody className="divide-y divide-brand-border">
                                 {doctors.map((doc, idx) => (
                                     <tr key={idx} className={cn(doc.status === 'invalid' ? 'bg-danger/5' : '', doc.status === 'update' ? 'bg-info/5' : '')}>
                                         <td className="px-4 py-4 font-semibold font-mono text-xs">{doc.rut}</td>
                                         <td className="px-4 py-4">
-                                            <p className="font-bold text-prevenort-text">{doc.name} {doc.last_name}</p>
-                                            <p className="text-[10px] text-prevenort-text/40 truncate">{doc.hospital_name}</p>
-                                            <p className="font-mono text-[9px] text-prevenort-text/60 mt-0.5">{formatPhoneDisplay(doc.phone_number)}</p>
+                                            <p className="font-bold text-brand-text">{doc.name} {doc.last_name}</p>
+                                            <p className="text-[10px] text-brand-text/40 truncate">{doc.hospital_name}</p>
+                                            <p className="font-mono text-[9px] text-brand-text/60 mt-0.5">{formatPhoneDisplay(doc.phone_number)}</p>
                                         </td>
-                                        <td className="px-4 py-4 text-xs font-bold text-prevenort-text/70">{doc.specialty}</td>
+                                        <td className="px-4 py-4 text-xs font-bold text-brand-text/70">{doc.specialty}</td>
                                         <td className="px-4 py-4">
                                             {doc.status === 'valid' ? (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/10 text-success text-[10px] font-black tracking-widest uppercase rounded-lg">
@@ -335,47 +335,47 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
 
         // VISTA IAM DIRECTORIO (SIN IMPORTACIÓN ACTIVA)
         return (
-            <div className="card-premium space-y-6 animate-in slide-in-from-bottom-4 duration-500 bg-prevenort-surface border-prevenort-border min-h-[500px]">
+            <div className="card-premium space-y-6 animate-in slide-in-from-bottom-4 duration-500 bg-brand-surface border-brand-border min-h-[500px]">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-prevenort-primary/10 rounded-xl">
-                            <DatabaseBackup className="w-5 h-5 text-prevenort-primary" />
+                        <div className="p-2 bg-brand-primary/10 rounded-xl">
+                            <DatabaseBackup className="w-5 h-5 text-brand-primary" />
                         </div>
-                        <h2 className="text-lg font-black tracking-tight text-prevenort-text">Directorio IAM (Whitelist)</h2>
+                        <h2 className="text-lg font-black tracking-tight text-brand-text">Directorio IAM (Whitelist)</h2>
                     </div>
-                    <div className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest border border-prevenort-border px-3 py-1.5 rounded-lg bg-prevenort-bg">
+                    <div className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest border border-brand-border px-3 py-1.5 rounded-lg bg-brand-bg">
                         {existingDoctors.length} Médicos Registrados
                     </div>
                 </div>
 
                 {isLoadingData ? (
-                    <div className="flex flex-col items-center justify-center p-20 text-prevenort-text/40">
+                    <div className="flex flex-col items-center justify-center p-20 text-brand-text/40">
                         <Loader2 className="w-8 h-8 animate-spin mb-4" />
                         <p className="text-[10px] font-black uppercase tracking-widest">Sincronizando Base de Datos</p>
                     </div>
                 ) : existingDoctors.length > 0 ? (
-                    <div className="bg-prevenort-bg border border-prevenort-border rounded-xl overflow-hidden h-[450px] overflow-y-auto shadow-inner">
+                    <div className="bg-brand-bg border border-brand-border rounded-xl overflow-hidden h-[450px] overflow-y-auto shadow-inner">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-prevenort-surface sticky top-0 z-10 shadow-sm border-b border-prevenort-border">
+                            <thead className="bg-brand-surface sticky top-0 z-10 shadow-sm border-b border-brand-border">
                                 <tr>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Profesional</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Institución</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-prevenort-text/40">Contacto Validado</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Profesional</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Institución</th>
+                                    <th className="px-4 py-3 text-[10px] uppercase font-black tracking-widest text-brand-text/40">Contacto Validado</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-prevenort-border">
+                            <tbody className="divide-y divide-brand-border">
                                 {existingDoctors.map((doc, idx) => (
-                                    <tr key={idx} className="hover:bg-prevenort-surface transition-colors">
+                                    <tr key={idx} className="hover:bg-brand-surface transition-colors">
                                         <td className="px-4 py-4">
-                                            <p className="font-bold text-prevenort-text">{doc.name} {doc.last_name}</p>
-                                            <p className="font-mono text-[9px] text-prevenort-text/40">{doc.rut}</p>
+                                            <p className="font-bold text-brand-text">{doc.name} {doc.last_name}</p>
+                                            <p className="font-mono text-[9px] text-brand-text/40">{doc.rut}</p>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <p className="text-xs font-bold text-prevenort-text/80">{doc.hospital_name}</p>
-                                            <p className="text-[10px] text-prevenort-text/40">{doc.specialty}</p>
+                                            <p className="text-xs font-bold text-brand-text/80">{doc.hospital_name}</p>
+                                            <p className="text-[10px] text-brand-text/40">{doc.specialty}</p>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-prevenort-text/5 border border-prevenort-border rounded-lg font-mono text-xs text-prevenort-text/80">
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-text/5 border border-brand-border rounded-lg font-mono text-xs text-brand-text/80">
                                                 <CheckCircle className="w-3 h-3 text-success" />
                                                 {formatPhoneDisplay(doc.phone_number)}
                                             </span>
@@ -386,7 +386,7 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                         </table>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-[350px] text-prevenort-text/20 border-2 border-dashed border-prevenort-border rounded-3xl m-4 bg-prevenort-bg/50">
+                    <div className="flex flex-col items-center justify-center h-[350px] text-brand-text/20 border-2 border-dashed border-brand-border rounded-3xl m-4 bg-brand-bg/50">
                         <Users className="w-12 h-12 mb-4 opacity-50" />
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] max-w-sm text-center leading-loose">
                             La lista blanca está vacía. Importa una plantilla CSV o agrega un médico manualmente.
@@ -402,14 +402,14 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
                 <div>
-                    <h1 className="text-3xl font-black text-prevenort-text tracking-tight uppercase mb-1">Onboarding Institucional B2B</h1>
-                    <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.3em]">
+                    <h1 className="text-3xl font-black text-brand-text tracking-tight uppercase mb-1">Onboarding Institucional B2B</h1>
+                    <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em]">
                         IAM Whitelist de Médicos (Telegram Bot Seshat)
                     </p>
                 </div>
                 <button 
                     onClick={handleDownloadTemplate}
-                    className="flex items-center gap-2.5 px-6 py-3 bg-prevenort-surface border border-prevenort-border hover:bg-prevenort-primary hover:text-white hover:border-prevenort-primary text-prevenort-text rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
+                    className="flex items-center gap-2.5 px-6 py-3 bg-brand-surface border border-brand-border hover:bg-brand-primary hover:text-white hover:border-brand-primary text-brand-text rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
                 >
                     <Download className="w-4 h-4" />
                     Descargar Plantilla Excel
@@ -426,8 +426,8 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                         className={cn(
                             "flex flex-col items-center justify-center p-12 text-center rounded-3xl border-2 border-dashed transition-all cursor-pointer relative overflow-hidden",
                             isDragging 
-                                ? "bg-prevenort-primary/10 border-prevenort-primary scale-[1.02] shadow-xl shadow-prevenort-primary/20" 
-                                : "bg-prevenort-surface/50 border-prevenort-border hover:bg-prevenort-surface hover:border-prevenort-text/20 shadow-sm",
+                                ? "bg-brand-primary/10 border-brand-primary scale-[1.02] shadow-xl shadow-brand-primary/20" 
+                                : "bg-brand-surface/50 border-brand-border hover:bg-brand-surface hover:border-brand-text/20 shadow-sm",
                         )}
                         onClick={() => fileInputRef.current?.click()}
                     >
@@ -438,11 +438,11 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
                             ref={fileInputRef}
                             onChange={handleFileChange}
                         />
-                        <div className="p-4 bg-prevenort-primary/10 rounded-2xl mb-4 transition-transform group-hover:scale-110">
-                            <Upload className="w-8 h-8 text-prevenort-primary" />
+                        <div className="p-4 bg-brand-primary/10 rounded-2xl mb-4 transition-transform group-hover:scale-110">
+                            <Upload className="w-8 h-8 text-brand-primary" />
                         </div>
-                        <h3 className="text-sm font-black text-prevenort-text tracking-tight">Carga de CSV Masivo</h3>
-                        <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.1em] mt-2 leading-relaxed px-4">
+                        <h3 className="text-sm font-black text-brand-text tracking-tight">Carga de CSV Masivo</h3>
+                        <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.1em] mt-2 leading-relaxed px-4">
                             Arrastra y suelta el archivo o haz clic aquí
                         </p>
                     </div>
@@ -471,58 +471,58 @@ export const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ isAddModalOp
             {/* MODAL: Registro Individual B2B */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-prevenort-bg border border-prevenort-border rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between p-6 border-b border-prevenort-border bg-prevenort-surface">
+                    <div className="bg-brand-bg border border-brand-border rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between p-6 border-b border-brand-border bg-brand-surface">
                             <div>
-                                <h3 className="text-xl font-black tracking-tight text-prevenort-text">Alta Individual de Médico</h3>
-                                <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.2em] mt-1">Agregar a la Whitelist B2B</p>
+                                <h3 className="text-xl font-black tracking-tight text-brand-text">Alta Individual de Médico</h3>
+                                <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.2em] mt-1">Agregar a la Whitelist B2B</p>
                             </div>
-                            <button onClick={onCloseModal} className="p-2 hover:bg-prevenort-bg rounded-xl transition-colors">
-                                <X className="w-5 h-5 text-prevenort-text/40" />
+                            <button onClick={onCloseModal} className="p-2 hover:bg-brand-bg rounded-xl transition-colors">
+                                <X className="w-5 h-5 text-brand-text/40" />
                             </button>
                         </div>
                         
                         <form onSubmit={handleSingleSubmit} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">RUT</label>
-                                    <input required placeholder="12.345.678-9" value={formData.rut} onChange={e => setFormData({...formData, rut: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">RUT</label>
+                                    <input required placeholder="12.345.678-9" value={formData.rut} onChange={e => setFormData({...formData, rut: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Centro Clínico</label>
-                                    <input required placeholder="Clínica AMIS" value={formData.hospital_name} onChange={e => setFormData({...formData, hospital_name: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
-                                </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Nombres</label>
-                                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Apellidos</label>
-                                    <input required value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Centro Clínico</label>
+                                    <input required placeholder="Clínica AMIS" value={formData.hospital_name} onChange={e => setFormData({...formData, hospital_name: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
                                 </div>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Teléfono (Validación Bot)</label>
-                                    <input required placeholder="+569..." value={formData.phone_number} onChange={e => setFormData({...formData, phone_number: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-mono text-success focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all font-bold" />
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Nombres</label>
+                                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Correo Clínico (Opcional)</label>
-                                    <input placeholder="dr@clinica.cl" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Apellidos</label>
+                                    <input required value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Teléfono (Validación Bot)</label>
+                                    <input required placeholder="+569..." value={formData.phone_number} onChange={e => setFormData({...formData, phone_number: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-mono text-success focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-bold" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Correo Clínico (Opcional)</label>
+                                    <input placeholder="dr@clinica.cl" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black tracking-widest uppercase text-prevenort-text/60">Especialidad</label>
-                                <input value={formData.specialty} onChange={e => setFormData({...formData, specialty: e.target.value})} className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-prevenort-primary focus:ring-1 focus:ring-prevenort-primary transition-all text-prevenort-text" />
+                                <label className="text-[10px] font-black tracking-widest uppercase text-brand-text/60">Especialidad</label>
+                                <input value={formData.specialty} onChange={e => setFormData({...formData, specialty: e.target.value})} className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all text-brand-text" />
                             </div>
 
                             <div className="pt-6">
-                                <button disabled={isProcessing} type="submit" className="w-full flex items-center justify-center gap-2 bg-prevenort-primary text-white p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-prevenort-primary/90 transition-all shadow-lg shadow-prevenort-primary/20 disabled:opacity-50">
+                                <button disabled={isProcessing} type="submit" className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-brand-primary/90 transition-all shadow-lg shadow-brand-primary/20 disabled:opacity-50">
                                     {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <DatabaseBackup className="w-5 h-5" />}
                                     Almacenar en Supabase
                                 </button>

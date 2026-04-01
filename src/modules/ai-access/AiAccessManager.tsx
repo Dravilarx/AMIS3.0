@@ -186,10 +186,10 @@ export const AiAccessManager: React.FC = () => {
               <UserCheck className="w-7 h-7 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-prevenort-text tracking-tight uppercase leading-none">
+              <h1 className="text-3xl font-black text-brand-text tracking-tight uppercase leading-none">
                 Gestor de Accesos IA
               </h1>
-              <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.3em]">
+              <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em]">
                 Directorio Médico · Whitelisting & Control de Identidades AMIS
               </p>
             </div>
@@ -210,8 +210,8 @@ export const AiAccessManager: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-premium p-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest">Directorio</p>
-            <h3 className="text-3xl font-black text-prevenort-text">{totalMedicos}</h3>
+            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Directorio</p>
+            <h3 className="text-3xl font-black text-brand-text">{totalMedicos}</h3>
           </div>
           <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
             <Users className="w-5 h-5 text-cyan-400" />
@@ -219,7 +219,7 @@ export const AiAccessManager: React.FC = () => {
         </div>
         <div className="card-premium p-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest">Activos</p>
+            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Activos</p>
             <h3 className="text-3xl font-black text-success">{medicosActivos}</h3>
           </div>
           <div className="p-3 bg-success/10 rounded-xl border border-success/20">
@@ -228,7 +228,7 @@ export const AiAccessManager: React.FC = () => {
         </div>
         <div className="card-premium p-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest">Bloqueados</p>
+            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Bloqueados</p>
             <h3 className="text-3xl font-black text-danger">{medicosInactivos}</h3>
           </div>
           <div className="p-3 bg-danger/10 rounded-xl border border-danger/20">
@@ -237,7 +237,7 @@ export const AiAccessManager: React.FC = () => {
         </div>
         <div className="card-premium p-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest">Clínicas</p>
+            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Clínicas</p>
             <h3 className="text-3xl font-black text-info">{clinicasCubiertas}</h3>
           </div>
           <div className="p-3 bg-info/10 rounded-xl border border-info/20">
@@ -248,16 +248,16 @@ export const AiAccessManager: React.FC = () => {
 
       {/* === IMPORTACIÓN MASIVA === */}
       <div className="card-premium !p-0 overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-cyan-500/5 to-transparent border-b border-prevenort-border">
+        <div className="p-6 bg-gradient-to-r from-cyan-500/5 to-transparent border-b border-brand-border">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2 bg-cyan-500/15 rounded-xl border border-cyan-500/20">
               <FileSpreadsheet className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-prevenort-text uppercase tracking-wide">
+              <h3 className="text-sm font-black text-brand-text uppercase tracking-wide">
                 Importación de Nómina Clínica
               </h3>
-              <p className="text-[9px] text-prevenort-text/30 font-bold uppercase tracking-widest">
+              <p className="text-[9px] text-brand-text/30 font-bold uppercase tracking-widest">
                 Onboarding B2B · Carga masiva de médicos acreditados
               </p>
             </div>
@@ -267,28 +267,28 @@ export const AiAccessManager: React.FC = () => {
           <div className="flex flex-col md:flex-row items-stretch gap-4">
             {/* Selector de Clínica */}
             <div className="flex-1">
-              <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+              <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                 Red / Cliente destino
               </label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20" />
                 <select
                   value={importClinica}
                   onChange={(e) => setImportClinica(e.target.value)}
-                  className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl pl-10 pr-10 py-3.5 text-sm text-prevenort-text font-bold appearance-none focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all cursor-pointer"
+                  className="w-full bg-brand-bg border border-brand-border rounded-xl pl-10 pr-10 py-3.5 text-sm text-brand-text font-bold appearance-none focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all cursor-pointer"
                 >
                   <option value="">Selecciona una clínica...</option>
                   {CLINICAS_DISPONIBLES.map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20 pointer-events-none" />
               </div>
             </div>
 
             {/* Dropzone de Excel */}
             <div className="flex-1">
-              <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+              <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                 Archivo de nómina
               </label>
               <div
@@ -296,31 +296,31 @@ export const AiAccessManager: React.FC = () => {
                 className={cn(
                   "relative border-2 border-dashed rounded-xl p-3.5 transition-all cursor-pointer group flex items-center gap-4",
                   importClinica
-                    ? "border-cyan-500/30 hover:border-cyan-500 hover:bg-cyan-500/5 bg-prevenort-bg"
-                    : "border-prevenort-border bg-prevenort-bg/50 opacity-60"
+                    ? "border-cyan-500/30 hover:border-cyan-500 hover:bg-cyan-500/5 bg-brand-bg"
+                    : "border-brand-border bg-brand-bg/50 opacity-60"
                 )}
               >
                 <div className={cn(
                   "p-3 rounded-xl transition-all flex-shrink-0",
                   importClinica
                     ? "bg-cyan-500/10 group-hover:bg-cyan-500/20"
-                    : "bg-prevenort-surface"
+                    : "bg-brand-surface"
                 )}>
                   <Upload className={cn(
                     "w-6 h-6 transition-colors",
                     importClinica
                       ? "text-cyan-400 group-hover:animate-bounce"
-                      : "text-prevenort-text/20"
+                      : "text-brand-text/20"
                   )} />
                 </div>
                 <div>
                   <p className={cn(
                     "text-xs font-black uppercase tracking-tight",
-                    importClinica ? "text-prevenort-text" : "text-prevenort-text/30"
+                    importClinica ? "text-brand-text" : "text-brand-text/30"
                   )}>
                     Importar Excel/CSV de Médicos Acreditados
                   </p>
-                  <p className="text-[9px] text-prevenort-text/30 mt-0.5">
+                  <p className="text-[9px] text-brand-text/30 mt-0.5">
                     Formatos: .xlsx, .xls, .csv · Columnas: Nombre, RUT, Teléfono
                   </p>
                 </div>
@@ -329,7 +329,7 @@ export const AiAccessManager: React.FC = () => {
           </div>
 
           {/* Info de seguridad */}
-          <div className="mt-4 flex items-center gap-2 text-[9px] text-prevenort-text/25">
+          <div className="mt-4 flex items-center gap-2 text-[9px] text-brand-text/25">
             <Shield className="w-3 h-3 flex-shrink-0" />
             <span>Los médicos importados quedarán en estado <strong className="text-cyan-400">Activo</strong> y serán verificados por WhatsApp antes de acceder al bot.</span>
           </div>
@@ -339,26 +339,26 @@ export const AiAccessManager: React.FC = () => {
       {/* === FILTROS + BUSCADOR === */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
         <div className="relative flex-1 min-w-[250px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre, RUT o teléfono..."
-            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl pl-11 pr-4 py-3 text-sm text-prevenort-text focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/10 transition-all"
+            className="w-full bg-brand-surface border border-brand-border rounded-xl pl-11 pr-4 py-3 text-sm text-brand-text focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/10 transition-all"
           />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-prevenort-text/20" />
-            <span className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest">Filtros:</span>
+            <Filter className="w-3.5 h-3.5 text-brand-text/20" />
+            <span className="text-[9px] font-black text-brand-text/30 uppercase tracking-widest">Filtros:</span>
           </div>
 
           {/* Filtro Rol */}
           <select
             value={filterRol}
             onChange={(e) => setFilterRol(e.target.value as MedicoRol | 'todos')}
-            className="bg-prevenort-surface border border-prevenort-border rounded-lg px-3 py-2 text-[11px] text-prevenort-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
+            className="bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-[11px] text-brand-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
           >
             <option value="todos">Todos los Roles</option>
             <option value="institucional">Institucional</option>
@@ -369,7 +369,7 @@ export const AiAccessManager: React.FC = () => {
           <select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value as 'todos' | 'activo' | 'inactivo')}
-            className="bg-prevenort-surface border border-prevenort-border rounded-lg px-3 py-2 text-[11px] text-prevenort-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
+            className="bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-[11px] text-brand-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
           >
             <option value="todos">Todos los Estados</option>
             <option value="activo">Activos</option>
@@ -380,7 +380,7 @@ export const AiAccessManager: React.FC = () => {
           <select
             value={filterClinica}
             onChange={(e) => setFilterClinica(e.target.value)}
-            className="bg-prevenort-surface border border-prevenort-border rounded-lg px-3 py-2 text-[11px] text-prevenort-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
+            className="bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-[11px] text-brand-text font-bold appearance-none focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer pr-8"
           >
             <option value="todas">Todas las Clínicas</option>
             {CLINICAS_DISPONIBLES.map(c => (
@@ -391,26 +391,26 @@ export const AiAccessManager: React.FC = () => {
       </div>
 
       {/* === TABLA DE IDENTIDADES === */}
-      <div className="bg-prevenort-surface border border-prevenort-border rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+      <div className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-prevenort-border bg-prevenort-bg/30">
-              <th className="px-5 py-4 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest whitespace-nowrap">
+            <tr className="border-b border-brand-border bg-brand-bg/30">
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">
                 Profesional
               </th>
-              <th className="px-5 py-4 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest whitespace-nowrap">
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">
                 <div className="flex items-center gap-1.5">
                   <Phone className="w-3 h-3" />
                   Contacto / WhatsApp
                 </div>
               </th>
-              <th className="px-5 py-4 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest whitespace-nowrap">
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">
                 Clínicas Asociadas
               </th>
-              <th className="px-5 py-4 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest whitespace-nowrap text-center">
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap text-center">
                 Rol
               </th>
-              <th className="px-5 py-4 text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest whitespace-nowrap text-center">
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap text-center">
                 <div className="flex items-center gap-1.5 justify-center">
                   <Shield className="w-3 h-3" />
                   Estado de Acceso
@@ -418,13 +418,13 @@ export const AiAccessManager: React.FC = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-prevenort-border">
+          <tbody className="divide-y divide-brand-border">
             {filteredMedicos.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <Users className="w-12 h-12 text-prevenort-text/10" />
-                    <p className="text-[11px] text-prevenort-text/30 font-bold">
+                    <Users className="w-12 h-12 text-brand-text/10" />
+                    <p className="text-[11px] text-brand-text/30 font-bold">
                       {searchTerm || filterRol !== 'todos' || filterEstado !== 'todos' || filterClinica !== 'todas'
                         ? 'No hay profesionales que coincidan con los filtros'
                         : 'El directorio está vacío. Importa o agrega médicos para comenzar.'}
@@ -448,17 +448,17 @@ export const AiAccessManager: React.FC = () => {
                         "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black border transition-colors flex-shrink-0",
                         medico.activo
                           ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
-                          : "bg-prevenort-surface text-prevenort-text/20 border-prevenort-border"
+                          : "bg-brand-surface text-brand-text/20 border-brand-border"
                       )}>
                         {medico.nombre.split(' ').filter((_,i) => i === 0 || i === 1).map(w => w[0]).join('')}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-prevenort-text/90 group-hover:text-cyan-400 transition-colors">
+                        <p className="text-xs font-bold text-brand-text/90 group-hover:text-cyan-400 transition-colors">
                           {medico.nombre}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Hash className="w-2.5 h-2.5 text-prevenort-text/20" />
-                          <span className="text-[10px] text-prevenort-text/30 font-mono">{medico.rut}</span>
+                          <Hash className="w-2.5 h-2.5 text-brand-text/20" />
+                          <span className="text-[10px] text-brand-text/30 font-mono">{medico.rut}</span>
                         </div>
                       </div>
                     </div>
@@ -471,7 +471,7 @@ export const AiAccessManager: React.FC = () => {
                         <Phone className="w-3.5 h-3.5 text-success" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-prevenort-text/80 font-mono">{medico.telefono}</p>
+                        <p className="text-xs font-bold text-brand-text/80 font-mono">{medico.telefono}</p>
                         <p className="text-[9px] text-success/60 font-bold uppercase tracking-widest">WhatsApp</p>
                       </div>
                     </div>
@@ -481,7 +481,7 @@ export const AiAccessManager: React.FC = () => {
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-1.5">
                       {medico.clinicas.length === 0 ? (
-                        <span className="text-[9px] text-prevenort-text/20 italic flex items-center gap-1">
+                        <span className="text-[9px] text-brand-text/20 italic flex items-center gap-1">
                           <Globe className="w-3 h-3" />
                           Solo acceso público
                         </span>
@@ -501,7 +501,7 @@ export const AiAccessManager: React.FC = () => {
                     <span className={cn(
                       "inline-flex items-center gap-1.5 text-[8px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border",
                       medico.rol === 'institucional'
-                        ? "bg-prevenort-primary/10 text-prevenort-primary border-prevenort-primary/20"
+                        ? "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
                         : "bg-purple-500/10 text-purple-400 border-purple-500/20"
                     )}>
                       {medico.rol === 'institucional' ? (
@@ -539,11 +539,11 @@ export const AiAccessManager: React.FC = () => {
         </table>
 
         {/* Footer de tabla */}
-        <div className="px-5 py-3 border-t border-prevenort-border bg-prevenort-bg/20 flex items-center justify-between">
-          <span className="text-[10px] text-prevenort-text/25 font-bold">
+        <div className="px-5 py-3 border-t border-brand-border bg-brand-bg/20 flex items-center justify-between">
+          <span className="text-[10px] text-brand-text/25 font-bold">
             {filteredMedicos.length} de {medicos.length} profesionales
           </span>
-          <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/20">
+          <div className="flex items-center gap-1.5 text-[9px] text-brand-text/20">
             <Shield className="w-3 h-3" />
             <span>El estado de acceso se aplica en <strong className="text-cyan-400">tiempo real</strong> al motor del bot omnicanal</span>
           </div>
@@ -553,26 +553,26 @@ export const AiAccessManager: React.FC = () => {
       {/* === MODAL: AÑADIR MÉDICO === */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-lg bg-prevenort-surface border border-prevenort-border rounded-3xl shadow-2xl shadow-cyan-500/10 animate-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+          <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-3xl shadow-2xl shadow-cyan-500/10 animate-in slide-in-from-bottom-4 duration-500 overflow-hidden">
             {/* Modal Header */}
-            <div className="p-6 border-b border-prevenort-border bg-gradient-to-r from-cyan-500/10 to-transparent">
+            <div className="p-6 border-b border-brand-border bg-gradient-to-r from-cyan-500/10 to-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-cyan-500/20 rounded-xl border border-cyan-500/30">
                     <UserPlus className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-prevenort-text uppercase tracking-tight">
+                    <h3 className="text-lg font-black text-brand-text uppercase tracking-tight">
                       Registrar Médico
                     </h3>
-                    <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-widest">
+                    <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-widest">
                       Alta manual en el directorio
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => { setShowAddModal(false); resetForm(); }}
-                  className="p-2 rounded-xl text-prevenort-text/30 hover:text-prevenort-text hover:bg-prevenort-bg transition-all"
+                  className="p-2 rounded-xl text-brand-text/30 hover:text-brand-text hover:bg-brand-bg transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -582,7 +582,7 @@ export const AiAccessManager: React.FC = () => {
             <div className="p-6 space-y-5">
               {/* Nombre */}
               <div>
-                <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+                <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                   Nombre completo del Profesional
                 </label>
                 <input
@@ -590,14 +590,14 @@ export const AiAccessManager: React.FC = () => {
                   value={formNombre}
                   onChange={(e) => setFormNombre(e.target.value)}
                   placeholder="Dr. Juan Pérez Soto"
-                  className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-bold focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-prevenort-text/20"
+                  className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-bold focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-brand-text/20"
                 />
               </div>
 
               {/* RUT + Teléfono */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+                  <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                     RUT
                   </label>
                   <input
@@ -605,11 +605,11 @@ export const AiAccessManager: React.FC = () => {
                     value={formRut}
                     onChange={(e) => setFormRut(e.target.value)}
                     placeholder="12.345.678-9"
-                    className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-mono focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-prevenort-text/20"
+                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-mono focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-brand-text/20"
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+                  <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                     WhatsApp / Celular
                   </label>
                   <input
@@ -617,14 +617,14 @@ export const AiAccessManager: React.FC = () => {
                     value={formTelefono}
                     onChange={(e) => setFormTelefono(e.target.value)}
                     placeholder="+569 9918 8701"
-                    className="w-full bg-prevenort-bg border border-prevenort-border rounded-xl px-4 py-3 text-sm text-prevenort-text font-mono focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-prevenort-text/20"
+                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text font-mono focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 transition-all placeholder:text-brand-text/20"
                   />
                 </div>
               </div>
 
               {/* Rol */}
               <div>
-                <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+                <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                   Tipo de Acceso
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -633,8 +633,8 @@ export const AiAccessManager: React.FC = () => {
                     className={cn(
                       "px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 justify-center border",
                       formRol === 'institucional'
-                        ? "bg-prevenort-primary/15 text-prevenort-primary border-prevenort-primary/30 shadow-lg shadow-prevenort-primary/10"
-                        : "bg-prevenort-bg border-prevenort-border text-prevenort-text/40 hover:border-prevenort-text/20"
+                        ? "bg-brand-primary/15 text-brand-primary border-brand-primary/30 shadow-lg shadow-brand-primary/10"
+                        : "bg-brand-bg border-brand-border text-brand-text/40 hover:border-brand-text/20"
                     )}
                   >
                     <Briefcase className="w-4 h-4" />
@@ -646,7 +646,7 @@ export const AiAccessManager: React.FC = () => {
                       "px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 justify-center border",
                       formRol === 'independiente'
                         ? "bg-purple-500/15 text-purple-400 border-purple-500/30 shadow-lg shadow-purple-500/10"
-                        : "bg-prevenort-bg border-prevenort-border text-prevenort-text/40 hover:border-prevenort-text/20"
+                        : "bg-brand-bg border-brand-border text-brand-text/40 hover:border-brand-text/20"
                     )}
                   >
                     <Globe className="w-4 h-4" />
@@ -658,7 +658,7 @@ export const AiAccessManager: React.FC = () => {
               {/* Clínicas (solo si Institucional) */}
               {formRol === 'institucional' && (
                 <div>
-                  <label className="text-[9px] font-black text-prevenort-text/40 uppercase tracking-widest mb-2 block">
+                  <label className="text-[9px] font-black text-brand-text/40 uppercase tracking-widest mb-2 block">
                     Clínicas Asociadas
                   </label>
                   <div className="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto custom-scrollbar">
@@ -672,14 +672,14 @@ export const AiAccessManager: React.FC = () => {
                           "text-left px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-2 border",
                           formClinicas.includes(clinica)
                             ? "bg-info/15 text-info border-info/30"
-                            : "text-prevenort-text/40 border-prevenort-border hover:bg-prevenort-bg hover:text-prevenort-text"
+                            : "text-brand-text/40 border-brand-border hover:bg-brand-bg hover:text-brand-text"
                         )}
                       >
                         <div className={cn(
                           "w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0",
                           formClinicas.includes(clinica)
                             ? "bg-info border-info"
-                            : "border-prevenort-border"
+                            : "border-brand-border"
                         )}>
                           {formClinicas.includes(clinica) && <CheckCircle2 className="w-3 h-3 text-white" />}
                         </div>
@@ -693,15 +693,15 @@ export const AiAccessManager: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-prevenort-border bg-prevenort-bg/30 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[9px] text-prevenort-text/25">
+            <div className="p-6 border-t border-brand-border bg-brand-bg/30 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[9px] text-brand-text/25">
                 <AlertCircle className="w-3 h-3" />
                 <span>El médico recibirá un mensaje de verificación por WhatsApp</span>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowAddModal(false); resetForm(); }}
-                  className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-prevenort-text/50 border border-prevenort-border hover:bg-prevenort-surface transition-all"
+                  className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-text/50 border border-brand-border hover:bg-brand-surface transition-all"
                 >
                   Cancelar
                 </button>
@@ -712,7 +712,7 @@ export const AiAccessManager: React.FC = () => {
                     "flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg",
                     formNombre.trim() && formRut.trim() && formTelefono.trim()
                       ? "bg-cyan-600 text-white hover:bg-cyan-500 shadow-cyan-500/25 border border-cyan-400/30"
-                      : "bg-prevenort-surface text-prevenort-text/20 border border-prevenort-border cursor-not-allowed shadow-none"
+                      : "bg-brand-surface text-brand-text/20 border border-brand-border cursor-not-allowed shadow-none"
                   )}
                 >
                   <UserPlus className="w-3.5 h-3.5" />

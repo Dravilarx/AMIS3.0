@@ -338,7 +338,7 @@ export const DispatchCenter: React.FC = () => {
       case 'reassigned':
         return { color: 'text-purple-400 bg-purple-400/15', label: 'Reasignado' };
       default:
-        return { color: 'text-prevenort-text/40 bg-prevenort-text/5', label: status };
+        return { color: 'text-brand-text/40 bg-brand-text/5', label: status };
     }
   };
 
@@ -348,7 +348,7 @@ export const DispatchCenter: React.FC = () => {
       <div className="max-w-[1600px] mx-auto flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
           <RefreshCw className="w-8 h-8 text-rose-400 mx-auto animate-spin" />
-          <p className="text-sm text-prevenort-text/40 font-bold">Cargando Centro de Despacho...</p>
+          <p className="text-sm text-brand-text/40 font-bold">Cargando Centro de Despacho...</p>
         </div>
       </div>
     );
@@ -364,10 +364,10 @@ export const DispatchCenter: React.FC = () => {
               <Headphones className="w-7 h-7 text-rose-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-prevenort-text tracking-tight uppercase leading-none">
+              <h1 className="text-3xl font-black text-brand-text tracking-tight uppercase leading-none">
                 Centro de Despacho
               </h1>
-              <p className="text-[10px] text-prevenort-text/40 font-bold uppercase tracking-[0.3em]">
+              <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em]">
                 Torre de Control · Monitoreo en Tiempo Real
               </p>
             </div>
@@ -381,7 +381,7 @@ export const DispatchCenter: React.FC = () => {
               "flex items-center gap-2 px-3 py-2.5 rounded-2xl border transition-all",
               soundEnabled
                 ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                : "bg-prevenort-surface border-prevenort-border text-prevenort-text/30"
+                : "bg-brand-surface border-brand-border text-brand-text/30"
             )}
           >
             <Volume2 className="w-3.5 h-3.5" />
@@ -409,18 +409,18 @@ export const DispatchCenter: React.FC = () => {
           </div>
 
           {/* Live badge */}
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-prevenort-surface border border-prevenort-border rounded-2xl">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-brand-surface border border-brand-border rounded-2xl">
             <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-            <span className="text-[10px] font-black text-prevenort-text/60 uppercase tracking-widest">En vivo</span>
+            <span className="text-[10px] font-black text-brand-text/60 uppercase tracking-widest">En vivo</span>
           </div>
 
           {/* Refresh button */}
           <button
             onClick={() => { fetchCases(); fetchRadiologists(); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-prevenort-surface border border-prevenort-border rounded-2xl hover:bg-prevenort-bg transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-surface border border-brand-border rounded-2xl hover:bg-brand-bg transition-all"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-prevenort-text/40" />
-            <span className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">
+            <RefreshCw className="w-3.5 h-3.5 text-brand-text/40" />
+            <span className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">
               {lastRefresh.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </button>
@@ -436,7 +436,7 @@ export const DispatchCenter: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="card-premium p-4 flex items-center justify-between">
           <div>
-            <p className="text-[9px] text-prevenort-text/40 uppercase font-black tracking-widest">Urgencias</p>
+            <p className="text-[9px] text-brand-text/40 uppercase font-black tracking-widest">Urgencias</p>
             <h3 className="text-2xl font-black text-danger">{urgentCases.length}</h3>
           </div>
           <div className="p-2.5 bg-danger/10 rounded-xl border border-danger/20">
@@ -445,7 +445,7 @@ export const DispatchCenter: React.FC = () => {
         </div>
         <div className="card-premium p-4 flex items-center justify-between">
           <div>
-            <p className="text-[9px] text-prevenort-text/40 uppercase font-black tracking-widest">En Curso</p>
+            <p className="text-[9px] text-brand-text/40 uppercase font-black tracking-widest">En Curso</p>
             <h3 className="text-2xl font-black text-warning">{activeCases.length}</h3>
           </div>
           <div className="p-2.5 bg-warning/10 rounded-xl border border-warning/20">
@@ -454,7 +454,7 @@ export const DispatchCenter: React.FC = () => {
         </div>
         <div className="card-premium p-4 flex items-center justify-between">
           <div>
-            <p className="text-[9px] text-prevenort-text/40 uppercase font-black tracking-widest">Resueltos Hoy</p>
+            <p className="text-[9px] text-brand-text/40 uppercase font-black tracking-widest">Resueltos Hoy</p>
             <h3 className="text-2xl font-black text-success">{resolvedCases.length}</h3>
           </div>
           <div className="p-2.5 bg-success/10 rounded-xl border border-success/20">
@@ -463,8 +463,8 @@ export const DispatchCenter: React.FC = () => {
         </div>
         <div className="card-premium p-4 flex items-center justify-between">
           <div>
-            <p className="text-[9px] text-prevenort-text/40 uppercase font-black tracking-widest">TAT Promedio</p>
-            <h3 className="text-2xl font-black text-info">{avgSlaActive}<span className="text-sm text-prevenort-text/30 ml-1">min</span></h3>
+            <p className="text-[9px] text-brand-text/40 uppercase font-black tracking-widest">TAT Promedio</p>
+            <h3 className="text-2xl font-black text-info">{avgSlaActive}<span className="text-sm text-brand-text/30 ml-1">min</span></h3>
           </div>
           <div className="p-2.5 bg-info/10 rounded-xl border border-info/20">
             <Zap className="w-4 h-4 text-info" />
@@ -472,8 +472,8 @@ export const DispatchCenter: React.FC = () => {
         </div>
         <div className="card-premium p-4 flex items-center justify-between">
           <div>
-            <p className="text-[9px] text-prevenort-text/40 uppercase font-black tracking-widest">Total Hoy</p>
-            <h3 className="text-2xl font-black text-prevenort-text">{cases.length}</h3>
+            <p className="text-[9px] text-brand-text/40 uppercase font-black tracking-widest">Total Hoy</p>
+            <h3 className="text-2xl font-black text-brand-text">{cases.length}</h3>
           </div>
           <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20">
             <MessageCircle className="w-4 h-4 text-purple-400" />
@@ -484,9 +484,9 @@ export const DispatchCenter: React.FC = () => {
       {/* === Empty state === */}
       {cases.length === 0 && (
         <div className="card-premium p-16 text-center">
-          <Headphones className="w-16 h-16 text-prevenort-text/10 mx-auto mb-4" />
-          <h3 className="text-lg font-black text-prevenort-text/30 uppercase mb-2">Sin interconsultas activas</h3>
-          <p className="text-sm text-prevenort-text/20 max-w-md mx-auto">
+          <Headphones className="w-16 h-16 text-brand-text/10 mx-auto mb-4" />
+          <h3 className="text-lg font-black text-brand-text/30 uppercase mb-2">Sin interconsultas activas</h3>
+          <p className="text-sm text-brand-text/20 max-w-md mx-auto">
             El Centro de Despacho está escuchando. Cuando se genere una nueva interconsulta vía la Edge Function, aparecerá aquí automáticamente.
           </p>
           <div className="flex items-center justify-center gap-2 mt-6 text-success/40">
@@ -510,7 +510,7 @@ export const DispatchCenter: React.FC = () => {
               {urgentCases.length === 0 ? (
                 <div className="card-premium p-8 text-center">
                   <CheckCircle2 className="w-8 h-8 text-success/30 mx-auto mb-2" />
-                  <p className="text-[11px] text-prevenort-text/30 font-bold">Sin urgencias pendientes</p>
+                  <p className="text-[11px] text-brand-text/30 font-bold">Sin urgencias pendientes</p>
                 </div>
               ) : (
                 urgentCases.map(c => {
@@ -530,13 +530,13 @@ export const DispatchCenter: React.FC = () => {
                           <span className={cn("text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest", badge.color)}>{badge.label}</span>
                           <span className="text-[9px] font-black text-danger animate-pulse">⏱ {mins} min</span>
                         </div>
-                        <p className="text-[8px] font-mono text-prevenort-text/30 mb-1">{c.case_id}</p>
-                        <p className="text-xs font-bold text-prevenort-text mb-1 group-hover:text-danger transition-colors">{c.paciente_nombre}</p>
-                        <p className="text-[10px] text-prevenort-text/40">{c.estudio_tipo}</p>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-prevenort-border">
+                        <p className="text-[8px] font-mono text-brand-text/30 mb-1">{c.case_id}</p>
+                        <p className="text-xs font-bold text-brand-text mb-1 group-hover:text-danger transition-colors">{c.paciente_nombre}</p>
+                        <p className="text-[10px] text-brand-text/40">{c.estudio_tipo}</p>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-brand-border">
                           <div className="flex items-center gap-1.5">
-                            <User className="w-3 h-3 text-prevenort-text/20" />
-                            <span className="text-[9px] text-prevenort-text/40">{c.referente_nombre}</span>
+                            <User className="w-3 h-3 text-brand-text/20" />
+                            <span className="text-[9px] text-brand-text/40">{c.referente_nombre}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-danger" />
@@ -561,8 +561,8 @@ export const DispatchCenter: React.FC = () => {
             <div className="space-y-3">
               {activeCases.length === 0 ? (
                 <div className="card-premium p-8 text-center">
-                  <Clock className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
-                  <p className="text-[11px] text-prevenort-text/30 font-bold">Sin casos activos</p>
+                  <Clock className="w-8 h-8 text-brand-text/10 mx-auto mb-2" />
+                  <p className="text-[11px] text-brand-text/30 font-bold">Sin casos activos</p>
                 </div>
               ) : (
                 activeCases.map(c => {
@@ -583,15 +583,15 @@ export const DispatchCenter: React.FC = () => {
                       <div className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <span className={cn("text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest", badge.color)}>{badge.label}</span>
-                          <span className={cn("text-[9px] font-bold", slaExpired ? "text-danger" : "text-prevenort-text/30")}>{mins} min</span>
+                          <span className={cn("text-[9px] font-bold", slaExpired ? "text-danger" : "text-brand-text/30")}>{mins} min</span>
                         </div>
-                        <p className="text-[8px] font-mono text-prevenort-text/30 mb-1">{c.case_id}</p>
-                        <p className="text-xs font-bold text-prevenort-text mb-1 group-hover:text-warning transition-colors">{c.paciente_nombre}</p>
-                        <p className="text-[10px] text-prevenort-text/40">{c.estudio_tipo}</p>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-prevenort-border">
+                        <p className="text-[8px] font-mono text-brand-text/30 mb-1">{c.case_id}</p>
+                        <p className="text-xs font-bold text-brand-text mb-1 group-hover:text-warning transition-colors">{c.paciente_nombre}</p>
+                        <p className="text-[10px] text-brand-text/40">{c.estudio_tipo}</p>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-brand-border">
                           <div className="flex items-center gap-1.5">
-                            <User className="w-3 h-3 text-prevenort-text/20" />
-                            <span className="text-[9px] text-prevenort-text/40">{c.referente_nombre}</span>
+                            <User className="w-3 h-3 text-brand-text/20" />
+                            <span className="text-[9px] text-brand-text/40">{c.referente_nombre}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className={cn("w-2 h-2 rounded-full", c.radiologo_nombre ? "bg-success" : "bg-warning")} />
@@ -616,8 +616,8 @@ export const DispatchCenter: React.FC = () => {
             <div className="space-y-3">
               {resolvedCases.length === 0 ? (
                 <div className="card-premium p-8 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
-                  <p className="text-[11px] text-prevenort-text/30 font-bold">Sin resoluciones aún</p>
+                  <CheckCircle2 className="w-8 h-8 text-brand-text/10 mx-auto mb-2" />
+                  <p className="text-[11px] text-brand-text/30 font-bold">Sin resoluciones aún</p>
                 </div>
               ) : (
                 resolvedCases.map(c => {
@@ -638,11 +638,11 @@ export const DispatchCenter: React.FC = () => {
                           <span className="text-[8px] font-black text-success bg-success/15 px-2 py-0.5 rounded uppercase tracking-widest">Resuelto</span>
                           <span className="text-[9px] font-bold text-success">{resolvedMin} min ✓</span>
                         </div>
-                        <p className="text-[8px] font-mono text-prevenort-text/20 mb-1">{c.case_id}</p>
-                        <p className="text-xs font-bold text-prevenort-text/60 mb-1">{c.paciente_nombre}</p>
-                        <p className="text-[10px] text-prevenort-text/30">{c.estudio_tipo}</p>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-prevenort-border">
-                          <span className="text-[9px] text-prevenort-text/30">{c.referente_nombre}</span>
+                        <p className="text-[8px] font-mono text-brand-text/20 mb-1">{c.case_id}</p>
+                        <p className="text-xs font-bold text-brand-text/60 mb-1">{c.paciente_nombre}</p>
+                        <p className="text-[10px] text-brand-text/30">{c.estudio_tipo}</p>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-brand-border">
+                          <span className="text-[9px] text-brand-text/30">{c.referente_nombre}</span>
                           <span className="text-[9px] text-success/60">{c.radiologo_nombre}</span>
                         </div>
                       </div>
@@ -660,10 +660,10 @@ export const DispatchCenter: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="flex-1" onClick={() => setSelectedCase(null)} />
 
-          <div className="w-full max-w-xl bg-prevenort-surface border-l border-prevenort-border shadow-2xl shadow-black/50 animate-in slide-in-from-right-8 duration-500 flex flex-col overflow-hidden">
+          <div className="w-full max-w-xl bg-brand-surface border-l border-brand-border shadow-2xl shadow-black/50 animate-in slide-in-from-right-8 duration-500 flex flex-col overflow-hidden">
             {/* Panel Header */}
             <div className={cn(
-              "p-5 border-b border-prevenort-border flex-shrink-0",
+              "p-5 border-b border-brand-border flex-shrink-0",
               categorizeCase(selectedCase) === 'urgent' ? "bg-gradient-to-r from-danger/10 to-transparent" :
               categorizeCase(selectedCase) === 'active' ? "bg-gradient-to-r from-warning/10 to-transparent" :
               "bg-gradient-to-r from-success/10 to-transparent"
@@ -681,47 +681,47 @@ export const DispatchCenter: React.FC = () => {
                      <CheckCircle2 className="w-5 h-5 text-success" />}
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-prevenort-text uppercase tracking-tight">
+                    <h3 className="text-sm font-black text-brand-text uppercase tracking-tight">
                       {selectedCase.case_id}
                     </h3>
-                    <p className="text-[9px] text-prevenort-text/40 font-bold uppercase tracking-widest">
+                    <p className="text-[9px] text-brand-text/40 font-bold uppercase tracking-widest">
                       {getStatusBadge(selectedCase.status).label}
                     </p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedCase(null)} className="p-2 rounded-xl text-prevenort-text/30 hover:text-prevenort-text hover:bg-prevenort-bg transition-all">
+                <button onClick={() => setSelectedCase(null)} className="p-2 rounded-xl text-brand-text/30 hover:text-brand-text hover:bg-brand-bg transition-all">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Case Info Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-prevenort-bg rounded-xl border border-prevenort-border">
-                  <p className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest mb-1">Paciente</p>
-                  <p className="text-xs font-bold text-prevenort-text">{selectedCase.paciente_nombre}</p>
-                  <p className="text-[10px] text-prevenort-text/40 mt-0.5">{selectedCase.estudio_tipo}</p>
+                <div className="p-3 bg-brand-bg rounded-xl border border-brand-border">
+                  <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">Paciente</p>
+                  <p className="text-xs font-bold text-brand-text">{selectedCase.paciente_nombre}</p>
+                  <p className="text-[10px] text-brand-text/40 mt-0.5">{selectedCase.estudio_tipo}</p>
                 </div>
-                <div className="p-3 bg-prevenort-bg rounded-xl border border-prevenort-border">
-                  <p className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest mb-1">Referente</p>
-                  <p className="text-xs font-bold text-prevenort-text">{selectedCase.referente_nombre}</p>
+                <div className="p-3 bg-brand-bg rounded-xl border border-brand-border">
+                  <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">Referente</p>
+                  <p className="text-xs font-bold text-brand-text">{selectedCase.referente_nombre}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Building2 className="w-3 h-3 text-info" />
                     <span className="text-[10px] text-info">{selectedCase.referente_clinica}</span>
                   </div>
                 </div>
-                <div className="p-3 bg-prevenort-bg rounded-xl border border-prevenort-border">
-                  <p className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest mb-1">Radiólogo</p>
-                  <p className="text-xs font-bold text-prevenort-text">{selectedCase.radiologo_nombre || 'Sin asignar'}</p>
-                  <p className="text-[10px] text-prevenort-text/40 mt-0.5">
+                <div className="p-3 bg-brand-bg rounded-xl border border-brand-border">
+                  <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">Radiólogo</p>
+                  <p className="text-xs font-bold text-brand-text">{selectedCase.radiologo_nombre || 'Sin asignar'}</p>
+                  <p className="text-[10px] text-brand-text/40 mt-0.5">
                     {selectedCase.radiologo_telegram_chat_id ? '📱 Con Telegram' : '⚠️ Sin Telegram'}
                   </p>
                 </div>
-                <div className="p-3 bg-prevenort-bg rounded-xl border border-prevenort-border">
-                  <p className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest mb-1">SLA</p>
+                <div className="p-3 bg-brand-bg rounded-xl border border-brand-border">
+                  <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">SLA</p>
                   <p className={cn("text-xs font-black", isSlaPassed(selectedCase) ? "text-danger" : "text-success")}>
                     {selectedCase.sla_minutes} min
                   </p>
-                  <p className="text-[10px] text-prevenort-text/40 mt-0.5">
+                  <p className="text-[10px] text-brand-text/40 mt-0.5">
                     {isSlaPassed(selectedCase) ? '⚠️ SLA Vencido' : '✓ Dentro del SLA'}
                     {selectedCase.escalation_level > 0 && ` · Nivel ${selectedCase.escalation_level}`}
                   </p>
@@ -731,7 +731,7 @@ export const DispatchCenter: React.FC = () => {
               {/* Canales de despacho */}
               {selectedCase.dispatched_via && selectedCase.dispatched_via.length > 0 && (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest">Canales:</span>
+                  <span className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest">Canales:</span>
                   {selectedCase.dispatched_via.map((ch) => (
                     <span key={ch} className="text-[9px] font-bold text-info bg-info/10 px-2 py-0.5 rounded">
                       {ch === 'websocket' ? '📡 WebSocket' : '📱 Telegram'}
@@ -742,9 +742,9 @@ export const DispatchCenter: React.FC = () => {
 
               {/* Mensaje / consulta médica */}
               {selectedCase.message && (
-                <div className="mt-3 p-3 bg-prevenort-bg/50 border border-prevenort-border rounded-xl">
-                  <p className="text-[8px] font-black text-prevenort-text/30 uppercase tracking-widest mb-1">Consulta Médica</p>
-                  <p className="text-[11px] text-prevenort-text/70 leading-relaxed italic">"{selectedCase.message}"</p>
+                <div className="mt-3 p-3 bg-brand-bg/50 border border-brand-border rounded-xl">
+                  <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">Consulta Médica</p>
+                  <p className="text-[11px] text-brand-text/70 leading-relaxed italic">"{selectedCase.message}"</p>
                 </div>
               )}
 
@@ -765,7 +765,7 @@ export const DispatchCenter: React.FC = () => {
 
             {/* Reassign Button (for urgent/active) */}
             {categorizeCase(selectedCase) !== 'resolved' && (
-              <div className="p-4 border-b border-prevenort-border flex-shrink-0 bg-prevenort-bg/30 space-y-3">
+              <div className="p-4 border-b border-brand-border flex-shrink-0 bg-brand-bg/30 space-y-3">
                 {reassignSuccess ? (
                   <div className="flex items-center gap-3 p-4 bg-success/10 border border-success/20 rounded-xl animate-in fade-in duration-300">
                     <CheckCircle2 className="w-5 h-5 text-success" />
@@ -788,11 +788,11 @@ export const DispatchCenter: React.FC = () => {
 
                     {showReassignDropdown && (
                       <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                        <p className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest px-1">
+                        <p className="text-[9px] font-black text-brand-text/30 uppercase tracking-widest px-1">
                           Radiólogos disponibles — Selecciona destino:
                         </p>
                         {radiologists.length === 0 ? (
-                          <p className="text-[10px] text-prevenort-text/30 px-1 py-4 text-center">No hay radiólogos cargados</p>
+                          <p className="text-[10px] text-brand-text/30 px-1 py-4 text-center">No hay radiólogos cargados</p>
                         ) : (
                           radiologists
                             .filter((r) => r.id !== selectedCase.radiologo_id)
@@ -800,18 +800,18 @@ export const DispatchCenter: React.FC = () => {
                               <button
                                 key={rad.id}
                                 onClick={() => handleReassign(rad.id)}
-                                className="w-full flex items-center gap-3 p-3 bg-prevenort-surface border border-prevenort-border rounded-xl hover:border-success/40 hover:bg-success/5 transition-all group text-left"
+                                className="w-full flex items-center gap-3 p-3 bg-brand-surface border border-brand-border rounded-xl hover:border-success/40 hover:bg-success/5 transition-all group text-left"
                               >
                                 <div className="w-9 h-9 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center flex-shrink-0 group-hover:bg-success/20 transition-colors">
                                   <User className="w-4 h-4 text-success" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-prevenort-text group-hover:text-success transition-colors">{rad.nombre}</p>
-                                  <p className="text-[10px] text-prevenort-text/30">
+                                  <p className="text-xs font-bold text-brand-text group-hover:text-success transition-colors">{rad.nombre}</p>
+                                  <p className="text-[10px] text-brand-text/30">
                                     {rad.telegram_chat_id ? '📱 Con Telegram' : '⚠️ Sin Telegram'}
                                   </p>
                                 </div>
-                                <ChevronRight className="w-4 h-4 text-prevenort-text/10 group-hover:text-success transition-colors" />
+                                <ChevronRight className="w-4 h-4 text-brand-text/10 group-hover:text-success transition-colors" />
                               </button>
                             ))
                         )}
@@ -826,14 +826,14 @@ export const DispatchCenter: React.FC = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               <div className="p-4 pb-2">
                 <div className="flex items-center gap-2 mb-4">
-                  <Eye className="w-3.5 h-3.5 text-prevenort-text/30" />
-                  <p className="text-[9px] font-black text-prevenort-text/30 uppercase tracking-widest">Historial de Escalamiento · Audit Trail</p>
+                  <Eye className="w-3.5 h-3.5 text-brand-text/30" />
+                  <p className="text-[9px] font-black text-brand-text/30 uppercase tracking-widest">Historial de Escalamiento · Audit Trail</p>
                 </div>
 
                 {(!selectedCase.escalation_history || selectedCase.escalation_history.length === 0) ? (
                   <div className="p-8 text-center">
-                    <MessageCircle className="w-8 h-8 text-prevenort-text/10 mx-auto mb-2" />
-                    <p className="text-[11px] text-prevenort-text/30">Sin eventos de escalamiento</p>
+                    <MessageCircle className="w-8 h-8 text-brand-text/10 mx-auto mb-2" />
+                    <p className="text-[11px] text-brand-text/30">Sin eventos de escalamiento</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -868,25 +868,25 @@ export const DispatchCenter: React.FC = () => {
                                isReassign ? '🔄 Reasignación' :
                                '📡 Dispatch'}
                             </span>
-                            <span className="text-[8px] text-prevenort-text/20 ml-auto">
+                            <span className="text-[8px] text-brand-text/20 ml-auto">
                               {entry.timestamp ? new Date(String(entry.timestamp)).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
                             </span>
                           </div>
                           {Boolean(entry.channels) && (
-                            <p className="text-[10px] text-prevenort-text/50">
+                            <p className="text-[10px] text-brand-text/50">
                               Canales: {Array.isArray(entry.channels) ? (entry.channels as string[]).join(', ') : String(entry.channels as string)}
                             </p>
                           )}
                           {Boolean(entry.from_radiologist) && (
-                            <p className="text-[10px] text-prevenort-text/50">
+                            <p className="text-[10px] text-brand-text/50">
                               {String(entry.from_radiologist as string)} → {String((entry.to_radiologist as string) || '')}
                             </p>
                           )}
                           {entry.latency_ms != null && (
-                            <p className="text-[10px] text-prevenort-text/30">Latencia: {String(entry.latency_ms)}ms</p>
+                            <p className="text-[10px] text-brand-text/30">Latencia: {String(entry.latency_ms)}ms</p>
                           )}
                           {entry.minutes_elapsed != null && (
-                            <p className="text-[10px] text-prevenort-text/30">Tiempo transcurrido: {String(entry.minutes_elapsed)} min</p>
+                            <p className="text-[10px] text-brand-text/30">Tiempo transcurrido: {String(entry.minutes_elapsed)} min</p>
                           )}
                         </div>
                       );
@@ -897,8 +897,8 @@ export const DispatchCenter: React.FC = () => {
             </div>
 
             {/* Panel Footer */}
-            <div className="p-4 border-t border-prevenort-border bg-prevenort-bg/30 flex-shrink-0">
-              <div className="flex items-center gap-2 text-[9px] text-prevenort-text/20">
+            <div className="p-4 border-t border-brand-border bg-brand-bg/30 flex-shrink-0">
+              <div className="flex items-center gap-2 text-[9px] text-brand-text/20">
                 <Shield className="w-3 h-3" />
                 <span>Datos en vivo desde Supabase. Reasignaciones quedan registradas en el audit trail.</span>
               </div>

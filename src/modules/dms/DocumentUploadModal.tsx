@@ -116,14 +116,14 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-prevenort-bg border border-prevenort-border w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl overflow-y-auto max-h-[90vh]">
-                <header className="p-6 border-b border-prevenort-border flex items-center justify-between bg-gradient-to-r from-info/10 to-transparent">
+            <div className="bg-brand-bg border border-brand-border w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl overflow-y-auto max-h-[90vh]">
+                <header className="p-6 border-b border-brand-border flex items-center justify-between bg-gradient-to-r from-info/10 to-transparent">
                     <div>
-                        <h3 className="text-lg font-black text-prevenort-text/90 uppercase tracking-tighter">Subir Activo Digital</h3>
-                        <p className="text-[10px] text-prevenort-text/40 font-mono uppercase">Gestión de Expedientes e Inteligencia Documental</p>
+                        <h3 className="text-lg font-black text-brand-text/90 uppercase tracking-tighter">Subir Activo Digital</h3>
+                        <p className="text-[10px] text-brand-text/40 font-mono uppercase">Gestión de Expedientes e Inteligencia Documental</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-prevenort-surface rounded-full transition-colors">
-                        <X className="w-5 h-5 text-prevenort-text/40" />
+                    <button onClick={onClose} className="p-2 hover:bg-brand-surface rounded-full transition-colors">
+                        <X className="w-5 h-5 text-brand-text/40" />
                     </button>
                 </header>
 
@@ -131,7 +131,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                     {/* DROPZONE */}
                     <div className={cn(
                         "relative group border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center gap-3",
-                        file ? "border-emerald-500/30 bg-emerald-500/5" : "border-prevenort-border hover:border-info/30 hover:bg-prevenort-surface/50"
+                        file ? "border-emerald-500/30 bg-emerald-500/5" : "border-brand-border hover:border-info/30 hover:bg-brand-surface/50"
                     )}>
                         <input
                             type="file"
@@ -141,15 +141,15 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                         />
                         <div className={cn(
                             "w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
-                            file ? "bg-emerald-500/20 text-emerald-400" : "bg-prevenort-surface text-prevenort-text/20"
+                            file ? "bg-emerald-500/20 text-emerald-400" : "bg-brand-surface text-brand-text/20"
                         )}>
                             {file ? <FileText className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-bold text-prevenort-text/80">
+                            <p className="text-sm font-bold text-brand-text/80">
                                 {file ? file.name : "Arrastra o selecciona un archivo"}
                             </p>
-                            <p className="text-[10px] text-prevenort-text/30 uppercase mt-1">
+                            <p className="text-[10px] text-brand-text/30 uppercase mt-1">
                                 PDF, Office, Markdown, Imagen o Vídeo (Máx 100MB)
                             </p>
                         </div>
@@ -164,18 +164,18 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest ml-1">Nombre del Activo</label>
+                            <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Nombre del Activo</label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Ej: Contrato Marco 2026"
-                                className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2.5 text-sm text-prevenort-text focus:border-info/40 outline-none"
+                                className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text focus:border-info/40 outline-none"
                                 required
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest ml-1">Categoría</label>
+                            <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Categoría</label>
                             <SmartCombobox
                                 options={[
                                     { id: 'General', label: 'General' },
@@ -189,21 +189,21 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                                 placeholder="Seleccionar o escribir nueva..."
                                 storageKey="dms.recentCategories"
                                 allowCustomText={true}
-                                className="!py-2.5 !border !border-prevenort-border !rounded-xl"
+                                className="!py-2.5 !border !border-brand-border !rounded-xl"
                             />
                         </div>
                     </div>
 
                     {/* ALCANCE Y VISIBILIDAD */}
-                    <div className="space-y-4 pt-4 border-t border-prevenort-border">
+                    <div className="space-y-4 pt-4 border-t border-brand-border">
                         <div className="flex items-center gap-2 mb-2">
                             <Globe className="w-4 h-4 text-info" />
-                            <h4 className="text-xs font-black text-prevenort-text/60 uppercase tracking-widest">Configuración de Alcance</h4>
+                            <h4 className="text-xs font-black text-brand-text/60 uppercase tracking-widest">Configuración de Alcance</h4>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest ml-1">Visibilidad Principal</label>
+                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Visibilidad Principal</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
                                         { id: 'community', label: 'Comunidad', icon: Globe },
@@ -218,7 +218,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                                                 "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all",
                                                 visibility === opt.id
                                                     ? "bg-blue-600/20 border-blue-500/50 text-blue-400"
-                                                    : "bg-prevenort-surface border-prevenort-border text-prevenort-text/30 hover:bg-prevenort-primary/10"
+                                                    : "bg-brand-surface border-brand-border text-brand-text/30 hover:bg-brand-primary/10"
                                             )}
                                         >
                                             <opt.icon className="w-4 h-4" />
@@ -230,13 +230,13 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                             {visibility !== 'community' && (
                                 <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-                                    <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest ml-1">
+                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">
                                         Seleccionar {visibility === 'profile' ? 'Perfil/Cargo' : 'Usuario'}
                                     </label>
                                     <select
                                         value={targetId}
                                         onChange={(e) => setTargetId(e.target.value)}
-                                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2.5 text-sm text-prevenort-text outline-none"
+                                        className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none"
                                         required
                                     >
                                         <option value="">Seleccionar...</option>
@@ -259,13 +259,13 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest flex items-center gap-1 ml-1">
+                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest flex items-center gap-1 ml-1">
                                         <Briefcase className="w-3 h-3" /> Vincular a Proyecto
                                     </label>
                                     <select
                                         value={projectId}
                                         onChange={(e) => setProjectId(e.target.value)}
-                                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2.5 text-sm text-prevenort-text outline-none"
+                                        className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none"
                                     >
                                         <option value="">Ninguno (Opcional)</option>
                                         {projects?.map(p => (
@@ -275,13 +275,13 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] text-prevenort-text/40 uppercase font-black tracking-widest flex items-center gap-1 ml-1">
+                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest flex items-center gap-1 ml-1">
                                         <CheckSquare className="w-3 h-3" /> Vincular a Tarea
                                     </label>
                                     <select
                                         value={taskId}
                                         onChange={(e) => setTaskId(e.target.value)}
-                                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2.5 text-sm text-prevenort-text outline-none"
+                                        className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none"
                                     >
                                         <option value="">Ninguna (Opcional)</option>
                                         {tasks?.map(t => (
@@ -300,7 +300,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-6 py-3 border border-prevenort-border rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-prevenort-surface transition-all text-prevenort-text"
+                            className="flex-1 px-6 py-3 border border-brand-border rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-brand-surface transition-all text-brand-text"
                         >
                             Cancelar
                         </button>
@@ -310,8 +310,8 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                             className={cn(
                                 "flex-[2] px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
                                 file && !uploading
-                                    ? "bg-prevenort-primary hover:bg-prevenort-primary/90 shadow-lg shadow-prevenort-primary/20 text-white"
-                                    : "bg-prevenort-surface text-prevenort-text/20 cursor-not-allowed"
+                                    ? "bg-brand-primary hover:bg-brand-primary/90 shadow-lg shadow-brand-primary/20 text-white"
+                                    : "bg-brand-surface text-brand-text/20 cursor-not-allowed"
                             )}
                         >
                             {uploading ? (

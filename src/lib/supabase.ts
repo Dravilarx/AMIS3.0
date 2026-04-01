@@ -6,7 +6,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Inicialización limpia de Supabase
 export const supabase = createClient(
     supabaseUrl || '',
-    supabaseAnonKey || ''
+    supabaseAnonKey || '',
+    {
+        auth: {
+            persistSession: true,
+            storageKey: 'amis3-auth-token', // 🚀 Evita conflictos con Prevenort en localhost
+            autoRefreshToken: true,
+        }
+    }
 );
 
 // Log de advertencia solo para desarrollo

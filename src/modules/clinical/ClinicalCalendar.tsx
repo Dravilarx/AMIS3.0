@@ -43,66 +43,66 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
     return (
         <div className="space-y-6 animate-in fade-in duration-700">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between bg-prevenort-surface border border-prevenort-border p-5 rounded-[2rem] shadow-sm">
+            <div className="flex items-center justify-between bg-brand-surface border border-brand-border p-5 rounded-[2rem] shadow-sm">
                 <div className="flex items-center gap-8">
-                    <div className="flex bg-prevenort-bg rounded-2xl p-1 shadow-sm border border-prevenort-border">
+                    <div className="flex bg-brand-bg rounded-2xl p-1 shadow-sm border border-brand-border">
                         <button
                             onClick={() => setCurrentDate(d => addWeeks(d, -1))}
-                            className="p-2.5 hover:bg-prevenort-surface rounded-xl transition-all"
+                            className="p-2.5 hover:bg-brand-surface rounded-xl transition-all"
                         >
-                            <ChevronLeft className="w-5 h-5 text-prevenort-text/40 hover:text-prevenort-primary" />
+                            <ChevronLeft className="w-5 h-5 text-brand-text/40 hover:text-brand-primary" />
                         </button>
                         <button
                             onClick={() => setCurrentDate(new Date())}
-                            className="px-6 py-2 text-[10px] font-black uppercase text-prevenort-text/40 hover:text-prevenort-primary transition-all tracking-widest"
+                            className="px-6 py-2 text-[10px] font-black uppercase text-brand-text/40 hover:text-brand-primary transition-all tracking-widest"
                         >
                             Hoy
                         </button>
                         <button
                             onClick={() => setCurrentDate(d => addWeeks(d, 1))}
-                            className="p-2.5 hover:bg-prevenort-surface rounded-xl transition-all"
+                            className="p-2.5 hover:bg-brand-surface rounded-xl transition-all"
                         >
-                            <ChevronRight className="w-5 h-5 text-prevenort-text/40 hover:text-prevenort-primary" />
+                            <ChevronRight className="w-5 h-5 text-brand-text/40 hover:text-brand-primary" />
                         </button>
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black text-prevenort-text uppercase tracking-tight">
+                        <h3 className="text-2xl font-black text-brand-text uppercase tracking-tight">
                             {format(currentDate, 'MMMM yyyy', { locale: es })}
                         </h3>
-                        <p className="text-[10px] text-prevenort-primary font-black uppercase tracking-[0.2em] mt-1">Agenda Semanal de Red</p>
+                        <p className="text-[10px] text-brand-primary font-black uppercase tracking-[0.2em] mt-1">Agenda Semanal de Red</p>
                     </div>
                 </div>
 
                 <div className="flex gap-6">
                     <div className="flex items-center gap-2.5 group">
                         <div className="w-3.5 h-3.5 rounded-lg bg-orange-500/10 border border-orange-500/30 shadow-sm" />
-                        <span className="text-[10px] font-black uppercase text-prevenort-text/40 group-hover:text-prevenort-text transition-colors tracking-wider">Programado</span>
+                        <span className="text-[10px] font-black uppercase text-brand-text/40 group-hover:text-brand-text transition-colors tracking-wider">Programado</span>
                     </div>
                     <div className="flex items-center gap-2.5 group">
                         <div className="w-3.5 h-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 shadow-sm" />
-                        <span className="text-[10px] font-black uppercase text-prevenort-text/40 group-hover:text-prevenort-text transition-colors tracking-wider">Completado</span>
+                        <span className="text-[10px] font-black uppercase text-brand-text/40 group-hover:text-brand-text transition-colors tracking-wider">Completado</span>
                     </div>
                 </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="card-premium p-0 overflow-hidden border-prevenort-border shadow-2xl">
+            <div className="card-premium p-0 overflow-hidden border-brand-border shadow-2xl">
                 <div className="overflow-x-auto">
                     <div className="min-w-[1200px]">
                         {/* Days Header */}
-                        <div className="flex border-b border-prevenort-border bg-prevenort-surface/50">
-                            <div className="w-24 border-r border-prevenort-border" />
+                        <div className="flex border-b border-brand-border bg-brand-surface/50">
+                            <div className="w-24 border-r border-brand-border" />
                             {weekDays.map(day => (
                                 <div key={day.toString()} className={cn(
-                                    "flex-1 py-6 px-4 text-center border-r border-prevenort-border last:border-r-0",
-                                    isSameDay(day, new Date()) && "bg-prevenort-primary/5"
+                                    "flex-1 py-6 px-4 text-center border-r border-brand-border last:border-r-0",
+                                    isSameDay(day, new Date()) && "bg-brand-primary/5"
                                 )}>
-                                    <p className="text-[10px] font-black text-prevenort-text/40 uppercase tracking-[0.2em] mb-1.5">
+                                    <p className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em] mb-1.5">
                                         {format(day, 'EEE', { locale: es })}
                                     </p>
                                     <p className={cn(
                                         "text-2xl font-black transition-colors tracking-tight",
-                                        isSameDay(day, new Date()) ? "text-prevenort-primary" : "text-prevenort-text"
+                                        isSameDay(day, new Date()) ? "text-brand-primary" : "text-brand-text"
                                     )}>
                                         {format(day, 'd')}
                                     </p>
@@ -111,12 +111,12 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                         </div>
 
                         {/* Slots */}
-                        <div className="flex relative bg-prevenort-surface">
+                        <div className="flex relative bg-brand-surface">
                             {/* Time Column */}
-                            <div className="w-24 border-r border-prevenort-border bg-prevenort-bg/30">
+                            <div className="w-24 border-r border-brand-border bg-brand-bg/30">
                                 {timeSlots.map(hour => (
-                                    <div key={hour} className="h-[90px] p-4 text-right border-b border-prevenort-border/30">
-                                        <span className="text-[11px] font-black text-prevenort-text/30 tracking-tighter">
+                                    <div key={hour} className="h-[90px] p-4 text-right border-b border-brand-border/30">
+                                        <span className="text-[11px] font-black text-brand-text/30 tracking-tighter">
                                             {hour.toString().padStart(2, '0')}:00
                                         </span>
                                     </div>
@@ -127,12 +127,12 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                             <div className="flex flex-1 relative h-[1260px]">
                                 {weekDays.map(day => (
                                     <div key={day.toString()} className={cn(
-                                        "flex-1 border-r border-prevenort-border/50 last:border-r-0 relative group/day",
-                                        isSameDay(day, new Date()) && "bg-prevenort-primary/5"
+                                        "flex-1 border-r border-brand-border/50 last:border-r-0 relative group/day",
+                                        isSameDay(day, new Date()) && "bg-brand-primary/5"
                                     )}>
                                         {/* Hour lines */}
                                         {timeSlots.map(hour => (
-                                            <div key={hour} className="h-[90px] border-b border-prevenort-border/50" />
+                                            <div key={hour} className="h-[90px] border-b border-brand-border/50" />
                                         ))}
 
                                         {/* Appointments */}
@@ -142,9 +142,9 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                                                 onClick={() => onSelectAppointment(app)}
                                                 className={cn(
                                                     "absolute left-2 right-2 rounded-2xl border-2 p-4 cursor-pointer transition-all hover:scale-[1.03] hover:z-20 shadow-xl group/app overflow-hidden",
-                                                    app.status === 'scheduled' ? "bg-prevenort-surface border-orange-500/30 text-prevenort-text shadow-orange-500/5" :
-                                                        app.status === 'completed' ? "bg-prevenort-surface border-emerald-500/30 text-prevenort-text shadow-emerald-500/5" :
-                                                            "bg-prevenort-surface border-prevenort-border text-prevenort-text/40"
+                                                    app.status === 'scheduled' ? "bg-brand-surface border-orange-500/30 text-brand-text shadow-orange-500/5" :
+                                                        app.status === 'completed' ? "bg-brand-surface border-emerald-500/30 text-brand-text shadow-emerald-500/5" :
+                                                            "bg-brand-surface border-brand-border text-brand-text/40"
                                                 )}
                                                 style={{
                                                     ...getPositionStyle(app.appointmentTime),
@@ -156,16 +156,16 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                                                     <div className="flex items-center gap-3 overflow-hidden">
                                                         <div className={cn(
                                                             "w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner",
-                                                            app.status === 'scheduled' ? "bg-orange-500/10 text-prevenort-primary" :
+                                                            app.status === 'scheduled' ? "bg-orange-500/10 text-brand-primary" :
                                                                 app.status === 'completed' ? "bg-emerald-500/10 text-emerald-600" :
-                                                                    "bg-prevenort-bg text-prevenort-text/30"
+                                                                    "bg-brand-bg text-brand-text/30"
                                                         )}>
                                                             <User className="w-3.5 h-3.5" />
                                                         </div>
-                                                        <p className="text-[11px] font-black uppercase truncate tracking-tight text-prevenort-text">{formatName(app.patientName)}</p>
+                                                        <p className="text-[11px] font-black uppercase truncate tracking-tight text-brand-text">{formatName(app.patientName)}</p>
                                                     </div>
-                                                    <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-60 text-prevenort-text/40">
-                                                        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-prevenort-primary" /> {app.appointmentTime}</span>
+                                                    <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-60 text-brand-text/40">
+                                                        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-brand-primary" /> {app.appointmentTime}</span>
                                                         <span className="truncate flex items-center gap-1.5 max-w-[50%]">
                                                             <Activity className="w-3 h-3" /> {app.procedure?.name}
                                                         </span>
@@ -175,13 +175,13 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                                                 {/* Left accent line */}
                                                 <div className={cn(
                                                     "absolute left-0 top-0 bottom-0 w-1",
-                                                    app.status === 'scheduled' ? "bg-prevenort-primary" :
+                                                    app.status === 'scheduled' ? "bg-brand-primary" :
                                                         app.status === 'completed' ? "bg-emerald-500" :
-                                                            "bg-prevenort-text/20"
+                                                            "bg-brand-text/20"
                                                 )} />
 
                                                 {/* Hover details */}
-                                                <div className="absolute inset-0 bg-prevenort-primary flex flex-col items-center justify-center opacity-0 group-hover/app:opacity-100 transition-all duration-300">
+                                                <div className="absolute inset-0 bg-brand-primary flex flex-col items-center justify-center opacity-0 group-hover/app:opacity-100 transition-all duration-300">
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Ver Expediente</span>
                                                 </div>
                                             </div>

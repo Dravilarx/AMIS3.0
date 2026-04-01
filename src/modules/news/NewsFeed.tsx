@@ -87,8 +87,8 @@ export const NewsFeed: React.FC = () => {
                 pinned
                     ? "bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border-blue-500/20 hover:border-blue-500/40"
                     : article.isRead
-                        ? "bg-prevenort-surface/30 border-prevenort-border/50 hover:border-prevenort-border"
-                        : "bg-prevenort-surface/50 border-prevenort-border hover:border-prevenort-text/20",
+                        ? "bg-brand-surface/30 border-brand-border/50 hover:border-brand-border"
+                        : "bg-brand-surface/50 border-brand-border hover:border-brand-text/20",
                 article.priority === 'urgente' && "border-red-500/30 hover:border-red-500/50"
             )}
         >
@@ -143,14 +143,14 @@ export const NewsFeed: React.FC = () => {
             {/* Title */}
             <h3 className={cn(
                 "text-sm font-bold mb-2 leading-snug line-clamp-2",
-                article.isRead ? "text-prevenort-text/60" : "text-prevenort-text/90"
+                article.isRead ? "text-brand-text/60" : "text-brand-text/90"
             )}>
                 {article.title}
             </h3>
 
             {/* Excerpt */}
             {article.excerpt && (
-                <p className="text-xs text-prevenort-text/30 line-clamp-2 mb-3">{article.excerpt}</p>
+                <p className="text-xs text-brand-text/30 line-clamp-2 mb-3">{article.excerpt}</p>
             )}
 
             {/* Event date */}
@@ -166,7 +166,7 @@ export const NewsFeed: React.FC = () => {
             )}
 
             {/* Footer: author + time + reads */}
-            <div className="flex items-center justify-between text-[10px] text-prevenort-text/20 pt-2 border-t border-prevenort-border/50">
+            <div className="flex items-center justify-between text-[10px] text-brand-text/20 pt-2 border-t border-brand-border/50">
                 <span className="font-medium">{article.authorName}</span>
                 <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
@@ -194,13 +194,13 @@ export const NewsFeed: React.FC = () => {
                     <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">
                         Comunicación Central
                     </p>
-                    <h1 className="text-2xl font-black text-prevenort-text tracking-tight">
+                    <h1 className="text-2xl font-black text-brand-text tracking-tight">
                         Noticias & Comunicados
                     </h1>
                 </div>
                 <button
                     onClick={() => { setEditingArticle(null); setShowComposer(true); }}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-prevenort-primary hover:bg-prevenort-primary/90 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-prevenort-primary/20 hover:shadow-prevenort-primary/40"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40"
                 >
                     <Plus className="w-4 h-4" />
                     Nueva Publicación
@@ -215,12 +215,12 @@ export const NewsFeed: React.FC = () => {
                     { icon: AlertTriangle, label: 'Urgentes', value: stats.urgent, color: 'text-red-400' },
                     { icon: Calendar, label: 'Eventos Próximos', value: stats.events, color: 'text-purple-400' },
                 ].map((kpi) => (
-                    <div key={kpi.label} className="p-4 rounded-2xl bg-prevenort-surface/50 border border-prevenort-border">
+                    <div key={kpi.label} className="p-4 rounded-2xl bg-brand-surface/50 border border-brand-border">
                         <div className="flex items-center justify-between">
                             <kpi.icon className={cn("w-5 h-5", kpi.color)} />
                             <span className={cn("text-2xl font-black", kpi.color)}>{kpi.value}</span>
                         </div>
-                        <p className="text-[9px] font-black text-prevenort-text/20 uppercase tracking-widest mt-2">{kpi.label}</p>
+                        <p className="text-[9px] font-black text-brand-text/20 uppercase tracking-widest mt-2">{kpi.label}</p>
                     </div>
                 ))}
             </div>
@@ -228,19 +228,19 @@ export const NewsFeed: React.FC = () => {
             {/* Search + Filters */}
             <div className="flex items-center gap-3">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20" />
                     <input
                         type="text"
                         placeholder="Buscar noticias..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-prevenort-text placeholder:text-prevenort-text/20 focus:outline-none focus:border-info/50"
+                        className="w-full bg-brand-surface border border-brand-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-brand-text placeholder:text-brand-text/20 focus:outline-none focus:border-info/50"
                     />
                 </div>
                 <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    className="bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-xs text-prevenort-text/60 focus:outline-none focus:border-info/50"
+                    className="bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-xs text-brand-text/60 focus:outline-none focus:border-info/50"
                 >
                     <option value="">Todas las categorías</option>
                     {(Object.entries(CATEGORY_LABELS) as [NewsCategory, string][]).map(([k, v]) => (
@@ -250,7 +250,7 @@ export const NewsFeed: React.FC = () => {
                 <select
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
-                    className="bg-prevenort-surface border border-prevenort-border rounded-xl px-3 py-2.5 text-xs text-prevenort-text/60 focus:outline-none focus:border-info/50"
+                    className="bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-xs text-brand-text/60 focus:outline-none focus:border-info/50"
                 >
                     <option value="">Toda prioridad</option>
                     {(Object.entries(PRIORITY_LABELS) as [NewsPriority, string][]).map(([k, v]) => (
@@ -262,7 +262,7 @@ export const NewsFeed: React.FC = () => {
             {/* Pinned Section */}
             {pinnedArticles.length > 0 && (
                 <div>
-                    <p className="text-[10px] font-black text-prevenort-text/20 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <p className="text-[10px] font-black text-brand-text/20 uppercase tracking-widest mb-3 flex items-center gap-2">
                         <Pin className="w-3 h-3 text-blue-400" /> Fijados
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -282,8 +282,8 @@ export const NewsFeed: React.FC = () => {
                 </div>
             ) : pinnedArticles.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <Newspaper className="w-12 h-12 text-prevenort-text/10 mb-4" />
-                    <p className="text-sm text-prevenort-text/30">No hay noticias publicadas aún.</p>
+                    <Newspaper className="w-12 h-12 text-brand-text/10 mb-4" />
+                    <p className="text-sm text-brand-text/30">No hay noticias publicadas aún.</p>
                     {isAdmin && (
                         <button
                             onClick={() => { setEditingArticle(null); setShowComposer(true); }}

@@ -54,11 +54,15 @@ function App() {
       case 'messaging': return <MessagingHub />;
       case 'dms': return <SemanticDMS />;
       case 'ideation': return <IdeaAnalyst />;
-      case 'admin': return <AdminModule />;
+      case 'admin': 
+        if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AdminModule />;
+        return <DashboardModule />;
       case 'institutions': return <InstitutionsDashboard />;
       case 'news': return <NewsFeed />;
       case 'stat_multiris': return <StatMultirisModule />;
-      case 'ai_access': return <AiAccessManager />;
+      case 'ai_access': 
+        if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AiAccessManager />;
+        return <DashboardModule />;
       case 'dispatch': return <DispatchCenter />;
 
       default: return <DashboardModule />;

@@ -89,7 +89,7 @@ export const ProjectBPM: React.FC = () => {
     if (projectsLoading || tasksLoading) return (
         <div className="flex flex-col items-center justify-center h-96">
             <Loader2 className="w-10 h-10 text-info animate-spin mb-4" />
-            <p className="text-prevenort-text/40 font-mono text-sm uppercase tracking-widest">Sincronizando con Portezuelo Cloud...</p>
+            <p className="text-brand-text/40 font-mono text-sm uppercase tracking-widest">Sincronizando con Portezuelo Cloud...</p>
         </div>
     );
 
@@ -97,7 +97,7 @@ export const ProjectBPM: React.FC = () => {
         <div className="p-12 text-center card-premium border-danger/20">
             <AlertCircle className="w-10 h-10 text-danger mx-auto mb-4" />
             <p className="text-danger font-bold uppercase tracking-tighter">Error de Conexión BPM</p>
-            <p className="text-prevenort-text/20 text-xs mt-1">{projectsError}</p>
+            <p className="text-brand-text/20 text-xs mt-1">{projectsError}</p>
         </div>
     );
 
@@ -105,8 +105,8 @@ export const ProjectBPM: React.FC = () => {
         <div className="space-y-6 animate-in fade-in duration-700">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-prevenort-text tracking-tighter uppercase">BPM & Control de Proyectos</h2>
-                    <p className="text-xs text-prevenort-text/40 font-mono uppercase tracking-widest">Portezuelo Privacy Layer & AI Summaries (M7)</p>
+                    <h2 className="text-2xl font-black text-brand-text tracking-tighter uppercase">BPM & Control de Proyectos</h2>
+                    <p className="text-xs text-brand-text/40 font-mono uppercase tracking-widest">Portezuelo Privacy Layer & AI Summaries (M7)</p>
                 </div>
                 <div className="flex gap-2">
                     {activeTab === 'projects' ? (
@@ -115,7 +115,7 @@ export const ProjectBPM: React.FC = () => {
                                 setSelectedProject(null);
                                 setIsProjectModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-prevenort-text text-prevenort-bg hover:opacity-90 rounded-xl text-xs font-black uppercase tracking-tight transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-text text-brand-bg hover:opacity-90 rounded-xl text-xs font-black uppercase tracking-tight transition-all"
                         >
                             <Plus className="w-4 h-4" /> Nuevo Proyecto
                         </button>
@@ -132,12 +132,12 @@ export const ProjectBPM: React.FC = () => {
 
             {/* Tabs & View Controls */}
             <div className="flex items-center justify-between">
-                <div className="flex gap-1 p-1 bg-prevenort-surface border border-prevenort-border rounded-xl w-fit">
+                <div className="flex gap-1 p-1 bg-brand-surface border border-brand-border rounded-xl w-fit">
                     <button
                         onClick={() => setActiveTab('projects')}
                         className={cn(
                             "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                            activeTab === 'projects' ? "bg-prevenort-primary/10 text-prevenort-primary border border-prevenort-primary/20" : "text-prevenort-text/40 hover:text-prevenort-text/60"
+                            activeTab === 'projects' ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/20" : "text-brand-text/40 hover:text-brand-text/60"
                         )}
                     >
                         Proyectos
@@ -146,7 +146,7 @@ export const ProjectBPM: React.FC = () => {
                         onClick={() => setActiveTab('tasks')}
                         className={cn(
                             "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                            activeTab === 'tasks' ? "bg-prevenort-primary/10 text-prevenort-primary border border-prevenort-primary/20" : "text-prevenort-text/40 hover:text-prevenort-text/60"
+                            activeTab === 'tasks' ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/20" : "text-brand-text/40 hover:text-brand-text/60"
                         )}
                     >
                         Tareas BPM
@@ -156,22 +156,22 @@ export const ProjectBPM: React.FC = () => {
                 {activeTab === 'tasks' && (
                     <div className="flex items-center gap-3">
                         <select
-                            className="bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-prevenort-text/60 focus:border-info/50 outline-none transition-all appearance-none"
+                            className="bg-brand-surface border border-brand-border rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-brand-text/60 focus:border-info/50 outline-none transition-all appearance-none"
                             value={filterProjectId}
                             onChange={(e) => setFilterProjectId(e.target.value)}
                         >
-                            <option value="all" className="bg-prevenort-surface text-prevenort-text">Todos los Proyectos</option>
+                            <option value="all" className="bg-brand-surface text-brand-text">Todos los Proyectos</option>
                             {projects.map(p => (
-                                <option key={p.id} value={p.id} className="bg-prevenort-surface text-prevenort-text">{p.name}</option>
+                                <option key={p.id} value={p.id} className="bg-brand-surface text-brand-text">{p.name}</option>
                             ))}
                         </select>
 
-                        <div className="flex gap-1 p-1 bg-prevenort-surface border border-prevenort-border rounded-xl">
+                        <div className="flex gap-1 p-1 bg-brand-surface border border-brand-border rounded-xl">
                             <button
                                 onClick={() => setTaskViewMode('kanban')}
                                 className={cn(
                                     "p-2 rounded-lg transition-all",
-                                    taskViewMode === 'kanban' ? "bg-prevenort-primary/10 text-prevenort-primary" : "text-prevenort-text/20 hover:text-prevenort-text/40"
+                                    taskViewMode === 'kanban' ? "bg-brand-primary/10 text-brand-primary" : "text-brand-text/20 hover:text-brand-text/40"
                                 )}
                                 title="Vista Kanban"
                             >
@@ -181,7 +181,7 @@ export const ProjectBPM: React.FC = () => {
                                 onClick={() => setTaskViewMode('list')}
                                 className={cn(
                                     "p-2 rounded-lg transition-all",
-                                    taskViewMode === 'list' ? "bg-prevenort-primary/10 text-prevenort-primary" : "text-prevenort-text/20 hover:text-prevenort-text/40"
+                                    taskViewMode === 'list' ? "bg-brand-primary/10 text-brand-primary" : "text-brand-text/20 hover:text-brand-text/40"
                                 )}
                                 title="Vista Lista"
                             >
@@ -208,7 +208,7 @@ export const ProjectBPM: React.FC = () => {
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3">
-                                                <h4 className="text-lg font-black text-prevenort-text tracking-tight group-hover:text-info transition-colors">{project.name}</h4>
+                                                <h4 className="text-lg font-black text-brand-text tracking-tight group-hover:text-info transition-colors">{project.name}</h4>
                                                 <span className={cn(
                                                     "flex items-center gap-1 text-[8px] px-2 py-0.5 rounded font-black uppercase tracking-widest border",
                                                     project.privacyLevel === 'confidential' ? 'text-danger border-danger/20 bg-danger/5' :
@@ -223,16 +223,16 @@ export const ProjectBPM: React.FC = () => {
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-4">
-                                                <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 font-mono uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5 text-[9px] text-brand-text/30 font-mono uppercase tracking-widest">
                                                     <span>ID: {project.id}</span>
                                                 </div>
-                                                <div className="h-3 w-px bg-prevenort-border" />
-                                                <div className="flex items-center gap-1.5 text-[9px] text-prevenort-text/30 font-mono uppercase tracking-widest">
+                                                <div className="h-3 w-px bg-brand-border" />
+                                                <div className="flex items-center gap-1.5 text-[9px] text-brand-text/30 font-mono uppercase tracking-widest">
                                                     <span>Inicio: {project.startDate}</span>
                                                 </div>
                                                 {project.tenderId && (
                                                     <>
-                                                        <div className="h-3 w-px bg-prevenort-border" />
+                                                        <div className="h-3 w-px bg-brand-border" />
                                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-success/10 border border-success/20 rounded-md">
                                                             <LinkIcon className="w-3 h-3 text-success" />
                                                             <span className="text-[8px] font-black text-success uppercase tracking-widest">Licitación: {project.tenderId}</span>
@@ -247,7 +247,7 @@ export const ProjectBPM: React.FC = () => {
                                                     e.stopPropagation();
                                                     handleEditProject(project);
                                                 }}
-                                                className="p-2 text-prevenort-text/40 hover:text-info hover:bg-info/10 rounded-lg transition-colors border border-transparent hover:border-info/20"
+                                                className="p-2 text-brand-text/40 hover:text-info hover:bg-info/10 rounded-lg transition-colors border border-transparent hover:border-info/20"
                                                 title="Editar proyecto"
                                             >
                                                 <Edit2 className="w-4 h-4" />
@@ -259,7 +259,7 @@ export const ProjectBPM: React.FC = () => {
                                                         archiveProject(project.id);
                                                     }
                                                 }}
-                                                className="p-2 text-prevenort-text/40 hover:text-danger hover:bg-danger/10 rounded-lg transition-colors border border-transparent hover:border-danger/20"
+                                                className="p-2 text-brand-text/40 hover:text-danger hover:bg-danger/10 rounded-lg transition-colors border border-transparent hover:border-danger/20"
                                                 title="Eliminar proyecto"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -270,15 +270,15 @@ export const ProjectBPM: React.FC = () => {
                                     <div className="space-y-4">
                                         <div>
                                             <div className="flex justify-between text-[10px] mb-2">
-                                                <span className="text-prevenort-text/30 uppercase font-black tracking-widest">Progreso de Ejecución</span>
+                                                <span className="text-brand-text/30 uppercase font-black tracking-widest">Progreso de Ejecución</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-prevenort-text/20 font-mono">
+                                                    <span className="text-[9px] text-brand-text/20 font-mono">
                                                         {tasks.filter(t => t.projectId === project.id && t.status === 'completed').length} / {tasks.filter(t => t.projectId === project.id).length} Tareas
                                                     </span>
                                                     <span className="font-black text-info">{project.progress}%</span>
                                                 </div>
                                             </div>
-                                            <div className="h-1.5 w-full bg-prevenort-border/50 rounded-full overflow-hidden border border-prevenort-border p-[1px]">
+                                            <div className="h-1.5 w-full bg-brand-border/50 rounded-full overflow-hidden border border-brand-border p-[1px]">
                                                 <div
                                                     className="h-full bg-gradient-to-r from-info to-indigo-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                                                     style={{ width: `${project.progress}%` }}
@@ -288,7 +288,7 @@ export const ProjectBPM: React.FC = () => {
 
                                         <div className="flex flex-wrap gap-2">
                                             {project.tags.map((tag, i) => (
-                                                <span key={i} className="text-[9px] px-2 py-0.5 bg-prevenort-bg border border-prevenort-border rounded font-bold text-prevenort-text/40 group-hover:text-prevenort-text/60 transition-colors">
+                                                <span key={i} className="text-[9px] px-2 py-0.5 bg-brand-bg border border-brand-border rounded font-bold text-brand-text/40 group-hover:text-brand-text/60 transition-colors">
                                                     #{tag}
                                                 </span>
                                             ))}
@@ -297,10 +297,10 @@ export const ProjectBPM: React.FC = () => {
                                 </div>
                             ))}
                             {projects.length === 0 && (
-                                <div className="text-center py-24 bg-prevenort-surface rounded-3xl border-2 border-dashed border-prevenort-border">
-                                    <Layers className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4" />
-                                    <p className="text-prevenort-text/40 font-bold uppercase tracking-widest text-sm">No hay proyectos activos</p>
-                                    <p className="text-prevenort-text/20 text-[10px] mt-2 italic font-mono">Inicia un proyecto desde una licitación ganada</p>
+                                <div className="text-center py-24 bg-brand-surface rounded-3xl border-2 border-dashed border-brand-border">
+                                    <Layers className="w-12 h-12 text-brand-text/10 mx-auto mb-4" />
+                                    <p className="text-brand-text/40 font-bold uppercase tracking-widest text-sm">No hay proyectos activos</p>
+                                    <p className="text-brand-text/20 text-[10px] mt-2 italic font-mono">Inicia un proyecto desde una licitación ganada</p>
                                 </div>
                             )}
                         </div>
@@ -327,13 +327,13 @@ export const ProjectBPM: React.FC = () => {
                                                     "w-10 h-10 rounded-lg flex items-center justify-center border",
                                                     task.status === 'completed' ? 'border-success/30 bg-success/5 text-success' :
                                                         task.status === 'in-progress' ? 'border-info/30 bg-info/5 text-info' :
-                                                            'border-prevenort-border bg-prevenort-surface text-prevenort-text/40'
+                                                            'border-brand-border bg-brand-surface text-brand-text/40'
                                                 )}>
                                                     <Layers className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h5 className="font-bold text-prevenort-text group-hover:text-info transition-colors">{task.title}</h5>
-                                                    <p className="text-[10px] text-prevenort-text/40 font-mono flex items-center gap-2">
+                                                    <h5 className="font-bold text-brand-text group-hover:text-info transition-colors">{task.title}</h5>
+                                                    <p className="text-[10px] text-brand-text/40 font-mono flex items-center gap-2">
                                                         <span>Responsable: {getProfessionalName(task.assignedTo)}</span>
                                                         <span>|</span>
                                                         <span>Vence: {task.dueDate}</span>
@@ -354,7 +354,7 @@ export const ProjectBPM: React.FC = () => {
                                                 "text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-tighter border",
                                                 task.priority === 'critical' ? 'text-danger border-danger/20' :
                                                     task.priority === 'high' ? 'text-warning border-warning/20' :
-                                                        'text-prevenort-text/40 border-prevenort-border'
+                                                        'text-brand-text/40 border-brand-border'
                                             )}>
                                                 {task.priority}
                                             </span>
@@ -362,7 +362,7 @@ export const ProjectBPM: React.FC = () => {
 
                                         {task.progress !== undefined && task.progress > 0 && (
                                             <div className="mt-3 px-14">
-                                                <div className="h-1 w-full bg-prevenort-border/50 rounded-full overflow-hidden">
+                                                <div className="h-1 w-full bg-brand-border/50 rounded-full overflow-hidden">
                                                     <div
                                                         className="h-full bg-info/50 transition-all duration-700"
                                                         style={{ width: `${task.progress}%` }}
@@ -376,7 +376,7 @@ export const ProjectBPM: React.FC = () => {
                                                 <div className="flex items-center gap-1.5 mb-1 text-[10px] text-info font-bold uppercase tracking-widest">
                                                     <Sparkles className="w-3 h-3" /> Resumen AI Agrawall
                                                 </div>
-                                                <p className="text-xs text-prevenort-text/70 italic leading-relaxed">
+                                                <p className="text-xs text-brand-text/70 italic leading-relaxed">
                                                     "{task.aiSummary}"
                                                 </p>
                                             </div>
@@ -384,9 +384,9 @@ export const ProjectBPM: React.FC = () => {
                                     </div>
                                 ))}
                                 {filteredTasks.length === 0 && (
-                                    <div className="text-center py-24 bg-prevenort-surface rounded-3xl border-2 border-dashed border-prevenort-border">
-                                        <Layers className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4" />
-                                        <p className="text-prevenort-text/40 font-bold uppercase tracking-widest text-sm">No hay tareas pendientes</p>
+                                    <div className="text-center py-24 bg-brand-surface rounded-3xl border-2 border-dashed border-brand-border">
+                                        <Layers className="w-12 h-12 text-brand-text/10 mx-auto mb-4" />
+                                        <p className="text-brand-text/40 font-bold uppercase tracking-widest text-sm">No hay tareas pendientes</p>
                                     </div>
                                 )}
                             </div>
@@ -398,23 +398,23 @@ export const ProjectBPM: React.FC = () => {
                 {!(activeTab === 'tasks' && taskViewMode === 'kanban') && (
                     <div className="space-y-6">
                         <div className="card-premium">
-                            <h3 className="font-bold mb-4 flex items-center gap-2 text-prevenort-text">
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-brand-text">
                                 <BarChart2 className="w-4 h-4 text-info" /> Métricas BPM
                             </h3>
                             <div className="space-y-4">
                                 <div>
-                                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold mb-2">KPI Entrega</p>
-                                    <div className="text-2xl font-bold text-prevenort-text">88.4%</div>
+                                    <p className="text-[10px] text-brand-text/40 uppercase font-bold mb-2">KPI Entrega</p>
+                                    <div className="text-2xl font-bold text-brand-text">88.4%</div>
                                 </div>
-                                <div className="pt-4 border-t border-prevenort-border">
-                                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold mb-2">Cuellos de Botella</p>
+                                <div className="pt-4 border-t border-brand-border">
+                                    <p className="text-[10px] text-brand-text/40 uppercase font-bold mb-2">Cuellos de Botella</p>
                                     <div className="text-sm font-medium text-warning">Validación Legal</div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="card-premium">
-                            <h3 className="font-bold mb-4 flex items-center gap-2 text-prevenort-text">
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-brand-text">
                                 <MessageSquareText className="w-4 h-4 text-success" /> Actividad Reciente
                             </h3>
                             <div className="space-y-3">
@@ -423,8 +423,8 @@ export const ProjectBPM: React.FC = () => {
                                     { user: 'Maria P.', act: 'actualizó contrato RSG', time: '1h' },
                                 ].map((act, i) => (
                                     <div key={i} className="text-xs">
-                                        <span className="font-bold text-prevenort-text/80">{act.user}</span>{' '}
-                                        <span className="text-prevenort-text/40">{act.act}</span>{' '}
+                                        <span className="font-bold text-brand-text/80">{act.user}</span>{' '}
+                                        <span className="text-brand-text/40">{act.act}</span>{' '}
                                         <span className="text-[9px] text-info/60 font-mono ml-1">{act.time}</span>
                                     </div>
                                 ))}

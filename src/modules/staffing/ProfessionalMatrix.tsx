@@ -198,7 +198,7 @@ export const ProfessionalMatrix: React.FC = () => {
     };
 
     const SortIcon = ({ field }: { field: SortField }) => {
-        if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-prevenort-text/20" />;
+        if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-brand-text/20" />;
         return sortDir === 'asc' ? <ChevronUp className="w-3 h-3 text-info" /> : <ChevronDown className="w-3 h-3 text-info" />;
     };
 
@@ -208,7 +208,7 @@ export const ProfessionalMatrix: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
                 <Loader2 className="w-8 h-8 text-info animate-spin" />
-                <p className="text-prevenort-text/40 animate-pulse">Sincronizando con Holding Portezuelo...</p>
+                <p className="text-brand-text/40 animate-pulse">Sincronizando con Holding Portezuelo...</p>
             </div>
         );
     }
@@ -217,10 +217,10 @@ export const ProfessionalMatrix: React.FC = () => {
         return (
             <div className="card-premium border-danger/20 bg-danger/5 text-center py-12">
                 <p className="text-danger font-bold mb-2">Error de Conexión</p>
-                <p className="text-prevenort-text/40 text-sm mb-6">{error}</p>
+                <p className="text-brand-text/40 text-sm mb-6">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-prevenort-surface hover:bg-prevenort-primary/10 border border-prevenort-border rounded-lg transition-colors text-sm text-prevenort-text"
+                    className="px-4 py-2 bg-brand-surface hover:bg-brand-primary/10 border border-brand-border rounded-lg transition-colors text-sm text-brand-text"
                 >
                     Reintentar conexión
                 </button>
@@ -232,21 +232,21 @@ export const ProfessionalMatrix: React.FC = () => {
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="card-premium">
-                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold tracking-widest mb-1">Utilización del Staff</p>
+                    <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-widest mb-1">Utilización del Staff</p>
                     <div className="flex items-center justify-between">
                         <span className={cn("text-2xl font-black", isOverloaded ? "text-danger" : "text-success")}>
                             {utilizationRate.toFixed(1)}%
                         </span>
-                        <div className="w-24 h-2 bg-prevenort-surface rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-brand-surface rounded-full overflow-hidden">
                             <div className={cn("h-full transition-all", isOverloaded ? "bg-danger" : "bg-success")} style={{ width: `${Math.min(utilizationRate, 100)}%` }} />
                         </div>
                     </div>
                 </div>
                 <div className="card-premium">
-                    <p className="text-[10px] text-prevenort-text/40 uppercase font-bold tracking-widest mb-1">Gap de Cobertura</p>
+                    <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-widest mb-1">Gap de Cobertura</p>
                     <div className="flex items-center justify-between">
-                        <span className="text-2xl font-black text-prevenort-text">{capacityGap > 0 ? `+${capacityGap.toFixed(0)}h` : `${capacityGap.toFixed(0)}h`}</span>
-                        <span className="text-[10px] text-prevenort-text/40">Disponible p/ mes</span>
+                        <span className="text-2xl font-black text-brand-text">{capacityGap > 0 ? `+${capacityGap.toFixed(0)}h` : `${capacityGap.toFixed(0)}h`}</span>
+                        <span className="text-[10px] text-brand-text/40">Disponible p/ mes</span>
                     </div>
                 </div>
                 <div className="card-premium bg-info/5 border-info/20">
@@ -259,25 +259,25 @@ export const ProfessionalMatrix: React.FC = () => {
             <div className="flex flex-col gap-3">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-prevenort-text">Matriz de Profesionales</h2>
-                        <p className="text-prevenort-text/40 text-sm">
+                        <h2 className="text-2xl font-bold text-brand-text">Matriz de Profesionales</h2>
+                        <p className="text-brand-text/40 text-sm">
                             {filteredAndSorted.length} de {professionals.length} profesionales
                             {selectedIds.size > 0 && <span className="text-info font-bold"> · {selectedIds.size} seleccionado(s)</span>}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prevenort-text/20" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/20" />
                             <input
                                 type="text"
                                 placeholder="Buscar nombre, apellido, RUT, email, rol..."
-                                className="bg-prevenort-surface border border-prevenort-border rounded-lg pl-10 pr-4 py-2 text-sm text-prevenort-text focus:outline-none focus:border-info/50 w-80 transition-all"
+                                className="bg-brand-surface border border-brand-border rounded-lg pl-10 pr-4 py-2 text-sm text-brand-text focus:outline-none focus:border-info/50 w-80 transition-all"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
                                 <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <X className="w-3.5 h-3.5 text-prevenort-text/30 hover:text-prevenort-text" />
+                                    <X className="w-3.5 h-3.5 text-brand-text/30 hover:text-brand-text" />
                                 </button>
                             )}
                         </div>
@@ -287,7 +287,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                 "p-2 border rounded-lg transition-colors relative",
                                 showFilters || activeFiltersCount > 0
                                     ? "bg-info/10 border-info/30 text-info"
-                                    : "bg-prevenort-surface border-prevenort-border text-prevenort-text/60 hover:bg-prevenort-primary/10"
+                                    : "bg-brand-surface border-brand-border text-brand-text/60 hover:bg-brand-primary/10"
                             )}
                         >
                             <Filter className="w-4 h-4" />
@@ -297,23 +297,23 @@ export const ProfessionalMatrix: React.FC = () => {
                                 </span>
                             )}
                         </button>
-                        <div className="flex border border-prevenort-border rounded-lg overflow-hidden">
+                        <div className="flex border border-brand-border rounded-lg overflow-hidden">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={cn("p-2 transition-colors", viewMode === 'grid' ? "bg-prevenort-primary/10 text-prevenort-text" : "bg-transparent text-prevenort-text/40 hover:text-prevenort-text")}
+                                className={cn("p-2 transition-colors", viewMode === 'grid' ? "bg-brand-primary/10 text-brand-text" : "bg-transparent text-brand-text/40 hover:text-brand-text")}
                             >
                                 <LayoutGrid className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={cn("p-2 transition-colors", viewMode === 'list' ? "bg-prevenort-primary/10 text-prevenort-text" : "bg-transparent text-prevenort-text/40 hover:text-prevenort-text")}
+                                className={cn("p-2 transition-colors", viewMode === 'list' ? "bg-brand-primary/10 text-brand-text" : "bg-transparent text-brand-text/40 hover:text-brand-text")}
                             >
                                 <List className="w-4 h-4" />
                             </button>
                         </div>
                         <button
                             onClick={() => setIsBulkOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-prevenort-surface border border-prevenort-border hover:border-prevenort-text/20 rounded-lg transition-all font-medium text-sm text-prevenort-text/60"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border hover:border-brand-text/20 rounded-lg transition-all font-medium text-sm text-brand-text/60"
                         >
                             <Upload className="w-4 h-4" />
                             <span>Carga Masiva</span>
@@ -323,7 +323,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                 setCurrentProfessional(null);
                                 setIsModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-prevenort-text text-prevenort-bg hover:opacity-90 rounded-lg transition-all font-medium text-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-text text-brand-bg hover:opacity-90 rounded-lg transition-all font-medium text-sm"
                         >
                             <Plus className="w-4 h-4" />
                             <span>Añadir Profesional</span>
@@ -333,24 +333,24 @@ export const ProfessionalMatrix: React.FC = () => {
 
                 {/* ── PANEL DE FILTROS ── */}
                 {showFilters && (
-                    <div className="flex flex-wrap items-center gap-3 p-3 bg-prevenort-surface/50 border border-prevenort-border rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex flex-wrap items-center gap-3 p-3 bg-brand-surface/50 border border-brand-border rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center gap-2">
-                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Rol</label>
+                            <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Rol</label>
                             <select
                                 value={filterRole}
                                 onChange={e => setFilterRole(e.target.value)}
-                                className="bg-prevenort-bg border border-prevenort-border rounded-lg px-3 py-1.5 text-xs text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                className="bg-brand-bg border border-brand-border rounded-lg px-3 py-1.5 text-xs text-brand-text focus:border-info/50 outline-none appearance-none"
                             >
                                 <option value="all">Todos</option>
                                 {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
                         </div>
                         <div className="flex items-center gap-2">
-                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Estado</label>
+                            <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Estado</label>
                             <select
                                 value={filterStatus}
                                 onChange={e => setFilterStatus(e.target.value)}
-                                className="bg-prevenort-bg border border-prevenort-border rounded-lg px-3 py-1.5 text-xs text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                className="bg-brand-bg border border-brand-border rounded-lg px-3 py-1.5 text-xs text-brand-text focus:border-info/50 outline-none appearance-none"
                             >
                                 <option value="all">Todos</option>
                                 <option value="active">Activos</option>
@@ -358,11 +358,11 @@ export const ProfessionalMatrix: React.FC = () => {
                             </select>
                         </div>
                         <div className="flex items-center gap-2">
-                            <label className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Equipo</label>
+                            <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Equipo</label>
                             <select
                                 value={filterTeam}
                                 onChange={e => setFilterTeam(e.target.value)}
-                                className="bg-prevenort-bg border border-prevenort-border rounded-lg px-3 py-1.5 text-xs text-prevenort-text focus:border-info/50 outline-none appearance-none"
+                                className="bg-brand-bg border border-brand-border rounded-lg px-3 py-1.5 text-xs text-brand-text focus:border-info/50 outline-none appearance-none"
                             >
                                 <option value="all">Todos</option>
                                 {uniqueTeams.map(t => <option key={t} value={t}>{t}</option>)}
@@ -411,7 +411,7 @@ export const ProfessionalMatrix: React.FC = () => {
                             <select
                                 value={bulkTeamValue}
                                 onChange={e => setBulkTeamValue(e.target.value)}
-                                className="bg-prevenort-bg border border-purple-500/20 rounded-lg px-2 py-1 text-[10px] text-prevenort-text focus:border-purple-500/50 outline-none appearance-none"
+                                className="bg-brand-bg border border-purple-500/20 rounded-lg px-2 py-1 text-[10px] text-brand-text focus:border-purple-500/50 outline-none appearance-none"
                             >
                                 <option value="">Asignar Equipo...</option>
                                 {uniqueTeams.map(t => <option key={t} value={t}>{t}</option>)}
@@ -421,7 +421,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Nombre del equipo"
-                                    className="bg-prevenort-bg border border-purple-500/20 rounded-lg px-2 py-1 text-[10px] text-prevenort-text w-28 focus:border-purple-500/50 outline-none"
+                                    className="bg-brand-bg border border-purple-500/20 rounded-lg px-2 py-1 text-[10px] text-brand-text w-28 focus:border-purple-500/50 outline-none"
                                     onKeyDown={e => {
                                         if (e.key === 'Enter') {
                                             const val = (e.target as HTMLInputElement).value.trim();
@@ -447,7 +447,7 @@ export const ProfessionalMatrix: React.FC = () => {
                         <div className="flex-1" />
                         <button
                             onClick={() => setSelectedIds(new Set())}
-                            className="text-[10px] text-prevenort-text/40 hover:text-prevenort-text uppercase font-bold"
+                            className="text-[10px] text-brand-text/40 hover:text-brand-text uppercase font-bold"
                         >
                             Cancelar selección
                         </button>
@@ -458,11 +458,11 @@ export const ProfessionalMatrix: React.FC = () => {
 
             {/* ── VISTA LISTA (WORKLIST COMPACTA) ── */}
             {viewMode === 'list' ? (
-                <div className="bg-prevenort-surface/30 border border-prevenort-border rounded-2xl overflow-hidden">
+                <div className="bg-brand-surface/30 border border-brand-border rounded-2xl overflow-hidden">
                     {/* Header de tabla */}
-                    <div className="grid grid-cols-[40px_1fr_140px_120px_140px_100px_80px] gap-2 px-4 py-2.5 bg-prevenort-surface/50 border-b border-prevenort-border text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">
+                    <div className="grid grid-cols-[40px_1fr_140px_120px_140px_100px_80px] gap-2 px-4 py-2.5 bg-brand-surface/50 border-b border-brand-border text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">
                         <div className="flex items-center justify-center">
-                            <button onClick={toggleSelectAll} className="hover:text-prevenort-text transition-colors">
+                            <button onClick={toggleSelectAll} className="hover:text-brand-text transition-colors">
                                 {selectedIds.size === filteredAndSorted.length && filteredAndSorted.length > 0
                                     ? <CheckSquare className="w-4 h-4 text-info" />
                                     : <Square className="w-4 h-4" />
@@ -470,31 +470,31 @@ export const ProfessionalMatrix: React.FC = () => {
                             </button>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button onClick={() => handleSortToggle('name')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors text-left">
+                            <button onClick={() => handleSortToggle('name')} className="flex items-center gap-1 hover:text-brand-text transition-colors text-left">
                                 Nombre <SortIcon field="name" />
                             </button>
-                            <button onClick={() => handleSortToggle('lastName')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors text-left text-[10px]">
+                            <button onClick={() => handleSortToggle('lastName')} className="flex items-center gap-1 hover:text-brand-text transition-colors text-left text-[10px]">
                                 Apellido <SortIcon field="lastName" />
                             </button>
                         </div>
-                        <button onClick={() => handleSortToggle('role')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('role')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Rol <SortIcon field="role" />
                         </button>
-                        <button onClick={() => handleSortToggle('team')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('team')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Equipo <SortIcon field="team" />
                         </button>
-                        <button onClick={() => handleSortToggle('city')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors">
+                        <button onClick={() => handleSortToggle('city')} className="flex items-center gap-1 hover:text-brand-text transition-colors">
                             Ciudad <SortIcon field="city" />
                         </button>
                         <div>Contratos</div>
-                        <button onClick={() => handleSortToggle('status')} className="flex items-center gap-1 hover:text-prevenort-text transition-colors justify-center">
+                        <button onClick={() => handleSortToggle('status')} className="flex items-center gap-1 hover:text-brand-text transition-colors justify-center">
                             Estado <SortIcon field="status" />
                         </button>
                     </div>
 
                     {/* Filas de datos */}
                     {filteredAndSorted.length === 0 ? (
-                        <div className="text-center py-12 text-prevenort-text/30 text-sm">Sin resultados</div>
+                        <div className="text-center py-12 text-brand-text/30 text-sm">Sin resultados</div>
                     ) : (
                         filteredAndSorted.map((prof) => {
                             const isActive = prof.isActive !== false;
@@ -503,7 +503,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                 <div
                                     key={prof.id}
                                     className={cn(
-                                        "grid grid-cols-[40px_1fr_140px_120px_140px_100px_80px] gap-2 px-4 py-2 border-b border-prevenort-border/50 hover:bg-prevenort-surface/30 transition-colors cursor-pointer items-center group",
+                                        "grid grid-cols-[40px_1fr_140px_120px_140px_100px_80px] gap-2 px-4 py-2 border-b border-brand-border/50 hover:bg-brand-surface/30 transition-colors cursor-pointer items-center group",
                                         isSelected && "bg-info/5",
                                         !isActive && "opacity-60"
                                     )}
@@ -511,7 +511,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                     <div className="flex items-center justify-center" onClick={(e) => { e.stopPropagation(); toggleSelect(prof.id); }}>
                                         {isSelected
                                             ? <CheckSquare className="w-4 h-4 text-info" />
-                                            : <Square className="w-4 h-4 text-prevenort-text/20 group-hover:text-prevenort-text/40" />
+                                            : <Square className="w-4 h-4 text-brand-text/20 group-hover:text-brand-text/40" />
                                         }
                                     </div>
                                     <div className="flex items-center gap-3 min-w-0" onClick={() => handleEdit(prof)}>
@@ -530,22 +530,22 @@ export const ProfessionalMatrix: React.FC = () => {
                                         <div className="min-w-0">
                                             <p className={cn(
                                                 "text-sm font-semibold truncate",
-                                                isActive ? "text-prevenort-text group-hover:text-info" : "text-prevenort-text/50 line-through decoration-red-500/30"
+                                                isActive ? "text-brand-text group-hover:text-info" : "text-brand-text/50 line-through decoration-red-500/30"
                                             )}>
                                                 {prof.name} {prof.lastName}
                                             </p>
-                                            <p className="text-[10px] text-prevenort-text/30 truncate font-mono">{prof.nationalId} · {prof.email}</p>
+                                            <p className="text-[10px] text-brand-text/30 truncate font-mono">{prof.nationalId} · {prof.email}</p>
                                         </div>
                                     </div>
-                                    <div className="text-xs text-prevenort-text/60 truncate" onClick={() => handleEdit(prof)}>{prof.role}</div>
-                                    <div className="text-xs text-prevenort-text/40 truncate" onClick={() => handleEdit(prof)}>{prof.team || '—'}</div>
-                                    <div className="text-xs text-prevenort-text/40 truncate" onClick={() => handleEdit(prof)}>
+                                    <div className="text-xs text-brand-text/60 truncate" onClick={() => handleEdit(prof)}>{prof.role}</div>
+                                    <div className="text-xs text-brand-text/40 truncate" onClick={() => handleEdit(prof)}>{prof.team || '—'}</div>
+                                    <div className="text-xs text-brand-text/40 truncate" onClick={() => handleEdit(prof)}>
                                         <span className="flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-prevenort-text/20 flex-shrink-0" />
+                                            <MapPin className="w-3 h-3 text-brand-text/20 flex-shrink-0" />
                                             {prof.residence?.city || '—'}
                                         </span>
                                     </div>
-                                    <div className="text-xs text-prevenort-text/40" onClick={() => handleEdit(prof)}>{prof.contracts?.length || 0}</div>
+                                    <div className="text-xs text-brand-text/40" onClick={() => handleEdit(prof)}>{prof.contracts?.length || 0}</div>
                                     <div className="flex justify-center" onClick={() => handleEdit(prof)}>
                                         <span className={cn(
                                             "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
@@ -585,7 +585,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                 >
                                     {isSelected
                                         ? <CheckSquare className="w-5 h-5 text-info" />
-                                        : <Square className="w-5 h-5 text-prevenort-text/30 hover:text-prevenort-text/60" />
+                                        : <Square className="w-5 h-5 text-brand-text/30 hover:text-brand-text/60" />
                                     }
                                 </button>
 
@@ -601,7 +601,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                                 />
                                             ) : (
                                                 <div className={cn(
-                                                    "w-12 h-12 rounded-full bg-gradient-to-br from-prevenort-surface to-prevenort-surface/50 flex items-center justify-center text-xl font-bold text-prevenort-text",
+                                                    "w-12 h-12 rounded-full bg-gradient-to-br from-brand-surface to-brand-surface/50 flex items-center justify-center text-xl font-bold text-brand-text",
                                                     isActive
                                                         ? "border-2 border-emerald-500/50"
                                                         : "border-2 border-red-500/50"
@@ -610,7 +610,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                                 </div>
                                             )}
                                             <span className={cn(
-                                                "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-prevenort-bg",
+                                                "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-brand-bg",
                                                 isActive ? "bg-emerald-500" : "bg-red-500"
                                             )} title={isActive ? 'Activo' : 'Inactivo'} />
                                         </div>
@@ -652,35 +652,35 @@ export const ProfessionalMatrix: React.FC = () => {
                                                 <h4 className={cn(
                                                     "font-bold text-lg transition-colors",
                                                     isActive
-                                                        ? "text-prevenort-text group-hover:text-info"
-                                                        : "text-prevenort-text/50 group-hover:text-red-400 line-through decoration-red-500/30"
+                                                        ? "text-brand-text group-hover:text-info"
+                                                        : "text-brand-text/50 group-hover:text-red-400 line-through decoration-red-500/30"
                                                 )}>
                                                     {prof.name} {prof.lastName}
                                                 </h4>
-                                                <span className="text-[10px] text-prevenort-text/20 font-mono">{prof.nationalId}</span>
+                                                <span className="text-[10px] text-brand-text/20 font-mono">{prof.nationalId}</span>
                                             </div>
-                                            <p className="text-prevenort-text/40 text-xs mb-4">{prof.role} • {prof.email}</p>
+                                            <p className="text-brand-text/40 text-xs mb-4">{prof.role} • {prof.email}</p>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-xs text-prevenort-text/60">
-                                                <MapPin className="w-3 h-3 text-prevenort-text/20" />
+                                            <div className="flex items-center gap-2 text-xs text-brand-text/60">
+                                                <MapPin className="w-3 h-3 text-brand-text/20" />
                                                 <span>{prof.residence?.city || '—'}, {prof.residence?.region || ''}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-prevenort-text/60">
-                                                <Briefcase className="w-3 h-3 text-prevenort-text/20" />
+                                            <div className="flex items-center gap-2 text-xs text-brand-text/60">
+                                                <Briefcase className="w-3 h-3 text-brand-text/20" />
                                                 <span>{prof.contracts?.length || 0} Contrato(s) • {prof.team || 'Sin Equipo'}</span>
                                             </div>
                                         </div>
 
-                                        <div className="pt-4 border-t border-prevenort-border">
+                                        <div className="pt-4 border-t border-brand-border">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <GraduationCap className="w-3 h-3 text-prevenort-text/20" />
-                                                <span className="text-[10px] uppercase font-bold text-prevenort-text/40 tracking-widest">Competencias</span>
+                                                <GraduationCap className="w-3 h-3 text-brand-text/20" />
+                                                <span className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Competencias</span>
                                             </div>
                                             <div className="flex flex-wrap gap-1">
                                                 {prof.competencies.map((comp, i) => (
-                                                    <span key={i} className="text-[9px] bg-prevenort-surface border border-prevenort-border px-1.5 py-0.5 rounded text-prevenort-text/80">
+                                                    <span key={i} className="text-[9px] bg-brand-surface border border-brand-border px-1.5 py-0.5 rounded text-brand-text/80">
                                                         {comp}
                                                     </span>
                                                 ))}
@@ -771,7 +771,7 @@ export const ProfessionalMatrix: React.FC = () => {
             {/* Modal superpuesto para ver foto grande */}
             {viewingPhoto && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setViewingPhoto(null)}>
-                    <div className="relative max-w-2xl max-h-[80vh] bg-prevenort-surface rounded-2xl overflow-hidden border border-prevenort-border shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                    <div className="relative max-w-2xl max-h-[80vh] bg-brand-surface rounded-2xl overflow-hidden border border-brand-border shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                         <div className="absolute top-4 right-4 flex gap-2">
                             <button onClick={() => setViewingPhoto(null)} className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md">
                                 <X className="w-6 h-6" />

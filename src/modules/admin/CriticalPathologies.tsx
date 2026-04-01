@@ -79,10 +79,10 @@ export const CriticalPathologies: React.FC = () => {
                         <div className="p-2 bg-warning/10 rounded-xl">
                             <Building2 className="w-5 h-5 text-warning" />
                         </div>
-                        <h3 className="text-xs font-black text-prevenort-text/80 uppercase tracking-widest">Selector Clínica</h3>
+                        <h3 className="text-xs font-black text-brand-text/80 uppercase tracking-widest">Selector Clínica</h3>
                     </div>
 
-                    <div className="card-premium space-y-2 p-3 bg-prevenort-surface/30">
+                    <div className="card-premium space-y-2 p-3 bg-brand-surface/30">
                         {institutions.map(inst => (
                             <button
                                 key={inst.id}
@@ -91,11 +91,11 @@ export const CriticalPathologies: React.FC = () => {
                                     "w-full text-left p-4 rounded-2xl transition-all border",
                                     selectedInst === inst.id
                                         ? "bg-warning/10 border-warning text-warning shadow-lg shadow-warning/10 scale-[1.02]"
-                                        : "bg-prevenort-surface border-prevenort-border text-prevenort-text/60 hover:border-prevenort-text/20 hover:text-prevenort-text block"
+                                        : "bg-brand-surface border-brand-border text-brand-text/60 hover:border-brand-text/20 hover:text-brand-text block"
                                 )}
                             >
                                 <p className="text-sm font-black uppercase truncate">{inst.nombre_comercial}</p>
-                                <p className="text-[10px] uppercase font-bold text-prevenort-text/30 mt-1 truncate">VPN Legacy ID: {inst.legacy_id}</p>
+                                <p className="text-[10px] uppercase font-bold text-brand-text/30 mt-1 truncate">VPN Legacy ID: {inst.legacy_id}</p>
                             </button>
                         ))}
                     </div>
@@ -118,7 +118,7 @@ export const CriticalPathologies: React.FC = () => {
                             <div className="p-2 bg-danger/10 rounded-xl">
                                 <AlertTriangle className="w-5 h-5 text-danger" />
                             </div>
-                            <h3 className="text-xs font-black text-prevenort-text/80 uppercase tracking-widest">Matriz de Alertas Rojas</h3>
+                            <h3 className="text-xs font-black text-brand-text/80 uppercase tracking-widest">Matriz de Alertas Rojas</h3>
                         </div>
                         <button 
                             onClick={() => setIsAdding(!isAdding)}
@@ -129,7 +129,7 @@ export const CriticalPathologies: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="card-premium flex flex-col bg-prevenort-surface/30 p-0 overflow-hidden min-h-[500px]">
+                    <div className="card-premium flex flex-col bg-brand-surface/30 p-0 overflow-hidden min-h-[500px]">
                         
                         {/* Formulario Inline (Add) */}
                         {isAdding && (
@@ -137,23 +137,23 @@ export const CriticalPathologies: React.FC = () => {
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-warning mb-4">Añadir Disparador de Emergencia</h4>
                                 <div className="flex gap-4 items-end">
                                     <div className="flex-1 space-y-2">
-                                        <label className="text-[10px] font-bold text-prevenort-text/40 uppercase">Palabra Clave o Hallazgo (Ej: Neumotórax)</label>
+                                        <label className="text-[10px] font-bold text-brand-text/40 uppercase">Palabra Clave o Hallazgo (Ej: Neumotórax)</label>
                                         <input 
                                             type="text" 
                                             value={newFindingType}
                                             onChange={(e) => setNewFindingType(e.target.value)}
                                             placeholder="Buscar este texto exacto..."
-                                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-warning outline-none"
+                                            className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-warning outline-none"
                                         />
                                     </div>
                                     <div className="flex-2 space-y-2" style={{flex: 2}}>
-                                        <label className="text-[10px] font-bold text-prevenort-text/40 uppercase">Correos de Destino (separados por coma)</label>
+                                        <label className="text-[10px] font-bold text-brand-text/40 uppercase">Correos de Destino (separados por coma)</label>
                                         <input 
                                             type="text" 
                                             value={newTargetEmails}
                                             onChange={(e) => setNewTargetEmails(e.target.value)}
                                             placeholder="urgencias@cl.com, medico.jefe@cl.com"
-                                            className="w-full bg-prevenort-surface border border-prevenort-border rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-warning outline-none"
+                                            className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-warning outline-none"
                                         />
                                     </div>
                                     <button 
@@ -168,28 +168,28 @@ export const CriticalPathologies: React.FC = () => {
 
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-prevenort-border bg-prevenort-surface/80">
-                                    <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Hallazgo Sensible</th>
-                                    <th className="px-6 py-4 text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Protocolo de Redirección (Email)</th>
-                                    <th className="px-6 py-4 text-center text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Estado</th>
-                                    <th className="px-6 py-4 text-right text-[10px] font-black text-prevenort-text/40 uppercase tracking-widest">Acciones</th>
+                                <tr className="border-b border-brand-border bg-brand-surface/80">
+                                    <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Hallazgo Sensible</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Protocolo de Redirección (Email)</th>
+                                    <th className="px-6 py-4 text-center text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Estado</th>
+                                    <th className="px-6 py-4 text-right text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-prevenort-border">
+                            <tbody className="divide-y divide-brand-border">
                                 {filteredPathologies.map(p => (
                                     <tr key={p.id} className="hover:bg-danger/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <AlertTriangle className="w-4 h-4 text-danger" />
-                                                <span className="text-sm font-black text-prevenort-text">{p.finding_type}</span>
+                                                <span className="text-sm font-black text-brand-text">{p.finding_type}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <Mail className="w-4 h-4 text-prevenort-text/30" />
+                                                <Mail className="w-4 h-4 text-brand-text/30" />
                                                 <div className="flex flex-wrap gap-1">
                                                     {p.target_emails.split(',').map((email: string, i: number) => (
-                                                        <span key={i} className="text-[9px] bg-prevenort-surface font-bold text-prevenort-text/80 px-2 py-1 border border-prevenort-border rounded-md">
+                                                        <span key={i} className="text-[9px] bg-brand-surface font-bold text-brand-text/80 px-2 py-1 border border-brand-border rounded-md">
                                                             {email.trim()}
                                                         </span>
                                                     ))}
@@ -220,8 +220,8 @@ export const CriticalPathologies: React.FC = () => {
                                                 <div className="p-4 bg-danger/5 border border-danger/10 rounded-full mb-4">
                                                     <AlertTriangle className="w-8 h-8 text-danger/40" />
                                                 </div>
-                                                <p className="text-xs font-bold text-prevenort-text/40 uppercase tracking-widest mb-1">Sin Reglas de Alerta Crítica</p>
-                                                <p className="text-[10px] text-prevenort-text/30">Crea una regla para que AMIS envíe correos urgentes si detecta la patología.</p>
+                                                <p className="text-xs font-bold text-brand-text/40 uppercase tracking-widest mb-1">Sin Reglas de Alerta Crítica</p>
+                                                <p className="text-[10px] text-brand-text/30">Crea una regla para que AMIS envíe correos urgentes si detecta la patología.</p>
                                             </div>
                                         </td>
                                     </tr>

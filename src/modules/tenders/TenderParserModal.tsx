@@ -54,43 +54,43 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="w-full max-w-2xl bg-prevenort-surface border border-prevenort-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="flex items-center justify-between p-6 border-b border-prevenort-border">
+            <div className="w-full max-w-2xl bg-brand-surface border border-brand-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between p-6 border-b border-brand-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-info/10 border border-info/20">
                             <Sparkles className="w-5 h-5 text-info" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-prevenort-text uppercase tracking-tighter">Motor de Análisis Agrawall AI</h2>
-                            <p className="text-[10px] text-prevenort-text/40 font-mono uppercase tracking-widest">Extracción de Matriz de Riesgo v3</p>
+                            <h2 className="text-xl font-black text-brand-text uppercase tracking-tighter">Motor de Análisis Agrawall AI</h2>
+                            <p className="text-[10px] text-brand-text/40 font-mono uppercase tracking-widest">Extracción de Matriz de Riesgo v3</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-prevenort-primary/5 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-prevenort-text/40" />
+                    <button onClick={onClose} className="p-2 hover:bg-brand-primary/5 rounded-full transition-colors">
+                        <X className="w-5 h-5 text-brand-text/40" />
                     </button>
                 </div>
 
                 <div className="p-8">
                     {!result ? (
                         <div className="space-y-6">
-                            <div className="relative border-2 border-dashed border-prevenort-border rounded-2xl p-12 text-center group hover:border-info/30 transition-all cursor-pointer">
+                            <div className="relative border-2 border-dashed border-brand-border rounded-2xl p-12 text-center group hover:border-info/30 transition-all cursor-pointer">
                                 <input
                                     type="file"
                                     accept="application/pdf"
                                     onChange={handleFileChange}
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
-                                <Upload className="w-12 h-12 text-prevenort-text/10 mx-auto mb-4 group-hover:text-info/50 transition-colors" />
-                                <p className="text-sm font-bold text-prevenort-text/60 mb-1">
+                                <Upload className="w-12 h-12 text-brand-text/10 mx-auto mb-4 group-hover:text-info/50 transition-colors" />
+                                <p className="text-sm font-bold text-brand-text/60 mb-1">
                                     {file ? file.name : "Arrastra las bases de la licitación aquí"}
                                 </p>
-                                <p className="text-[10px] text-prevenort-text/20 uppercase tracking-widest">Formatos soportados: PDF (Máx 20MB)</p>
+                                <p className="text-[10px] text-brand-text/20 uppercase tracking-widest">Formatos soportados: PDF (Máx 20MB)</p>
                             </div>
 
                             <button
                                 onClick={handleProcess}
                                 disabled={!file || parsing}
-                                className="w-full py-4 bg-prevenort-primary text-white rounded-xl font-black uppercase tracking-widest text-xs hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
+                                className="w-full py-4 bg-brand-primary text-white rounded-xl font-black uppercase tracking-widest text-xs hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
                             >
                                 {parsing ? (
                                     <>
@@ -116,20 +116,20 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-prevenort-bg border border-prevenort-border">
-                                    <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Servicio Detectado</p>
-                                    <p className="text-sm font-bold text-prevenort-text truncate">{result.identificacion?.tipoServicio || 'No Detectado'}</p>
+                                <div className="p-4 rounded-xl bg-brand-bg border border-brand-border">
+                                    <p className="text-[9px] text-brand-text/30 uppercase font-mono mb-1">Servicio Detectado</p>
+                                    <p className="text-sm font-bold text-brand-text truncate">{result.identificacion?.tipoServicio || 'No Detectado'}</p>
                                 </div>
-                                <div className="p-4 rounded-xl bg-prevenort-bg border border-prevenort-border">
-                                    <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Volumen Proyectado</p>
+                                <div className="p-4 rounded-xl bg-brand-bg border border-brand-border">
+                                    <p className="text-[9px] text-brand-text/30 uppercase font-mono mb-1">Volumen Proyectado</p>
                                     <p className="text-sm font-bold text-info">{result.volumen?.total?.toLocaleString() || '0'} un.</p>
                                 </div>
-                                <div className="p-4 rounded-xl bg-prevenort-bg border border-prevenort-border">
-                                    <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Escala de Riesgo</p>
+                                <div className="p-4 rounded-xl bg-brand-bg border border-brand-border">
+                                    <p className="text-[9px] text-brand-text/30 uppercase font-mono mb-1">Escala de Riesgo</p>
                                     <p className="text-sm font-bold text-danger">{result.riesgoSLA?.escala ?? '?'}/8</p>
                                 </div>
-                                <div className="p-4 rounded-xl bg-prevenort-bg border border-prevenort-border">
-                                    <p className="text-[9px] text-prevenort-text/30 uppercase font-mono mb-1">Margen Estimado</p>
+                                <div className="p-4 rounded-xl bg-brand-bg border border-brand-border">
+                                    <p className="text-[9px] text-brand-text/30 uppercase font-mono mb-1">Margen Estimado</p>
                                     <p className="text-sm font-bold text-success">
                                         {result.economia?.margenProyectado ? `${result.economia.margenProyectado}%` : '28.5%'}
                                     </p>
@@ -139,7 +139,7 @@ export const TenderParserModal: React.FC<TenderParserModalProps> = ({ isOpen, on
                             <div className="flex gap-3 mt-8">
                                 <button
                                     onClick={() => setResult(null)}
-                                    className="flex-1 py-3 bg-prevenort-bg text-prevenort-text/60 rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-prevenort-primary/5 transition-all border border-prevenort-border"
+                                    className="flex-1 py-3 bg-brand-bg text-brand-text/60 rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-brand-primary/5 transition-all border border-brand-border"
                                 >
                                     Reintentar
                                 </button>
