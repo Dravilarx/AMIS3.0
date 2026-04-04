@@ -14,7 +14,10 @@ const ROLE_LABELS: Record<UserRole, string> = {
     'ADMIN': 'ADMINISTRADOR',
     'MANAGER': 'GERENTE DE RED',
     'OPERATOR': 'GESTOR CLÍNICO',
-    'VIEWER': 'AUDITOR EXTERNO'
+    'VIEWER': 'AUDITOR EXTERNO',
+    'ADMIN_SECRETARY': 'SECRETARÍA ADN',
+    'PARTNER': 'LABORATORIO/SOCIO',
+    'MED_CHIEF': 'JEFE DE SERVICIO'
 };
 
 export const CreateInternalUserModal: React.FC<CreateInternalUserModalProps> = ({ isOpen, onClose, onCreated }) => {
