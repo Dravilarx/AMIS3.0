@@ -13,13 +13,21 @@ export interface MultirisRecord {
     radiologo_validado: string;
     addendum_text: string | null;
     has_addendum: boolean;
+    status?: 'PENDING_INFO' | 'PENDING_CENTER_ACTION' | 'VALIDATED' | 'INFORMED';
+    pending_reason?: 'Examen incompleto' | 'Faltan antecedentes' | 'Faltan previos' | 'Prestación incorrecta' | 'Otra' | null;
+    pending_message?: string | null;
+    pending_author_name?: string | null;
+    is_priority?: boolean;
     accession_number: string | null;
     paciente_id: string | null;
     paciente_nombre: string | null;
     examen_nombre: string | null;
+    external_patient_id?: string | null;
+    patient_id_source?: 'RUT' | 'NUM_COBRE' | 'EXTERNAL_ID';
     id_informe: string | null;
     id_risexamen: string | null;
     raw_json: any;
+    id?: string;
 }
 
 const normalizeKey = (str: string) => {
@@ -126,6 +134,11 @@ export const parseMultirisExcel = async (file: File): Promise<MultirisRecord[]> 
                         examen_nombre: getVal(row, ['Examen', 'Nombre Examen', 'Estudio', 'Descripcion', 'Procedimiento'], ''),
                         id_informe: String(getVal(row, ['IDINFORME', 'Id Informe', 'Nro Informe'], '')),
                         id_risexamen: String(getVal(row, ['id_risexamen', 'ID Ris Examen', 'Ris Examen', 'idrisexamen'], '')),
+                        status: 'PENDING_INFO',
+                        pending_reason: null,
+                        pending_message: null,
+                        pending_author_name: null,
+                        is_priority: false,
                         raw_json: row
                     };
                 });
@@ -495,5 +508,79 @@ export const deleteGrupoMedico = async (id: string): Promise<void> => {
         .delete()
         .eq('id', id);
     if (error) throw error;
+};
+
+// --- Flujo de Pendientes por Centro (B2B) ---
+
+export const setPendingCenterAction = async (params: {
+    reportId: string,
+    reason: MultirisRecord['pending_reason'],
+    message: string,
+    authorName: string, // Nombre resuelto vía signatureUtils
+    // Datos adicionales para el dispatch de alertas
+    patientRut?: string,
+    patientName?: string,
+    examName?: string,
+    accessionNumber?: string,
+    centerAetitle?: string,
+    authorClinicalRole?: string,
+    authorSupervisorName?: string,
+}) => {
+    const { error } = await supabase
+        .from('multiris_production')
+        .update({
+            status: 'PENDING_CENTER_ACTION',
+            pending_reason: params.reason,
+            pending_message: params.message,
+            pending_author_name: params.authorName,
+            // Al pasar a PENDING_CENTER_ACTION el SLA se congela en la lógica de UI
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', params.reportId);
+
+    if (error) throw error;
+
+    // Disparar alerta automática al centro B2B
+    try {
+        await supabase.functions.invoke('dispatch-global-alerts', {
+            body: {
+                alert_type: 'PENDING_CENTER_ACTION',
+                report_id: params.reportId,
+                patient_rut: params.patientRut,
+                patient_name: params.patientName,
+                exam_name: params.examName,
+                accession_number: params.accessionNumber,
+                center_aetitle: params.centerAetitle,
+                pending_reason: params.reason,
+                pending_message: params.message,
+                author_name: params.authorName,
+                author_clinical_role: params.authorClinicalRole,
+                author_supervisor_name: params.authorSupervisorName,
+            }
+        });
+        console.log('📡 Alerta PENDING_CENTER_ACTION despachada');
+    } catch (dispatchErr) {
+        console.error('⚠️ Error despachando alerta (no bloqueante):', dispatchErr);
+    }
+
+    return { success: true };
+};
+
+export const resolveCenterAction = async (reportId: string) => {
+    const { error } = await supabase
+        .from('multiris_production')
+        .update({
+            status: 'PENDING_INFO',
+            pending_reason: null,
+            pending_message: null,
+            pending_author_name: null,
+            is_priority: true, // Hereda prioridad alta
+            fecha_asignacion: new Date().toISOString(), // Reinicia SLA de asignación
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', reportId);
+
+    if (error) throw error;
+    return { success: true };
 };
 

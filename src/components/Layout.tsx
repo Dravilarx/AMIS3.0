@@ -30,13 +30,13 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist';
 
-    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal') => void;
+    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist') => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
-    const { user, signOut, isRecoveringPassword } = useAuth();
+    const { user, signOut, isRecoveringPassword, hasModuleAccess } = useAuth();
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
         const saved = localStorage.getItem('brand-theme');
@@ -67,6 +67,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
         { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
         { id: 'b2b_portal', name: 'Portal B2B', icon: Hospital },
+        { id: 'secretary_command', name: 'Torre de Control', icon: Activity },
+        { id: 'radiology_worklist', name: 'Worklist Radiológica', icon: FileText },
     ] as const;
 
     const ROLE_LABELS: Record<string, string> = {
@@ -75,7 +77,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         'MANAGER': 'GERENTE DE RED',
         'OPERATOR': 'GESTOR CLÍNICO',
         'VIEWER': 'AUDITOR EXTERNO',
-        'PARTNER': 'CENTRO DERIVADOR'
+        'PARTNER': 'CENTRO DERIVADOR',
+        'MED_CHIEF': 'JEFE DE SERVICIO',
+        'ADMIN_SECRETARY': 'SECRETARÍA ADM.'
     };
 
     return (
@@ -96,7 +100,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 </div>
 
                 <nav className="space-y-1.5 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                    {navItems.map((item) => (
+                    {navItems.filter(item => hasModuleAccess(item.id)).map((item) => (
                         <SidebarItem
                             key={item.id}
                             icon={item.icon}

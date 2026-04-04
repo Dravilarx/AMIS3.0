@@ -637,17 +637,31 @@ export const useClinicalProcedures = () => {
         }
     };
 
-    const getPatientHistory = async (rut: string): Promise<ClinicalAppointment[]> => {
+    const getPatientHistory = async (
+        rut: string,
+        options?: { idSource?: 'RUT' | 'NUM_COBRE' | 'EXTERNAL_ID' }
+    ): Promise<ClinicalAppointment[]> => {
         try {
-            const { data, error } = await supabase
+            // Identidad Adaptativa: buscar por la llave correcta
+            const idSource = options?.idSource || 'RUT';
+            let query = supabase
                 .from('clinical_appointments')
                 .select(`
                     *,
                     procedure:medical_procedures_catalog(*),
                     center:clinical_centers(*)
                 `)
-                .eq('patient_rut', rut)
                 .order('appointment_date', { ascending: false });
+
+            // Query dinámica según tipo de ID
+            if (idSource === 'RUT') {
+                query = query.eq('patient_rut', rut);
+            } else {
+                // Para NUM_COBRE/EXTERNAL_ID, buscar en external_patient_id
+                query = query.eq('external_patient_id', rut);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 

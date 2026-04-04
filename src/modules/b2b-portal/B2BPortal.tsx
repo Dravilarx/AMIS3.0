@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { resolvePublicSignatureNameSync } from '../../lib/signatureUtils';
+import { resolvePatientId, getIdBadgeStyle, type PatientIdSource } from '../../lib/adaptiveIdentity';
 import { 
   ClipboardList, 
   Download, 
@@ -20,6 +21,8 @@ interface Study {
   accession_number: string;
   paciente_nombre: string;
   paciente_id: string; // RUT
+  external_patient_id: string | null;
+  patient_id_source: PatientIdSource;
   examen_nombre: string;
   fecha_examen: string;
   fecha_validacion: string | null;
@@ -53,7 +56,7 @@ export const B2BPortal: React.FC = () => {
       // En un caso real filtramos por la institución del usuario logueado
       const { data, error } = await supabase
         .from('multiris_production')
-        .select('id, accession_number, paciente_nombre, paciente_id, examen_nombre, fecha_examen, fecha_validacion, radiologo_validado, has_addendum')
+        .select('id, accession_number, paciente_nombre, paciente_id, external_patient_id, patient_id_source, examen_nombre, fecha_examen, fecha_validacion, radiologo_validado, has_addendum')
         .order('fecha_examen', { ascending: false })
         .limit(20);
 
@@ -180,7 +183,25 @@ export const B2BPortal: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <div className="font-medium text-slate-200">{study.paciente_nombre}</div>
-                    <div className="text-xs text-slate-500">{study.examen_nombre}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {(() => {
+                        const pid = resolvePatientId({
+                          paciente_id: study.paciente_id,
+                          external_patient_id: study.external_patient_id,
+                          patient_id_source: study.patient_id_source,
+                        });
+                        const badge = getIdBadgeStyle(pid.source);
+                        return (
+                          <>
+                            <span className="text-xs text-slate-500 font-mono">{pid.value}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${badge.bgClass} ${badge.textClass} ${badge.borderClass}`}>
+                              {badge.text}
+                            </span>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">{study.examen_nombre}</div>
                   </td>
                   <td className="p-4 text-sm font-mono text-indigo-400">{study.accession_number}</td>
                   <td className="p-4 text-sm text-slate-400">

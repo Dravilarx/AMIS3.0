@@ -23,10 +23,21 @@ import { DispatchCenter } from './modules/dispatch/DispatchCenter'
 import { QuickViewBridge } from './modules/quick-view/QuickViewBridge'
 import { MobileMicView } from './modules/remote-mic/MobileMicView'
 import { B2BPortal } from './modules/b2b-portal/B2BPortal'
+import { SecretaryCommandCenter } from './modules/admin-secretary/SecretaryCommandCenter'
+import { RadiologistWorklist } from './modules/radiology-worklist/RadiologistWorklist'
+import { useEffect } from 'react'
 
 function App() {
   const { user } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'ai_knowledge'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist'>('dashboard');
+
+  useEffect(() => {
+    if (user?.app_role === 'ADMIN_SECRETARY' || user?.app_role === 'MED_CHIEF') {
+      setCurrentView('secretary_command');
+    } else if (user?.app_role === 'MED_STAFF') {
+      setCurrentView('radiology_worklist');
+    }
+  }, [user]);
 
   if (window.location.pathname.startsWith('/guia/')) {
     return <PatientGuideView />;
@@ -63,6 +74,8 @@ function App() {
       case 'messaging': return <MessagingHub />;
       case 'dms': return <SemanticDMS />;
       case 'ideation': return <IdeaAnalyst />;
+      case 'secretary_command': return <SecretaryCommandCenter />;
+      case 'radiology_worklist': return <RadiologistWorklist />;
       case 'admin': 
         if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AdminModule />;
         return <DashboardModule />;
