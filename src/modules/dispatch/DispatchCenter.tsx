@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 // ═══════════════════════════════════════════════════════════════
 // 🖥️ AMIS 3.0 — Centro de Despacho (Torre de Control)
@@ -94,6 +95,7 @@ export const DispatchCenter: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [reassigning, setReassigning] = useState(false);
 
+  const { user } = useAuth();
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // ── Sonido de alerta ──────────────────────────────────────
@@ -227,12 +229,23 @@ export const DispatchCenter: React.FC = () => {
     setReassigning(true);
 
     try {
+      let assignerLabel = 'dispatch_center';
+      if (user) {
+        if (['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MED_CHIEF'].includes(user.role)) {
+          assignerLabel = 'Jefatura';
+        } else if (['ADMIN_SECRETARY', 'OPERATOR'].includes(user.role)) {
+          assignerLabel = 'Secretaría';
+        } else {
+          assignerLabel = user.name;
+        }
+      }
+
       const auditEntry = {
         action: 'manual_reassign',
         from_radiologist: selectedCase.radiologo_nombre,
         to_radiologist: rad.nombre,
         to_radiologist_id: rad.id,
-        reassigned_by: 'dispatch_center',
+        reassigned_by: assignerLabel,
         timestamp: new Date().toISOString(),
       };
 
@@ -247,7 +260,7 @@ export const DispatchCenter: React.FC = () => {
           radiologo_nombre: rad.nombre,
           radiologo_telegram_chat_id: rad.telegram_chat_id,
           status: 'dispatched',
-          reassigned_by: 'dispatch_center',
+          reassigned_by: assignerLabel,
           reassigned_to: rad.id,
           escalation_level: 0,
           escalated_at: null,
@@ -715,6 +728,14 @@ export const DispatchCenter: React.FC = () => {
                   <p className="text-[10px] text-brand-text/40 mt-0.5">
                     {selectedCase.radiologo_telegram_chat_id ? '📱 Con Telegram' : '⚠️ Sin Telegram'}
                   </p>
+                  {selectedCase.reassigned_by && selectedCase.reassigned_by !== 'dispatch_center' && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                      <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">
+                        Asignado por {selectedCase.reassigned_by}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="p-3 bg-brand-bg rounded-xl border border-brand-border">
                   <p className="text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">SLA</p>
