@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     X,
     ClipboardCheck,
@@ -19,8 +19,13 @@ import {
     ShieldCheck,
     XCircle,
     History,
-    UploadCloud
+    UploadCloud,
+    Mic,
+    QrCode,
+    Smartphone
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { supabase } from '../../lib/supabase';
 import { type ClinicalAppointment, type ClinicalIndications } from '../../types/clinical';
 import { cn, formatRUT, formatName, formatPhone } from '../../lib/utils';
 
@@ -64,6 +69,10 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     const [uploadingResult, setUploadingResult] = useState(false);
     const [resultFile, setResultFile] = useState<File | null>(null);
     const [findings, setFindings] = useState('');
+    const [showQR, setShowQR] = useState(false);
+    const [isPhoneConnected, setIsPhoneConnected] = useState(false);
+    const [sessionToken, setSessionToken] = useState<string | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (isOpen && appointment) {
@@ -75,9 +84,83 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                 })
                 .finally(() => setLoadingInd(false));
         }
-        // Reset dropdown state when panel opens/closes
+        // Reset dropdown and QR state when panel opens/closes
         setOpenDropdownId(null);
+        setShowQR(false);
+        setSessionToken(null);
     }, [isOpen, appointment]);
+
+    useEffect(() => {
+        if (!sessionToken) return;
+
+        const channel = supabase
+            .channel(`remote-mic-${sessionToken}`)
+            .on('postgres_changes', { 
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'remote_dictation_sessions',
+                filter: `session_token=eq.${sessionToken}` 
+            }, (payload: any) => {
+                // Actualizar estado de conexión
+                if (payload.new.is_connected !== undefined) {
+                    setIsPhoneConnected(payload.new.is_connected);
+                }
+
+                // Inyectar texto
+                const newText = payload.new.live_text;
+                if (newText && textareaRef.current) {
+                    const start = textareaRef.current.selectionStart;
+                    const end = textareaRef.current.selectionEnd;
+                    const text = textareaRef.current.value;
+                    const before = text.substring(0, start);
+                    const after = text.substring(end);
+                    
+                    const result = `${before}${before.endsWith(' ') || before === '' ? '' : ' '}${newText}${after.startsWith(' ') || after === '' ? '' : ' '}${after}`;
+                    setFindings(result);
+                    
+                    // Simple notification sound or feedback could go here
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [sessionToken]);
+
+    const toggleRemoteMic = async () => {
+        if (showQR) {
+            setShowQR(false);
+            return;
+        }
+
+        if (!appointment) return;
+
+        setIsPhoneConnected(false); // Reset connection status for new token
+
+        // Generate token
+        const token = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        // Expiration
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 30);
+
+        // Save session
+        const { error } = await supabase
+            .from('remote_dictation_sessions')
+            .upsert({
+                study_uid: appointment.id,
+                session_token: token,
+                expires_at: expiresAt.toISOString()
+            });
+
+        if (!error) {
+            setSessionToken(token);
+            setShowQR(true);
+        } else {
+            console.error("Error creating dictation session:", error);
+        }
+    };
 
     if (!isOpen || !appointment) return null;
 
@@ -615,12 +698,64 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             />
                         </div>
                         <div className="space-y-2.5">
-                            <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Dictamen o Conclusiones</label>
+                            <div className="flex items-center justify-between px-1">
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest">Dictamen o Conclusiones</label>
+                                <div className="flex items-center gap-3">
+                                    {showQR && (
+                                        <div className={cn(
+                                            "flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-500",
+                                            isPhoneConnected 
+                                                ? "bg-success/10 border-success/30 text-success shadow-[0_0_15px_rgba(34,197,94,0.1)]" 
+                                                : "bg-brand-text/5 border-brand-border/30 text-brand-text/30"
+                                        )}>
+                                            <Smartphone className={cn("w-3 h-3", isPhoneConnected && "animate-pulsing-subtle text-success")} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest leading-none">
+                                                {isPhoneConnected ? 'Puente Firme' : 'Celular no vinculado'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <button 
+                                        onClick={toggleRemoteMic}
+                                        className={cn(
+                                            "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all shadow-sm border",
+                                            showQR 
+                                                ? "bg-brand-primary text-white border-brand-primary" 
+                                                : "bg-brand-primary/10 border-brand-primary/20 text-brand-primary hover:bg-brand-primary hover:text-white"
+                                        )}
+                                    >
+                                        <Mic className={cn("w-3.5 h-3.5", showQR && "animate-pulse")} />
+                                        {showQR ? "DETENER" : "MICRÓFONO REMOTO"}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {showQR && sessionToken && (
+                                <div className="p-8 bg-brand-surface border border-brand-primary/30 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 animate-in zoom-in-95 duration-500 shadow-2xl shadow-orange-500/10 mb-6">
+                                    <div className="p-4 bg-white rounded-3xl shadow-inner border-4 border-brand-primary/10 group transition-all hover:scale-105">
+                                         <QRCodeSVG value={`${window.location.origin}/mobile-mic/${sessionToken}`} size={140} />
+                                    </div>
+                                    <div className="flex-1 text-center md:text-left space-y-3">
+                                        <div className="flex items-center gap-2 justify-center md:justify-start">
+                                            <QrCode className="w-4 h-4 text-brand-primary" />
+                                            <h5 className="text-sm font-black uppercase text-brand-text tracking-tighter">Dictado Remoto Activo</h5>
+                                        </div>
+                                        <p className="text-[10px] text-brand-text/50 font-bold uppercase leading-relaxed max-w-xs">
+                                            Escanea con tu celular para convertirlo en micrófono. Los hallazgos se inyectarán en la posición del cursor.
+                                        </p>
+                                        <div className="flex items-center gap-2 text-[9px] font-bold text-success bg-success/10 border border-success/20 px-3 py-1.5 rounded-xl w-fit mx-auto md:mx-0">
+                                            <Clock className="w-3 h-3" />
+                                            EXPIRA EN 30 MIN O AL CERRAR EXAMEN
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <textarea
+                                ref={textareaRef}
                                 value={findings}
                                 onChange={(e) => setFindings(e.target.value)}
-                                className="w-full h-32 bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text focus:border-brand-primary transition-all"
-                                placeholder="Describa el resultado del procedimiento..."
+                                className="w-full h-48 bg-brand-bg border border-brand-border rounded-[1.5rem] px-5 py-4 text-sm text-brand-text focus:border-brand-primary transition-all shadow-inner focus:ring-4 focus:ring-brand-primary/5"
+                                placeholder="Escriba o use el micrófono remoto para dictar sus hallazgos..."
                             />
                         </div>
                         <button

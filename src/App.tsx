@@ -21,6 +21,7 @@ import { PatientGuideView } from './modules/clinical/PatientGuideView'
 import { AiAccessManager } from './modules/ai-access/AiAccessManager'
 import { DispatchCenter } from './modules/dispatch/DispatchCenter'
 import { QuickViewBridge } from './modules/quick-view/QuickViewBridge'
+import { MobileMicView } from './modules/remote-mic/MobileMicView'
 
 function App() {
   const { user } = useAuth();
@@ -30,9 +31,16 @@ function App() {
     return <PatientGuideView />;
   }
 
-  // 🔗 Magic Link Bridge — Redirige al visor SESHAT tras validar JWT
   if (window.location.pathname === '/quick-view') {
     return <QuickViewBridge />;
+  }
+
+  const mobileMicToken = window.location.pathname.startsWith('/mobile-mic/') 
+    ? window.location.pathname.split('/mobile-mic/')[1] 
+    : null;
+
+  if (mobileMicToken) {
+    return <MobileMicView token={mobileMicToken} />;
   }
 
   // Protector de Rutas: Si no hay usuario, retorna vista Login
