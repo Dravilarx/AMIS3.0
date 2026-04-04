@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         patient_rut: patient_rut,
         request_text: request_text,
         requested_by_center: center_id || null,
-        status: 'PENDING'
+        status: 'TRIAGE_PENDING'
       })
       .select()
       .single()

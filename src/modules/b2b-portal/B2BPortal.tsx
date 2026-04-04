@@ -75,12 +75,12 @@ export const B2BPortal: React.FC = () => {
           study_uid: selectedStudy.accession_number,
           patient_rut: selectedStudy.paciente_id,
           request_text: addendumText,
-          status: 'PENDING'
+          status: 'TRIAGE_PENDING'
         });
 
       if (error) throw error;
       
-      alert('Solicitud de Addendum enviada al radiólogo.');
+      alert('✅ Solicitud enviada a la bandeja de triage. Secretaría administrativa revisará y asignará al especialista correspondiente.');
       setIsModalOpen(false);
       setAddendumText('');
       setSelectedStudy(null);
@@ -244,7 +244,7 @@ export const B2BPortal: React.FC = () => {
 
               <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                 <p className="text-xs text-amber-500 leading-relaxed italic">
-                  * Importante: Las solicitudes de addendum generan una notificación prioritaria al radiólogo informante. Favor de usar solo para dudas diagnósticas críticas.
+                  * Su solicitud ingresará a la bandeja de triage de Secretaría Administrativa, quien la revisará y asignará al especialista correspondiente. Tiempo de respuesta estimado: 2-4 horas hábiles.
                 </p>
               </div>
             </div>

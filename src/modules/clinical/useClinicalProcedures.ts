@@ -54,7 +54,7 @@ export const useClinicalProcedures = () => {
                 supabase.from('clinical_indications').select('*, procedure:medical_procedures_catalog(name), center:clinical_centers(name)'),
                 supabase.from('professionals').select('*').order('name'),
                 supabase.from('institutions').select('*').order('legal_name'),
-                supabase.from('addendum_requests').select('*').eq('status', 'PENDING')
+                supabase.from('addendum_requests').select('*').eq('status', 'ASSIGNED_TO_MEDIC')
             ]);
 
             if (catRes.error) throw catRes.error;
@@ -208,29 +208,48 @@ export const useClinicalProcedures = () => {
     useEffect(() => {
         fetchData();
 
-        // Realtime Subscription for Addendum Requests
+        // Realtime: el médico SOLO recibe alertas cuando una solicitud es ASSIGNED_TO_MEDIC
+        // y el assigned_to coincide con su propio user_id
+        let currentUserId: string | null = null;
+        supabase.auth.getUser().then(({ data }) => {
+            currentUserId = data.user?.id ?? null;
+        });
+
         const channel = supabase
-            .channel('addendum_status_changes')
+            .channel('addendum_medic_alerts')
             .on(
                 'postgres_changes',
                 {
-                    event: '*',
+                    event: 'UPDATE',
                     schema: 'public',
-                    table: 'addendum_requests'
+                    table: 'addendum_requests',
+                    filter: `status=eq.ASSIGNED_TO_MEDIC`
                 },
                 (payload) => {
-                    console.log('🔔 Addendum change received:', payload);
-                    if (payload.eventType === 'INSERT') {
-                        setAddendumRequests(prev => [...prev, payload.new]);
-                    } else if (payload.eventType === 'UPDATE') {
-                        if (payload.new.status === 'RESOLVED') {
-                            setAddendumRequests(prev => prev.filter(a => a.id !== payload.new.id));
-                        } else {
-                            setAddendumRequests(prev => prev.map(a => a.id === payload.new.id ? payload.new : a));
-                        }
-                    } else if (payload.eventType === 'DELETE') {
-                        setAddendumRequests(prev => prev.filter(a => a.id !== payload.old.id));
+                    const record = payload.new as any;
+                    // Solo actuar si fue asignado a este médico
+                    if (currentUserId && record.assigned_to === currentUserId) {
+                        console.log('🔔 Addendum asignado a ti:', record);
+                        setAddendumRequests(prev => {
+                            const exists = prev.find(a => a.id === record.id);
+                            return exists
+                                ? prev.map(a => a.id === record.id ? record : a)
+                                : [...prev, record];
+                        });
                     }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'addendum_requests',
+                    filter: `status=in.(RESOLVED_MEDIC,RESOLVED_ADMIN)`
+                },
+                (payload) => {
+                    // Eliminar de la lista si fue resuelto
+                    setAddendumRequests(prev => prev.filter(a => a.id !== payload.new.id));
                 }
             )
             .subscribe();
@@ -715,14 +734,14 @@ export const useClinicalProcedures = () => {
             // Marcamos el agendamiento como finalizado (completed)
             await updateAppointmentStatus(appointmentId, 'completed');
 
-            // Resolve pending addendum requests for this patient
+            // Resolve addendum requests asignados a este médico para ese paciente
             const app = appointments.find(a => a.id === appointmentId);
             if (app) {
                 await supabase
                     .from('addendum_requests')
-                    .update({ status: 'RESOLVED' })
+                    .update({ status: 'RESOLVED_MEDIC', resolved_at: new Date().toISOString() })
                     .eq('patient_rut', app.patientRut)
-                    .eq('status', 'PENDING');
+                    .eq('status', 'ASSIGNED_TO_MEDIC');
             }
 
             return { success: true };
