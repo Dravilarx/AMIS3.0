@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
@@ -30,9 +30,9 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal';
 
-    onNavigate: (view: any) => void;
+    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal') => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
@@ -66,7 +66,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'ideation', name: 'Innovación', icon: Lightbulb },
         { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
         { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
-
+        { id: 'b2b_portal', name: 'Portal B2B', icon: Hospital },
     ] as const;
 
     const ROLE_LABELS: Record<string, string> = {
@@ -74,7 +74,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         'ADMIN': 'ADMINISTRADOR',
         'MANAGER': 'GERENTE DE RED',
         'OPERATOR': 'GESTOR CLÍNICO',
-        'VIEWER': 'AUDITOR EXTERNO'
+        'VIEWER': 'AUDITOR EXTERNO',
+        'PARTNER': 'CENTRO DERIVADOR'
     };
 
     return (

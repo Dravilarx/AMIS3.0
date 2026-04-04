@@ -39,6 +39,7 @@ interface ProcedureDetailsPanelProps {
     onEdit?: (appointment: ClinicalAppointment) => void;
     onGetHistory: (rut: string) => Promise<ClinicalAppointment[]>;
     onUploadResult: (appointmentId: string, doctorId: string, findings: string, file?: File) => Promise<{ success: boolean; error?: string }>;
+    addendumRequests?: any[];
 }
 
 export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
@@ -50,7 +51,8 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     onUpdateStatus,
     onEdit,
     onGetHistory,
-    onUploadResult
+    onUploadResult,
+    addendumRequests = []
 }) => {
     const [indications, setIndications] = useState<ClinicalIndications | null>(null);
     const [loadingInd, setLoadingInd] = useState(false);
@@ -686,6 +688,20 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             <UploadCloud className="w-5 h-5 text-brand-primary" />
                             <h4 className="text-[11px] font-black text-brand-text/40 uppercase tracking-[0.25em]">Resultados y Entrega Final</h4>
                         </div>
+                        {/* Addendum Alert in Console */}
+                        {appointment && addendumRequests.some(r => r.patient_rut === appointment.patientRut && r.status === 'PENDING') && (
+                            <div className="bg-warning/10 border border-warning/30 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                                <div className="w-10 h-10 rounded-xl bg-warning/20 flex items-center justify-center text-warning">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[11px] font-black text-warning uppercase tracking-widest">⚠️ SOLICITUD DE ADDENDUM / INTERCONSULTA</p>
+                                    <p className="text-[10px] text-brand-text/60 font-bold mt-0.5">
+                                        {addendumRequests.find(r => r.patient_rut === appointment.patientRut && r.status === 'PENDING')?.request_text || 'Revisar antecedentes adicionales.'}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="p-8 bg-brand-surface border border-brand-border rounded-[2rem] shadow-sm space-y-6">

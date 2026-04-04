@@ -21,6 +21,7 @@ export const useClinicalProcedures = () => {
     const [batteries, setBatteries] = useState<RequirementBattery[]>([]);
     const [indications, setIndications] = useState<ClinicalIndications[]>([]);
     const [doctors, setDoctors] = useState<MedicalProfessional[]>([]);
+    const [addendumRequests, setAddendumRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -44,15 +45,16 @@ export const useClinicalProcedures = () => {
 
             if (appError) throw appError;
 
-            // Fetch Catalog, Centers, Requirements, Batteries, and all Indications
-            const [catRes, centerRes, reqRes, battRes, indRes, docRes, instRes] = await Promise.all([
+            // Fetch Catalog, Centers, Requirements, Batteries, all Indications and Addendum Requests
+            const [catRes, centerRes, reqRes, battRes, indRes, docRes, instRes, addendumRes] = await Promise.all([
                 supabase.from('medical_procedures_catalog').select('*').order('name'),
                 supabase.from('clinical_centers').select('*').order('name'),
                 supabase.from('medical_requirements').select('*').order('name'),
                 supabase.from('requirement_batteries').select('*, requirements:medical_requirements(*)').order('name'),
                 supabase.from('clinical_indications').select('*, procedure:medical_procedures_catalog(name), center:clinical_centers(name)'),
                 supabase.from('professionals').select('*').order('name'),
-                supabase.from('institutions').select('*').order('legal_name')
+                supabase.from('institutions').select('*').order('legal_name'),
+                supabase.from('addendum_requests').select('*').eq('status', 'PENDING')
             ]);
 
             if (catRes.error) throw catRes.error;
@@ -139,6 +141,7 @@ export const useClinicalProcedures = () => {
             });
 
             setCenters(centerRes.data || []);
+            setAddendumRequests(addendumRes.data || []);
             setInstitutions((instRes.data || []).map((i: any) => ({
                 id: i.id,
                 legalName: i.legal_name,
@@ -204,6 +207,37 @@ export const useClinicalProcedures = () => {
 
     useEffect(() => {
         fetchData();
+
+        // Realtime Subscription for Addendum Requests
+        const channel = supabase
+            .channel('addendum_status_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'addendum_requests'
+                },
+                (payload) => {
+                    console.log('🔔 Addendum change received:', payload);
+                    if (payload.eventType === 'INSERT') {
+                        setAddendumRequests(prev => [...prev, payload.new]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        if (payload.new.status === 'RESOLVED') {
+                            setAddendumRequests(prev => prev.filter(a => a.id !== payload.new.id));
+                        } else {
+                            setAddendumRequests(prev => prev.map(a => a.id === payload.new.id ? payload.new : a));
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        setAddendumRequests(prev => prev.filter(a => a.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [fetchData]);
 
     const addAppointment = async (data: Partial<ClinicalAppointment>) => {
@@ -680,6 +714,17 @@ export const useClinicalProcedures = () => {
 
             // Marcamos el agendamiento como finalizado (completed)
             await updateAppointmentStatus(appointmentId, 'completed');
+
+            // Resolve pending addendum requests for this patient
+            const app = appointments.find(a => a.id === appointmentId);
+            if (app) {
+                await supabase
+                    .from('addendum_requests')
+                    .update({ status: 'RESOLVED' })
+                    .eq('patient_rut', app.patientRut)
+                    .eq('status', 'PENDING');
+            }
+
             return { success: true };
         } catch (err: any) {
             console.error('Error uploading result:', err);
@@ -711,6 +756,7 @@ export const useClinicalProcedures = () => {
         deleteIndications,
         indications,
         doctors,
+        addendumRequests,
         upsertRequirement,
         upsertBattery,
         getPatientHistory,

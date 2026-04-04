@@ -64,6 +64,7 @@ export const ClinicalWorkflowView: React.FC = () => {
         deleteAppointment,
         indications,
         doctors,
+        addendumRequests,
         getPatientHistory,
         uploadResult
     } = useClinicalProcedures();
@@ -286,6 +287,12 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                     )}>
                                                         {app.status.replace('_', ' ')}
                                                     </div>
+                                                    {addendumRequests.some(r => r.patient_rut === app.patientRut) && (
+                                                        <div className="flex items-center gap-2 px-4 py-2 bg-danger/10 border border-danger/20 rounded-xl text-danger text-[10px] font-black uppercase tracking-widest animate-pulse shadow-sm">
+                                                            <AlertCircle className="w-4 h-4 text-danger" />
+                                                            ADDENDUM SOLICITADO
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-8 p-8 bg-brand-bg/50 rounded-[2.5rem] border border-brand-border shadow-inner group-hover:bg-brand-surface transition-colors duration-500">
@@ -443,6 +450,12 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             )}>
                                                                 {app.status.replace('_', ' ')}
                                                             </div>
+                                                            {addendumRequests.some(r => r.patient_rut === app.patientRut) && (
+                                                                <div className="mt-1 flex items-center gap-1.5 text-[8px] font-black text-danger uppercase tracking-widest animate-pulse">
+                                                                    <AlertCircle className="w-3 h-3" />
+                                                                    ADDENDUM
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td className="py-4 px-6 text-right">
                                                             <div className="flex items-center justify-end gap-2">
@@ -736,6 +749,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                 }}
                 onGetHistory={getPatientHistory}
                 onUploadResult={uploadResult}
+                addendumRequests={addendumRequests}
             />
         </div>
     );

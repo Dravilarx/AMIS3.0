@@ -22,10 +22,11 @@ import { AiAccessManager } from './modules/ai-access/AiAccessManager'
 import { DispatchCenter } from './modules/dispatch/DispatchCenter'
 import { QuickViewBridge } from './modules/quick-view/QuickViewBridge'
 import { MobileMicView } from './modules/remote-mic/MobileMicView'
+import { B2BPortal } from './modules/b2b-portal/B2BPortal'
 
 function App() {
   const { user } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_access' | 'dispatch'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'ai_knowledge'>('dashboard');
 
   if (window.location.pathname.startsWith('/guia/')) {
     return <PatientGuideView />;
@@ -72,6 +73,7 @@ function App() {
         if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AiAccessManager />;
         return <DashboardModule />;
       case 'dispatch': return <DispatchCenter />;
+      case 'b2b_portal': return <B2BPortal />;
 
       default: return <DashboardModule />;
     }
