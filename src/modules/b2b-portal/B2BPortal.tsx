@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { resolvePublicSignatureNameSync } from '../../lib/signatureUtils';
 import { 
   ClipboardList, 
   Download, 
@@ -186,7 +187,13 @@ export const B2BPortal: React.FC = () => {
                     {format(new Date(study.fecha_examen), 'P', { locale: es })}
                   </td>
                   <td className="p-4 text-sm text-slate-300">
-                    {study.radiologo_validado || 'Asignando...'}
+                    {study.radiologo_validado
+                      ? resolvePublicSignatureNameSync({
+                          clinicalRole: undefined, // No disponible en esta query
+                          ownName: study.radiologo_validado,
+                          publicNameAllowed: true,  // radiologo_validado ya es el nombre público del RIS
+                        })
+                      : 'Asignando...'}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">

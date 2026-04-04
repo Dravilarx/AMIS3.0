@@ -44,6 +44,10 @@ export const useProfessionals = () => {
                 username: p.username,
                 signatureType: p.signature_type,
                 associatedWith: p.associated_with,
+                // RBAC Clínico
+                clinicalRole: p.clinical_role ?? 'MED_STAFF',
+                supervisorId: p.supervisor_id ?? undefined,
+                publicNameAllowed: p.public_name_allowed ?? true,
                 residence: {
                     city: p.city,
                     region: p.region,

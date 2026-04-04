@@ -41,8 +41,30 @@ export interface Contract {
 }
 
 /**
- * Representación de un profesional dentro del sistema.
+ * Roles clínicos RBAC. Determina capacidades de firma y visibilidad pública.
+ * - MED_STAFF: Radiólogo pleno. Firma y su nombre es público.
+ * - MED_CHIEF: Médico Jefe. Firma propio y co-firma. Nombre público.
+ * - MED_RESIDENT: Residente/becado. NO firma. Su nombre NUNCA aparece en documentos externos.
+ * - MED_REQUIRES_COSIGN: Médico nuevo que requiere segunda firma. Mismo tratamiento que residente.
+ * - ADMIN_SECRETARY: Secretaría/Triage. Sin firma médica.
+ * - TECH_SUPPORT: Solo logs, PHI enmascarado.
+ * - COORDINATOR: Coordinación operativa.
  */
+export type ClinicalRole =
+  | 'MED_STAFF'
+  | 'MED_CHIEF'
+  | 'MED_RESIDENT'
+  | 'MED_REQUIRES_COSIGN'
+  | 'ADMIN_SECRETARY'
+  | 'TECH_SUPPORT'
+  | 'COORDINATOR';
+
+/** Roles que NUNCA pueden aparecer en documentos públicos o PDFs */
+export const HIDDEN_CLINICAL_ROLES: ClinicalRole[] = ['MED_RESIDENT', 'MED_REQUIRES_COSIGN'];
+
+/** Roles con capacidad de firma autónoma */
+export const AUTONOMOUS_SIGNER_ROLES: ClinicalRole[] = ['MED_STAFF', 'MED_CHIEF'];
+
 export interface Professional {
     id: string;
     name: string;
@@ -68,8 +90,27 @@ export interface Professional {
     subSpecialty?: string;
     team?: string;
     username?: string;
-    signatureType?: string;
+    signatureType?: 'autonoma' | 'segunda_firma' | 'ninguna'; // Tipo de capacidad de firma
     associatedWith?: string; // Radiology partner/group association
+
+    /** 
+     * RBAC Clínico - Controla visibilidad pública y capacidad de firma.
+     * Persiste en professionals.clinical_role.
+     */
+    clinicalRole?: ClinicalRole;
+
+    /**
+     * UUID del supervisor validador directo.
+     * Solo relevante para MED_RESIDENT y MED_REQUIRES_COSIGN.
+     * Su nombre reemplaza al residente en PDFs y listados externos.
+     */
+    supervisorId?: string;
+
+    /**
+     * Si false: el nombre de este profesional NUNCA aparece en PDFs ni listados B2B.
+     * Se determina automáticamente por el clinicalRole.
+     */
+    publicNameAllowed?: boolean;
 
     /** Lugar de residencia para logística de turnos */
     residence: {
@@ -98,6 +139,7 @@ export interface Professional {
     is_deleted?: boolean;
     archived_at?: string;
 }
+
 
 export type ProjectStatus = 'draft' | 'active' | 'on-hold' | 'completed' | 'archived';
 
