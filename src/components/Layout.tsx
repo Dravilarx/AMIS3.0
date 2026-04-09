@@ -122,7 +122,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                 />
                                 <SidebarItem
                                     icon={UserCheck}
-                                    label="Gestor de Accesos IA"
+                                    label="Configuración Bot"
                                     active={currentView === 'ai_access'}
                                     onClick={() => onNavigate('ai_access')}
                                 />
