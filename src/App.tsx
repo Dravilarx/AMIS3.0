@@ -17,6 +17,9 @@ import { AdminModule } from './modules/admin/AdminModule'
 import { InstitutionsDashboard } from './modules/institutions/InstitutionsDashboard'
 import { NewsFeed } from './modules/news/NewsFeed'
 import { StatMultirisModule } from './modules/stat-multiris/StatMultirisModule'
+import { StatMultirisHTML } from './modules/stat-multiris/StatMultirisHTML'
+import { WizardCompetencias } from './modules/rrhh-clinico/WizardCompetencias'
+import { ResumenCompetenciasAdmin } from './modules/rrhh-clinico/ResumenCompetenciasAdmin'
 import { PatientGuideView } from './modules/clinical/PatientGuideView'
 import { AiAccessManager } from './modules/ai-access/AiAccessManager'
 import { DispatchCenter } from './modules/dispatch/DispatchCenter'
@@ -25,11 +28,12 @@ import { MobileMicView } from './modules/remote-mic/MobileMicView'
 import { B2BPortal } from './modules/b2b-portal/B2BPortal'
 import { SecretaryCommandCenter } from './modules/admin-secretary/SecretaryCommandCenter'
 import { RadiologistWorklist } from './modules/radiology-worklist/RadiologistWorklist'
+import { PortalMedico } from './modules/portal-medico/PortalMedico'
 import { useEffect } from 'react'
 
 function App() {
   const { user } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'>('dashboard');
 
   useEffect(() => {
     if (user?.app_role === 'ADMIN_SECRETARY' || user?.app_role === 'MED_CHIEF') {
@@ -45,6 +49,12 @@ function App() {
 
   if (window.location.pathname === '/quick-view') {
     return <QuickViewBridge />;
+  }
+
+  // Portal Médico: acceso vía magic link o ruta directa
+  if (window.location.pathname === '/portal-medico' ||
+      window.location.search.includes('token=')) {
+    return <PortalMedico />;
   }
 
   const mobileMicToken = window.location.pathname.startsWith('/mobile-mic/') 
@@ -82,11 +92,17 @@ function App() {
       case 'institutions': return <InstitutionsDashboard />;
       case 'news': return <NewsFeed />;
       case 'stat_multiris': return <StatMultirisModule />;
+      case 'stat_multiris_html': return <StatMultirisHTML />;
       case 'ai_access': 
         if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AiAccessManager />;
         return <DashboardModule />;
       case 'dispatch': return <DispatchCenter />;
       case 'b2b_portal': return <B2BPortal />;
+      case 'wizard_competencias': return <WizardCompetencias />;
+      case 'resumen_competencias':
+      case 'auditoria_rrhh':
+        if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <ResumenCompetenciasAdmin />;
+        return <WizardCompetencias />;
 
       default: return <DashboardModule />;
     }

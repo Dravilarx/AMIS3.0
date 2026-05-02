@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Upload, Search, Filter, X, Phone,
   Building2, CheckCircle2, XCircle, Shield, FileSpreadsheet,
   AlertCircle, UserPlus, Hash, ToggleLeft, ToggleRight,
-  ChevronDown, Briefcase, Globe, Users
+  ChevronDown, Briefcase, Globe, Users,
+  Link2, Copy, ClipboardCheck, ExternalLink, ClipboardList
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 // --- Tipos ---
 type MedicoRol = 'institucional' | 'independiente';
+type OnboardingEstado = 'pendiente' | 'enviado' | 'completado';
+
+interface OnboardingInfo {
+  estado: OnboardingEstado;
+  link?: string;
+  fecha_envio?: string; // ISO string
+}
 
 interface Medico {
   id: string;
@@ -105,6 +113,12 @@ export const AccessDirectory: React.FC = () => {
   const [filterClinica, setFilterClinica] = useState<string>('todas');
   const [showAddModal, setShowAddModal] = useState(false);
   const [importClinica, setImportClinica] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
+
+  // Mapa de onboarding por médico ID
+  const [onboardingMap, setOnboardingMap] = useState<Record<string, OnboardingInfo>>(
+    Object.fromEntries(MOCK_MEDICOS.map(m => [m.id, { estado: 'pendiente' as OnboardingEstado }]))
+  );
 
   // Form state para modal
   const [formNombre, setFormNombre] = useState('');
@@ -112,6 +126,90 @@ export const AccessDirectory: React.FC = () => {
   const [formTelefono, setFormTelefono] = useState('');
   const [formClinicas, setFormClinicas] = useState<string[]>([]);
   const [formRol, setFormRol] = useState<MedicoRol>('institucional');
+
+  // --- Helpers Onboarding ---
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 3000);
+  }, []);
+
+  const generateLink = (medicoId: string, nombre: string): string => {
+    const token = btoa(`${medicoId}:${nombre}:${Date.now()}`).replace(/=/g, '');
+    return `${window.location.origin}/portal-medico?token=${token}`;
+  };
+
+  const handleGenerarLink = (medico: Medico) => {
+    const link = generateLink(medico.id, medico.nombre);
+    const info: OnboardingInfo = { estado: 'enviado', link, fecha_envio: new Date().toISOString() };
+    setOnboardingMap(prev => ({ ...prev, [medico.id]: info }));
+    navigator.clipboard.writeText(link).then(() => {
+      showToast(`🔗 Link copiado. Listo para pegar en WhatsApp a ${medico.nombre.split(' ').slice(0, 2).join(' ')}`);
+    });
+  };
+
+  const handleCopiarLink = (link: string) => {
+    navigator.clipboard.writeText(link).then(() => showToast('📋 Link copiado nuevamente.'));
+  };
+
+  // Semáforo de estado
+  const renderOnboardingCell = (medico: Medico) => {
+    const info = onboardingMap[medico.id] ?? { estado: 'pendiente' as OnboardingEstado };
+
+    if (info.estado === 'pendiente') {
+      return (
+        <button
+          onClick={() => handleGenerarLink(medico)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-[9px] font-black uppercase tracking-widest hover:bg-danger/20 transition-all"
+        >
+          <Link2 className="w-3 h-3" />
+          Generar Link
+        </button>
+      );
+    }
+
+    if (info.estado === 'enviado') {
+      const diasAtras = info.fecha_envio
+        ? Math.floor((Date.now() - new Date(info.fecha_envio).getTime()) / 86400000)
+        : 0;
+      const label = diasAtras === 0 ? 'Hace un momento' : `Hace ${diasAtras} día${diasAtras > 1 ? 's' : ''}`;
+      return (
+        <div className="flex flex-col gap-1 items-start">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-warning/10 border border-warning/30 text-warning text-[9px] font-black uppercase tracking-widest">
+            <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+            Link Enviado · {label}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleCopiarLink(info.link!)}
+              title="Copiar link"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-bg border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 text-[9px] font-bold transition-all"
+            >
+              <Copy className="w-3 h-3" /> Copiar
+            </button>
+            <button
+              onClick={() => handleGenerarLink(medico)}
+              title="Generar nuevo link"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-bg border border-brand-border text-brand-text/40 hover:text-warning hover:border-warning/30 text-[9px] font-bold transition-all"
+            >
+              <ExternalLink className="w-3 h-3" /> Reenviar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // completado
+    return (
+      <div className="flex flex-col gap-1 items-start">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-success/10 border border-success/30 text-success text-[9px] font-black uppercase tracking-widest">
+          <CheckCircle2 className="w-3 h-3" /> Completado
+        </span>
+        <button className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-bg border border-brand-border text-brand-text/40 hover:text-success hover:border-success/30 text-[9px] font-bold transition-all">
+          <ClipboardList className="w-3 h-3" /> Revisar Matriz
+        </button>
+      </div>
+    );
+  };
 
   // --- Handlers ---
   const handleToggleActivo = (id: string) => {
@@ -175,9 +273,20 @@ export const AccessDirectory: React.FC = () => {
   const medicosActivos = medicos.filter(m => m.activo).length;
   const medicosInactivos = medicos.filter(m => !m.activo).length;
   const clinicasCubiertas = new Set(medicos.flatMap(m => m.clinicas)).size;
+  const onboardingCompletados = Object.values(onboardingMap).filter(o => o.estado === 'completado').length;
+  const onboardingEnviados = Object.values(onboardingMap).filter(o => o.estado === 'enviado').length;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+      {/* === TOAST === */}
+      {toastMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3.5 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/40 animate-in slide-in-from-bottom-4 duration-300">
+          <ClipboardCheck className="w-4 h-4 text-success flex-shrink-0" />
+          <span className="text-sm font-bold text-brand-text">{toastMsg}</span>
+        </div>
+      )}
+
       {/* === HEADER CON BOTÓN === */}
       <div className="flex items-center justify-between">
         <div />
@@ -226,6 +335,16 @@ export const AccessDirectory: React.FC = () => {
           </div>
           <div className="p-3 bg-info/10 rounded-xl border border-info/20">
             <Building2 className="w-5 h-5 text-info" />
+          </div>
+        </div>
+        <div className="card-premium p-5 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Onboarding</p>
+            <h3 className="text-3xl font-black text-success">{onboardingCompletados}<span className="text-lg text-brand-text/30">/{totalMedicos}</span></h3>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] text-warning font-bold">{onboardingEnviados} links enviados</p>
+            <p className="text-[9px] text-danger/60 font-bold">{totalMedicos - onboardingCompletados - onboardingEnviados} pendientes</p>
           </div>
         </div>
       </div>
@@ -400,12 +519,18 @@ export const AccessDirectory: React.FC = () => {
                   Estado de Acceso
                 </div>
               </th>
+              <th className="px-5 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">
+                <div className="flex items-center gap-1.5">
+                  <ClipboardList className="w-3 h-3" />
+                  Perfil Clínico
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-border">
             {filteredMedicos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-16 text-center">
+                <td colSpan={6} className="px-5 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <Users className="w-12 h-12 text-brand-text/10" />
                     <p className="text-[11px] text-brand-text/30 font-bold">
@@ -515,6 +640,11 @@ export const AccessDirectory: React.FC = () => {
                         </>
                       )}
                     </button>
+                  </td>
+
+                  {/* Estado Perfil Clínico (Semáforo Onboarding) */}
+                  <td className="px-5 py-4">
+                    {renderOnboardingCell(medico)}
                   </td>
                 </tr>
               ))

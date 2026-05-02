@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
@@ -30,9 +30,9 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh';
 
-    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist') => void;
+    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh') => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
@@ -66,6 +66,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'ideation', name: 'Innovación', icon: Lightbulb },
         { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
         { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
+        { id: 'stat_multiris_html', name: 'Stat Multiris (HTML)', icon: Globe },
+        { id: 'wizard_competencias', name: 'Mi Auto-evaluación', icon: ClipboardList },
         { id: 'b2b_portal', name: 'Portal B2B', icon: Hospital },
         { id: 'secretary_command', name: 'Torre de Control', icon: Activity },
         { id: 'radiology_worklist', name: 'Worklist Radiológica', icon: FileText },
@@ -125,6 +127,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                     label="Configuración Bot"
                                     active={currentView === 'ai_access'}
                                     onClick={() => onNavigate('ai_access')}
+                                />
+                                <SidebarItem
+                                    icon={BarChart2}
+                                    label="Resumen Competencias"
+                                    active={currentView === 'resumen_competencias'}
+                                    onClick={() => onNavigate('resumen_competencias')}
+                                />
+                                <SidebarItem
+                                    icon={ClipboardList}
+                                    label="Auditoría RR.HH."
+                                    active={currentView === 'auditoria_rrhh'}
+                                    onClick={() => onNavigate('auditoria_rrhh')}
                                 />
                             </>
                         )}
