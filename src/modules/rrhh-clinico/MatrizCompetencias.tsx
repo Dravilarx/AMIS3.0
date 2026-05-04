@@ -124,7 +124,7 @@ export const MatrizCompetencias: React.FC = () => {
         const total = valores.length;
         const completadas = valores.filter(v => v > 0).length;
         const porNivel = [0, 1, 2, 3].map(n => valores.filter(v => v === n).length);
-        const promedio = valores.reduce((a, b) => a + b, 0) / total;
+        const promedio = (valores as number[]).reduce((a, b) => a + b, 0) / total;
         return { total, completadas, porNivel, promedio, porcentaje: Math.round((completadas / total) * 100) };
     }, [matriz]);
 

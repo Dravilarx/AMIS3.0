@@ -145,12 +145,13 @@ export const ResumenCompetenciasAdmin: React.FC = () => {
     const kpis = useMemo(() => {
         const vals = PROCEDIMIENTOS_FLAT.map(p => getValor(p.id));
         const porNivel = [0,1,2,3].map(n => vals.filter(v => v === n).length);
-        const promedio = (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
+        const promedio = ((vals as number[]).reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
         return { porNivel, promedio };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [medicoId, overrides]);
 
-    const medico = MOCK_MEDICOS.find(m => m.id === medicoId)!;
+
+
 
     return (
         <div className="space-y-5 pb-10">

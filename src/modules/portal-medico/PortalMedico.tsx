@@ -5,7 +5,7 @@ import { WizardCompetencias } from '../rrhh-clinico/WizardCompetencias';
 import { Calendar, CreditCard, Lock } from 'lucide-react';
 
 // ─── Placeholder para secciones en construcción ───────────────────────────────
-const ProximamenteView: React.FC<{ titulo: string; icon: React.ElementType }> = ({ titulo, icon: Icon }) => (
+const ProximamenteView: React.FC<{ titulo: string; icon: React.ElementType }> = ({ titulo, icon: _icon }) => (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-5 text-center">
         <div className="w-20 h-20 rounded-3xl bg-brand-surface border border-brand-border flex items-center justify-center">
             <Lock className="w-8 h-8 text-brand-text/20" />
