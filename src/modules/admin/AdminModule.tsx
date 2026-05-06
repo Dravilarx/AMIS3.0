@@ -8,22 +8,32 @@ import { ProcedureHomologation } from './ProcedureHomologation';
 import { CriticalPathologies } from './CriticalPathologies';
 import { CreateInternalUserModal } from './CreateInternalUserModal';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FUENTE DE VERDAD ÚNICA: Debe estar sincronizado 1:1 con navItems en Layout.tsx
+// Al agregar un módulo al sidebar, agrégalo aquí también para que aparezca
+// automáticamente en la matriz de permisos del Centro de Control Red.
+// ─────────────────────────────────────────────────────────────────────────────
 const MODULES = [
-    { id: 'dashboard', name: 'Panel Principal' },
-    { id: 'tenders', name: 'Licitaciones' },
-    { id: 'staffing', name: 'Gestión RR.HH.' },
-    { id: 'shifts', name: 'Turnos Médicos' },
-    { id: 'logistics', name: 'Logística Salud' },
-    { id: 'institutions', name: 'Red de Centros' },
-    { id: 'clinical', name: 'Procedimientos' },
-    { id: 'audit', name: 'Auditoría IA' },
-    { id: 'projects', name: 'Proyectos BPM' },
-    { id: 'messaging', name: 'Mensajería' },
-    { id: 'dispatch', name: 'Centro de Despacho' },
-    { id: 'dms', name: 'Archivo Digital' },
-    { id: 'ideation', name: 'Innovación' },
-    { id: 'news', name: 'Noticias Corporativas' },
-    { id: 'stat_multiris', name: 'Stat Multiris' },
+    { id: 'dashboard',            name: 'Panel Principal' },
+    { id: 'tenders',              name: 'Licitaciones' },
+    { id: 'staffing',             name: 'Gestión RR.HH.' },
+    { id: 'shifts',               name: 'Turnos Médicos' },
+    { id: 'logistics',            name: 'Logística Salud' },
+    { id: 'institutions',         name: 'Red de Centros' },
+    { id: 'clinical',             name: 'Procedimientos' },
+    { id: 'audit',                name: 'Auditoría IA' },
+    { id: 'projects',             name: 'Proyectos BPM' },
+    { id: 'messaging',            name: 'Mensajería' },
+    { id: 'dispatch',             name: 'Centro de Despacho' },
+    { id: 'dms',                  name: 'Archivo Digital' },
+    { id: 'ideation',             name: 'Innovación' },
+    { id: 'news',                 name: 'Noticias Corporativas' },
+    { id: 'stat_multiris',        name: 'Stat Multiris' },
+    { id: 'stat_multiris_html',   name: 'Stat Multiris (HTML)' },
+    { id: 'wizard_competencias',  name: 'Mi Auto-evaluación' },
+    { id: 'b2b_portal',           name: 'Portal B2B' },
+    { id: 'secretary_command',    name: 'Torre de Control' },
+    { id: 'radiology_worklist',   name: 'Worklist Radiológica' },
 ] as const;
 
 const ROLE_LABELS: Record<UserRole, string> = {
