@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ShieldAlert, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Sparkles, Loader2, Layers, FolderOpen, Users, Trash2, X, FileCheck } from 'lucide-react';
-import { useProfessionals } from '../../hooks/useProfessionals';
 import { useTenderFolder } from '../../hooks/useTenderFolder';
+import { useTenderExport, type ExportDoc } from '../../hooks/useTenderExport';
+import { useProfessionals } from '../../hooks/useProfessionals';
 import { cn } from '../../lib/utils';
 import { useTenderScoring } from './useTenderScoring';
 import { useTenders } from '../../hooks/useTenders';
@@ -16,12 +17,50 @@ export const TenderDashboard: React.FC = () => {
     const [isParserOpen, setIsParserOpen] = useState(false);
     const [creatingProject, setCreatingProject] = useState(false);
     const [showFolder, setShowFolder]     = useState(false);
+    const [showExport, setShowExport] = useState(false);
     const { professionals: allProfs }     = useProfessionals();
 
     // Seleccionar la primera licitación válida
     const activeTender = tenders.find(t => t.id === selectedId) || tenders[0];
-
     const folder                          = useTenderFolder(activeTender?.id);
+    const { exporting, progress, exportPDF, exportZipByProfessional, exportZipByDoc } = useTenderExport();
+
+    const buildExportDocs = (): ExportDoc[] => {
+        const docs: ExportDoc[] = [];
+        for (const prof of folder.professionals) {
+            for (const req of folder.requiredDocs) {
+                const status = folder.getDocStatus(prof.professionalId, req.docType);
+                if (status?.fileUrl && !status.isPending) {
+                    docs.push({
+                        professionalId:   prof.professionalId,
+                        professionalName: prof.name,
+                        docType:          req.docType,
+                        docLabel:         req.label,
+                        fileUrl:          status.fileUrl,
+                        fileName:         status.fileName || `${req.docType}.pdf`,
+                    });
+                }
+            }
+        }
+        return docs;
+    };
+
+    const tenderName = activeTender?.identificacion?.tipoServicio || activeTender?.id || 'Licitacion';
+    const exportDocs = buildExportDocs();
+    const totalCeldas   = folder.professionals.length * folder.requiredDocs.length;
+    const celdasOk      = exportDocs.length;
+    const celdasPending = folder.professionals.length * folder.requiredDocs.length > 0
+        ? (() => {
+            let p = 0;
+            for (const prof of folder.professionals)
+                for (const req of folder.requiredDocs) {
+                    const s = folder.getDocStatus(prof.professionalId, req.docType);
+                    if (s?.isPending) p++;
+                }
+            return p;
+        })()
+        : 0;
+    const celdasFaltan = totalCeldas - celdasOk - celdasPending;
 
     const handleCreateProject = async () => {
         if (!activeTender) return;
@@ -320,8 +359,8 @@ export const TenderDashboard: React.FC = () => {
                                     >
                                         <option value="">Agregar médico...</option>
                                         {allProfs
-                                            .filter(p => !folder.professionals.find(fp => fp.professionalId === p.id))
-                                            .map(p => (
+                                            .filter((p: any) => !folder.professionals.find((fp: any) => fp.professionalId === p.id))
+                                            .map((p: any) => (
                                                 <option key={p.id} value={p.id}>
                                                     {p.name} {p.lastName} — {p.role}
                                                 </option>
@@ -506,6 +545,127 @@ export const TenderDashboard: React.FC = () => {
                                 <p className="text-[9px] text-brand-text/20 text-right font-mono">
                                     ✅ disponible · PND pendiente · ✗ falta — los documentos se suben desde la ficha del médico
                                 </p>
+                            </div>
+                        )}
+
+                        {/* ── Panel de exportación ── */}
+                        {folder.professionals.length > 0 && folder.requiredDocs.length > 0 && (
+                            <div className="border border-brand-border rounded-xl overflow-hidden">
+                                <button
+                                    onClick={() => setShowExport(v => !v)}
+                                    className="w-full flex items-center justify-between px-4 py-3 bg-brand-surface/50 hover:bg-brand-surface transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <FolderOpen className="w-4 h-4 text-purple-400" />
+                                        <span className="text-xs font-black uppercase tracking-widest text-brand-text/60">
+                                            Exportar carpeta documental
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 text-[10px] font-mono">
+                                            <span className="text-emerald-400">{celdasOk} ✅</span>
+                                            {celdasPending > 0 && <span className="text-amber-400">{celdasPending} PND</span>}
+                                            {celdasFaltan  > 0 && <span className="text-red-400">{celdasFaltan} ✗</span>}
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {showExport && (
+                                    <div className="p-4 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+
+                                        {/* Resumen de completitud */}
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {[
+                                                { label: 'Disponibles', val: celdasOk,      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                                                { label: 'Pendientes',  val: celdasPending, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+                                                { label: 'Faltan',      val: celdasFaltan,  color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+                                            ].map(s => (
+                                                <div key={s.label} className={cn('rounded-xl border p-3 text-center', s.color)}>
+                                                    <p className="text-2xl font-black">{s.val}</p>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-70 mt-0.5">{s.label}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {celdasFaltan > 0 && (
+                                            <div className="flex items-start gap-2 p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                                                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                                                <p className="text-xs text-amber-400/80">
+                                                    Faltan {celdasFaltan} documento(s). El paquete exportado solo incluirá los documentos disponibles. Los documentos faltantes deben subirse desde la ficha del médico.
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {exportDocs.length === 0 ? (
+                                            <div className="text-center py-6 text-brand-text/20 text-xs">
+                                                No hay documentos disponibles para exportar.
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                {/* PDF Consolidado */}
+                                                <button
+                                                    onClick={() => exportPDF(exportDocs, tenderName)}
+                                                    disabled={exporting}
+                                                    className="flex flex-col items-center gap-2 p-4 bg-red-500/5 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-all disabled:opacity-50 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <FileCheck className="w-5 h-5 text-red-400" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest">PDF Consolidado</p>
+                                                        <p className="text-[10px] text-brand-text/30 mt-0.5">Todos los docs en un solo PDF</p>
+                                                    </div>
+                                                </button>
+
+                                                {/* ZIP por médico */}
+                                                <button
+                                                    onClick={() => exportZipByProfessional(exportDocs, tenderName)}
+                                                    disabled={exporting}
+                                                    className="flex flex-col items-center gap-2 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 transition-all disabled:opacity-50 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Users className="w-5 h-5 text-blue-400" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-black text-blue-400 uppercase tracking-widest">ZIP por Médico</p>
+                                                        <p className="text-[10px] text-brand-text/30 mt-0.5">Carpeta por cada profesional</p>
+                                                    </div>
+                                                </button>
+
+                                                {/* ZIP por documento */}
+                                                <button
+                                                    onClick={() => exportZipByDoc(exportDocs, tenderName)}
+                                                    disabled={exporting}
+                                                    className="flex flex-col items-center gap-2 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl hover:bg-purple-500/10 transition-all disabled:opacity-50 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <FolderOpen className="w-5 h-5 text-purple-400" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-black text-purple-400 uppercase tracking-widest">ZIP por Documento</p>
+                                                        <p className="text-[10px] text-brand-text/30 mt-0.5">Carpeta SIS, Título, Cédula...</p>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Barra de progreso */}
+                                        {exporting && (
+                                            <div className="space-y-2 animate-in fade-in duration-200">
+                                                <div className="flex justify-between text-[10px] font-mono">
+                                                    <span className="text-brand-text/40">Generando paquete...</span>
+                                                    <span className="text-info">{progress}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-brand-border rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-info transition-all duration-300 rounded-full"
+                                                        style={{ width: `${progress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
