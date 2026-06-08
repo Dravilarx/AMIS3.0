@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
+import { useProfessionals } from '../../hooks/useProfessionals';
 import {
     ChevronLeft, ChevronRight, Send, CheckCircle2,
     Loader2, Award, RotateCcw, HelpCircle, Play,
@@ -40,6 +42,9 @@ type Paso = 'seleccion' | 'wizard' | 'done';
 // ─── Componente Principal ─────────────────────────────────────────────────────
 export const WizardCompetencias: React.FC = () => {
     const { user } = useAuth();
+    const { professionals } = useProfessionals();
+    const professional = professionals.find(p => p.email === user?.email);
+    const professionalId = professional?.id ?? null;
 
     // ── Estado global del wizard ──────────────────────────────────────────────
     const [paso, setPaso] = useState<Paso>('seleccion');
@@ -95,13 +100,24 @@ export const WizardCompetencias: React.FC = () => {
 
             setSending(true);
             setError(null);
-            console.log('📊 AMIS — Matriz completa enviada:', JSON.stringify(matrizCompleta, null, 2));
             try {
-                // TODO: await supabase.from('competencias_radiologos').upsert({ user_id: user?.id, respuestas: matrizCompleta, submitted_at: new Date().toISOString() });
-                await new Promise(r => setTimeout(r, 1200));
+                if (!professionalId) {
+                    throw new Error('No se encontró tu perfil de profesional. Contacta a RRHH.');
+                }
+                const { error: upsertError } = await supabase
+                    .from('competencias_radiologos')
+                    .upsert({
+                        professional_id: professionalId,
+                        respuestas:      matrizCompleta,
+                        status:          'pending',
+                        submitted_at:    new Date().toISOString(),
+                        updated_at:      new Date().toISOString(),
+                    }, { onConflict: 'professional_id' });
+
+                if (upsertError) throw upsertError;
                 setPaso('done');
-            } catch {
-                setError('Error al enviar. Intenta nuevamente.');
+            } catch (err: any) {
+                setError(err.message || 'Error al enviar. Intenta nuevamente.');
             } finally {
                 setSending(false);
             }

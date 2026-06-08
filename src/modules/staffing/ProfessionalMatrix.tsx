@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2 } from 'lucide-react';
+import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2, ArchiveRestore, Archive } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
 import { useProfessionals } from '../../hooks/useProfessionals';
@@ -28,6 +28,7 @@ export const ProfessionalMatrix: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterTeam, setFilterTeam] = useState<string>('all');
     const [showFilters, setShowFilters] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
 
     // ── Ordenamiento ──
     const [sortField, setSortField] = useState<SortField>('name');
@@ -59,7 +60,7 @@ export const ProfessionalMatrix: React.FC = () => {
         { key: 'competencies', excelHeader: 'competencias', label: 'Competencias (separadas por coma)', required: false, example: 'RM Próstata, TC Coronario' },
     ];
 
-    const { professionals, loading, error, addProfessional, updateProfessional, archiveProfessional } = useProfessionals();
+    const { professionals, allProfessionals, loading, error, addProfessional, updateProfessional, archiveProfessional, restoreProfessional } = useProfessionals();
     const { tenders } = useTenders();
 
     const { utilizationRate, capacityGap, isOverloaded } = useCapacityPlanning(professionals, tenders);
@@ -85,7 +86,8 @@ export const ProfessionalMatrix: React.FC = () => {
     const filteredAndSorted = useMemo(() => {
         const term = searchTerm.toLowerCase().trim();
 
-        let result = professionals.filter(p => {
+        const source = showArchived ? allProfessionals.filter(p => p.is_deleted) : professionals;
+        let result = source.filter(p => {
             // Búsqueda global
             if (term) {
                 const searchable = [
@@ -126,7 +128,7 @@ export const ProfessionalMatrix: React.FC = () => {
         });
 
         return result;
-    }, [professionals, searchTerm, filterRole, filterStatus, filterTeam, sortField, sortDir]);
+    }, [professionals, allProfessionals, showArchived, searchTerm, filterRole, filterStatus, filterTeam, sortField, sortDir]);
 
     // ── Selección masiva ──
     const toggleSelect = (id: string) => {
@@ -311,6 +313,23 @@ export const ProfessionalMatrix: React.FC = () => {
                                 <List className="w-4 h-4" />
                             </button>
                         </div>
+                        <button
+                            onClick={() => { setShowArchived(v => !v); setSelectedIds(new Set()); }}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 border rounded-lg transition-all font-medium text-sm",
+                                showArchived
+                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                    : "bg-brand-surface border-brand-border text-brand-text/60 hover:border-brand-text/20"
+                            )}
+                        >
+                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                            <span>{showArchived ? 'Ver Activos' : 'Ver Archivados'}</span>
+                            {!showArchived && allProfessionals.filter(p => p.is_deleted).length > 0 && (
+                                <span className="w-4 h-4 bg-amber-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                                    {allProfessionals.filter(p => p.is_deleted).length}
+                                </span>
+                            )}
+                        </button>
                         <button
                             onClick={() => setIsBulkOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border hover:border-brand-text/20 rounded-lg transition-all font-medium text-sm text-brand-text/60"
@@ -505,7 +524,7 @@ export const ProfessionalMatrix: React.FC = () => {
                                     className={cn(
                                         "grid grid-cols-[40px_1fr_140px_120px_140px_100px_80px] gap-2 px-4 py-2 border-b border-brand-border/50 hover:bg-brand-surface/30 transition-colors cursor-pointer items-center group",
                                         isSelected && "bg-info/5",
-                                        !isActive && "opacity-60"
+                                        showArchived ? "opacity-50 bg-amber-500/5 hover:bg-amber-500/10" : !isActive && "opacity-60"
                                     )}
                                 >
                                     <div className="flex items-center justify-center" onClick={(e) => { e.stopPropagation(); toggleSelect(prof.id); }}>
@@ -529,10 +548,17 @@ export const ProfessionalMatrix: React.FC = () => {
                                         </div>
                                         <div className="min-w-0">
                                             <p className={cn(
-                                                "text-sm font-semibold truncate",
-                                                isActive ? "text-brand-text group-hover:text-info" : "text-brand-text/50 line-through decoration-red-500/30"
+                                                "text-sm font-semibold truncate flex items-center gap-2",
+                                                showArchived
+                                                    ? "text-amber-400/70"
+                                                    : isActive ? "text-brand-text group-hover:text-info" : "text-brand-text/50 line-through decoration-red-500/30"
                                             )}>
                                                 {prof.name} {prof.lastName}
+                                                {showArchived && (
+                                                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-wider flex-shrink-0">
+                                                        Archivado
+                                                    </span>
+                                                )}
                                             </p>
                                             <p className="text-[10px] text-brand-text/30 truncate font-mono">{prof.nationalId} · {prof.email}</p>
                                         </div>
@@ -546,15 +572,27 @@ export const ProfessionalMatrix: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="text-xs text-brand-text/40" onClick={() => handleEdit(prof)}>{prof.contracts?.length || 0}</div>
-                                    <div className="flex justify-center" onClick={() => handleEdit(prof)}>
-                                        <span className={cn(
-                                            "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
-                                            isActive
-                                                ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                                                : "text-red-400 bg-red-500/10 border border-red-500/20"
-                                        )}>
-                                            {isActive ? 'Activo' : 'Inactivo'}
-                                        </span>
+                                    <div className="flex justify-center">
+                                        {showArchived ? (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); restoreProfessional(prof.id); }}
+                                                className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] font-black uppercase hover:bg-amber-500/20 transition-all"
+                                            >
+                                                <ArchiveRestore className="w-3 h-3" /> Restaurar
+                                            </button>
+                                        ) : (
+                                            <span
+                                                onClick={() => handleEdit(prof)}
+                                                className={cn(
+                                                    "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider cursor-pointer",
+                                                    isActive
+                                                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                                                        : "text-red-400 bg-red-500/10 border border-red-500/20"
+                                                )}
+                                            >
+                                                {isActive ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             );

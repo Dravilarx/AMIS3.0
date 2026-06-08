@@ -8,20 +8,21 @@ export interface AdminProfile {
     full_name: string;
     role: UserRole;
     permissions?: UserPermissions;
+    is_deleted?: boolean;
+    archived_at?: string | null;
 }
 
 export const useAdminProfiles = () => {
-    const [profiles, setProfiles] = useState<AdminProfile[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [profiles, setProfiles]   = useState<AdminProfile[]>([]);
+    const [loading, setLoading]     = useState(true);
 
     const fetchProfiles = async () => {
         try {
             setLoading(true);
-            // Intentamos traer los perfiles. Si la columna 'permissions' no existe, 
-            // supabase fallará, así que seleccionamos lo básico primero.
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
+                .eq('is_deleted', false)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -52,16 +53,23 @@ export const useAdminProfiles = () => {
         }
     };
 
+    /**
+     * BUG CORREGIDO: Antes hacía .delete() → hard delete irreversible.
+     * Ahora hace soft delete: is_deleted=true + archived_at=now().
+     * El perfil desaparece de la lista pero queda en DB para auditoría.
+     */
     const deleteProfile = async (id: string) => {
         try {
             setLoading(true);
-            const { error: profileError } = await supabase
+            const { error } = await supabase
                 .from('profiles')
-                .delete()
+                .update({
+                    is_deleted:  true,
+                    archived_at: new Date().toISOString(),
+                })
                 .eq('id', id);
 
-            if (profileError) throw profileError;
-            
+            if (error) throw error;
             await fetchProfiles();
             return { success: true };
         } catch (err: any) {
@@ -75,36 +83,33 @@ export const useAdminProfiles = () => {
     const createProfile = async (email: string, password: string, fullName: string, role: UserRole) => {
         try {
             setLoading(true);
-            // Default permissions based on role
-            const defaultPerms = role === 'ADMIN' || role === 'SUPER_ADMIN' ? {} : {};
 
             // 1. Crear usuario en Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: {
-                        full_name: fullName,
-                        role: role
-                    }
+                    data: { full_name: fullName, role }
                 }
             });
 
             if (authError) throw authError;
             if (!authData.user) throw new Error('No se pudo crear el usuario.');
 
-            // 2. Crear perfil en public.profiles (por si no hay trigger)
+            // 2. Upsert en profiles (por si no hay trigger automático)
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
-                    id: authData.user.id,
-                    email: email,
-                    full_name: fullName,
-                    role: role,
-                    permissions: defaultPerms
+                    id:         authData.user.id,
+                    email,
+                    full_name:  fullName,
+                    role,
+                    is_deleted: false,
                 });
 
-            if (profileError) console.warn('Aviso: El perfil podría crearse vía trigger, error ignoreable:', profileError);
+            if (profileError) {
+                console.warn('Perfil posiblemente creado vía trigger:', profileError);
+            }
 
             await fetchProfiles();
             return { success: true };

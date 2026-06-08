@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
+import { useProfessionals } from '../../hooks/useProfessionals';
 import {
     Brain, Eye, Wind, Scan, Bone, Heart, Baby,
     CheckCircle2, Send, RotateCcw, Info, Award,
@@ -113,6 +115,9 @@ const CeldaNivel: React.FC<CeldaProps> = ({ valor, onChange }) => (
 
 export const MatrizCompetencias: React.FC = () => {
     const { user } = useAuth();
+    const { professionals } = useProfessionals();
+    const professional = professionals.find(p => p.email === user?.email);
+    const professionalId = professional?.id ?? null;
     const [matriz, setMatriz] = useState<MatrizState>(buildEstadoInicial);
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
@@ -146,17 +151,32 @@ export const MatrizCompetencias: React.FC = () => {
         setSending(true);
         setError(null);
         try {
-            // TODO: Conectar con Supabase
-            // await supabase.from('competencias_radiologos').upsert({
-            //   user_id: user?.id,
-            //   user_name: user?.name,
-            //   matriz,
-            //   submitted_at: new Date().toISOString(),
-            // });
-            await new Promise(res => setTimeout(res, 1200)); // Simula latencia
+            if (!professionalId) {
+                throw new Error('No se encontró tu perfil de profesional. Contacta a RRHH.');
+            }
+
+            // Aplanar la matriz área×modalidad al mismo formato que usa el Wizard
+            const respuestasPlanas: Record<string, number> = {};
+            for (const areaId of Object.keys(matriz)) {
+                for (const modId of Object.keys(matriz[areaId])) {
+                    respuestasPlanas[`${areaId}_${modId}`] = matriz[areaId][modId];
+                }
+            }
+
+            const { error: upsertError } = await supabase
+                .from('competencias_radiologos')
+                .upsert({
+                    professional_id: professionalId,
+                    respuestas:      respuestasPlanas,
+                    status:          'pending',
+                    submitted_at:    new Date().toISOString(),
+                    updated_at:      new Date().toISOString(),
+                }, { onConflict: 'professional_id' });
+
+            if (upsertError) throw upsertError;
             setSent(true);
-        } catch {
-            setError('No se pudo enviar. Intenta nuevamente.');
+        } catch (err: any) {
+            setError(err.message || 'No se pudo enviar. Intenta nuevamente.');
         } finally {
             setSending(false);
         }

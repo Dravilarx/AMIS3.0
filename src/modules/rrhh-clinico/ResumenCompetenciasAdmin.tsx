@@ -1,32 +1,33 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-    BarChart2, Edit3, Lock, Save, CheckSquare, Eye,
+    BarChart2, Edit3, Save,
     ChevronDown, ChevronRight, AlertTriangle, ShieldCheck,
+    Loader2, RefreshCw,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
 import {
     CATEGORIAS, PROCEDIMIENTOS_FLAT,
     NIVELES_CONFIG, type Nivel, type RespuestasMap,
 } from './competenciasDictionary';
 
-// ─── Mock de médicos ──────────────────────────────────────────────────────────
-// TODO: Reemplazar con query real a Supabase (tabla competencias_radiologos)
-const MOCK_MEDICOS = [
-    { id: '1', name: 'Dr. Juan Pérez',      role: 'Radiólogo General',           status: 'pending' as const },
-    { id: '2', name: 'Dra. Ana Torres',     role: 'Neuro-Radióloga',             status: 'active'  as const },
-    { id: '3', name: 'Dr. Marcos Díaz',     role: 'Radiólogo Intervencionista',  status: 'draft'   as const },
-];
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type EstadoPerfil = 'pending' | 'draft' | 'active';
 
-const buildMock = (seed: number): RespuestasMap =>
-    Object.fromEntries(PROCEDIMIENTOS_FLAT.map((p, i) => [p.id, ((seed + i) % 4) as Nivel]));
+interface MedicoCompetencia {
+    id:             string;
+    professionalId: string;
+    name:           string;
+    role:           string;
+    status:         EstadoPerfil;
+    respuestas:     RespuestasMap;
+    submittedAt:    string | null;
+    reviewedAt:     string | null;
+}
 
-const MOCK_DATA: Record<string, RespuestasMap> = {
-    '1': buildMock(1), '2': buildMock(2), '3': buildMock(3),
-};
+// ─── Subcomponentes ───────────────────────────────────────────────────────────
 
-// ─── Badge de nivel ───────────────────────────────────────────────────────────
 const NivelBadge: React.FC<{ valor: Nivel; overridden?: boolean }> = ({ valor, overridden }) => {
     const cfg = NIVELES_CONFIG[valor];
     return (
@@ -39,11 +40,10 @@ const NivelBadge: React.FC<{ valor: Nivel; overridden?: boolean }> = ({ valor, o
     );
 };
 
-// ─── Selector de nivel (modo edición) ─────────────────────────────────────────
 const NivelSelector: React.FC<{ valor: Nivel; original: Nivel; onChange: (n: Nivel) => void }> = ({ valor, original, onChange }) => (
     <div className="flex items-center gap-1">
         {NIVELES_CONFIG.map(n => {
-            const isSelected = valor === n.value;
+            const isSelected  = valor === n.value;
             const isOverridden = valor !== original && n.value === valor;
             return (
                 <button
@@ -66,7 +66,6 @@ const NivelSelector: React.FC<{ valor: Nivel; original: Nivel; onChange: (n: Niv
     </div>
 );
 
-// ─── Estado Badge ──────────────────────────────────────────────────────────────
 const EstadoBadge: React.FC<{ estado: EstadoPerfil }> = ({ estado }) => {
     const cfg = {
         pending: { label: 'Pendiente de Revisión', color: 'text-amber-400 border-amber-500 bg-amber-950/40' },
@@ -81,288 +80,317 @@ const EstadoBadge: React.FC<{ estado: EstadoPerfil }> = ({ estado }) => {
 };
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
+
 export const ResumenCompetenciasAdmin: React.FC = () => {
-    const [medicoId, setMedicoId]           = useState(MOCK_MEDICOS[0].id);
-    const [editMode, setEditMode]           = useState(false);
-    const [expanded, setExpanded]           = useState<Set<string>>(new Set(['neuro']));
-    const [estado, setEstado]               = useState<EstadoPerfil>('pending');
-    const [saving, setSaving]               = useState(false);
-    const [savedMsg, setSavedMsg]           = useState('');
+    const [medicos, setMedicos]           = useState<MedicoCompetencia[]>([]);
+    const [loading, setLoading]           = useState(true);
+    const [error, setError]               = useState<string | null>(null);
+    const [selectedId, setSelectedId]     = useState<string | null>(null);
+    const [editMode, setEditMode]         = useState(false);
+    const [overrides, setOverrides]       = useState<RespuestasMap>({});
+    const [saving, setSaving]             = useState(false);
+    const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set([CATEGORIAS[0]?.id]));
 
-    // Datos originales del médico + overrides del director
-    const originales: RespuestasMap         = MOCK_DATA[medicoId] ?? {};
-    const [overrides, setOverrides]         = useState<RespuestasMap>({});
-    const overrideKeys                      = useMemo(() => new Set(
-        Object.keys(overrides).filter(k => overrides[k] !== originales[k])
-    ), [overrides, originales]);
+    // ── Fetch desde Supabase ──────────────────────────────────────────────────
+    const fetchCompetencias = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-    // Cambiar médico: resetear overrides
-    const handleMedico = (id: string) => {
-        setMedicoId(id);
-        setOverrides({});
-        setEstado(MOCK_MEDICOS.find(m => m.id === id)?.status ?? 'pending');
-        setEditMode(false);
+            const { data, error: dbError } = await supabase
+                .from('competencias_radiologos')
+                .select(`
+                    id,
+                    professional_id,
+                    respuestas,
+                    status,
+                    submitted_at,
+                    reviewed_at,
+                    professionals (
+                        name,
+                        last_name,
+                        role
+                    )
+                `)
+                .order('submitted_at', { ascending: false });
+
+            if (dbError) throw dbError;
+
+            const mapped: MedicoCompetencia[] = (data || []).map((row: any) => ({
+                id:             row.id,
+                professionalId: row.professional_id,
+                name:           `${row.professionals?.name || ''} ${row.professionals?.last_name || ''}`.trim() || 'Sin nombre',
+                role:           row.professionals?.role || '—',
+                status:         row.status as EstadoPerfil,
+                respuestas:     row.respuestas || {},
+                submittedAt:    row.submitted_at,
+                reviewedAt:     row.reviewed_at,
+            }));
+
+            setMedicos(mapped);
+            if (mapped.length > 0 && !selectedId) {
+                setSelectedId(mapped[0].id);
+            }
+        } catch (err: any) {
+            console.error('Error fetching competencias:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Override de una celda
-    const handleOverride = (procId: string, nivel: Nivel) => {
-        setOverrides(prev => ({ ...prev, [procId]: nivel }));
-    };
+    useEffect(() => { fetchCompetencias(); }, []);
 
-    // Valor efectivo: override si existe, original si no
-    const getValor = (procId: string): Nivel => overrides[procId] ?? originales[procId] ?? 0;
+    // ── Médico seleccionado ───────────────────────────────────────────────────
+    const medico = useMemo(
+        () => medicos.find(m => m.id === selectedId) ?? null,
+        [medicos, selectedId]
+    );
 
-    const toggleArea = (id: string) => setExpanded(prev => {
-        const n = new Set(prev);
-        n.has(id) ? n.delete(id) : n.add(id);
-        return n;
+    const respuestasVigentes: RespuestasMap = useMemo(() => {
+        if (!medico) return {};
+        return editMode
+            ? { ...medico.respuestas, ...overrides }
+            : medico.respuestas;
+    }, [medico, editMode, overrides]);
+
+    // ── Toggle categoría expandida ────────────────────────────────────────────
+    const toggleCat = (id: string) => setExpandedCats(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
     });
 
-    // Guardar borrador
-    const handleGuardar = async () => {
+    // ── Guardar overrides del admin ───────────────────────────────────────────
+    const handleSave = async (nuevoStatus: EstadoPerfil) => {
+        if (!medico) return;
         setSaving(true);
-        // TODO: await supabase.from('competencias_radiologos').upsert({ ... overrides ... status: 'draft' })
-        await new Promise(r => setTimeout(r, 900));
-        setEstado('draft');
-        setSavedMsg('Borrador guardado correctamente.');
-        setSaving(false);
-        setTimeout(() => setSavedMsg(''), 3000);
+        try {
+            const respuestasFinales = { ...medico.respuestas, ...overrides };
+            const { error: updateError } = await supabase
+                .from('competencias_radiologos')
+                .update({
+                    respuestas:  respuestasFinales,
+                    status:      nuevoStatus,
+                    reviewed_at: new Date().toISOString(),
+                    updated_at:  new Date().toISOString(),
+                })
+                .eq('id', medico.id);
+
+            if (updateError) throw updateError;
+
+            await fetchCompetencias();
+            setEditMode(false);
+            setOverrides({});
+        } catch (err: any) {
+            console.error('Error saving competencias:', err);
+        } finally {
+            setSaving(false);
+        }
     };
 
-    // Aprobar perfil
-    const handleAprobar = async () => {
-        setSaving(true);
-        // TODO: await supabase.from('competencias_radiologos').upsert({ ... overrides ... status: 'active' })
-        await new Promise(r => setTimeout(r, 1100));
-        setEstado('active');
-        setEditMode(false);
-        setSavedMsg('✅ Perfil Clínico aprobado y activado.');
-        setSaving(false);
-        setTimeout(() => setSavedMsg(''), 4000);
-    };
+    // ── Stats del médico seleccionado ─────────────────────────────────────────
+    const stats = useMemo(() => {
+        if (!medico) return null;
+        const vals = Object.values(respuestasVigentes) as Nivel[];
+        const total = PROCEDIMIENTOS_FLAT.length;
+        return {
+            total,
+            respondidos: vals.filter(v => v > 0).length,
+            nivel3: vals.filter(v => v === 3).length,
+            nivel2: vals.filter(v => v === 2).length,
+            nivel1: vals.filter(v => v === 1).length,
+            nivel0: vals.filter(v => v === 0).length,
+        };
+    }, [medico, respuestasVigentes]);
 
-    // KPIs globales
-    const kpis = useMemo(() => {
-        const vals = PROCEDIMIENTOS_FLAT.map(p => getValor(p.id));
-        const porNivel = [0,1,2,3].map(n => vals.filter(v => v === n).length);
-        const promedio = ((vals as number[]).reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
-        return { porNivel, promedio };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [medicoId, overrides]);
+    // ── Loading / Error ───────────────────────────────────────────────────────
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <Loader2 className="w-8 h-8 text-info animate-spin" />
+            <p className="text-brand-text/40 text-sm animate-pulse">Cargando matrices de competencias...</p>
+        </div>
+    );
 
+    if (error) return (
+        <div className="card-premium border-danger/20 bg-danger/5 text-center py-12">
+            <AlertTriangle className="w-8 h-8 text-danger mx-auto mb-3" />
+            <p className="text-danger font-bold mb-2">Error al cargar</p>
+            <p className="text-brand-text/40 text-sm mb-6">{error}</p>
+            <button onClick={fetchCompetencias} className="px-4 py-2 bg-brand-surface border border-brand-border rounded-lg text-sm text-brand-text hover:bg-brand-primary/10 transition-colors flex items-center gap-2 mx-auto">
+                <RefreshCw className="w-4 h-4" /> Reintentar
+            </button>
+        </div>
+    );
 
-
+    if (medicos.length === 0) return (
+        <div className="card-premium text-center py-16">
+            <BarChart2 className="w-12 h-12 text-brand-text/20 mx-auto mb-4" />
+            <p className="text-brand-text/50 font-bold">Sin evaluaciones enviadas</p>
+            <p className="text-brand-text/30 text-sm mt-1">Los profesionales deben completar su auto-evaluación en el módulo RRHH Clínico.</p>
+        </div>
+    );
 
     return (
-        <div className="space-y-5 pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
 
-            {/* ── Barra de control ── */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-800 flex items-center justify-center shadow-lg flex-shrink-0">
-                        <BarChart2 className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-black text-brand-text">Auditoría RR.HH. Clínico</h1>
-                        <p className="text-[10px] text-brand-text/40 uppercase tracking-widest font-bold">Panel Director Médico</p>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    <EstadoBadge estado={estado} />
-
-                    {/* Toggle Edición */}
-                    <button
-                        onClick={() => setEditMode(v => !v)}
-                        className={cn(
-                            'flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-xs transition-all',
-                            editMode
-                                ? 'bg-violet-500/20 border-violet-500 text-violet-300'
-                                : 'bg-brand-surface border-brand-border text-brand-text/50 hover:border-brand-text/30'
-                        )}
-                    >
-                        {editMode ? <><Edit3 className="w-3.5 h-3.5" /> Edición Activa</> : <><Lock className="w-3.5 h-3.5" /> Habilitar Edición de Director</>}
+            {/* ── Panel izquierdo: lista de médicos ── */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-black text-brand-text/40 uppercase tracking-widest">
+                        Evaluaciones ({medicos.length})
+                    </h2>
+                    <button onClick={fetchCompetencias} className="p-1.5 rounded-lg hover:bg-brand-surface text-brand-text/30 hover:text-brand-text transition-colors">
+                        <RefreshCw className="w-3.5 h-3.5" />
                     </button>
                 </div>
-            </div>
-
-            {/* ── Selector de médico ── */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-brand-surface border border-brand-border rounded-2xl">
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <Eye className="w-4 h-4 text-brand-text/30" />
-                    <span className="text-xs font-black text-brand-text/40 uppercase tracking-widest">Médico</span>
-                </div>
-                <select
-                    value={medicoId}
-                    onChange={e => handleMedico(e.target.value)}
-                    className="flex-1 bg-brand-bg border border-brand-border rounded-xl px-4 py-2 text-sm font-bold text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
-                >
-                    {MOCK_MEDICOS.map(m => <option key={m.id} value={m.id}>{m.name} — {m.role}</option>)}
-                </select>
-                {overrideKeys.size > 0 && (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-900/30 border border-violet-500/40 rounded-xl text-xs font-bold text-violet-300 flex-shrink-0">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        {overrideKeys.size} celda{overrideKeys.size > 1 ? 's' : ''} modificada{overrideKeys.size > 1 ? 's' : ''}
-                    </span>
-                )}
-            </div>
-
-            {/* ── KPIs ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {NIVELES_CONFIG.map((n, i) => (
-                    <div key={n.value} className="bg-brand-surface border border-brand-border rounded-2xl p-3 text-center">
-                        <p className={cn('text-3xl font-black', n.color)}>{kpis.porNivel[i]}</p>
-                        <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-wide mt-1 leading-tight">{n.label}</p>
-                    </div>
+                {medicos.map(m => (
+                    <button
+                        key={m.id}
+                        onClick={() => { setSelectedId(m.id); setEditMode(false); setOverrides({}); }}
+                        className={cn(
+                            'w-full text-left p-3 rounded-xl border transition-all',
+                            selectedId === m.id
+                                ? 'bg-info/10 border-info/30 text-brand-text'
+                                : 'bg-brand-surface border-brand-border text-brand-text/60 hover:border-brand-text/20'
+                        )}
+                    >
+                        <p className="font-bold text-sm truncate">{m.name}</p>
+                        <p className="text-[10px] text-brand-text/40 truncate">{m.role}</p>
+                        <div className="mt-1.5">
+                            <EstadoBadge estado={m.status} />
+                        </div>
+                        {m.submittedAt && (
+                            <p className="text-[9px] text-brand-text/25 mt-1 font-mono">
+                                {new Date(m.submittedAt).toLocaleDateString('es-CL')}
+                            </p>
+                        )}
+                    </button>
                 ))}
             </div>
 
-            {/* Promedio */}
-            <div className="flex items-center gap-3 px-5 py-3 bg-brand-surface border border-brand-border rounded-2xl self-start w-fit">
-                <span className="text-xs text-brand-text/40 font-bold uppercase tracking-widest">Promedio global</span>
-                <span className="text-2xl font-black text-brand-primary">{kpis.promedio}</span>
-                <span className="text-xs text-brand-text/30">/ 3.0</span>
-                {editMode && <span className="text-[10px] text-violet-400 font-bold uppercase tracking-widest ml-2">· Modo Edición ON</span>}
-            </div>
+            {/* ── Panel derecho: detalle ── */}
+            {medico && stats && (
+                <div className="space-y-4">
 
-            {/* ── Mensaje de acción ── */}
-            {savedMsg && (
-                <div className="flex items-center gap-3 p-4 bg-success/10 border border-success/30 rounded-2xl text-success text-sm font-bold">
-                    <ShieldCheck className="w-5 h-5 flex-shrink-0" /> {savedMsg}
-                </div>
-            )}
-
-            {/* ── Matriz completa por categoría ── */}
-            <div className="space-y-3">
-                {CATEGORIAS.map(cat => {
-                    const procs = PROCEDIMIENTOS_FLAT.filter(p => p.categoriaId === cat.id);
-                    const isOpen = expanded.has(cat.id);
-                    const catVals = procs.map(p => getValor(p.id));
-                    const catMax = Math.max(...catVals) as Nivel;
-                    const catOverrides = procs.filter(p => overrideKeys.has(p.id)).length;
-
-                    return (
-                        <div key={cat.id} className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden">
-
-                            {/* Cabecera colapsable */}
-                            <button
-                                onClick={() => toggleArea(cat.id)}
-                                className="w-full flex items-center gap-3 p-4 hover:bg-brand-primary/3 transition-colors text-left"
-                            >
-                                <div className={cn('w-3 h-3 rounded-full bg-gradient-to-br flex-shrink-0', cat.gradient)} />
-                                <span className="flex-1 font-black text-brand-text text-sm">{cat.nombre}</span>
-                                {catOverrides > 0 && (
-                                    <span className="px-2 py-0.5 bg-violet-900/30 border border-violet-500/40 rounded-full text-[10px] font-bold text-violet-300">
-                                        {catOverrides} override{catOverrides > 1 ? 's' : ''}
-                                    </span>
-                                )}
-                                <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border',
-                                    NIVELES_CONFIG[catMax].color, NIVELES_CONFIG[catMax].border, NIVELES_CONFIG[catMax].bg)}>
-                                    Máx: {NIVELES_CONFIG[catMax].label}
-                                </span>
-                                {isOpen
-                                    ? <ChevronDown className="w-4 h-4 text-brand-text/40 flex-shrink-0" />
-                                    : <ChevronRight className="w-4 h-4 text-brand-text/40 flex-shrink-0" />}
-                            </button>
-
-                            {/* Tabla de procedimientos */}
-                            {isOpen && (
-                                <div className="border-t border-brand-border/50">
-                                    {/* Cabecera de columnas */}
-                                    <div className={cn(
-                                        'grid px-4 py-2 text-[9px] font-black text-brand-text/30 uppercase tracking-widest border-b border-brand-border/30',
-                                        editMode ? 'grid-cols-[1fr_80px_120px_120px]' : 'grid-cols-[1fr_80px_80px]'
-                                    )}>
-                                        <span>Procedimiento</span>
-                                        <span className="text-center">Modalidad</span>
-                                        <span className="text-center">{editMode ? 'Auto-reporte' : 'Nivel'}</span>
-                                        {editMode && <span className="text-center text-violet-400">Override Director</span>}
-                                    </div>
-
-                                    {procs.map((p, i) => {
-                                        const valorActual = getValor(p.id);
-                                        const valorOriginal = originales[p.id] ?? 0;
-                                        const isOverridden = overrideKeys.has(p.id);
-
-                                        return (
-                                            <div
-                                                key={p.id}
-                                                className={cn(
-                                                    'grid items-center px-4 py-2.5 transition-colors border-b border-brand-border/20 last:border-0',
-                                                    editMode ? 'grid-cols-[1fr_80px_120px_120px]' : 'grid-cols-[1fr_80px_80px]',
-                                                    i % 2 === 0 ? 'bg-brand-bg/30' : '',
-                                                    isOverridden ? 'bg-violet-950/20' : ''
-                                                )}
-                                            >
-                                                {/* Nombre */}
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    {isOverridden && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
-                                                    <span className={cn('text-sm truncate', isOverridden ? 'text-brand-text' : 'text-brand-text/70')}>
-                                                        {p.nombre}
-                                                    </span>
-                                                </div>
-
-                                                {/* Modalidad */}
-                                                <div className="flex justify-center">
-                                                    <span className="px-2 py-0.5 bg-brand-bg border border-brand-border rounded-full text-[10px] font-bold text-brand-text/40">
-                                                        {p.modalidad}
-                                                    </span>
-                                                </div>
-
-                                                {/* Valor auto-reporte (siempre read-only) */}
-                                                <div className="flex justify-center">
-                                                    <NivelBadge valor={valorOriginal} />
-                                                </div>
-
-                                                {/* Override del director (solo en edit mode) */}
-                                                {editMode && (
-                                                    <div className="flex justify-center">
-                                                        <NivelSelector
-                                                            valor={valorActual}
-                                                            original={valorOriginal}
-                                                            onChange={n => handleOverride(p.id, n)}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h2 className="text-xl font-black text-brand-text">{medico.name}</h2>
+                            <p className="text-brand-text/40 text-sm">{medico.role}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <EstadoBadge estado={medico.status} />
+                            {!editMode ? (
+                                <button
+                                    onClick={() => { setEditMode(true); setOverrides({}); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/10 border border-violet-500/30 text-violet-400 rounded-lg text-xs font-black hover:bg-violet-500/20 transition-all"
+                                >
+                                    <Edit3 className="w-3.5 h-3.5" /> Editar
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => { setEditMode(false); setOverrides({}); }}
+                                        className="px-3 py-1.5 bg-brand-surface border border-brand-border text-brand-text/50 rounded-lg text-xs font-black hover:bg-brand-primary/10 transition-all"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={() => handleSave('draft')}
+                                        disabled={saving}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 border border-sky-500/30 text-sky-400 rounded-lg text-xs font-black hover:bg-sky-500/20 transition-all disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                        Borrador
+                                    </button>
+                                    <button
+                                        onClick={() => handleSave('active')}
+                                        disabled={saving}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 border border-success/30 text-success rounded-lg text-xs font-black hover:bg-success/20 transition-all disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                                        Aprobar Oficial
+                                    </button>
                                 </div>
                             )}
                         </div>
-                    );
-                })}
-            </div>
+                    </div>
 
-            {/* ── Acciones de validación ── */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                    onClick={handleGuardar}
-                    disabled={saving || estado === 'active'}
-                    className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-brand-border text-brand-text/60 hover:text-brand-text hover:border-brand-text/30 font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <Save className="w-4 h-4" />
-                    {saving ? 'Guardando...' : 'Guardar Borrador'}
-                </button>
+                    {/* Stats rápidas */}
+                    <div className="grid grid-cols-4 gap-3">
+                        {[
+                            { label: 'Subespecialista', val: stats.nivel3, color: 'text-amber-400 bg-amber-950/40 border-amber-800' },
+                            { label: 'Avanzado',        val: stats.nivel2, color: 'text-orange-400 bg-orange-950/40 border-orange-800' },
+                            { label: 'Básico',          val: stats.nivel1, color: 'text-sky-400 bg-sky-950/40 border-sky-800' },
+                            { label: 'No informa',      val: stats.nivel0, color: 'text-brand-text/30 bg-brand-surface border-brand-border' },
+                        ].map(s => (
+                            <div key={s.label} className={cn('rounded-xl border p-3 text-center', s.color)}>
+                                <p className="text-2xl font-black">{s.val}</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest opacity-70 mt-0.5">{s.label}</p>
+                            </div>
+                        ))}
+                    </div>
 
-                <button
-                    onClick={handleAprobar}
-                    disabled={saving || estado === 'active'}
-                    className={cn(
-                        'flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-base transition-all shadow-xl',
-                        estado === 'active'
-                            ? 'bg-success text-white shadow-success/20 cursor-default'
-                            : 'bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.01] disabled:opacity-40 disabled:cursor-not-allowed'
-                    )}
-                >
-                    <CheckSquare className="w-5 h-5" />
-                    {estado === 'active' ? 'Perfil ya Aprobado' : saving ? 'Procesando...' : 'Aprobar Perfil Clínico'}
-                </button>
-            </div>
+                    {/* Tabla por categoría */}
+                    <div className="space-y-2">
+                        {CATEGORIAS.map(cat => {
+                            const procs = PROCEDIMIENTOS_FLAT.filter(p => p.categoriaId === cat.id);
+                            const isExpanded = expandedCats.has(cat.id);
+                            const catVals = procs.map(p => respuestasVigentes[p.id] ?? 0 as Nivel);
+                            const catMax  = Math.max(...catVals) as Nivel;
 
-            <p className="text-center text-[11px] text-brand-text/20 font-mono">
-                Datos mock · Conectar con <code>competencias_radiologos</code> · Estado activo = fuente de verdad para motor de enrutamiento
-            </p>
+                            return (
+                                <div key={cat.id} className="bg-brand-surface border border-brand-border rounded-xl overflow-hidden">
+                                    <button
+                                        onClick={() => toggleCat(cat.id)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-brand-primary/5 transition-colors"
+                                    >
+                                        <div className={cn('w-2.5 h-2.5 rounded-full bg-gradient-to-br flex-shrink-0', cat.gradient)} />
+                                        <span className="font-black text-sm text-brand-text flex-1 text-left">{cat.nombre}</span>
+                                        <NivelBadge valor={catMax} />
+                                        <span className="text-[10px] text-brand-text/30 font-mono">{procs.length} procs</span>
+                                        {isExpanded
+                                            ? <ChevronDown className="w-4 h-4 text-brand-text/30" />
+                                            : <ChevronRight className="w-4 h-4 text-brand-text/30" />
+                                        }
+                                    </button>
+
+                                    {isExpanded && (
+                                        <div className="border-t border-brand-border divide-y divide-brand-border/50">
+                                            {procs.map(proc => {
+                                                const valorOriginal = medico.respuestas[proc.id] ?? 0 as Nivel;
+                                                const valorActual   = respuestasVigentes[proc.id] ?? 0 as Nivel;
+                                                const isOverridden  = editMode && overrides[proc.id] !== undefined && overrides[proc.id] !== valorOriginal;
+
+                                                return (
+                                                    <div key={proc.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-bg/50 transition-colors">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className={cn('text-xs font-semibold truncate', isOverridden ? 'text-violet-300' : 'text-brand-text/80')}>
+                                                                {proc.nombre}
+                                                            </p>
+                                                            <p className="text-[9px] text-brand-text/30 uppercase tracking-wider">{proc.modalidad}</p>
+                                                        </div>
+                                                        {editMode ? (
+                                                            <NivelSelector
+                                                                valor={valorActual}
+                                                                original={valorOriginal}
+                                                                onChange={n => setOverrides(prev => ({ ...prev, [proc.id]: n }))}
+                                                            />
+                                                        ) : (
+                                                            <NivelBadge valor={valorActual} />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
