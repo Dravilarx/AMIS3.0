@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ShieldAlert, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Sparkles, Loader2, Layers } from 'lucide-react';
+import { ShieldAlert, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Sparkles, Loader2, Layers, FolderOpen, Users, Trash2, X, FileCheck } from 'lucide-react';
+import { useProfessionals } from '../../hooks/useProfessionals';
+import { useTenderFolder } from '../../hooks/useTenderFolder';
 import { cn } from '../../lib/utils';
 import { useTenderScoring } from './useTenderScoring';
 import { useTenders } from '../../hooks/useTenders';
@@ -13,9 +15,13 @@ export const TenderDashboard: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isParserOpen, setIsParserOpen] = useState(false);
     const [creatingProject, setCreatingProject] = useState(false);
+    const [showFolder, setShowFolder]     = useState(false);
+    const { professionals: allProfs }     = useProfessionals();
 
     // Seleccionar la primera licitación válida
     const activeTender = tenders.find(t => t.id === selectedId) || tenders[0];
+
+    const folder                          = useTenderFolder(activeTender?.id);
 
     const handleCreateProject = async () => {
         if (!activeTender) return;
@@ -264,6 +270,246 @@ export const TenderDashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* ── CARPETA DE LICITACIÓN ── */}
+            <div className="border border-brand-border rounded-2xl overflow-hidden">
+                <button
+                    onClick={() => setShowFolder(v => !v)}
+                    className="w-full flex items-center justify-between px-5 py-4 bg-brand-surface/50 hover:bg-brand-surface transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <FolderOpen className="w-5 h-5 text-amber-400" />
+                        <div className="text-left">
+                            <p className="text-sm font-bold text-brand-text">Carpeta de Licitación</p>
+                            <p className="text-[10px] text-brand-text/40 uppercase tracking-widest">
+                                {folder.professionals.length} médico(s) · {folder.requiredDocs.length} documento(s) requerido(s)
+                            </p>
+                        </div>
+                    </div>
+                    <div className={cn('transition-transform duration-200', showFolder ? 'rotate-180' : '')}>
+                        <AlertTriangle className="w-4 h-4 text-brand-text/20 rotate-180" />
+                    </div>
+                </button>
+
+                {showFolder && (
+                    <div className="p-5 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                        {/* ── Panel izquierdo/derecho en grid ── */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {/* ── Médicos participantes ── */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-info" />
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-brand-text/60">Médicos participantes</h4>
+                                    </div>
+                                </div>
+
+                                {/* Selector para agregar médico */}
+                                <div className="flex gap-2">
+                                    <select
+                                        className="flex-1 bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50 appearance-none"
+                                        defaultValue=""
+                                        onChange={async e => {
+                                            if (!e.target.value) return;
+                                            await folder.addProfessional(e.target.value);
+                                            e.target.value = '';
+                                        }}
+                                    >
+                                        <option value="">Agregar médico...</option>
+                                        {allProfs
+                                            .filter(p => !folder.professionals.find(fp => fp.professionalId === p.id))
+                                            .map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} {p.lastName} — {p.role}
+                                                </option>
+                                            ))
+                                        }
+                                    </select>
+                                </div>
+
+                                {/* Lista de médicos */}
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {folder.professionals.length === 0 ? (
+                                        <div className="text-center py-6 text-brand-text/20 text-xs">
+                                            Sin médicos asignados. Agrega uno arriba.
+                                        </div>
+                                    ) : folder.professionals.map(prof => {
+                                        const totalDocs   = folder.requiredDocs.length;
+                                        const docsOk      = folder.requiredDocs.filter(d => {
+                                            const s = folder.getDocStatus(prof.professionalId, d.docType);
+                                            return s?.fileUrl && !s.isPending;
+                                        }).length;
+                                        const pct = totalDocs > 0 ? Math.round((docsOk / totalDocs) * 100) : 0;
+                                        const allOk = totalDocs > 0 && docsOk === totalDocs;
+
+                                        return (
+                                            <div key={prof.id} className={cn(
+                                                'flex items-center gap-3 p-3 rounded-xl border transition-all',
+                                                allOk
+                                                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                                                    : 'bg-brand-surface border-brand-border'
+                                            )}>
+                                                <div className={cn(
+                                                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden',
+                                                    allOk
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                        : 'bg-brand-surface text-brand-text/40 border border-brand-border'
+                                                )}>
+                                                    {prof.photoUrl
+                                                        ? <img src={prof.photoUrl} alt={prof.name} className="w-full h-full object-cover" />
+                                                        : prof.name[0]
+                                                    }
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold text-brand-text truncate">{prof.name}</p>
+                                                    <p className="text-[10px] text-brand-text/40 truncate">{prof.role}</p>
+                                                    {totalDocs > 0 && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="flex-1 h-1 bg-brand-border rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={cn('h-full rounded-full transition-all', allOk ? 'bg-emerald-500' : 'bg-info')}
+                                                                    style={{ width: `${pct}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-[9px] font-mono text-brand-text/30">{docsOk}/{totalDocs}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {allOk && <FileCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                                                <button
+                                                    onClick={() => folder.removeProfessional(prof.id)}
+                                                    className="p-1 rounded text-brand-text/20 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
+                                                    title="Quitar de la licitación"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* ── Documentos requeridos ── */}
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <FileCheck className="w-4 h-4 text-purple-400" />
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-brand-text/60">Documentos requeridos</h4>
+                                </div>
+
+                                {/* Selector para agregar doc */}
+                                <div className="flex gap-2">
+                                    <select
+                                        className="flex-1 bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50 appearance-none"
+                                        defaultValue=""
+                                        onChange={async e => {
+                                            if (!e.target.value) return;
+                                            await folder.addRequiredDoc(e.target.value);
+                                            e.target.value = '';
+                                        }}
+                                    >
+                                        <option value="">Agregar documento...</option>
+                                        {folder.DOC_OPTIONS
+                                            .filter(d => !folder.requiredDocs.find(rd => rd.docType === d.value))
+                                            .map(d => (
+                                                <option key={d.value} value={d.value}>{d.label}</option>
+                                            ))
+                                        }
+                                    </select>
+                                </div>
+
+                                {/* Lista de docs requeridos */}
+                                <div className="space-y-1.5">
+                                    {folder.requiredDocs.length === 0 ? (
+                                        <div className="text-center py-6 text-brand-text/20 text-xs">
+                                            Sin documentos requeridos. Agrega uno arriba.
+                                        </div>
+                                    ) : folder.requiredDocs.map(doc => (
+                                        <div key={doc.id} className="flex items-center gap-2 px-3 py-2 bg-brand-surface border border-brand-border rounded-lg">
+                                            <span className="flex-1 text-xs text-brand-text/70">{doc.label}</span>
+                                            <button
+                                                onClick={() => folder.removeRequiredDoc(doc.id)}
+                                                className="p-1 rounded text-brand-text/20 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Matriz de cumplimiento ── */}
+                        {folder.professionals.length > 0 && folder.requiredDocs.length > 0 && (
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-brand-text/40 flex items-center gap-2">
+                                    <FolderOpen className="w-3.5 h-3.5" />
+                                    Matriz de cumplimiento documental
+                                </h4>
+                                <div className="overflow-x-auto rounded-xl border border-brand-border">
+                                    <table className="w-full text-xs">
+                                        <thead>
+                                            <tr className="bg-brand-surface/50 border-b border-brand-border">
+                                                <th className="text-left px-3 py-2 text-[10px] font-black uppercase tracking-widest text-brand-text/40 w-40">
+                                                    Médico
+                                                </th>
+                                                {folder.requiredDocs.map(doc => (
+                                                    <th key={doc.id} className="px-3 py-2 text-center text-[10px] font-black uppercase tracking-widest text-brand-text/40 min-w-[100px]">
+                                                        {doc.label}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {folder.professionals.map((prof, i) => (
+                                                <tr key={prof.id} className={cn(
+                                                    'border-b border-brand-border/50 last:border-0',
+                                                    i % 2 === 0 ? 'bg-brand-surface' : 'bg-brand-bg/20'
+                                                )}>
+                                                    <td className="px-3 py-2">
+                                                        <p className="font-bold text-brand-text/80 truncate">{prof.name}</p>
+                                                        <p className="text-[9px] text-brand-text/30">{prof.role}</p>
+                                                    </td>
+                                                    {folder.requiredDocs.map(doc => {
+                                                        const status = folder.getDocStatus(prof.professionalId, doc.docType);
+                                                        const hasDoc  = status?.fileUrl && !status.isPending;
+                                                        const pending = status?.isPending;
+                                                        return (
+                                                            <td key={doc.id} className="px-3 py-2 text-center">
+                                                                {hasDoc ? (
+                                                                    <button
+                                                                        onClick={() => window.open(status!.fileUrl!, '_blank')}
+                                                                        className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                                                                        title={`Ver ${status?.fileName}`}
+                                                                    >
+                                                                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                                                    </button>
+                                                                ) : pending ? (
+                                                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20" title="Pendiente">
+                                                                        <span className="text-[8px] font-black text-amber-400">PND</span>
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-500/10 border border-red-500/20" title="Falta">
+                                                                        <X className="w-3.5 h-3.5 text-red-400" />
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p className="text-[9px] text-brand-text/20 text-right font-mono">
+                                    ✅ disponible · PND pendiente · ✗ falta — los documentos se suben desde la ficha del médico
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
