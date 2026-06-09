@@ -40,7 +40,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 aiObservation: d.ai_observation,
                 expiryDate: d.expiry_date,
                 status: d.status as any,
-                requestedSigners: d.requested_signers
+                requestedSigners: d.requested_signers,
+                folderId: d.folder_id,
             }));
 
             setDocuments(mappedData);
@@ -87,7 +88,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
-            const filePath = `expedientes/${fileName}`;
+            const category = metadata.category || 'general';
+            const filePath = `${category}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('documents')
@@ -203,7 +205,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
         try {
             const { error: updateError } = await supabase
                 .from('documents')
-                .update({ status: 'rejected', is_locked: true })
+                .update({ status: 'rejected' })
                 .eq('id', id);
 
             if (updateError) throw updateError;

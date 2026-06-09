@@ -46,6 +46,7 @@ export interface Document {
     aiObservation?: string; // Feedback de la IA
     expiryDate?: string; // Fecha de vencimiento para alertas
     requestedSigners?: string[]; // Roles o UIDs permitidos para firmar
+    folderId?: string | null;
     status?: 'draft' | 'pending' | 'signed' | 'rejected';
 }
 
