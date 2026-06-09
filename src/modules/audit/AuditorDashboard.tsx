@@ -1,288 +1,644 @@
-import React, { useState } from 'react';
-import { Shield, AlertTriangle, Info, Filter, Search, BarChart3, ArrowUpRight, FileText } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import {
+    Shield, Info, Search, FileText, Sparkles,
+    ChevronRight, X, Upload, Mail, Send, Loader2, CheckCircle2,
+    Plus, Trash2, Eye, MailOpen, MailIcon, Paperclip,
+    Building2, Stethoscope, CalendarDays,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { AgrawallLevel } from '../../types/audit';
-import { useAudit } from '../../hooks/useAudit';
-import { Sparkles } from 'lucide-react';
+import { useAudit, type AuditCase, type AuditDocument } from '../../hooks/useAudit';
+import { useProfessionals } from '../../hooks/useProfessionals';
 import { InlineAuditUploader } from './InlineAuditUploader';
+import { analyzeClinicalReportFromPDF } from './agrawallAI';
 
-export const AuditorDashboard: React.FC = () => {
-    const { audits } = useAudit();
-    const [selectedAudit, setSelectedAudit] = useState<any>(null);
-    const [showUploader, setShowUploader] = useState(false);
+// ─── Constantes ───────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+    pending:   { label: 'Nuevo',          color: 'text-info    bg-info/10    border-info/20' },
+    reviewed:  { label: 'En Resolución',  color: 'text-warning bg-warning/10 border-warning/20' },
+    escalated: { label: 'Escalado',       color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+    completed: { label: 'Completado',     color: 'text-success bg-success/10 border-success/20' },
+};
 
-    const getLevelColor = (level: AgrawallLevel) => {
-        switch (level) {
-            case 1: return 'text-success bg-success/10 border-success/20';
-            case 2: return 'text-info bg-info/10 border-info/20';
-            case 3: return 'text-warning bg-warning/10 border-warning/20';
-            case 4: return 'text-danger bg-danger/10 border-danger/20';
-            default: return 'text-brand-text/40 bg-brand-surface/50 border-brand-border';
+const AGRAWALL_CONFIG = {
+    1: { label: 'Correcto',              color: 'text-success  bg-success/10  border-success/20' },
+    2: { label: 'Discrepancia Menor',    color: 'text-info     bg-info/10     border-info/20' },
+    3: { label: 'Discrepancia Moderada', color: 'text-warning  bg-warning/10  border-warning/20' },
+    4: { label: 'Discrepancia Grave',    color: 'text-red-400  bg-red-500/10  border-red-500/20' },
+};
+
+const DOC_TYPES = [
+    { value: 'informe',      label: 'Informe Médico' },
+    { value: 'orden_medica', label: 'Orden Médica' },
+    { value: 'examen',       label: 'Examen' },
+    { value: 'correo',       label: 'Correo Electrónico' },
+    { value: 'otro',         label: 'Otro Antecedente' },
+];
+
+// ─── Badge Agrawall ───────────────────────────────────────────────────────────
+const AgrawallBadge: React.FC<{ level?: number; size?: 'sm' | 'lg' }> = ({ level, size = 'sm' }) => {
+    if (!level) return <span className="text-[9px] text-brand-text/20 font-mono">—</span>;
+    const cfg = AGRAWALL_CONFIG[level as keyof typeof AGRAWALL_CONFIG];
+    return (
+        <span className={cn(
+            'font-black border rounded-full uppercase tracking-wider',
+            cfg.color,
+            size === 'lg' ? 'px-3 py-1 text-xs' : 'px-2 py-0.5 text-[9px]'
+        )}>
+            N{level} — {cfg.label}
+        </span>
+    );
+};
+
+// ─── Panel de detalle del caso ────────────────────────────────────────────────
+const CaseDetailPanel: React.FC<{
+    auditCase:    AuditCase;
+    onClose:      () => void;
+    professionals: { id: string; name: string; lastName: string }[];
+}> = ({ auditCase, onClose, professionals }) => {
+    const { updateCase, uploadDocument, deleteDocument, addCommunication } = useAudit();
+
+    const [activeTab,    setActiveTab]    = useState<'info' | 'docs' | 'comms' | 'agrawall'>('info');
+    const [saving,       setSaving]       = useState(false);
+    const [uploadingDoc, setUploadingDoc] = useState(false);
+    const [analyzingPDF, setAnalyzingPDF] = useState(false);
+
+    const [editData, setEditData] = useState({
+        status:          auditCase.status,
+        doctorId:        auditCase.doctorId        || '',
+        institution:     auditCase.institution     || '',
+        requestType:     auditCase.requestType     || 'Radiología',
+        resolutionDate:  auditCase.resolutionDate  ? auditCase.resolutionDate.split('T')[0] : '',
+        observations:    auditCase.observations    || '',
+        measuresTaken:   auditCase.measuresTaken   || '',
+    });
+
+    const [newComm, setNewComm] = useState({
+        direction: 'sent' as 'sent' | 'received',
+        subject:   '',
+        body:      '',
+        toEmail:   '',
+        fromEmail: '',
+    });
+
+    const [selectedDocType, setSelectedDocType] = useState<AuditDocument['docType']>('informe');
+
+    const handleSave = async () => {
+        setSaving(true);
+        const doctor = professionals.find(p => p.id === editData.doctorId);
+        await updateCase(auditCase.id, {
+            ...editData,
+            doctorName:     doctor ? `${doctor.name} ${doctor.lastName}` : auditCase.doctorName,
+            resolutionDate: editData.resolutionDate || undefined,
+        });
+        setSaving(false);
+    };
+
+    const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingDoc(true);
+        await uploadDocument(auditCase.id, file, selectedDocType);
+        setUploadingDoc(false);
+    };
+
+    const handleAnalyzePDF = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAnalyzingPDF(true);
+        try {
+            const result = await analyzeClinicalReportFromPDF(file);
+            await updateCase(auditCase.id, {
+                agrawallLevel:    result.score,
+                agrawallReasoning: result.reasoning,
+                agrawallFindings:  result.findings,
+            });
+            await uploadDocument(auditCase.id, file, 'informe', 'Analizado por Gemini IA');
+        } catch (err) {
+            console.error('Error análisis IA:', err);
+        } finally {
+            setAnalyzingPDF(false);
         }
     };
 
+    const handleAddComm = async () => {
+        if (!newComm.subject.trim() || !newComm.body.trim()) return;
+        await addCommunication(auditCase.id, {
+            ...newComm,
+            hasAttachment: false,
+        });
+        setNewComm({ direction: 'sent', subject: '', body: '', toEmail: '', fromEmail: '' });
+    };
+
+    const TABS = [
+        { id: 'info',     label: 'Información',  icon: <Info className="w-3.5 h-3.5" /> },
+        { id: 'docs',     label: 'Documentos',   icon: <Paperclip className="w-3.5 h-3.5" />, count: auditCase.documents.length },
+        { id: 'comms',    label: 'Comunicaciones', icon: <Mail className="w-3.5 h-3.5" />, count: auditCase.communications.length },
+        { id: 'agrawall', label: 'Agrawall IA',  icon: <Sparkles className="w-3.5 h-3.5" /> },
+    ] as const;
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-700">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-                <div>
-                    <h2 className="text-2xl font-bold text-brand-text">Gestión de Casos Clínicos</h2>
-                    <p className="text-brand-text/40 text-sm">Análisis de Discrepancias y Reclamos Radiológicos (Agrawall)</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-brand-bg border border-brand-border rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+
+                {/* Header */}
+                <div className="flex items-start justify-between px-6 py-4 border-b border-brand-border">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-black text-brand-text">{auditCase.patientName}</h2>
+                            <AgrawallBadge level={auditCase.agrawallLevel} size="sm" />
+                            <span className={cn(
+                                'text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider',
+                                STATUS_CONFIG[auditCase.status].color
+                            )}>
+                                {STATUS_CONFIG[auditCase.status].label}
+                            </span>
+                        </div>
+                        <p className="text-[10px] text-brand-text/40 mt-0.5">
+                            {auditCase.patientRut && <span className="font-mono">{auditCase.patientRut} · </span>}
+                            {auditCase.institution} · {auditCase.requestType}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-brand-surface text-brand-text/40 hover:text-brand-text transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowUploader(!showUploader)}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white hover:bg-blue-500 rounded-xl transition-all font-black text-xs uppercase tracking-tight shadow-lg shadow-blue-500/20 border border-blue-400/30"
-                >
-                    <Sparkles className="w-4 h-4" />
-                    <span>NUEVO CASO IA</span>
+
+                {/* Tabs */}
+                <div className="flex gap-1 px-6 pt-3 border-b border-brand-border overflow-x-auto flex-shrink-0">
+                    {TABS.map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                            className={cn(
+                                'flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2 -mb-px',
+                                activeTab === tab.id
+                                    ? 'bg-brand-surface border-brand-primary text-brand-text'
+                                    : 'border-transparent text-brand-text/40 hover:text-brand-text/70'
+                            )}>
+                            {tab.icon} {tab.label}
+                            {'count' in tab && tab.count > 0 && (
+                                <span className="w-4 h-4 bg-brand-primary text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                                    {tab.count}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+                    {/* ── Tab Info ── */}
+                    {activeTab === 'info' && (
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Estado</label>
+                                    <select value={editData.status} onChange={e => setEditData(p => ({ ...p, status: e.target.value as any }))}
+                                        className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none">
+                                        {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                                            <option key={k} value={k}>{v.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest flex items-center gap-1">
+                                        <Stethoscope className="w-3 h-3" /> Médico Responsable
+                                    </label>
+                                    <select value={editData.doctorId} onChange={e => setEditData(p => ({ ...p, doctorId: e.target.value }))}
+                                        className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none">
+                                        <option value="">Sin asignar</option>
+                                        {professionals.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name} {p.lastName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest flex items-center gap-1">
+                                        <Building2 className="w-3 h-3" /> Institución
+                                    </label>
+                                    <input className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none"
+                                        value={editData.institution}
+                                        onChange={e => setEditData(p => ({ ...p, institution: e.target.value }))} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Tipo Solicitud</label>
+                                    <select value={editData.requestType} onChange={e => setEditData(p => ({ ...p, requestType: e.target.value }))}
+                                        className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none">
+                                        {['Radiología', 'Cirugía', 'Consulta General', 'Reclamo Administrativo', 'Otro'].map(t => (
+                                            <option key={t} value={t}>{t}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest flex items-center gap-1">
+                                        <CalendarDays className="w-3 h-3" /> Fecha Resolución
+                                    </label>
+                                    <input type="date" className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none"
+                                        value={editData.resolutionDate}
+                                        onChange={e => setEditData(p => ({ ...p, resolutionDate: e.target.value }))} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Observaciones</label>
+                                <textarea rows={3} className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none resize-none"
+                                    placeholder="Notas del caso, contexto clínico..."
+                                    value={editData.observations}
+                                    onChange={e => setEditData(p => ({ ...p, observations: e.target.value }))} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Medidas Tomadas</label>
+                                <textarea rows={3} className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none resize-none"
+                                    placeholder="Acciones realizadas para resolver el caso..."
+                                    value={editData.measuresTaken}
+                                    onChange={e => setEditData(p => ({ ...p, measuresTaken: e.target.value }))} />
+                            </div>
+
+                            <button onClick={handleSave} disabled={saving}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-brand-primary text-white font-black text-sm hover:brightness-110 transition-all disabled:opacity-50">
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                {saving ? 'Guardando...' : 'Guardar Cambios'}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ── Tab Documentos ── */}
+                    {activeTab === 'docs' && (
+                        <div className="space-y-4">
+                            {/* Upload */}
+                            <div className="flex items-center gap-3 p-3 bg-brand-surface border border-brand-border rounded-xl">
+                                <select value={selectedDocType} onChange={e => setSelectedDocType(e.target.value as any)}
+                                    className="bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-text outline-none appearance-none">
+                                    {DOC_TYPES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                </select>
+                                <label className={cn(
+                                    'flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase cursor-pointer transition-all',
+                                    uploadingDoc ? 'bg-brand-surface text-brand-text/30' : 'bg-info/10 border border-info/20 text-info hover:bg-info/20'
+                                )}>
+                                    {uploadingDoc ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                                    {uploadingDoc ? 'Subiendo...' : 'Subir documento'}
+                                    <input type="file" className="hidden" disabled={uploadingDoc}
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.eml,.msg"
+                                        onChange={handleDocUpload} />
+                                </label>
+                            </div>
+
+                            {/* Lista documentos */}
+                            {auditCase.documents.length === 0 ? (
+                                <div className="text-center py-10 text-brand-text/20 text-xs">Sin documentos adjuntos.</div>
+                            ) : auditCase.documents.map(doc => (
+                                <div key={doc.id} className="flex items-center gap-3 p-3 bg-brand-surface border border-brand-border rounded-xl">
+                                    <FileText className="w-5 h-5 text-brand-text/30 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-brand-text truncate">{doc.fileName}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[9px] font-black text-brand-text/30 uppercase">
+                                                {DOC_TYPES.find(d => d.value === doc.docType)?.label}
+                                            </span>
+                                            <span className="text-[9px] text-brand-text/20 font-mono">
+                                                {new Date(doc.uploadedAt).toLocaleDateString('es-CL')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => window.open(doc.fileUrl, '_blank')}
+                                        className="p-1.5 rounded-lg text-brand-text/20 hover:text-info hover:bg-info/10 transition-colors">
+                                        <Eye className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => deleteDocument(doc.id)}
+                                        className="p-1.5 rounded-lg text-brand-text/20 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* ── Tab Comunicaciones ── */}
+                    {activeTab === 'comms' && (
+                        <div className="space-y-4">
+                            {/* Formulario nuevo correo */}
+                            <div className="space-y-3 p-4 bg-brand-surface border border-brand-border rounded-2xl">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Registrar Comunicación</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <select value={newComm.direction} onChange={e => setNewComm(p => ({ ...p, direction: e.target.value as any }))}
+                                        className="bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-text outline-none">
+                                        <option value="sent">Enviado</option>
+                                        <option value="received">Recibido</option>
+                                    </select>
+                                    <input placeholder={newComm.direction === 'sent' ? 'Para (email)' : 'De (email)'}
+                                        className="bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-text outline-none"
+                                        value={newComm.direction === 'sent' ? newComm.toEmail : newComm.fromEmail}
+                                        onChange={e => setNewComm(p => newComm.direction === 'sent'
+                                            ? { ...p, toEmail: e.target.value }
+                                            : { ...p, fromEmail: e.target.value }
+                                        )} />
+                                </div>
+                                <input placeholder="Asunto"
+                                    className="bg-brand-bg border border-brand-border rounded-lg w-full px-3 py-2 text-xs text-brand-text outline-none"
+                                    value={newComm.subject}
+                                    onChange={e => setNewComm(p => ({ ...p, subject: e.target.value }))} />
+                                <textarea rows={3} placeholder="Contenido del correo..."
+                                    className="bg-brand-bg border border-brand-border rounded-lg w-full px-3 py-2 text-xs text-brand-text outline-none resize-none"
+                                    value={newComm.body}
+                                    onChange={e => setNewComm(p => ({ ...p, body: e.target.value }))} />
+                                <button onClick={handleAddComm} disabled={!newComm.subject.trim() || !newComm.body.trim()}
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-info/10 border border-info/20 text-info rounded-lg text-xs font-black uppercase hover:bg-info/20 transition-all disabled:opacity-40">
+                                    <Send className="w-3 h-3" /> Registrar
+                                </button>
+                            </div>
+
+                            {/* Historial */}
+                            {auditCase.communications.length === 0 ? (
+                                <div className="text-center py-8 text-brand-text/20 text-xs">Sin comunicaciones registradas.</div>
+                            ) : [...auditCase.communications]
+                                .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+                                .map(comm => (
+                                    <div key={comm.id} className={cn(
+                                        'p-4 rounded-xl border space-y-2',
+                                        comm.direction === 'sent'
+                                            ? 'bg-info/5 border-info/20'
+                                            : 'bg-brand-surface border-brand-border'
+                                    )}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                {comm.direction === 'sent'
+                                                    ? <Send className="w-3.5 h-3.5 text-info" />
+                                                    : <MailOpen className="w-3.5 h-3.5 text-brand-text/40" />
+                                                }
+                                                <span className="text-xs font-bold text-brand-text">{comm.subject}</span>
+                                            </div>
+                                            <span className="text-[9px] font-mono text-brand-text/30">
+                                                {new Date(comm.sentAt).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-brand-text/40">
+                                            {comm.direction === 'sent' ? `Para: ${comm.toEmail}` : `De: ${comm.fromEmail}`}
+                                        </p>
+                                        <p className="text-xs text-brand-text/70 leading-relaxed whitespace-pre-line">{comm.body}</p>
+                                    </div>
+                                ))}
+                        </div>
+                    )}
+
+                    {/* ── Tab Agrawall ── */}
+                    {activeTab === 'agrawall' && (
+                        <div className="space-y-5">
+                            {auditCase.agrawallLevel ? (
+                                <div className="space-y-4">
+                                    <div className={cn(
+                                        'p-5 rounded-2xl border-2 space-y-3',
+                                        AGRAWALL_CONFIG[auditCase.agrawallLevel as keyof typeof AGRAWALL_CONFIG].color
+                                    )}>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-14 h-14 rounded-2xl bg-current/10 flex items-center justify-center">
+                                                <span className="text-3xl font-black">{auditCase.agrawallLevel}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black uppercase tracking-wider">
+                                                    Nivel {auditCase.agrawallLevel} — {AGRAWALL_CONFIG[auditCase.agrawallLevel as keyof typeof AGRAWALL_CONFIG].label}
+                                                </p>
+                                                <p className="text-[10px] opacity-60 mt-0.5">Clasificado por Gemini IA</p>
+                                            </div>
+                                        </div>
+                                        {auditCase.agrawallReasoning && (
+                                            <p className="text-sm leading-relaxed opacity-80">{auditCase.agrawallReasoning}</p>
+                                        )}
+                                    </div>
+
+                                    {auditCase.agrawallFindings.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Hallazgos identificados</p>
+                                            {auditCase.agrawallFindings.map((f, i) => (
+                                                <div key={i} className="flex items-start gap-2 p-2.5 bg-brand-surface border border-brand-border rounded-lg">
+                                                    <ChevronRight className="w-3.5 h-3.5 text-brand-text/30 mt-0.5 flex-shrink-0" />
+                                                    <p className="text-xs text-brand-text/70">{f}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 border border-dashed border-brand-border rounded-2xl">
+                                    <Sparkles className="w-8 h-8 text-brand-text/10 mx-auto mb-3" />
+                                    <p className="text-sm text-brand-text/30 mb-1">Sin análisis Agrawall</p>
+                                    <p className="text-xs text-brand-text/20">Sube el informe para análisis IA</p>
+                                </div>
+                            )}
+
+                            {/* Re-analizar */}
+                            <div className="p-4 bg-brand-surface/50 border border-brand-border rounded-2xl space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40 flex items-center gap-2">
+                                    <Sparkles className="w-3 h-3 text-purple-400" />
+                                    {auditCase.agrawallLevel ? 'Re-analizar con Gemini' : 'Analizar con Gemini IA'}
+                                </p>
+                                <label className={cn(
+                                    'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase cursor-pointer transition-all w-fit',
+                                    analyzingPDF
+                                        ? 'bg-brand-surface text-brand-text/30 cursor-not-allowed'
+                                        : 'bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20'
+                                )}>
+                                    {analyzingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                                    {analyzingPDF ? 'Analizando...' : 'Subir PDF del informe'}
+                                    <input type="file" accept=".pdf" className="hidden" disabled={analyzingPDF} onChange={handleAnalyzePDF} />
+                                </label>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Dashboard principal ──────────────────────────────────────────────────────
+export const AuditorDashboard: React.FC = () => {
+    const { cases, loading } = useAudit();
+    const { professionals }  = useProfessionals();
+
+    const [searchTerm,    setSearchTerm]    = useState('');
+    const [filterStatus,  setFilterStatus]  = useState('');
+    const [filterLevel,   setFilterLevel]   = useState('');
+    const [filterDoctor,  setFilterDoctor]  = useState('');
+    const [showUploader,  setShowUploader]  = useState(false);
+    const [selectedCase,  setSelectedCase]  = useState<AuditCase | null>(null);
+
+    const filtered = useMemo(() => cases.filter(c => {
+        const s = searchTerm.toLowerCase();
+        const matchSearch  = c.patientName.toLowerCase().includes(s) ||
+                             (c.patientRut || '').includes(s) ||
+                             (c.institution || '').toLowerCase().includes(s) ||
+                             (c.doctorName  || '').toLowerCase().includes(s);
+        const matchStatus  = !filterStatus || c.status           === filterStatus;
+        const matchLevel   = !filterLevel  || String(c.agrawallLevel) === filterLevel;
+        const matchDoctor  = !filterDoctor || c.doctorId          === filterDoctor;
+        return matchSearch && matchStatus && matchLevel && matchDoctor;
+    }), [cases, searchTerm, filterStatus, filterLevel, filterDoctor]);
+
+    const kpis = {
+        total:    cases.length,
+        pending:  cases.filter(c => c.status === 'pending').length,
+        inProgress: cases.filter(c => c.status === 'reviewed').length,
+        completed: cases.filter(c => c.status === 'completed').length,
+        nivel4:   cases.filter(c => c.agrawallLevel === 4).length,
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-black text-brand-text">Auditoría Clínica IA</h2>
+                    <p className="text-brand-text/40 text-sm">Gestión de casos, reclamos y discrepancias — Escala Agrawall</p>
+                </div>
+                <button onClick={() => setShowUploader(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20">
+                    <Plus className="w-4 h-4" /> Nuevo Caso
                 </button>
             </div>
 
-            {/* KPIs Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="card-premium p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Total Casos</p>
-                        <h3 className="text-2xl font-black text-brand-text">{audits.length}</h3>
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {[
+                    { label: 'Total',        val: kpis.total,      color: 'text-brand-text bg-brand-surface border-brand-border' },
+                    { label: 'Nuevos',       val: kpis.pending,    color: 'text-info    bg-info/10    border-info/20' },
+                    { label: 'En Resolución',val: kpis.inProgress, color: 'text-warning bg-warning/10 border-warning/20' },
+                    { label: 'Completados',  val: kpis.completed,  color: 'text-success bg-success/10 border-success/20' },
+                    { label: 'Nivel 4 ⚠️',  val: kpis.nivel4,     color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+                ].map(k => (
+                    <div key={k.label} className={cn('flex items-center gap-4 px-4 py-3 rounded-2xl border', k.color)}>
+                        <span className={cn('text-2xl font-black', k.color.split(' ')[0])}>{k.val}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-brand-text/40 leading-tight">{k.label}</span>
                     </div>
-                    <div className="p-3 bg-brand-surface rounded-xl border border-brand-border">
-                        <FileText className="w-5 h-5 text-brand-text/40" />
-                    </div>
-                </div>
-                <div className="card-premium p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Nuevos (Pendientes)</p>
-                        <h3 className="text-2xl font-black text-info">
-                            {audits.filter(a => a.status === 'pending').length}
-                        </h3>
-                    </div>
-                    <div className="p-3 bg-info/10 rounded-xl border border-info/10">
-                        <Info className="w-5 h-5 text-info" />
-                    </div>
-                </div>
-                <div className="card-premium p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">En Gestión</p>
-                        <h3 className="text-2xl font-black text-warning">0</h3>
-                    </div>
-                    <div className="p-3 bg-warning/10 rounded-xl border border-warning/10">
-                        <AlertTriangle className="w-5 h-5 text-warning" />
-                    </div>
-                </div>
-                <div className="card-premium p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Resueltos</p>
-                        <h3 className="text-2xl font-black text-success">
-                            {audits.filter(a => a.status === 'completed').length}
-                        </h3>
-                    </div>
-                    <div className="p-3 bg-success/10 rounded-xl border border-success/10">
-                        <Shield className="w-5 h-5 text-success" />
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {/* Agrawall Distribution Grid */}
-            <div className="card-premium p-6 bg-gradient-to-br from-brand-surface to-transparent border border-brand-border">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-info/20 rounded-lg text-info">
-                        <BarChart3 className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-black text-brand-text uppercase tracking-wider">Distribución Agrawall</h3>
-                        <p className="text-[10px] text-brand-text/40 uppercase tracking-tighter">Niveles de Discrepancia detectados por IA</p>
-                    </div>
+            {/* Filtros */}
+            <div className="flex flex-wrap items-center gap-3 p-4 bg-brand-surface border border-brand-border rounded-2xl">
+                <div className="relative flex-1 min-w-48">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-text/20" />
+                    <input placeholder="Buscar paciente, RUT, institución, médico..."
+                        className="bg-brand-bg border border-brand-border rounded-xl w-full pl-9 pr-4 py-2 text-xs text-brand-text outline-none focus:border-info/50"
+                        value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                    {[0, 1, 2, 3, 4, 5].map((level) => {
-                        const count = audits.filter(a => a.score === level).length;
-                        return (
-                            <div key={level} className="bg-brand-surface border border-brand-border rounded-xl p-4 flex flex-col items-center group hover:bg-brand-primary/5 transition-all">
-                                <div className={cn(
-                                    "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black mb-2 border",
-                                    level === 0 ? "bg-success/20 text-success border-success/20" :
-                                        level <= 2 ? "bg-info/20 text-info border-info/20" :
-                                            "bg-warning/20 text-warning border-warning/20"
-                                )}>
-                                    {level}
-                                </div>
-                                <span className="text-xl font-black text-brand-text">{count}</span>
-                                <span className="text-[8px] text-brand-text/30 uppercase font-bold tracking-widest mt-1">Nivel {level}</span>
-                            </div>
-                        );
-                    })}
-                </div>
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none appearance-none">
+                    <option value="">Todos los estados</option>
+                    {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+                <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none appearance-none">
+                    <option value="">Todos los niveles</option>
+                    {[1, 2, 3, 4].map(n => <option key={n} value={n}>Nivel {n}</option>)}
+                </select>
+                <select value={filterDoctor} onChange={e => setFilterDoctor(e.target.value)}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none appearance-none">
+                    <option value="">Todos los médicos</option>
+                    {professionals.map(p => <option key={p.id} value={p.id}>{p.name} {p.lastName}</option>)}
+                </select>
+                {(filterStatus || filterLevel || filterDoctor || searchTerm) && (
+                    <button onClick={() => { setFilterStatus(''); setFilterLevel(''); setFilterDoctor(''); setSearchTerm(''); }}
+                        className="px-3 py-2 text-[10px] font-black uppercase text-danger hover:bg-danger/10 rounded-xl transition-colors">
+                        Limpiar
+                    </button>
+                )}
+                <span className="ml-auto text-[10px] font-mono text-brand-text/30">{filtered.length} de {cases.length}</span>
             </div>
 
-            {/* Inline Uploader */}
+            {/* Tabla */}
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="text-center py-16 border border-dashed border-brand-border rounded-2xl">
+                    <Shield className="w-12 h-12 text-brand-text/10 mx-auto mb-3" />
+                    <p className="text-sm text-brand-text/30">Sin casos. Crea el primero con "Nuevo Caso".</p>
+                </div>
+            ) : (
+                <div className="rounded-2xl border border-brand-border overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-brand-surface/50 border-b border-brand-border">
+                                {['Paciente', 'Institución', 'Agrawall', 'Médico', 'Estado', 'Fecha Solicitud', 'Fecha Resolución', ''].map(h => (
+                                    <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-brand-border/50">
+                            {filtered.map(c => (
+                                <tr key={c.id} onClick={() => setSelectedCase(c)}
+                                    className="hover:bg-brand-surface/50 cursor-pointer transition-colors group">
+                                    <td className="px-4 py-3">
+                                        <p className="text-sm font-bold text-brand-text group-hover:text-brand-primary transition-colors">{c.patientName}</p>
+                                        {c.patientRut && <p className="text-[10px] font-mono text-brand-text/30">{c.patientRut}</p>}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs text-brand-text/60">{c.institution || '—'}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <AgrawallBadge level={c.agrawallLevel} />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs text-brand-text/60">{c.doctorName || '—'}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={cn(
+                                            'text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider',
+                                            STATUS_CONFIG[c.status].color
+                                        )}>
+                                            {STATUS_CONFIG[c.status].label}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs font-mono text-brand-text/40">
+                                            {new Date(c.requestDate).toLocaleDateString('es-CL')}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs font-mono text-brand-text/40">
+                                            {c.resolutionDate ? new Date(c.resolutionDate).toLocaleDateString('es-CL') : '—'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {c.documents.length > 0 && (
+                                                <span className="text-[9px] text-brand-text/30 flex items-center gap-0.5">
+                                                    <Paperclip className="w-2.5 h-2.5" /> {c.documents.length}
+                                                </span>
+                                            )}
+                                            {c.communications.length > 0 && (
+                                                <span className="text-[9px] text-brand-text/30 flex items-center gap-0.5 ml-1">
+                                                    <MailIcon className="w-2.5 h-2.5" /> {c.communications.length}
+                                                </span>
+                                            )}
+                                            <ChevronRight className="w-4 h-4 text-brand-text/30 ml-1" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* Modal nuevo caso */}
             {showUploader && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                     <div className="w-full max-w-2xl">
                         <InlineAuditUploader onClose={() => setShowUploader(false)} />
                     </div>
                 </div>
             )}
 
-
-            <div className={cn(
-                "grid gap-6",
-                selectedAudit ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1"
-            )}>
-                {/* List Side */}
-                <div className={cn(selectedAudit ? "lg:col-span-2" : "lg:col-span-1", "space-y-4")}>
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Listado de Hallazgos</h3>
-                            <div className="h-px w-8 bg-brand-border" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-text/20" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar paciente, RUT o descripción..."
-                                    className="bg-brand-surface border border-brand-border rounded-lg pl-9 pr-4 py-1.5 text-[11px] text-brand-text focus:outline-none focus:border-brand-primary/30 transition-all w-64"
-                                />
-                            </div>
-                            <button className="p-1.5 bg-brand-surface border border-brand-border rounded-lg hover:bg-brand-primary/5 transition-colors">
-                                <Filter className="w-3.5 h-3.5 text-brand-text/40" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden overflow-x-auto shadow-sm">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-brand-border bg-brand-bg/30">
-                                    <th className="px-6 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">Paciente / ID</th>
-                                    <th className="px-6 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">Institución</th>
-                                    <th className="px-6 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap text-center">Nivel Agrawall</th>
-                                    <th className="px-6 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap">Estado</th>
-                                    <th className="px-6 py-4 text-[9px] font-black text-brand-text/40 uppercase tracking-widest whitespace-nowrap text-right">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-brand-border">
-                                {audits.map((audit) => (
-                                    <tr
-                                        key={audit.id}
-                                        onClick={() => setSelectedAudit(audit)}
-                                        className={cn(
-                                            "hover:bg-brand-primary/5 transition-colors cursor-pointer group",
-                                            selectedAudit?.id === audit.id && "bg-info/10 border-l-2 border-info"
-                                        )}
-                                    >
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="text-xs font-bold text-brand-text/90 group-hover:text-brand-primary transition-colors">
-                                                    {audit.patient_name || 'Paciente IA'}
-                                                </span>
-                                                <span className="text-[10px] text-brand-text/20 font-mono">
-                                                    ID: {audit.id.slice(0, 8)}...
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-[10px] text-brand-text/50 uppercase font-black tracking-tighter">
-                                                <Shield className="w-3 h-3 text-brand-text/20" />
-                                                <span>{audit.projects?.name || 'VITALMÉDICA'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-center">
-                                                <div className={cn(
-                                                    "w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border",
-                                                    getLevelColor(audit.score)
-                                                )}>
-                                                    {audit.score}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "text-[8px] px-2 py-0.5 rounded font-black uppercase tracking-widest leading-none",
-                                                audit.status === 'pending' ? 'bg-info/20 text-info border-info/20' : 'bg-success/20 text-success border-success/20'
-                                            )}>
-                                                {audit.status === 'pending' ? 'NUEVO' : 'COMPLETADO'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <ArrowUpRight className="w-3.5 h-3.5 text-brand-text/10 group-hover:text-brand-text/60 ml-auto transition-colors" />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Detail Side - Solo aparece cuando hay selección */}
-                {selectedAudit && (
-                    <div className="lg:col-span-1">
-                        <div className="card-premium space-y-6 sticky top-6 bg-brand-surface border-brand-border">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-brand-primary font-bold uppercase tracking-widest">Detalle de Auditoría</span>
-                                <button onClick={() => setSelectedAudit(null)} className="text-brand-text/20 hover:text-brand-text text-xl">×</button>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-bold text-brand-text">{selectedAudit.patient_name || 'Análisis de Proyecto'}</h3>
-                                <p className="text-sm text-brand-text/40 mb-4">{selectedAudit.projects?.name}</p>
-
-                                <div className={cn("p-4 rounded-xl border mb-6 shadow-sm", getLevelColor(selectedAudit.score))}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <BarChart3 className="w-4 h-4" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Escala Agrawall Nivel {selectedAudit.score}</span>
-                                    </div>
-                                    <p className="text-sm leading-relaxed">{selectedAudit.compliance_details?.aiClassificationReason || 'Cumplimiento analizado por IA'}</p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest mb-2">Hallazgos Extraídos (IA)</p>
-                                        <div className="space-y-2">
-                                            {typeof selectedAudit.anomalies === 'string'
-                                                ? selectedAudit.anomalies.split('\n').filter(Boolean).map((f: string, i: number) => (
-                                                    <div key={i} className="flex gap-2 p-2 bg-brand-bg border border-brand-border rounded-lg text-[11px] text-brand-text/70">
-                                                        <span className="text-brand-primary font-bold">•</span>
-                                                        <span>{f}</span>
-                                                    </div>
-                                                ))
-                                                : (selectedAudit.anomalies || []).map((f: string, i: number) => (
-                                                    <div key={i} className="flex gap-2 p-2 bg-brand-bg border border-brand-border rounded-lg text-[11px] text-brand-text/70">
-                                                        <span className="text-brand-primary font-bold">•</span>
-                                                        <span>{f}</span>
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-brand-bg/50 border border-brand-border rounded-xl">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest flex items-center gap-1">
-                                                <FileText className="w-3 h-3" /> Contenido del Informe
-                                            </p>
-                                        </div>
-                                        <div className="text-[11px] text-brand-text/60 leading-relaxed font-mono whitespace-pre-wrap max-h-[200px] overflow-y-auto custom-scrollbar">
-                                            {selectedAudit.reportContent}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3 mt-8">
-                                    <button className="py-2.5 px-4 bg-brand-surface border border-brand-border text-brand-text rounded-lg text-sm font-bold hover:bg-brand-primary/5 hover:border-brand-primary/30 transition-all">
-                                        Validar
-                                    </button>
-                                    <button className="py-2.5 px-4 bg-danger/10 border border-danger/30 text-danger rounded-lg text-sm font-bold hover:bg-danger/20 transition-all">
-                                        Escalar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+            {/* Panel de detalle */}
+            {selectedCase && (
+                <CaseDetailPanel
+                    auditCase={selectedCase}
+                    onClose={() => setSelectedCase(null)}
+                    professionals={professionals.map(p => ({ id: p.id, name: p.name, lastName: p.lastName || '' }))}
+                />
+            )}
         </div>
     );
 };
