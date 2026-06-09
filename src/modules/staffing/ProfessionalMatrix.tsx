@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2, ArchiveRestore, Archive } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
-import { useProfessionals } from '../../hooks/useProfessionals';
+import { useProfessionals, validateRUT } from '../../hooks/useProfessionals';
 import type { Professional } from '../../types/core';
 
 import { useTenders } from '../../hooks/useTenders';
@@ -610,7 +610,9 @@ export const ProfessionalMatrix: React.FC = () => {
                                 key={prof.id}
                                 className={cn(
                                     "card-premium group transition-all duration-300 cursor-pointer relative",
-                                    isActive
+                                    showArchived
+                                        ? "ring-2 ring-amber-500/30 hover:ring-amber-400/50 opacity-50 bg-amber-500/5"
+                                        : isActive
                                         ? "ring-2 ring-emerald-500/40 hover:ring-emerald-400/60 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_-3px_rgba(16,185,129,0.35)]"
                                         : "ring-2 ring-red-500/40 hover:ring-red-400/60 shadow-[0_0_15px_-3px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_-3px_rgba(239,68,68,0.35)] opacity-75",
                                     isSelected && "ring-info ring-2 bg-info/5"
@@ -653,14 +655,26 @@ export const ProfessionalMatrix: React.FC = () => {
                                             )} title={isActive ? 'Activo' : 'Inactivo'} />
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
-                                            <span className={cn(
-                                                "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
-                                                isActive
-                                                    ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                                                    : "text-red-400 bg-red-500/10 border border-red-500/20"
-                                            )}>
-                                                {isActive ? '● ACTIVO' : '● INACTIVO'}
-                                            </span>
+                                            {showArchived ? (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        restoreProfessional(prof.id);
+                                                    }}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] font-black uppercase hover:bg-amber-500/20 transition-all"
+                                                >
+                                                    <ArchiveRestore className="w-3 h-3" /> Restaurar
+                                                </button>
+                                            ) : (
+                                                <span className={cn(
+                                                    "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
+                                                    isActive
+                                                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                                                        : "text-red-400 bg-red-500/10 border border-red-500/20"
+                                                )}>
+                                                    {isActive ? '● ACTIVO' : '● INACTIVO'}
+                                                </span>
+                                            )}
                                             {prof.infoStatus === 'complete' ? (
                                                 <span className="text-[9px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Info Completa</span>
                                             ) : (
@@ -688,12 +702,19 @@ export const ProfessionalMatrix: React.FC = () => {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
                                                 <h4 className={cn(
-                                                    "font-bold text-lg transition-colors",
-                                                    isActive
+                                                    "font-bold text-lg transition-colors flex items-center gap-2 flex-wrap",
+                                                    showArchived
+                                                        ? "text-amber-400/70"
+                                                        : isActive
                                                         ? "text-brand-text group-hover:text-info"
                                                         : "text-brand-text/50 group-hover:text-red-400 line-through decoration-red-500/30"
                                                 )}>
                                                     {prof.name} {prof.lastName}
+                                                    {showArchived && (
+                                                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-wider">
+                                                            Archivado
+                                                        </span>
+                                                    )}
                                                 </h4>
                                                 <span className="text-[10px] text-brand-text/20 font-mono">{prof.nationalId}</span>
                                             </div>
@@ -764,6 +785,13 @@ export const ProfessionalMatrix: React.FC = () => {
                                 const competencies = row.competencies
                                     ? row.competencies.split(',').map((c: string) => c.trim()).filter(Boolean)
                                     : [];
+
+                                // Validar RUT si viene en la fila
+                                if (row.nationalId && !validateRUT(row.nationalId)) {
+                                    failed++;
+                                    errors.push({ row: i + 2, message: `RUT inválido: ${row.nationalId}` });
+                                    continue;
+                                }
 
                                 const result = await addProfessional({
                                     name: row.name,
