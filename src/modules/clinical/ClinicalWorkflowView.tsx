@@ -12,23 +12,33 @@ import {
     Clock,
     Share2,
     ArrowRight,
-    Landmark,
     CheckCircle2,
     AlertCircle,
-    Sparkles,
     Activity as ActivityIcon,
     Settings2,
     Book,
     Pencil,
-    Trash2
+    Trash2,
+    UploadCloud,
+    X,
+    Loader2
 } from 'lucide-react';
 import { cn, formatRUT, formatName } from '../../lib/utils';
 import { useClinicalProcedures } from './useClinicalProcedures';
+import { useExpenses } from '../../hooks/useExpenses';
 import { ClinicalProcedureModal } from './ClinicalProcedureModal';
 import { ProcedureDetailsPanel } from './ProcedureDetailsPanel';
 import { ClinicalConfigPanel } from './ClinicalConfigPanel';
 import { ClinicalCalendar } from './ClinicalCalendar';
-import type { ClinicalAppointment } from '../../types/clinical';
+import type { ClinicalAppointment, MedicalProcedure } from '../../types/clinical';
+
+const STATUS_LABELS: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    scheduled:            { label: 'Agendado',            color: 'text-info',    bg: 'bg-info/10',    border: 'border-info/20' },
+    requirements_pending: { label: 'Req. Pendientes',     color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+    in_progress:          { label: 'En Curso',            color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+    completed:            { label: 'Completado',          color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+    cancelled:            { label: 'Cancelado',           color: 'text-danger',  bg: 'bg-danger/10',  border: 'border-danger/20' },
+};
 
 const TABS = [
     { id: 'agenda', name: 'Agenda Activa', icon: Calendar },
@@ -37,6 +47,603 @@ const TABS = [
     { id: 'results', name: 'Resultados', icon: ActivityIcon },
     { id: 'config', name: 'Configuración', icon: Settings2 },
 ];
+
+// ─── Tab Logística ────────────────────────────────────────────────────────────
+interface LogisticsTabProps {
+    appointments:        ClinicalAppointment[];
+    onSelectAppointment: (app: ClinicalAppointment) => void;
+}
+
+const LogisticsTab: React.FC<LogisticsTabProps> = ({ appointments, onSelectAppointment }) => {
+    const { expenses, addExpense } = useExpenses();
+    const [selectedApp,   setSelectedApp]   = useState<ClinicalAppointment | null>(null);
+    const [showForm,      setShowForm]       = useState(false);
+    const [saving,        setSaving]         = useState(false);
+    const [newExpense,    setNewExpense]      = useState({
+        vendor: '', amount: 0, category: 'Traslado',
+        date: new Date().toISOString().split('T')[0],
+        expense_type: 'transport' as const,
+    });
+
+    // Solo procedimientos que requieren logística
+    const withLogistics = appointments.filter(a =>
+        a.logisticsStatus?.transport !== 'not_required' ||
+        a.logisticsStatus?.perDiem   !== 'not_required'
+    );
+
+    // KPIs
+    const transportPending    = appointments.filter(a => a.logisticsStatus?.transport === 'required').length;
+    const perDiemPending      = appointments.filter(a => a.logisticsStatus?.perDiem   === 'required').length;
+    const transportCoordinated = appointments.filter(a => a.logisticsStatus?.transport === 'coordinated').length;
+
+    // Gastos vinculados al procedimiento seleccionado
+    const appExpenses = selectedApp
+        ? expenses.filter(e => (e as any).appointment_id === selectedApp.id)
+        : [];
+
+    const totalAppExpenses = appExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    const handleAddExpense = async () => {
+        if (!selectedApp || !newExpense.vendor.trim() || !newExpense.amount) return;
+        setSaving(true);
+        await addExpense({
+            ...newExpense,
+            appointment_id: selectedApp.id,
+            status:         'pending',
+            tax_id:         '',
+        } as any);
+        setNewExpense({
+            vendor: '', amount: 0, category: 'Traslado',
+            date: new Date().toISOString().split('T')[0],
+            expense_type: 'transport',
+        });
+        setShowForm(false);
+        setSaving(false);
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+
+            {/* KPIs */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: 'Traslados pendientes',    val: transportPending,     color: 'text-red-400    bg-red-500/10    border-red-500/20' },
+                    { label: 'Viáticos pendientes',     val: perDiemPending,       color: 'text-amber-400  bg-amber-500/10  border-amber-500/20' },
+                    { label: 'Traslados coordinados',   val: transportCoordinated, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                ].map(k => (
+                    <div key={k.label} className={cn('flex items-center gap-4 px-5 py-4 rounded-2xl border', k.color)}>
+                        <span className={cn('text-3xl font-black', k.color.split(' ')[0])}>{k.val}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">{k.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+
+                {/* Lista de procedimientos con logística */}
+                <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">
+                        Procedimientos con logística ({withLogistics.length})
+                    </h4>
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                        {withLogistics.length === 0 ? (
+                            <p className="text-center py-8 text-xs text-brand-text/20">Sin procedimientos con logística requerida.</p>
+                        ) : withLogistics.map(app => (
+                            <button key={app.id}
+                                type="button"
+                                onClick={() => setSelectedApp(app)}
+                                className={cn(
+                                    'w-full text-left p-3 rounded-xl border transition-all',
+                                    selectedApp?.id === app.id
+                                        ? 'bg-info/10 border-info/30'
+                                        : 'bg-brand-surface border-brand-border hover:border-brand-text/20'
+                                )}>
+                                <p className="text-xs font-bold text-brand-text truncate">{app.patientName}</p>
+                                <p className="text-[10px] text-brand-text/40 truncate">{app.procedure?.name}</p>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                    {app.logisticsStatus?.transport !== 'not_required' && (
+                                        <span className={cn(
+                                            'text-[8px] font-black px-1.5 py-0.5 rounded uppercase',
+                                            app.logisticsStatus?.transport === 'coordinated'
+                                                ? 'bg-emerald-500/10 text-emerald-400'
+                                                : 'bg-red-500/10 text-red-400'
+                                        )}>
+                                            🚗 Traslado
+                                        </span>
+                                    )}
+                                    {app.logisticsStatus?.perDiem !== 'not_required' && (
+                                        <span className={cn(
+                                            'text-[8px] font-black px-1.5 py-0.5 rounded uppercase',
+                                            app.logisticsStatus?.perDiem === 'coordinated'
+                                                ? 'bg-emerald-500/10 text-emerald-400'
+                                                : 'bg-amber-500/10 text-amber-400'
+                                        )}>
+                                            💰 Viáticos
+                                        </span>
+                                    )}
+                                    <span className="text-[8px] text-brand-text/30 font-mono ml-auto">
+                                        {new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')}
+                                    </span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Panel de gastos del procedimiento */}
+                {selectedApp ? (
+                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-black text-brand-text">{selectedApp.patientName}</p>
+                                <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.center?.name}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-brand-text/30">
+                                    Total: <span className="text-brand-text font-black">$ {totalAppExpenses.toLocaleString('es-CL')}</span>
+                                </span>
+                                <button onClick={() => setShowForm(v => !v)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase hover:brightness-110 transition-all">
+                                    <Plus className="w-3 h-3" /> Agregar gasto
+                                </button>
+                                <button onClick={() => onSelectAppointment(selectedApp)}
+                                    className="px-3 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-[10px] font-black uppercase text-brand-text/60 hover:bg-brand-primary/10 transition-all">
+                                    Ver expediente
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Formulario nuevo gasto */}
+                        {showForm && (
+                            <div className="p-4 bg-info/5 border border-info/20 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-brand-text/40">Tipo</label>
+                                        <select className="bg-brand-surface border border-brand-border rounded-lg w-full px-2 py-1.5 text-xs outline-none"
+                                            value={newExpense.expense_type}
+                                            onChange={e => setNewExpense(p => ({ ...p, expense_type: e.target.value as any }))}>
+                                            <option value="transport">Traslado</option>
+                                            <option value="per_diem">Viático</option>
+                                            <option value="accommodation">Alojamiento</option>
+                                            <option value="general">General</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-brand-text/40">Proveedor</label>
+                                        <input className="bg-brand-surface border border-brand-border rounded-lg w-full px-2 py-1.5 text-xs outline-none"
+                                            value={newExpense.vendor}
+                                            onChange={e => setNewExpense(p => ({ ...p, vendor: e.target.value }))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-brand-text/40">Monto</label>
+                                        <input type="number" className="bg-brand-surface border border-brand-border rounded-lg w-full px-2 py-1.5 text-xs outline-none"
+                                            value={newExpense.amount}
+                                            onChange={e => setNewExpense(p => ({ ...p, amount: Number(e.target.value) }))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] uppercase font-bold text-brand-text/40">Fecha</label>
+                                        <input type="date" className="bg-brand-surface border border-brand-border rounded-lg w-full px-2 py-1.5 text-xs outline-none"
+                                            value={newExpense.date}
+                                            onChange={e => setNewExpense(p => ({ ...p, date: e.target.value }))} />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => setShowForm(false)}
+                                        className="px-3 py-1.5 border border-brand-border rounded-lg text-xs text-brand-text/50 hover:bg-brand-surface">
+                                        Cancelar
+                                    </button>
+                                    <button onClick={handleAddExpense} disabled={saving || !newExpense.vendor.trim() || !newExpense.amount}
+                                        className="flex items-center gap-1.5 px-4 py-1.5 bg-info/10 border border-info/20 text-info rounded-lg text-xs font-black uppercase disabled:opacity-50">
+                                        {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Lista de gastos */}
+                        {appExpenses.length === 0 ? (
+                            <div className="text-center py-8 border border-dashed border-brand-border rounded-2xl">
+                                <p className="text-xs text-brand-text/20">Sin gastos registrados para este procedimiento.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {appExpenses.map(e => (
+                                    <div key={e.id} className="flex items-center gap-3 p-3 bg-brand-surface border border-brand-border rounded-xl">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-brand-text truncate">{e.vendor}</p>
+                                            <p className="text-[9px] text-brand-text/40">{e.category} · {e.date}</p>
+                                        </div>
+                                        <span className={cn(
+                                            'text-[9px] font-black px-2 py-0.5 rounded uppercase',
+                                            e.status === 'verified' ? 'bg-emerald-500/10 text-emerald-400'
+                                                : e.status === 'rejected' ? 'bg-red-500/10 text-red-400'
+                                                : 'bg-amber-500/10 text-amber-400'
+                                        )}>
+                                            {e.status === 'verified' ? 'Verificado' : e.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                                        </span>
+                                        <span className="text-sm font-black text-brand-text flex-shrink-0">
+                                            $ {e.amount.toLocaleString('es-CL')}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center min-h-[40vh] text-center">
+                        <div>
+                            <Truck className="w-12 h-12 text-brand-text/10 mx-auto mb-3" />
+                            <p className="text-xs text-brand-text/20">Selecciona un procedimiento para ver y gestionar sus gastos</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ─── Tab Catálogo ─────────────────────────────────────────────────────────────
+interface CatalogTabProps {
+    catalog:  MedicalProcedure[];
+    onUpsert: (proc: Partial<MedicalProcedure>) => Promise<any>;
+    onDelete: ((id: string) => Promise<any>) | undefined;
+}
+
+const CatalogTab: React.FC<CatalogTabProps> = ({ catalog, onUpsert, onDelete }) => {
+    const [editingId,  setEditingId]  = useState<string | null>(null);
+    const [editData,   setEditData]   = useState<Partial<MedicalProcedure>>({});
+    const [saving,     setSaving]     = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showNew,    setShowNew]    = useState(false);
+    const [newProc,    setNewProc]    = useState<{ code: string; name: string; description: string; basePrice: number }>({ code: '', name: '', description: '', basePrice: 0 });
+
+    const filtered = catalog.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleSaveEdit = async () => {
+        if (!editingId) return;
+        setSaving(true);
+        await onUpsert({ ...editData, id: editingId });
+        setEditingId(null);
+        setEditData({});
+        setSaving(false);
+    };
+
+    const handleSaveNew = async () => {
+        if (!newProc.code.trim() || !newProc.name.trim()) return;
+        setSaving(true);
+        await onUpsert({ ...newProc, isActive: true });
+        setNewProc({ code: '', name: '', description: '', basePrice: 0 });
+        setShowNew(false);
+        setSaving(false);
+    };
+
+    return (
+        <div className="space-y-4 animate-in fade-in duration-300">
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-text/20" />
+                    <input type="text" placeholder="Buscar procedimiento o código..."
+                        className="bg-brand-surface border border-brand-border rounded-xl w-full pl-9 pr-4 py-2 text-xs text-brand-text outline-none focus:border-info/50"
+                        value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                </div>
+                <button onClick={() => setShowNew(v => !v)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary text-white rounded-xl text-xs font-black uppercase hover:brightness-110 transition-all">
+                    <Plus className="w-3.5 h-3.5" /> Nuevo
+                </button>
+            </div>
+
+            {/* Formulario nuevo procedimiento */}
+            {showNew && (
+                <div className="p-4 bg-info/5 border border-info/20 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-info/60">Nuevo Procedimiento</p>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] uppercase font-bold text-brand-text/40">Código</label>
+                            <input className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none focus:border-info/50"
+                                value={newProc.code} onChange={e => setNewProc(p => ({ ...p, code: e.target.value }))} />
+                        </div>
+                        <div className="space-y-1 md:col-span-2">
+                            <label className="text-[9px] uppercase font-bold text-brand-text/40">Nombre</label>
+                            <input className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none focus:border-info/50"
+                                value={newProc.name} onChange={e => setNewProc(p => ({ ...p, name: e.target.value }))} />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] uppercase font-bold text-brand-text/40">Precio base</label>
+                            <input type="number" className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none focus:border-info/50"
+                                value={newProc.basePrice} onChange={e => setNewProc(p => ({ ...p, basePrice: Number(e.target.value) }))} />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-brand-text/40">Descripción</label>
+                        <input className="bg-brand-surface border border-brand-border rounded-lg w-full px-3 py-1.5 text-xs text-brand-text outline-none focus:border-info/50"
+                            value={newProc.description} onChange={e => setNewProc(p => ({ ...p, description: e.target.value }))} />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                        <button onClick={() => setShowNew(false)}
+                            className="px-3 py-1.5 border border-brand-border rounded-lg text-xs text-brand-text/50 hover:bg-brand-surface transition-all">
+                            Cancelar
+                        </button>
+                        <button onClick={handleSaveNew} disabled={saving || !newProc.code.trim() || !newProc.name.trim()}
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-info/10 border border-info/20 text-info rounded-lg text-xs font-black uppercase hover:bg-info/20 transition-all disabled:opacity-50">
+                            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Tabla */}
+            <div className="rounded-2xl border border-brand-border overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-brand-surface/50 border-b border-brand-border">
+                            <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-text/40 w-24">Código</th>
+                            <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-text/40">Procedimiento</th>
+                            <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-text/40 w-32">Precio</th>
+                            <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-text/40 w-24 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-border/50">
+                        {filtered.map(proc => (
+                            <tr key={proc.id} className="hover:bg-brand-bg/30 transition-colors group">
+                                {editingId === proc.id ? (
+                                    <>
+                                        <td className="px-4 py-2">
+                                            <input className="bg-brand-surface border border-info/30 rounded-lg w-full px-2 py-1 text-xs text-brand-text outline-none"
+                                                value={editData.code ?? proc.code}
+                                                onChange={e => setEditData(p => ({ ...p, code: e.target.value }))} />
+                                        </td>
+                                        <td className="px-4 py-2 space-y-1">
+                                            <input className="bg-brand-surface border border-info/30 rounded-lg w-full px-2 py-1 text-xs text-brand-text outline-none"
+                                                value={editData.name ?? proc.name}
+                                                onChange={e => setEditData(p => ({ ...p, name: e.target.value }))} />
+                                            <input className="bg-brand-surface border border-brand-border rounded-lg w-full px-2 py-1 text-[10px] text-brand-text/60 outline-none"
+                                                placeholder="Descripción..."
+                                                value={editData.description ?? proc.description}
+                                                onChange={e => setEditData(p => ({ ...p, description: e.target.value }))} />
+                                        </td>
+                                        <td className="px-4 py-2">
+                                            <input type="number" className="bg-brand-surface border border-info/30 rounded-lg w-full px-2 py-1 text-xs text-brand-text outline-none"
+                                                value={editData.basePrice ?? proc.basePrice}
+                                                onChange={e => setEditData(p => ({ ...p, basePrice: Number(e.target.value) }))} />
+                                        </td>
+                                        <td className="px-4 py-2 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button onClick={handleSaveEdit} disabled={saving}
+                                                    className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors">
+                                                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                                </button>
+                                                <button onClick={() => { setEditingId(null); setEditData({}); }}
+                                                    className="p-1.5 rounded-lg text-brand-text/30 hover:bg-brand-surface transition-colors">
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </>
+                                ) : (
+                                    <>
+                                        <td className="px-4 py-3">
+                                            <span className="text-xs font-mono font-black text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-1 rounded-lg">
+                                                {proc.code}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <p className="text-sm font-bold text-brand-text">{proc.name}</p>
+                                            <p className="text-[10px] text-brand-text/40 line-clamp-1">{proc.description}</p>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm font-black text-brand-text">
+                                                $ {proc.basePrice.toLocaleString('es-CL')}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => { setEditingId(proc.id); setEditData({}); }}
+                                                    className="p-1.5 rounded-lg text-brand-text/30 hover:text-info hover:bg-info/10 transition-colors">
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                </button>
+                                                {onDelete && (
+                                                    <button
+                                                        onClick={() => { if (confirm(`¿Eliminar "${proc.name}"?`)) onDelete(proc.id); }}
+                                                        className="p-1.5 rounded-lg text-brand-text/30 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </>
+                                )}
+                            </tr>
+                        ))}
+                        {filtered.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="px-4 py-8 text-center text-xs text-brand-text/20">
+                                    Sin procedimientos. Agrega uno con el botón "Nuevo".
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+// ─── Tab Resultados ───────────────────────────────────────────────────────────
+interface ResultsTabProps {
+    appointments: ClinicalAppointment[];
+    doctors:      { id: string; name: string; specialty: string; rut: string }[];
+    onUploadResult: (appointmentId: string, doctorId: string, findings: string, file?: File) => Promise<{ success: boolean; error?: string }>;
+}
+
+const ResultsTab: React.FC<ResultsTabProps> = ({ appointments, doctors, onUploadResult }) => {
+    const [selectedApp,  setSelectedApp]  = useState<ClinicalAppointment | null>(null);
+    const [findings,     setFindings]     = useState('');
+    const [selectedDoc,  setSelectedDoc]  = useState<File | null>(null);
+    const [doctorId,     setDoctorId]     = useState('');
+    const [saving,       setSaving]       = useState(false);
+    const [saved,        setSaved]        = useState<string | null>(null);
+    const [searchTerm,   setSearchTerm]   = useState('');
+
+    const pending = appointments.filter(a =>
+        a.status === 'completed' || a.status === 'in_progress' || a.checkoutStatus
+    );
+
+    const filtered = pending.filter(a =>
+        a.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.patientRut.includes(searchTerm)
+    );
+
+    const handleSave = async () => {
+        if (!selectedApp || !findings.trim() || !doctorId) return;
+        setSaving(true);
+        const result = await onUploadResult(
+            selectedApp.id, doctorId, findings,
+            selectedDoc || undefined
+        );
+        setSaving(false);
+        if (result.success) {
+            setSaved(selectedApp.id);
+            setFindings('');
+            setSelectedDoc(null);
+            setSelectedApp(null);
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+            {/* Lista de procedimientos con resultado pendiente */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-brand-text/40">
+                        Procedimientos ({filtered.length})
+                    </h3>
+                </div>
+                <input
+                    type="text" placeholder="Buscar paciente o RUT..."
+                    className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-xs text-brand-text outline-none focus:border-info/50"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                />
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                    {filtered.length === 0 ? (
+                        <div className="text-center py-12 text-brand-text/20 text-xs">
+                            Sin procedimientos para cargar resultados.
+                        </div>
+                    ) : filtered.map(app => (
+                        <button key={app.id}
+                            type="button"
+                            onClick={() => { setSelectedApp(app); setFindings(''); setSelectedDoc(null); setSaved(null); }}
+                            className={cn(
+                                'w-full text-left p-3 rounded-xl border transition-all',
+                                selectedApp?.id === app.id
+                                    ? 'bg-info/10 border-info/30'
+                                    : 'bg-brand-surface border-brand-border hover:border-brand-text/20',
+                                saved === app.id && 'bg-success/10 border-success/20'
+                            )}>
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-brand-text truncate">{app.patientName}</p>
+                                {saved === app.id && (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
+                                )}
+                            </div>
+                            <p className="text-[10px] text-brand-text/40 truncate">{app.procedure?.name}</p>
+                            <p className="text-[9px] text-brand-text/30 font-mono mt-1">
+                                {new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} — {app.center?.name}
+                            </p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Panel de carga de resultado */}
+            {selectedApp ? (
+                <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
+                        <p className="text-xs font-black text-brand-text">{selectedApp.patientName}</p>
+                        <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.center?.name}</p>
+                        <p className="text-[9px] font-mono text-brand-text/30 mt-1">
+                            {new Date(`${selectedApp.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })}
+                        </p>
+                    </div>
+
+                    {/* Médico */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">
+                            Médico Responsable <span className="text-red-400">*</span>
+                        </label>
+                        <select value={doctorId} onChange={e => setDoctorId(e.target.value)}
+                            className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none focus:border-info/50">
+                            <option value="">Seleccionar médico...</option>
+                            {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </select>
+                    </div>
+
+                    {/* Hallazgos */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">
+                            Hallazgos / Resultado <span className="text-red-400">*</span>
+                        </label>
+                        <textarea rows={6}
+                            placeholder="Describe los hallazgos del procedimiento, resultado de biopsia, conclusión diagnóstica..."
+                            className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none focus:border-info/50 resize-none"
+                            value={findings}
+                            onChange={e => setFindings(e.target.value)} />
+                    </div>
+
+                    {/* Archivo adjunto */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">
+                            Documento adjunto (opcional)
+                        </label>
+                        <label className={cn(
+                            'flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all',
+                            selectedDoc
+                                ? 'bg-emerald-500/5 border-emerald-500/20'
+                                : 'bg-brand-surface border-brand-border hover:border-info/30'
+                        )}>
+                            <UploadCloud className={cn('w-4 h-4 flex-shrink-0', selectedDoc ? 'text-emerald-400' : 'text-brand-text/20')} />
+                            <span className="text-xs text-brand-text/60 truncate flex-1">
+                                {selectedDoc ? selectedDoc.name : 'Subir PDF, imagen o informe anatomopatológico'}
+                            </span>
+                            {selectedDoc && (
+                                <button type="button" onClick={e => { e.preventDefault(); setSelectedDoc(null); }}
+                                    className="p-1 text-brand-text/20 hover:text-red-400">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden"
+                                onChange={e => setSelectedDoc(e.target.files?.[0] || null)} />
+                        </label>
+                    </div>
+
+                    {/* Botón guardar */}
+                    <button onClick={handleSave}
+                        disabled={saving || !findings.trim() || !doctorId}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-brand-primary text-white font-black text-sm shadow-xl shadow-brand-primary/20 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        {saving
+                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando resultado...</>
+                            : <><FileCheck className="w-4 h-4" /> Registrar Resultado</>
+                        }
+                    </button>
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+                    <FileCheck className="w-12 h-12 text-brand-text/10" />
+                    <p className="text-sm font-bold text-brand-text/30">Selecciona un procedimiento para cargar su resultado</p>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export const ClinicalWorkflowView: React.FC = () => {
     const {
@@ -75,7 +682,11 @@ export const ClinicalWorkflowView: React.FC = () => {
     const [selectedApp, setSelectedApp] = useState<ClinicalAppointment | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [doctorFilter, setDoctorFilter] = useState('');
-    const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'worklist'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'worklist'>('worklist');
+    const [filterStatus, setFilterStatus]   = useState('');
+    const [filterCenter, setFilterCenter]   = useState('');
+    const [filterDateFrom, setFilterDateFrom] = useState('');
+    const [filterDateTo, setFilterDateTo]   = useState('');
 
     const handleDeleteAppointment = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -95,9 +706,27 @@ export const ClinicalWorkflowView: React.FC = () => {
             app.procedure?.name.toLowerCase().includes(search) ||
             app.center?.name.toLowerCase().includes(search)
         );
-        const matchesDoctor = !doctorFilter || app.doctorId === doctorFilter;
-        return matchesSearch && matchesDoctor;
+        const matchesDoctor  = !doctorFilter  || app.doctorId   === doctorFilter;
+        const matchesStatus  = !filterStatus  || app.status     === filterStatus;
+        const matchesCenter  = !filterCenter  || app.centerId   === filterCenter;
+        const matchesDateFrom = !filterDateFrom || app.appointmentDate >= filterDateFrom;
+        const matchesDateTo   = !filterDateTo   || app.appointmentDate <= filterDateTo;
+        return matchesSearch && matchesDoctor && matchesStatus && matchesCenter && matchesDateFrom && matchesDateTo;
     });
+
+    // KPIs calculados
+    const kpis = {
+        hoy:        appointments.filter(a => a.appointmentDate === new Date().toISOString().split('T')[0]).length,
+        semana:     appointments.filter(a => {
+            const d = new Date(a.appointmentDate);
+            const hoy = new Date();
+            const lunes = new Date(hoy); lunes.setDate(hoy.getDate() - hoy.getDay() + 1);
+            const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+            return d >= lunes && d <= domingo;
+        }).length,
+        reqPendientes: appointments.filter(a => a.status === 'requirements_pending').length,
+        completados:   appointments.filter(a => a.status === 'completed').length,
+    };
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] animate-in fade-in duration-700">
@@ -164,6 +793,63 @@ export const ClinicalWorkflowView: React.FC = () => {
                         Nuevo Agendamiento
                     </button>
                 </div>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                    { label: 'Hoy',               val: kpis.hoy,           color: 'text-info',    bg: 'bg-info/10 border-info/20' },
+                    { label: 'Esta semana',        val: kpis.semana,        color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+                    { label: 'Req. pendientes',    val: kpis.reqPendientes, color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
+                    { label: 'Completados',        val: kpis.completados,   color: 'text-success', bg: 'bg-success/10 border-success/20' },
+                ].map(k => (
+                    <div key={k.label} className={cn('flex items-center gap-4 px-5 py-4 rounded-2xl border', k.bg)}>
+                        <span className={cn('text-3xl font-black', k.color)}>{k.val}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">{k.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Filtros adicionales */}
+            <div className="flex flex-wrap items-center gap-3 p-4 bg-brand-surface border border-brand-border rounded-2xl">
+                <span className="text-[10px] font-black uppercase tracking-widest text-brand-text/30">Filtrar:</span>
+
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50 appearance-none">
+                    <option value="">Todos los estados</option>
+                    {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                    ))}
+                </select>
+
+                <select value={filterCenter} onChange={e => setFilterCenter(e.target.value)}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50 appearance-none">
+                    <option value="">Todos los centros</option>
+                    {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-brand-text/30 font-bold">Desde</span>
+                    <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
+                        className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50" />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-brand-text/30 font-bold">Hasta</span>
+                    <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
+                        className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50" />
+                </div>
+
+                {(filterStatus || filterCenter || filterDateFrom || filterDateTo) && (
+                    <button onClick={() => { setFilterStatus(''); setFilterCenter(''); setFilterDateFrom(''); setFilterDateTo(''); }}
+                        className="px-3 py-2 text-[10px] font-black uppercase text-danger hover:bg-danger/10 rounded-xl transition-colors">
+                        Limpiar filtros
+                    </button>
+                )}
+
+                <span className="ml-auto text-[10px] font-mono text-brand-text/30">
+                    {filteredAppointments.length} de {appointments.length} resultados
+                </span>
             </div>
 
             {/* Tactical Tabs */}
@@ -281,11 +967,11 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                     </div>
                                                     <div className={cn(
                                                         "px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm",
-                                                        app.status === 'scheduled' ? "border-info/20 text-info bg-info/10" :
-                                                            app.status === 'requirements_pending' ? "border-warning/20 text-warning bg-warning/10" :
-                                                                "border-success/20 text-success bg-success/10"
+                                                        (STATUS_LABELS[app.status]?.border || 'border-brand-border'),
+                                                        STATUS_LABELS[app.status]?.color || 'text-brand-text/40',
+                                                        STATUS_LABELS[app.status]?.bg || 'bg-brand-surface'
                                                     )}>
-                                                        {app.status.replace('_', ' ')}
+                                                        {STATUS_LABELS[app.status]?.label || app.status}
                                                     </div>
                                                     {addendumRequests.some(r => r.patient_rut === app.patientRut) && (
                                                         <div className="flex items-center gap-2 px-4 py-2 bg-danger/10 border border-danger/20 rounded-xl text-danger text-[10px] font-black uppercase tracking-widest animate-pulse shadow-sm">
@@ -352,14 +1038,19 @@ export const ClinicalWorkflowView: React.FC = () => {
 
                                                 <div className="flex items-center justify-between pt-6 border-t border-brand-border gap-6">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={cn(
-                                                            "w-3 h-3 rounded-full border-2 border-brand-surface shadow-xl",
-                                                            app.checkoutStatus ? "bg-success shadow-success/20" : "bg-danger shadow-danger/20"
-                                                        )} />
-                                                        <span className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">
-                                                            {app.checkoutStatus ? 'Requisitos Clínicos Validados' : 'Pendiente Verificación Documental'}
-                                                        </span>
-                                                    </div>
+                                                         <div className={cn(
+                                                             "w-3 h-3 rounded-full border-2 border-brand-surface shadow-xl",
+                                                             app.checkoutStatus ? "bg-success shadow-success/20" : "bg-danger shadow-danger/20"
+                                                         )} />
+                                                         <span className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest">
+                                                             {app.checkoutStatus ? 'Requisitos Validados' : 'Pendiente Verificación'}
+                                                         </span>
+                                                         {app.documents && app.documents.length > 0 && (
+                                                             <span className="text-[9px] font-mono text-brand-text/30">
+                                                                 {app.documents.filter(d => d.verifiedAt).length}/{app.documents.length} docs
+                                                             </span>
+                                                         )}
+                                                     </div>
                                                     <div className="flex gap-3">
                                                         <button
                                                             onClick={(e) => {
@@ -380,11 +1071,17 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             <Trash2 className="w-4 h-4 text-brand-text/40 group-hover/btn:text-white" />
                                                         </button>
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); }}
-                                                            className="p-4 bg-brand-surface border border-brand-border rounded-2xl hover:bg-white hover:text-black transition-all shadow-sm"
-                                                        >
-                                                            <Share2 className="w-4 h-4 text-brand-text/40" />
-                                                        </button>
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 const texto = `📋 *Agendamiento AMIS*\n\n👤 Paciente: ${app.patientName}\n🔬 Procedimiento: ${app.procedure?.name}\n📍 Centro: ${app.center?.name}\n📅 Fecha: ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })} ${app.appointmentTime}\n👨‍⚕️ Médico: ${app.doctor?.name || 'Por asignar'}\n\n_Enviado desde AMIS 3.0_`;
+                                                                 navigator.clipboard.writeText(texto);
+                                                                 alert('Resumen copiado al portapapeles ✅');
+                                                             }}
+                                                             className="p-4 bg-brand-surface border border-brand-border rounded-2xl hover:bg-white hover:text-black transition-all shadow-sm"
+                                                             title="Copiar resumen"
+                                                         >
+                                                             <Share2 className="w-4 h-4 text-brand-text/40" />
+                                                         </button>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -444,17 +1141,22 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                         <td className="py-4 px-6">
                                                             <div className={cn(
                                                                 "inline-flex px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm",
-                                                                app.status === 'scheduled' ? "border-info/20 text-info bg-info/10" :
-                                                                    app.status === 'requirements_pending' ? "border-warning/20 text-warning bg-warning/10" :
-                                                                        "border-success/20 text-success bg-success/10"
+                                                                (STATUS_LABELS[app.status]?.border || 'border-brand-border'),
+                                                                STATUS_LABELS[app.status]?.color || 'text-brand-text/40',
+                                                                STATUS_LABELS[app.status]?.bg || 'bg-brand-surface'
                                                             )}>
-                                                                {app.status.replace('_', ' ')}
+                                                                {STATUS_LABELS[app.status]?.label || app.status}
                                                             </div>
                                                             {addendumRequests.some(r => r.patient_rut === app.patientRut) && (
                                                                 <div className="mt-1 flex items-center gap-1.5 text-[8px] font-black text-danger uppercase tracking-widest animate-pulse">
                                                                     <AlertCircle className="w-3 h-3" />
                                                                     ADDENDUM
                                                                 </div>
+                                                            )}
+                                                            {app.documents && app.documents.length > 0 && (
+                                                                <p className="text-[8px] text-brand-text/30 font-mono mt-1">
+                                                                    {app.documents.filter(d => d.verifiedAt).length}/{app.documents.length} docs
+                                                                </p>
                                                             )}
                                                         </td>
                                                         <td className="py-4 px-6 text-right">
@@ -478,6 +1180,17 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                                     title="Editar"
                                                                 >
                                                                     <Pencil className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const texto = `📋 *Agendamiento AMIS*\n\n👤 ${app.patientName} · ${app.patientRut}\n🔬 ${app.procedure?.name}\n📍 ${app.center?.name}\n📅 ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} ${app.appointmentTime}\n👨‍⚕️ ${app.doctor?.name || 'Por asignar'}`;
+                                                                        navigator.clipboard.writeText(texto);
+                                                                        alert('Resumen copiado');
+                                                                    }}
+                                                                    className="p-2 border border-brand-border rounded-lg hover:bg-brand-surface transition-colors"
+                                                                    title="Copiar resumen"
+                                                                >
+                                                                    <Share2 className="w-4 h-4 text-brand-text/40" />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => handleDeleteAppointment(app.id, e)}
@@ -510,187 +1223,26 @@ export const ClinicalWorkflowView: React.FC = () => {
                 )}
 
                 {activeTab === 'catalog' && (
-                    <div className="card-premium p-0 overflow-hidden border-brand-border shadow-2xl animate-in zoom-in-95">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-brand-border bg-brand-bg/50">
-                                    <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Código Prevenort</th>
-                                    <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Protocolo / Denominación</th>
-                                    <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Valor Arancelario</th>
-                                    <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Estatus Operativo</th>
-                                    <th className="px-10 py-7 text-right"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-brand-border bg-transparent">
-                                {catalog.map(proc => (
-                                    <tr key={proc.id} className="hover:bg-brand-bg transition-colors group">
-                                        <td className="px-10 py-7">
-                                            <span className="text-xs font-mono font-black text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-4 py-1.5 rounded-xl shadow-sm">{proc.code}</span>
-                                        </td>
-                                        <td className="px-10 py-7">
-                                            <p className="text-sm font-black text-brand-text group-hover:text-brand-primary transition-colors uppercase tracking-tight leading-tight">{proc.name}</p>
-                                            <p className="text-[10px] text-brand-text/40 font-bold mt-1.5 line-clamp-1 uppercase tracking-tight">{proc.description}</p>
-                                        </td>
-                                        <td className="px-10 py-7">
-                                            <span className="text-sm font-black text-brand-text">$ {proc.basePrice.toLocaleString('es-CL')}</span>
-                                        </td>
-                                        <td className="px-10 py-7">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-2 h-2 rounded-full bg-success shadow-lg shadow-success/20" />
-                                                <span className="text-[10px] font-black text-brand-text/40 uppercase tracking-wider">Activo Red Prevenort</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-10 py-7 text-right">
-                                            <button className="p-3 text-brand-text/20 hover:text-brand-primary bg-brand-bg rounded-xl transition-all hover:shadow-md">
-                                                <Sparkles className="w-5 h-5" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <CatalogTab
+                        catalog={catalog}
+                        onUpsert={upsertProcedure}
+                        onDelete={deleteProcedure}
+                    />
                 )}
 
                 {activeTab === 'logistics' && (
-                    <div className="grid gap-8 animate-in slide-in-from-bottom-6 transition-all duration-700">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="card-premium p-10 flex flex-col items-center text-center gap-6">
-                                <div className="w-20 h-20 rounded-[2rem] bg-brand-primary/10 flex items-center justify-center shadow-inner border border-brand-primary/20">
-                                    <Truck className="w-10 h-10 text-brand-primary" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="text-4xl font-black text-brand-text">
-                                        {appointments.filter(a => a.logisticsStatus?.transport === 'required').length}
-                                    </h4>
-                                    <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-[0.2em] mt-1">Traslados Críticos Pendientes</p>
-                                </div>
-                            </div>
-                            <div className="card-premium p-10 flex flex-col items-center text-center gap-6">
-                                <div className="w-20 h-20 rounded-[2rem] bg-warning/10 flex items-center justify-center shadow-inner border border-warning/20">
-                                    <Landmark className="w-10 h-10 text-warning" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="text-4xl font-black text-brand-text">
-                                        {appointments.filter(a => a.logisticsStatus?.perDiem === 'required').length}
-                                    </h4>
-                                    <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-[0.2em] mt-1">Viáticos por Liberar</p>
-                                </div>
-                            </div>
-                            <div className="card-premium p-10 flex flex-col items-center text-center gap-6 border-success/20">
-                                <div className="w-20 h-20 rounded-[2rem] bg-success/10 flex items-center justify-center shadow-inner border border-success/20">
-                                    <CheckCircle2 className="w-10 h-10 text-success" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="text-4xl font-black text-brand-text">
-                                        {appointments.filter(a => a.logisticsStatus?.transport === 'coordinated').length}
-                                    </h4>
-                                    <p className="text-[10px] text-brand-text/40 uppercase font-bold tracking-[0.2em] mt-1">Movilidad Red Consolidada</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="card-premium p-0 overflow-hidden border-brand-border shadow-xl">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-brand-border bg-brand-bg/50">
-                                        <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Analista / Paciente</th>
-                                        <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Estatus Movilidad</th>
-                                        <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Gestión Viáticos</th>
-                                        <th className="px-10 py-7 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Sede Asignada</th>
-                                        <th className="px-10 py-7 text-right">Evolución</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-brand-border bg-transparent">
-                                    {appointments.filter(a => a.logisticsStatus?.transport !== 'not_required' || a.logisticsStatus?.perDiem !== 'not_required').map(app => (
-                                        <tr key={app.id} className="hover:bg-slate-50 transition-colors group">
-                                            <td className="px-10 py-7">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-[1rem] bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-orange-50 group-hover:border-orange-100 transition-all shadow-inner">
-                                                        <User className="w-5 h-5 text-slate-400 group-hover:text-brand-primary" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-900 uppercase leading-tight">{formatName(app.patientName)}</p>
-                                                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-wider">{new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-10 py-7">
-                                                <span className={cn(
-                                                    "px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                                                    app.logisticsStatus?.transport === 'coordinated' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-blue-50 text-blue-600 border-blue-100"
-                                                )}>
-                                                    {app.logisticsStatus?.transport}
-                                                </span>
-                                            </td>
-                                            <td className="px-10 py-7">
-                                                <span className={cn(
-                                                    "px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                                                    app.logisticsStatus?.perDiem === 'coordinated' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"
-                                                )}>
-                                                    {app.logisticsStatus?.perDiem}
-                                                </span>
-                                            </td>
-                                            <td className="px-10 py-7">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-1.5 bg-slate-50 rounded-lg">
-                                                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                                    </div>
-                                                    <p className="text-[11px] font-black text-slate-600 uppercase tracking-tight">{app.center?.name}</p>
-                                                </div>
-                                            </td>
-                                            <td className="px-10 py-7 text-right">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedApp(app);
-                                                        setIsDetailsOpen(true);
-                                                    }}
-                                                    className="p-3 bg-slate-900 text-white rounded-xl hover:bg-brand-primary group/btn transition-all shadow-lg hover:shadow-blue-200"
-                                                >
-                                                    <ArrowRight className="w-5 h-5" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <LogisticsTab
+                        appointments={appointments}
+                        onSelectAppointment={(app) => { setSelectedApp(app); setIsDetailsOpen(true); }}
+                    />
                 )}
 
                 {activeTab === 'results' && (
-                    <div className="grid gap-10 animate-in slide-in-from-right-6 duration-700">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            <div className="card-premium p-10 group hover:border-brand-primary transition-all">
-                                <ActivityIcon className="w-6 h-6 text-brand-primary mb-6" />
-                                <h4 className="text-4xl font-black text-brand-text">{appointments.filter(a => a.status === 'completed').length}</h4>
-                                <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest mt-2">Atenciones Finalizadas</p>
-                            </div>
-                            <div className="card-premium p-10 group hover:border-success/40 transition-all">
-                                <FileCheck className="w-6 h-6 text-success mb-6" />
-                                <h4 className="text-4xl font-black text-brand-text">{appointments.filter(a => a.checkoutStatus).length}</h4>
-                                <p className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest mt-2">Protocolos Validados</p>
-                            </div>
-                        </div>
-
-                        <div className="card-premium p-28 text-center border-4 border-dashed border-brand-border bg-brand-bg/50 rounded-[4rem]">
-                            <div className="w-24 h-24 rounded-full bg-brand-surface flex items-center justify-center mx-auto mb-10 shadow-2xl border border-brand-border group">
-                                <FileCheck className="w-12 h-12 text-brand-text/10 group-hover:text-brand-primary transition-colors" />
-                            </div>
-                            <h3 className="text-2xl font-black text-brand-text uppercase tracking-tight">Consola de Hallazgos Clínicos</h3>
-                            <p className="text-sm text-brand-text/40 font-bold mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-tight">
-                                Gestión de resultados médicos, carga de archivos PDF y cierre técnico de expedientes.
-                            </p>
-                            <div className="mt-12 flex items-center justify-center gap-6">
-                                <button className="px-10 py-4 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 hover:shadow-2xl transition-all">
-                                    Solicitar Acceso Auditor
-                                </button>
-                                <button className="px-10 py-4 bg-brand-surface border border-brand-border text-brand-text/40 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand-bg transition-all">
-                                    Guía de Protocolo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <ResultsTab
+                        appointments={appointments}
+                        doctors={doctors}
+                        onUploadResult={uploadResult}
+                    />
                 )}
 
                 {activeTab === 'config' && (

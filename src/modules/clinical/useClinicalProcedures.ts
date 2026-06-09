@@ -41,6 +41,7 @@ export const useClinicalProcedures = () => {
                         requirement:medical_requirements(*)
                     )
                 `)
+                .eq('is_deleted', false)
                 .order('appointment_date', { ascending: false });
 
             if (appError) throw appError;
@@ -345,12 +346,16 @@ export const useClinicalProcedures = () => {
         try {
             const { error } = await supabase
                 .from('clinical_appointments')
-                .delete()
+                .update({
+                    is_deleted:  true,
+                    archived_at: new Date().toISOString(),
+                })
                 .eq('id', id);
             if (error) throw error;
             await fetchData();
             return { success: true };
         } catch (err: any) {
+            console.error('Error archiving appointment:', err);
             return { success: false, error: err.message };
         }
     };

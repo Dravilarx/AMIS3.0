@@ -38,10 +38,29 @@ export const useExpenses = () => {
         }
     };
 
-    const addExpense = async (expense: Partial<Expense>) => {
+    const addExpense = async (expense: Partial<Expense> & { appointment_id?: string; expense_type?: string }) => {
         const { error } = await supabase.from('expenses').insert([expense]);
         if (!error) fetchExpenses();
         return { success: !error, error };
+    };
+
+    const getExpensesByAppointment = async (appointmentId: string) => {
+        const { data } = await supabase
+            .from('expenses')
+            .select('*')
+            .eq('appointment_id', appointmentId)
+            .order('date', { ascending: false });
+        return (data || []).map(e => ({
+            id:             e.id,
+            vendor:         e.vendor,
+            date:           e.date,
+            amount:         Number(e.amount),
+            category:       e.category,
+            status:         e.status,
+            tax_id:         e.tax_id,
+            appointment_id: e.appointment_id,
+            expense_type:   e.expense_type || 'general',
+        }));
     };
 
     useEffect(() => {
@@ -56,5 +75,5 @@ export const useExpenses = () => {
         return () => { supabase.removeChannel(channel); };
     }, []);
 
-    return { expenses, loading, addExpense, refresh: fetchExpenses };
+    return { expenses, loading, addExpense, getExpensesByAppointment, refresh: fetchExpenses };
 };
