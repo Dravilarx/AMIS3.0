@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import {
     Home, ClipboardList, Calendar, CreditCard,
-    LogOut, Lock, ChevronRight, Stethoscope, Bell
+    LogOut, Lock, ChevronRight, Stethoscope, Bell,
+    FileText, Briefcase, Newspaper, Award,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
-export type PortalView = 'inicio' | 'onboarding' | 'turnos' | 'pagos';
+export type PortalView =
+    | 'inicio'
+    | 'onboarding'
+    | 'documentos'
+    | 'contratos'
+    | 'noticias'
+    | 'competencias'
+    | 'turnos'
+    | 'pagos';
 
 interface NavItem {
     id: PortalView;
@@ -17,10 +26,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { id: 'inicio',      label: 'Inicio',       icon: Home         },
-    { id: 'onboarding',  label: 'Mi Onboarding', icon: ClipboardList },
-    { id: 'turnos',      label: 'Mis Turnos',    icon: Calendar,    locked: true },
-    { id: 'pagos',       label: 'Mis Pagos',     icon: CreditCard,  locked: true },
+    { id: 'inicio',       label: 'Inicio',           icon: Home          },
+    { id: 'onboarding',   label: 'Mi Onboarding',    icon: ClipboardList },
+    { id: 'documentos',   label: 'Mis Documentos',   icon: FileText      },
+    { id: 'contratos',    label: 'Mis Contratos',    icon: Briefcase     },
+    { id: 'noticias',     label: 'Noticias',         icon: Newspaper     },
+    { id: 'competencias', label: 'Mis Competencias', icon: Award         },
+    { id: 'turnos',       label: 'Mis Turnos',       icon: Calendar,     locked: true },
+    { id: 'pagos',        label: 'Mis Pagos',        icon: CreditCard,   locked: true },
 ];
 
 // ─── SidebarItem ──────────────────────────────────────────────────────────────
