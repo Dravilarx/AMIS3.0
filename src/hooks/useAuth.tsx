@@ -298,7 +298,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return modulePerms?.[action] === true;
     };
 
-    const isSuperAdmin = () => user?.email === 'marcelo.avila@amis.global';
+    const isSuperAdmin = () =>
+        user?.email === 'marcelo.avila@amis.global' ||
+        user?.email === 'dravilarx@gmail.com' ||
+        user?.role === 'SUPER_ADMIN';
 
     const signOut = async () => {
         try {
