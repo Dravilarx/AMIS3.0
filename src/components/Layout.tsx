@@ -19,7 +19,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
         className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group relative overflow-hidden",
             active
-                ? "bg-brand-primary text-white shadow-lg shadow-orange-500/20"
+                ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20"
                 : "text-brand-text/60 hover:text-brand-primary hover:bg-brand-primary/5"
         )}>
         {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white opacity-20" />}
@@ -92,7 +92,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                     className="flex items-center gap-3 mb-10 px-2 cursor-pointer group"
                     onClick={() => onNavigate('dashboard')}
                 >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary to-black shadow-xl shadow-orange-500/20 flex items-center justify-center group-hover:rotate-6 transition-transform">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary to-black shadow-xl shadow-teal-500/20 flex items-center justify-center group-hover:rotate-6 transition-transform">
                         <Stethoscope className="w-7 h-7 text-white" />
                     </div>
                     <div>
@@ -162,7 +162,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => setIsChangePasswordOpen(true)}
-                            className="flex items-center justify-center p-2.5 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-orange-500/5 transition-all"
+                            className="flex items-center justify-center p-2.5 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-teal-500/5 transition-all"
                         >
                             <Settings className="w-4 h-4" />
                             <span className="ml-2 text-xs font-bold">Cambiar Clave</span>

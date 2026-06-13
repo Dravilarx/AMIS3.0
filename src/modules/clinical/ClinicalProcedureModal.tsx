@@ -128,7 +128,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
             <div className="relative bg-brand-surface border border-brand-border rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide shadow-2xl animate-in zoom-in-95 duration-300">
                 <div className="sticky top-0 z-10 p-8 border-b border-brand-border bg-brand-surface/95 backdrop-blur-xl">
                     <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center shadow-xl shadow-orange-500/20">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center shadow-xl shadow-teal-500/20">
                             <Activity className="w-7 h-7 text-white" />
                         </div>
                         <div>
@@ -411,7 +411,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-[2] px-8 py-5 bg-gradient-to-r from-brand-primary to-black text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="flex-[2] px-8 py-5 bg-gradient-to-r from-brand-primary to-black text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                         >
                             {loading ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />

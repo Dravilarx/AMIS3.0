@@ -126,7 +126,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                         className={cn(
                             "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
                             activeSubTab === tab.id
-                                ? "bg-brand-primary text-white shadow-lg shadow-orange-500/10 border border-brand-primary"
+                                ? "bg-brand-primary text-white shadow-lg shadow-teal-500/10 border border-brand-primary"
                                 : "text-brand-text/40 hover:text-brand-text hover:bg-brand-surface"
                         )}
                     >
@@ -137,7 +137,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
             </div>
 
             {/* Content Area */}
-            <div className="card-premium bg-brand-surface border-brand-border p-8 shadow-2xl shadow-orange-500/5">
+            <div className="card-premium bg-brand-surface border-brand-border p-8 shadow-2xl shadow-teal-500/5">
                 {activeSubTab === 'catalog' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
@@ -147,7 +147,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                             </div>
                             <button
                                 onClick={() => setEditingProc({ name: '', code: '', basePrice: 0, description: '', isActive: true })}
-                                className="flex items-center gap-2 px-6 py-3 bg-brand-primary hover:bg-orange-600 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest text-white shadow-xl shadow-orange-600/20"
+                                className="flex items-center gap-2 px-6 py-3 bg-brand-primary hover:bg-teal-600 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest text-white shadow-xl shadow-teal-600/20"
                             >
                                 <Plus className="w-4 h-4" />
                                 Nuevo Procedimiento
@@ -156,9 +156,9 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {catalog.map(proc => (
-                                <div key={proc.id} className="group bg-brand-bg/50 border border-brand-border rounded-3xl p-6 hover:border-brand-primary/30 transition-all hover:bg-brand-surface hover:shadow-xl hover:shadow-orange-500/5">
+                                <div key={proc.id} className="group bg-brand-bg/50 border border-brand-border rounded-3xl p-6 hover:border-brand-primary/30 transition-all hover:bg-brand-surface hover:shadow-xl hover:shadow-teal-500/5">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 rounded-xl bg-orange-500/10 text-brand-primary border border-orange-500/20">
+                                        <div className="p-3 rounded-xl bg-teal-500/10 text-brand-primary border border-teal-500/20">
                                             <Book className="w-5 h-5" />
                                         </div>
                                         <div className="flex gap-1">
@@ -171,7 +171,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             </button>
                                             <button
                                                 onClick={() => handleDuplicateProcedure(proc)}
-                                                className="p-2 hover:bg-orange-500/10 rounded-lg text-brand-text/20 hover:text-brand-primary transition-all"
+                                                className="p-2 hover:bg-teal-500/10 rounded-lg text-brand-text/20 hover:text-brand-primary transition-all"
                                                 title="Duplicar"
                                             >
                                                 <Copy className="w-4 h-4" />
@@ -251,7 +251,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                         <p className="text-xs text-brand-text/40 leading-relaxed mb-4">{battery.description}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {battery.requirements?.map(req => (
-                                                <span key={req.id} className="px-2 py-1 bg-orange-500/10 text-brand-primary rounded-lg text-[10px] font-bold uppercase border border-orange-500/20">
+                                                <span key={req.id} className="px-2 py-1 bg-teal-500/10 text-brand-primary rounded-lg text-[10px] font-bold uppercase border border-teal-500/20">
                                                     {req.name}
                                                 </span>
                                             ))}
@@ -263,7 +263,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                 ))}
                                 <button
                                     onClick={() => setEditingBattery({ name: '', description: '' })}
-                                    className="w-full py-5 border-2 border-dashed border-brand-border rounded-3xl text-[10px] font-black text-brand-text/40 uppercase tracking-[0.3em] hover:border-brand-primary/40 hover:text-brand-primary hover:bg-orange-500/5 transition-all"
+                                    className="w-full py-5 border-2 border-dashed border-brand-border rounded-3xl text-[10px] font-black text-brand-text/40 uppercase tracking-[0.3em] hover:border-brand-primary/40 hover:text-brand-primary hover:bg-teal-500/5 transition-all"
                                 >
                                     + Crear Nueva Batería
                                 </button>

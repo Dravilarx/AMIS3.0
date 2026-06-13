@@ -19,7 +19,7 @@ export const TabContratos: React.FC<TabProps> = ({ formData, setFormData }) => {
             <div className="space-y-4 p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-orange-400" />
+                        <Layers className="w-4 h-4 text-teal-400" />
                         <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Configuración Contractual</h3>
                     </div>
                     <button type="button" onClick={addContract}

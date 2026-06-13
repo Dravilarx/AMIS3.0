@@ -224,7 +224,7 @@ export const MisContratosView: React.FC = () => {
 
             {/* Ficha del profesional */}
             {professional && (
-                <div className="p-5 bg-gradient-to-br from-brand-primary/10 to-orange-600/5 border border-brand-primary/20 rounded-2xl">
+                <div className="p-5 bg-gradient-to-br from-brand-primary/10 to-teal-600/5 border border-brand-primary/20 rounded-2xl">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-brand-primary/20 flex items-center justify-center flex-shrink-0">
                             <span className="text-xl font-black text-brand-primary">
@@ -506,7 +506,7 @@ export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void }> = (
                             {[
                                 { label: 'Total',          val: total,  color: 'text-brand-text' },
                                 { label: 'Subespecialista',val: nivel3,  color: 'text-amber-400' },
-                                { label: 'Avanzado',       val: nivel2,  color: 'text-orange-400' },
+                                { label: 'Avanzado',       val: nivel2,  color: 'text-teal-400' },
                                 { label: 'Básico',         val: nivel1,  color: 'text-sky-400' },
                             ].map(s => (
                                 <div key={s.label} className="p-3 bg-brand-surface border border-brand-border rounded-xl text-center">
@@ -523,7 +523,7 @@ export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void }> = (
                             <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/30">Distribución</p>
                             <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
                                 {nivel3 > 0 && <div style={{ width: `${(nivel3/total)*100}%` }} className="bg-amber-400 rounded-full" title="Subespecialista" />}
-                                {nivel2 > 0 && <div style={{ width: `${(nivel2/total)*100}%` }} className="bg-orange-400 rounded-full" title="Avanzado" />}
+                                {nivel2 > 0 && <div style={{ width: `${(nivel2/total)*100}%` }} className="bg-teal-400 rounded-full" title="Avanzado" />}
                                 {nivel1 > 0 && <div style={{ width: `${(nivel1/total)*100}%` }} className="bg-sky-400 rounded-full" title="Básico" />}
                                 {(total - nivel3 - nivel2 - nivel1) > 0 && (
                                     <div style={{ width: `${((total-nivel3-nivel2-nivel1)/total)*100}%` }} className="bg-brand-border rounded-full" title="No informa" />
@@ -532,7 +532,7 @@ export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void }> = (
                             <div className="flex items-center gap-4 flex-wrap">
                                 {[
                                     { color: 'bg-amber-400',  label: 'Subespecialista' },
-                                    { color: 'bg-orange-400', label: 'Avanzado' },
+                                    { color: 'bg-teal-400', label: 'Avanzado' },
                                     { color: 'bg-sky-400',    label: 'Básico' },
                                     { color: 'bg-brand-border', label: 'No informa' },
                                 ].map(l => (

@@ -181,7 +181,7 @@ export const PatientGuideView: React.FC = () => {
             <div className="sticky top-0 z-50 bg-brand-bg/80 backdrop-blur-xl border-b border-brand-border">
                 <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-primary rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                        <div className="w-10 h-10 bg-brand-primary rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/20">
                             <ShieldCheck className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -259,7 +259,7 @@ export const PatientGuideView: React.FC = () => {
                                             ) : (
                                                 <button
                                                     onClick={() => triggerFileSelect(doc.id)}
-                                                    className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+                                                    className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-teal-500/20"
                                                 >
                                                     <Upload className="w-4 h-4" />
                                                     Subir Archivo
@@ -284,7 +284,7 @@ export const PatientGuideView: React.FC = () => {
                                         <div>
                                             <button
                                                 onClick={() => alert('Modo Vista Previa: El paciente podrá subir su documento aquí una vez genere la cita médica.')}
-                                                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-orange-500/20 hover:scale-105"
+                                                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-teal-500/20 hover:scale-105"
                                             >
                                                 <Upload className="w-4 h-4" />
                                                 Subir Archivo

@@ -470,7 +470,7 @@ const TrafficPanel = ({ reports, loading, onRefresh }: { reports: any[], loading
                 <button
                   onClick={handleSetPending}
                   disabled={!pendingReason}
-                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-600/20 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+                  className="w-full bg-gradient-to-r from-amber-600 to-teal-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-600/20 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
                 >
                   <Shield className="w-4 h-4 inline-block mr-2 -mt-0.5" />
                   Notificar al Centro (Firmado por Supervisor)

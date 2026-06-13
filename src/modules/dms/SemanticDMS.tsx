@@ -35,7 +35,7 @@ const getCategoryColor = (cat: string) => {
         case 'legal':      return 'bg-blue-500/10    border-blue-500/20    text-blue-400';
         case 'commercial': return 'bg-purple-500/10  border-purple-500/20  text-purple-400';
         case 'induction':  return 'bg-violet-500/10  border-violet-500/20  text-violet-400';
-        default:           return 'bg-orange-500/10  border-orange-500/20  text-orange-400';
+        default:           return 'bg-teal-500/10  border-teal-500/20  text-teal-400';
     }
 };
 

@@ -54,11 +54,11 @@ export const AuthView: React.FC = () => {
         <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6 relative overflow-hidden">
             {/* Ambient Background Effects */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="w-full max-w-sm space-y-8 animate-in fade-in zoom-in-95 duration-1000 relative z-10">
                 <div className="text-center space-y-4">
-                    <div className="inline-flex p-1 rounded-3xl bg-gradient-to-br from-brand-primary/30 to-black mb-2 shadow-2xl shadow-orange-500/20">
+                    <div className="inline-flex p-1 rounded-3xl bg-gradient-to-br from-brand-primary/30 to-black mb-2 shadow-2xl shadow-teal-500/20">
                         <div className="p-4 bg-brand-surface rounded-2xl border border-brand-border">
                             <Stethoscope className="w-8 h-8 text-brand-primary" />
                         </div>
@@ -97,7 +97,7 @@ export const AuthView: React.FC = () => {
                                     <button 
                                         type="button"
                                         onClick={() => setIsRecoveryMode(true)}
-                                        className="text-[10px] font-bold text-brand-primary hover:text-orange-500 transition-colors uppercase tracking-wider"
+                                        className="text-[10px] font-bold text-brand-primary hover:text-teal-500 transition-colors uppercase tracking-wider"
                                     >
                                         ¿Olvidó su clave?
                                     </button>
@@ -131,7 +131,7 @@ export const AuthView: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-brand-primary hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
+                            className="w-full bg-brand-primary hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

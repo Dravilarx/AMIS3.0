@@ -56,7 +56,7 @@ export const CATEGORY_COLORS: Record<NewsCategory, string> = {
     operacional:   'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     urgente:       'bg-red-500/20     text-red-400     border-red-500/30',
     cultura:       'bg-amber-500/20   text-amber-400   border-amber-500/30',
-    rrhh:          'bg-orange-500/20  text-orange-400  border-orange-500/30',
+    rrhh:          'bg-teal-500/20  text-teal-400  border-teal-500/30',
     licitaciones:  'bg-cyan-500/20    text-cyan-400    border-cyan-500/30',
     calidad:       'bg-teal-500/20    text-teal-400    border-teal-500/30',
     clinico:       'bg-rose-500/20    text-rose-400    border-rose-500/30',

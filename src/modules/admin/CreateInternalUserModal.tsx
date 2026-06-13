@@ -50,7 +50,7 @@ export const CreateInternalUserModal: React.FC<CreateInternalUserModalProps> = (
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[2.5rem] shadow-2xl shadow-orange-500/10 animate-in zoom-in-95 duration-500 overflow-hidden">
+            <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[2.5rem] shadow-2xl shadow-teal-500/10 animate-in zoom-in-95 duration-500 overflow-hidden">
                 {/* Header */}
                 <div className="p-8 border-b border-brand-border bg-gradient-to-r from-brand-primary/10 to-transparent flex items-center justify-between">
                     <div className="flex items-center gap-4">

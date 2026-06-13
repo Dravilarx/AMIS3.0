@@ -114,7 +114,7 @@ export const InstitutionDetailPanel: React.FC<DetailPanelProps> = ({
             draft: { label: 'Borrador', cls: 'text-brand-text/40 bg-brand-surface' },
             active: { label: 'Vigente', cls: 'text-emerald-400 bg-emerald-500/10' },
             expired: { label: 'Expirado', cls: 'text-red-400 bg-red-500/10' },
-            terminated: { label: 'Terminado', cls: 'text-orange-400 bg-orange-500/10' },
+            terminated: { label: 'Terminado', cls: 'text-teal-400 bg-teal-500/10' },
             renewing: { label: 'Renovando', cls: 'text-blue-400 bg-blue-500/10' },
         };
         const { label, cls } = map[status];

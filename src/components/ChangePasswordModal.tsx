@@ -55,7 +55,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-brand-surface border border-brand-border rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary via-orange-400 to-brand-primary opacity-50" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary via-teal-400 to-brand-primary opacity-50" />
                 
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-6 flex-col text-center">
@@ -131,7 +131,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-[2] px-4 py-3.5 rounded-xl bg-brand-primary hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-[11px] font-black uppercase tracking-[0.1em]"
+                                    className="flex-[2] px-4 py-3.5 rounded-xl bg-brand-primary hover:bg-teal-600 text-white shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-[11px] font-black uppercase tracking-[0.1em]"
                                 >
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Actualizar Clave'}
                                 </button>

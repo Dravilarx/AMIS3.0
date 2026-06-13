@@ -99,7 +99,7 @@ export const PortalMedicoLayout: React.FC<PortalMedicoLayoutProps> = ({
             )}>
                 {/* Logo */}
                 <div className="flex items-center gap-3 px-4 py-5 border-b border-brand-border/30">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-primary to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-primary/20">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-primary to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-primary/20">
                         <Stethoscope className="w-4 h-4 text-white" />
                     </div>
                     {sidebarOpen && (

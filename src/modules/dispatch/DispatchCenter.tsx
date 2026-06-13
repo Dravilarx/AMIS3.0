@@ -373,7 +373,7 @@ export const DispatchCenter: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 bg-gradient-to-br from-rose-500/20 to-orange-500/20 rounded-2xl border border-rose-500/20">
+            <div className="p-2.5 bg-gradient-to-br from-rose-500/20 to-teal-600/20 rounded-2xl border border-rose-500/20">
               <Headphones className="w-7 h-7 text-rose-400" />
             </div>
             <div>
@@ -800,7 +800,7 @@ export const DispatchCenter: React.FC = () => {
                     <button
                       onClick={() => setShowReassignDropdown(!showReassignDropdown)}
                       disabled={reassigning}
-                      className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-rose-600 to-orange-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 transition-all border border-rose-400/30 disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-rose-600 to-teal-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 transition-all border border-rose-400/30 disabled:opacity-50"
                     >
                       <RefreshCw className={cn("w-4 h-4", (showReassignDropdown || reassigning) && "animate-spin")} />
                       {reassigning ? 'Reasignando...' : 'Reasignar Manualmente'}

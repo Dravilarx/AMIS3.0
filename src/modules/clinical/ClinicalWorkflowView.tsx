@@ -787,7 +787,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                             setSelectedApp(null);
                             setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-3 px-8 py-4.5 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 active:scale-95 transition-all shadow-xl shadow-orange-500/20 group"
+                        className="flex items-center gap-3 px-8 py-4.5 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-600 active:scale-95 transition-all shadow-xl shadow-teal-500/20 group"
                     >
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
                         Nuevo Agendamiento
@@ -864,7 +864,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                             className={cn(
                                 "flex items-center gap-3 px-8 py-3.5 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500",
                                 isActive
-                                    ? "bg-brand-primary text-white shadow-xl shadow-orange-500/20 border border-brand-primary scale-[1.05]"
+                                    ? "bg-brand-primary text-white shadow-xl shadow-teal-500/20 border border-brand-primary scale-[1.05]"
                                     : "text-brand-text/40 hover:text-brand-text hover:bg-brand-bg"
                             )}
                         >
@@ -899,7 +899,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                     className={cn(
                                         "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                                         viewMode === 'list'
-                                            ? "bg-brand-primary text-white shadow-lg shadow-orange-500/20 border border-brand-primary"
+                                            ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20 border border-brand-primary"
                                             : "text-brand-text/40 hover:text-brand-text"
                                     )}
                                 >
@@ -910,7 +910,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                     className={cn(
                                         "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                                         viewMode === 'worklist'
-                                            ? "bg-brand-primary text-white shadow-lg shadow-orange-500/20 border border-brand-primary"
+                                            ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20 border border-brand-primary"
                                             : "text-brand-text/40 hover:text-brand-text"
                                     )}
                                 >
@@ -921,7 +921,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                     className={cn(
                                         "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                                         viewMode === 'calendar'
-                                            ? "bg-brand-primary text-white shadow-lg shadow-orange-500/20 border border-brand-primary"
+                                            ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20 border border-brand-primary"
                                             : "text-brand-text/40 hover:text-brand-text"
                                     )}
                                 >
@@ -949,7 +949,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                             }}
                                             className="card-premium group relative overflow-hidden cursor-pointer hover:border-brand-primary/40 transition-all duration-500"
                                         >
-                                            <div className="absolute top-0 right-0 w-40 h-40 bg-orange-50/50 blur-3xl -mr-16 -mt-16 group-hover:bg-orange-100/50 transition-colors" />
+                                            <div className="absolute top-0 right-0 w-40 h-40 bg-teal-50/50 blur-3xl -mr-16 -mt-16 group-hover:bg-teal-100/50 transition-colors" />
 
                                             <div className="flex flex-col gap-10">
                                                 <div className="flex items-start justify-between">
@@ -1088,7 +1088,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                                 setSelectedApp(app);
                                                                 setIsDetailsOpen(true);
                                                             }}
-                                                            className="flex items-center gap-4 px-8 py-4 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-orange-500/20"
+                                                            className="flex items-center gap-4 px-8 py-4 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-teal-500/20"
                                                         >
                                                             Expediente Digital
                                                             <ArrowRight className="w-5 h-5" />

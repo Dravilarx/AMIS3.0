@@ -249,7 +249,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
             {/* Header */}
             <div className="p-8 border-b border-brand-border bg-brand-bg/50 flex items-center justify-between">
                 <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center shadow-xl shadow-orange-500/20">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center shadow-xl shadow-teal-500/20">
                         <Activity className="w-7 h-7 text-white" />
                     </div>
                     <div>
@@ -441,7 +441,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                     <div className="flex items-center gap-5">
                                         <div className={cn(
                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
-                                            doc.verified ? "bg-success text-white shadow-success/20" : "bg-brand-primary shadow-lg shadow-orange-500/20 text-white"
+                                            doc.verified ? "bg-success text-white shadow-success/20" : "bg-brand-primary shadow-lg shadow-teal-500/20 text-white"
                                         )}>
                                             {doc.verified ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                                         </div>
@@ -588,7 +588,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
                                                 "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
-                                                sentStatus.wa ? "bg-success shadow-success/20" : "bg-brand-primary shadow-orange-500/20"
+                                                sentStatus.wa ? "bg-success shadow-success/20" : "bg-brand-primary shadow-teal-500/20"
                                             )}>
                                                 <MessageSquare className="w-5 h-5 text-white" />
                                             </div>
@@ -636,7 +636,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
                                                 "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
-                                                sentStatus.email ? "bg-success shadow-success/20" : "bg-brand-primary shadow-orange-500/20"
+                                                sentStatus.email ? "bg-success shadow-success/20" : "bg-brand-primary shadow-teal-500/20"
                                             )}>
                                                 <Mail className="w-5 h-5 text-white" />
                                             </div>
@@ -746,7 +746,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                             </div>
 
                             {showQR && sessionToken && (
-                                <div className="p-8 bg-brand-surface border border-brand-primary/30 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 animate-in zoom-in-95 duration-500 shadow-2xl shadow-orange-500/10 mb-6">
+                                <div className="p-8 bg-brand-surface border border-brand-primary/30 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 animate-in zoom-in-95 duration-500 shadow-2xl shadow-teal-500/10 mb-6">
                                     <div className="p-4 bg-white rounded-3xl shadow-inner border-4 border-brand-primary/10 group transition-all hover:scale-105">
                                          <QRCodeSVG value={`${window.location.origin}/mobile-mic/${sessionToken}`} size={140} />
                                     </div>
@@ -799,7 +799,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                 "w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3",
                                 appointment.status === 'completed'
                                     ? "bg-success/20 text-success border border-success/30"
-                                    : "bg-brand-primary text-white hover:brightness-110 shadow-xl shadow-orange-500/20"
+                                    : "bg-brand-primary text-white hover:brightness-110 shadow-xl shadow-teal-500/20"
                             )}
                         >
                             {uploadingResult ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
@@ -817,7 +817,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                     className={cn(
                         "flex-1 py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-xl",
                         appointment.checkoutStatus
-                            ? "bg-gradient-to-r from-brand-primary to-black text-white shadow-orange-500/20 hover:scale-[1.02] hover:brightness-110"
+                            ? "bg-gradient-to-r from-brand-primary to-black text-white shadow-teal-500/20 hover:scale-[1.02] hover:brightness-110"
                             : "bg-brand-bg text-brand-text/20 cursor-not-allowed border border-brand-border shadow-none"
                     )}
                 >

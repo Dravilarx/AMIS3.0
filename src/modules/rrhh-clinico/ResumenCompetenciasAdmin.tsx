@@ -321,7 +321,7 @@ export const ResumenCompetenciasAdmin: React.FC = () => {
                     <div className="grid grid-cols-4 gap-3">
                         {[
                             { label: 'Subespecialista', val: stats.nivel3, color: 'text-amber-400 bg-amber-950/40 border-amber-800' },
-                            { label: 'Avanzado',        val: stats.nivel2, color: 'text-orange-400 bg-orange-950/40 border-orange-800' },
+                            { label: 'Avanzado',        val: stats.nivel2, color: 'text-teal-400 bg-orange-950/40 border-orange-800' },
                             { label: 'Básico',          val: stats.nivel1, color: 'text-sky-400 bg-sky-950/40 border-sky-800' },
                             { label: 'No informa',      val: stats.nivel0, color: 'text-brand-text/30 bg-brand-surface border-brand-border' },
                         ].map(s => (

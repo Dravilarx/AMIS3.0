@@ -129,7 +129,7 @@ function SuggestionInput({ defaultValue, suggestions, placeholder, onConfirm }: 
 
 const StatCard = ({ title, value, change, icon: Icon, trend, subtitle, color = 'primary', breakdown }: any) => {
     const colors = {
-        primary: 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary shadow-orange-500/10',
+        primary: 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary shadow-teal-500/10',
         success: 'bg-success/10 border-success/20 text-success shadow-green-500/10',
         info: 'bg-info/10 border-info/20 text-info shadow-cyan-500/10',
         danger: 'bg-danger/10 border-danger/20 text-danger shadow-red-500/10'
@@ -847,7 +847,7 @@ export const StatMultirisModule: React.FC = () => {
                     <button
                         onClick={() => setView(view === 'dashboard' ? 'upload' : 'dashboard')}
                         className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${view === 'upload'
-                            ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-orange-500/30 -translate-y-1'
+                            ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-teal-500/30 -translate-y-1'
                             : 'border-brand-text/5 bg-brand-text/5 hover:bg-brand-text/10 text-brand-text/60 hover:text-brand-text'
                             }`}
                     >
@@ -1031,7 +1031,7 @@ export const StatMultirisModule: React.FC = () => {
                                 { key: 'A', label: 'Ambulatorio', shortLabel: 'AMB', color: 'bg-emerald-500', textColor: 'text-emerald-400', dotColor: 'bg-emerald-400', desc: '' },
                                 { key: 'ONC', label: 'Oncológico', shortLabel: 'ONC', color: 'bg-violet-500', textColor: 'text-violet-400', dotColor: 'bg-violet-400', desc: '' },
                                 { key: 'MUT', label: 'Mutual', shortLabel: 'MUT', color: 'bg-rose-500', textColor: 'text-rose-400', dotColor: 'bg-rose-400', desc: '' },
-                                { key: 'UTI', label: 'UTI / UPC', shortLabel: 'UTI', color: 'bg-orange-500', textColor: 'text-orange-400', dotColor: 'bg-orange-400', desc: '' },
+                                { key: 'UTI', label: 'UTI / UPC', shortLabel: 'UTI', color: 'bg-teal-500', textColor: 'text-teal-400', dotColor: 'bg-teal-400', desc: '' },
                             ];
 
                             // Obtener valor global fallback para un tipo
@@ -2244,7 +2244,7 @@ export const StatMultirisModule: React.FC = () => {
                                 <motion.div key="calidad" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="card-premium min-h-[450px] flex flex-col items-center justify-center p-20 text-center">
                                     <div className="w-32 h-32 rounded-full border-2 border-dashed border-brand-primary/30 flex items-center justify-center relative mb-8 animate-spin-slow">
                                         <ShieldAlert className="w-12 h-12 text-brand-primary animate-pulse" />
-                                        <div className="absolute top-0 w-4 h-4 rounded-full bg-brand-primary shadow-lg shadow-orange-500/50" />
+                                        <div className="absolute top-0 w-4 h-4 rounded-full bg-brand-primary shadow-lg shadow-teal-500/50" />
                                     </div>
                                     <h3 className="text-3xl font-black uppercase tracking-tight mb-4">Motor de Inteligencia Operativa</h3>
                                     <p className="max-w-md text-brand-text/40 font-bold uppercase text-[10px] tracking-widest leading-relaxed">

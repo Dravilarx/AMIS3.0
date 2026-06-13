@@ -15,7 +15,7 @@ export interface NivelConfig {
 export const NIVELES_CONFIG: NivelConfig[] = [
     { value: 0, label: 'No informa', desc: 'No realizo este procedimiento en mi práctica actual.', color: 'text-brand-text/40', activeBg: 'bg-brand-bg', border: 'border-brand-border', ring: 'ring-brand-text/20' },
     { value: 1, label: 'Básico / Urgencia', desc: 'Puedo realizarlo en contexto de urgencia o como screening básico.', color: 'text-sky-400', activeBg: 'bg-sky-950/60', border: 'border-sky-500', ring: 'ring-sky-500' },
-    { value: 2, label: 'Avanzado / Estándar', desc: 'Competencia clínica completa para la práctica habitual y electiva.', color: 'text-orange-400', activeBg: 'bg-orange-950/60', border: 'border-orange-500', ring: 'ring-orange-500' },
+    { value: 2, label: 'Avanzado / Estándar', desc: 'Competencia clínica completa para la práctica habitual y electiva.', color: 'text-teal-400', activeBg: 'bg-orange-950/60', border: 'border-teal-500', ring: 'ring-teal-500' },
     { value: 3, label: 'Subespecialista / Referente', desc: 'Nivel de experto. Soy referente clínico o formador en esta área.', color: 'text-amber-300', activeBg: 'bg-amber-950/60', border: 'border-amber-400', ring: 'ring-amber-400' },
 ];
 
@@ -65,13 +65,13 @@ export const PROCEDIMIENTOS: ProcedimientoItem[] = [
     { id: 'abd_rm_pelvis',     areaId: 'abdomen', areaLabel: 'Abdomen / Pelvis', areaGradient: 'from-green-500 to-emerald-700', modalidadId: 'rm',   modalidadLabel: 'RM',      label: 'RM Pelvis / Próstata / Recto' },
 
     // ── MSK ──
-    { id: 'msk_rx_ext',        areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'rx',    modalidadLabel: 'Rx',      label: 'Rx Extremidades y Articulaciones' },
-    { id: 'msk_rx_columna',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'rx',    modalidadLabel: 'Rx',      label: 'Rx Columna (Escoliosis / Métricas)' },
-    { id: 'msk_us_articular',  areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'us',    modalidadLabel: 'US',      label: 'US Articular / Tendinoso' },
-    { id: 'msk_us_partes',     areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'us',    modalidadLabel: 'US',      label: 'US Partes Blandas / Guía Procedimientos' },
-    { id: 'msk_rm_rodilla',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Rodilla' },
-    { id: 'msk_rm_hombro',     areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Hombro' },
-    { id: 'msk_rm_columna',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-orange-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Columna MSK (Discopatía / Canal)' },
+    { id: 'msk_rx_ext',        areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'rx',    modalidadLabel: 'Rx',      label: 'Rx Extremidades y Articulaciones' },
+    { id: 'msk_rx_columna',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'rx',    modalidadLabel: 'Rx',      label: 'Rx Columna (Escoliosis / Métricas)' },
+    { id: 'msk_us_articular',  areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'us',    modalidadLabel: 'US',      label: 'US Articular / Tendinoso' },
+    { id: 'msk_us_partes',     areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'us',    modalidadLabel: 'US',      label: 'US Partes Blandas / Guía Procedimientos' },
+    { id: 'msk_rm_rodilla',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Rodilla' },
+    { id: 'msk_rm_hombro',     areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Hombro' },
+    { id: 'msk_rm_columna',    areaId: 'msk', areaLabel: 'Músculo-Esquelético', areaGradient: 'from-amber-500 to-teal-700', modalidadId: 'rm',    modalidadLabel: 'RM',      label: 'RM Columna MSK (Discopatía / Canal)' },
 
     // ── Mama ──
     { id: 'mama_rx_screening', areaId: 'mama', areaLabel: 'Mama',              areaGradient: 'from-rose-500 to-pink-700',    modalidadId: 'rx',    modalidadLabel: 'Mx',       label: 'Mamografía Bilateral Screening' },

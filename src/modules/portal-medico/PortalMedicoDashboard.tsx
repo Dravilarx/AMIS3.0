@@ -96,7 +96,7 @@ export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate }) => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             {/* Bienvenida */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-primary/20 via-orange-600/10 to-transparent border border-brand-primary/20 p-8">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-primary/20 via-teal-600/10 to-transparent border border-brand-primary/20 p-8">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
                 <div className="relative z-10">
                     <p className="text-[10px] font-black text-brand-primary/60 uppercase tracking-widest mb-2">
@@ -112,7 +112,7 @@ export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate }) => {
                     </p>
                     {pct < 100 && (
                         <button onClick={() => onNavigate('onboarding')}
-                            className="mt-5 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-primary to-orange-600 text-white font-black text-sm shadow-xl shadow-brand-primary/30 hover:brightness-110 transition-all">
+                            className="mt-5 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-primary to-teal-600 text-white font-black text-sm shadow-xl shadow-brand-primary/30 hover:brightness-110 transition-all">
                             Continuar Onboarding
                             <ArrowRight className="w-4 h-4" />
                         </button>

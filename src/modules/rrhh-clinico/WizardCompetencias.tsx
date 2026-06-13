@@ -268,7 +268,7 @@ export const WizardCompetencias: React.FC = () => {
                     className={cn(
                         'w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all shadow-xl',
                         catsSel.size > 0
-                            ? 'bg-gradient-to-r from-brand-primary to-orange-600 text-white shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.01]'
+                            ? 'bg-gradient-to-r from-brand-primary to-teal-600 text-white shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.01]'
                             : 'bg-brand-border text-brand-text/30 cursor-not-allowed shadow-none'
                     )}
                 >
@@ -410,7 +410,7 @@ export const WizardCompetencias: React.FC = () => {
                     className={cn(
                         'flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm transition-all shadow-xl',
                         seleccion !== null && !sending
-                            ? 'bg-gradient-to-r from-brand-primary to-orange-600 text-white shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.01]'
+                            ? 'bg-gradient-to-r from-brand-primary to-teal-600 text-white shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.01]'
                             : 'bg-brand-border text-brand-text/30 cursor-not-allowed shadow-none'
                     )}
                 >

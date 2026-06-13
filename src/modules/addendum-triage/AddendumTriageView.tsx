@@ -183,7 +183,7 @@ export const AddendumTriageView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-400 via-teal-400 to-rose-400 bg-clip-text text-transparent">
             Bandeja de Triage Administrativo
           </h1>
           <p className="text-slate-400 mt-1 flex items-center gap-2 text-sm">

@@ -17,7 +17,7 @@ export interface CategoriaDict {
 export const NIVELES_CONFIG = [
     { value: 0 as Nivel, label: 'No informa',               desc: 'No realizo este procedimiento en mi práctica.',          color: 'text-zinc-400',   border: 'border-zinc-600',   ring: 'ring-zinc-500',   bg: 'bg-zinc-900/40'   },
     { value: 1 as Nivel, label: 'Básico / Urgencia',        desc: 'Lo realizo en urgencia o como screening básico.',       color: 'text-sky-400',    border: 'border-sky-500',    ring: 'ring-sky-500',    bg: 'bg-sky-950/50'    },
-    { value: 2 as Nivel, label: 'Avanzado / Estándar',      desc: 'Competencia completa para práctica habitual y electiva.',color: 'text-orange-400', border: 'border-orange-500', ring: 'ring-orange-500', bg: 'bg-orange-950/50' },
+    { value: 2 as Nivel, label: 'Avanzado / Estándar',      desc: 'Competencia completa para práctica habitual y electiva.',color: 'text-teal-400', border: 'border-teal-500', ring: 'ring-teal-500', bg: 'bg-orange-950/50' },
     { value: 3 as Nivel, label: 'Subespecialista/Referente',desc: 'Nivel de experto. Referente clínico o formador.',       color: 'text-amber-300',  border: 'border-amber-400',  ring: 'ring-amber-400',  bg: 'bg-amber-950/50'  },
 ] as const;
 
@@ -93,7 +93,7 @@ export const CATEGORIAS: CategoriaDict[] = [
         ],
     },
     {
-        id: 'msk', nombre: 'MSK (Músculo-Esquelético)', gradient: 'from-amber-500 to-orange-700',
+        id: 'msk', nombre: 'MSK (Músculo-Esquelético)', gradient: 'from-amber-500 to-teal-700',
         procedimientos: [
             { id: 'rx_ext_general',      nombre: 'Rx Extremidades y Articulaciones',        modalidad: 'Rx'       },
             { id: 'rx_columna_msk',      nombre: 'Rx Columna (Escoliosis / Métricas)',      modalidad: 'Rx'       },

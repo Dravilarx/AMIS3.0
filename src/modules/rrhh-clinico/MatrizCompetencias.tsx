@@ -26,7 +26,7 @@ const AREAS = [
     { id: 'cabeza',     label: 'Cabeza y Cuello',      short: 'C. y Cuello',  icon: Eye,      color: 'from-sky-500 to-blue-700' },
     { id: 'torax',      label: 'Tórax',                short: 'Tórax',        icon: Wind,     color: 'from-teal-500 to-cyan-700' },
     { id: 'abdomen',    label: 'Abdomen / Pelvis',     short: 'Abd./Pelvis',  icon: Scan,     color: 'from-green-500 to-emerald-700' },
-    { id: 'msk',        label: 'Músculo-Esquelético',  short: 'MSK',          icon: Bone,     color: 'from-amber-500 to-orange-700' },
+    { id: 'msk',        label: 'Músculo-Esquelético',  short: 'MSK',          icon: Bone,     color: 'from-amber-500 to-teal-700' },
     { id: 'mama',       label: 'Mama',                 short: 'Mama',         icon: Heart,    color: 'from-rose-500 to-pink-700' },
     { id: 'pediatrica', label: 'Radiología Pediátrica',short: 'Pediátrica',   icon: Baby,     color: 'from-fuchsia-500 to-indigo-700' },
 ] as const;
@@ -60,7 +60,7 @@ const NIVELES: { value: Nivel; label: string; short: string; color: string; bg: 
         label: 'Avanzado / Estándar',
         short: '2',
         color: 'text-brand-primary',
-        bg: 'bg-orange-900/30 border-orange-700/50 hover:border-brand-primary',
+        bg: 'bg-teal-900/30 border-teal-700/50 hover:border-brand-primary',
         ring: 'ring-brand-primary',
     },
     {
@@ -390,7 +390,7 @@ export const MatrizCompetencias: React.FC = () => {
                         'flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-base transition-all shadow-xl',
                         sent
                             ? 'bg-success text-white shadow-success/20 cursor-default'
-                            : 'bg-gradient-to-r from-brand-primary to-orange-600 text-white shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100'
+                            : 'bg-gradient-to-r from-brand-primary to-teal-600 text-white shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100'
                     )}
                 >
                     {sending ? (

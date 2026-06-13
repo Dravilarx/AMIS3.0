@@ -75,7 +75,7 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
 
                 <div className="flex gap-6">
                     <div className="flex items-center gap-2.5 group">
-                        <div className="w-3.5 h-3.5 rounded-lg bg-orange-500/10 border border-orange-500/30 shadow-sm" />
+                        <div className="w-3.5 h-3.5 rounded-lg bg-teal-500/10 border border-teal-500/30 shadow-sm" />
                         <span className="text-[10px] font-black uppercase text-brand-text/40 group-hover:text-brand-text transition-colors tracking-wider">Programado</span>
                     </div>
                     <div className="flex items-center gap-2.5 group">
@@ -142,7 +142,7 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                                                 onClick={() => onSelectAppointment(app)}
                                                 className={cn(
                                                     "absolute left-2 right-2 rounded-2xl border-2 p-4 cursor-pointer transition-all hover:scale-[1.03] hover:z-20 shadow-xl group/app overflow-hidden",
-                                                    app.status === 'scheduled' ? "bg-brand-surface border-orange-500/30 text-brand-text shadow-orange-500/5" :
+                                                    app.status === 'scheduled' ? "bg-brand-surface border-teal-500/30 text-brand-text shadow-teal-500/5" :
                                                         app.status === 'completed' ? "bg-brand-surface border-emerald-500/30 text-brand-text shadow-emerald-500/5" :
                                                             "bg-brand-surface border-brand-border text-brand-text/40"
                                                 )}
@@ -156,7 +156,7 @@ export const ClinicalCalendar: React.FC<ClinicalCalendarProps> = ({ appointments
                                                     <div className="flex items-center gap-3 overflow-hidden">
                                                         <div className={cn(
                                                             "w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner",
-                                                            app.status === 'scheduled' ? "bg-orange-500/10 text-brand-primary" :
+                                                            app.status === 'scheduled' ? "bg-teal-500/10 text-brand-primary" :
                                                                 app.status === 'completed' ? "bg-emerald-500/10 text-emerald-600" :
                                                                     "bg-brand-bg text-brand-text/30"
                                                         )}>

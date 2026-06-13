@@ -332,7 +332,7 @@ export const RadiologistWorklist: React.FC = () => {
               className={cn(
                 "px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                 statusFilter === f.id
-                  ? "bg-brand-primary text-white shadow-lg shadow-orange-500/20"
+                  ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20"
                   : "text-brand-text/40 hover:text-brand-text hover:bg-brand-bg"
               )}
             >
