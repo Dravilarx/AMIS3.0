@@ -9,9 +9,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { type PortalView } from './PortalMedicoLayout';
 
-interface Props { onNavigate: (view: PortalView) => void; }
+interface Props {
+    onNavigate: (view: PortalView) => void;
+    targetEmail?: string;
+}
 
-export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate }) => {
+export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate, targetEmail }) => {
     const { user } = useAuth();
     const [prof,      setProf]      = useState<any | null>(null);
     const [docs,      setDocs]      = useState<any[]>([]);
@@ -20,13 +23,14 @@ export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate }) => {
     const [loading,   setLoading]   = useState(true);
 
     useEffect(() => {
-        if (!user?.email) return;
+        const lookupEmail = targetEmail || user?.email;
+        if (!lookupEmail) return;
         const load = async () => {
             setLoading(true);
             const { data: profData } = await supabase
                 .from('professionals')
                 .select('id, name, last_name, role, specialty, joining_date, status, is_active, info_status, induction')
-                .eq('email', user.email)
+                .eq('email', lookupEmail)
                 .single();
 
             if (!profData) { setLoading(false); return; }
@@ -44,7 +48,7 @@ export const PortalMedicoDashboard: React.FC<Props> = ({ onNavigate }) => {
             setLoading(false);
         };
         load();
-    }, [user]);
+    }, [user, targetEmail]);
 
     const firstName = prof?.name || user?.name?.split(' ')[0] || 'Doctor/a';
 

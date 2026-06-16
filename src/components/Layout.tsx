@@ -30,9 +30,9 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) =
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin';
 
-    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh') => void;
+    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin') => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
@@ -139,6 +139,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                     label="Auditoría RR.HH."
                                     active={currentView === 'auditoria_rrhh'}
                                     onClick={() => onNavigate('auditoria_rrhh')}
+                                />
+                                <SidebarItem
+                                    icon={Stethoscope}
+                                    label="Portal Médicos"
+                                    active={currentView === 'portal_medicos_admin'}
+                                    onClick={() => onNavigate('portal_medicos_admin')}
                                 />
                             </>
                         )}

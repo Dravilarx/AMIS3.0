@@ -22,7 +22,7 @@ const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ─── Vista: Mis Documentos ────────────────────────────────────────────────────
-export const MisDocumentosView: React.FC = () => {
+export const MisDocumentosView: React.FC<{ targetEmail?: string }> = ({ targetEmail }) => {
     const { user }  = useAuth();
     const [docs,    setDocs]    = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -39,14 +39,15 @@ export const MisDocumentosView: React.FC = () => {
     };
 
     useEffect(() => {
-        if (!user?.email) return;
+        const lookupEmail = targetEmail || user?.email;
+        if (!lookupEmail) return;
         const load = async () => {
             setLoading(true);
-            // Buscar el professional_id del médico logueado
+            // Buscar el professional_id del médico logueado o objetivo
             const { data: prof } = await supabase
                 .from('professionals')
                 .select('id')
-                .eq('email', user.email)
+                .eq('email', lookupEmail)
                 .single();
 
             if (!prof) { setLoading(false); return; }
@@ -87,7 +88,7 @@ export const MisDocumentosView: React.FC = () => {
             setLoading(false);
         };
         load();
-    }, [user]);
+    }, [user, targetEmail]);
 
     if (loading) return (
         <div className="flex items-center justify-center py-20">
@@ -179,20 +180,21 @@ export const MisDocumentosView: React.FC = () => {
 };
 
 // ─── Vista: Mis Contratos ─────────────────────────────────────────────────────
-export const MisContratosView: React.FC = () => {
+export const MisContratosView: React.FC<{ targetEmail?: string }> = ({ targetEmail }) => {
     const { user }       = useAuth();
     const [contracts,    setContracts]    = useState<any[]>([]);
     const [professional, setProfessional] = useState<any>(null);
     const [loading,      setLoading]      = useState(true);
 
     useEffect(() => {
-        if (!user?.email) return;
+        const lookupEmail = targetEmail || user?.email;
+        if (!lookupEmail) return;
         const load = async () => {
             setLoading(true);
             const { data: prof } = await supabase
                 .from('professionals')
                 .select('id, name, last_name, role, specialty, joining_date, status, is_active')
-                .eq('email', user.email)
+                .eq('email', lookupEmail)
                 .single();
 
             if (!prof) { setLoading(false); return; }
@@ -207,7 +209,7 @@ export const MisContratosView: React.FC = () => {
             setLoading(false);
         };
         load();
-    }, [user]);
+    }, [user, targetEmail]);
 
     if (loading) return (
         <div className="flex items-center justify-center py-20">
@@ -413,19 +415,20 @@ export const MisNoticiasView: React.FC = () => {
 };
 
 // ─── Vista: Mis Competencias ──────────────────────────────────────────────────
-export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void }> = ({ onNavigate }) => {
+export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void; targetEmail?: string }> = ({ onNavigate, targetEmail }) => {
     const { user }    = useAuth();
     const [data,      setData]    = useState<any | null>(null);
     const [loading,   setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user?.email) return;
+        const lookupEmail = targetEmail || user?.email;
+        if (!lookupEmail) return;
         const load = async () => {
             setLoading(true);
             const { data: prof } = await supabase
                 .from('professionals')
                 .select('id')
-                .eq('email', user.email)
+                .eq('email', lookupEmail)
                 .single();
 
             if (!prof) { setLoading(false); return; }
@@ -440,7 +443,7 @@ export const MisCompetenciasView: React.FC<{ onNavigate: (v: any) => void }> = (
             setLoading(false);
         };
         load();
-    }, [user]);
+    }, [user, targetEmail]);
 
     const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
         pending: { label: 'Enviada — pendiente de revisión', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },

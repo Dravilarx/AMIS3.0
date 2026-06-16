@@ -31,6 +31,7 @@ const B2BPortal              = lazy(() => import('./modules/b2b-portal/B2BPortal
 const SecretaryCommandCenter = lazy(() => import('./modules/admin-secretary/SecretaryCommandCenter').then(m => ({ default: m.SecretaryCommandCenter })));
 const RadiologistWorklist    = lazy(() => import('./modules/radiology-worklist/RadiologistWorklist').then(m => ({ default: m.RadiologistWorklist })));
 const PortalMedico           = lazy(() => import('./modules/portal-medico/PortalMedico').then(m => ({ default: m.PortalMedico })));
+const PortalMedicosAdmin     = lazy(() => import('./modules/portal-medico/PortalMedicosAdmin').then(m => ({ default: m.PortalMedicosAdmin })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
 const ModuleLoader = () => (
@@ -47,7 +48,8 @@ type CurrentView =
     | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation'
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
-    | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh';
+    | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
+    | 'portal_medicos_admin';
 
 function App() {
     const { user } = useAuth();
@@ -133,6 +135,9 @@ function App() {
             case 'auditoria_rrhh':
                 if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <ResumenCompetenciasAdmin />;
                 return <WizardCompetencias />;
+            case 'portal_medicos_admin':
+                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalMedicosAdmin />;
+                return <DashboardModule />;
             default:                    return <DashboardModule />;
         }
     };
