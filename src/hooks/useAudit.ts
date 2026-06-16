@@ -23,6 +23,18 @@ export interface AuditCommunication {
     hasAttachment:  boolean;
 }
 
+export interface AuditTrailEntry {
+    id:           string;
+    auditId:      string;
+    action:       string;
+    fieldChanged?: string;
+    oldValue?:    string;
+    newValue?:    string;
+    userId?:      string;
+    userName?:    string;
+    createdAt:    string;
+}
+
 export interface AuditCase {
     id:               string;
     patientName:      string;
@@ -41,6 +53,13 @@ export interface AuditCase {
     measuresTaken?:   string;
     reportContent?:   string;
     complianceDetails?: Record<string, any>;
+    nonconformityType?: string;
+    severity?:        string;
+    providerName?:    string;
+    problemDescription?: string;
+    proposedSolution?: string;
+    correctiveAction?: string;
+    kanbanColumn?:    string;
     documents:        AuditDocument[];
     communications:   AuditCommunication[];
     createdAt:        string;
@@ -66,6 +85,13 @@ const mapCase = (r: any): AuditCase => ({
     measuresTaken:    r.measures_taken,
     reportContent:    r.reportContent,
     complianceDetails: r.compliance_details,
+    nonconformityType: r.nonconformity_type,
+    severity:         r.severity,
+    providerName:     r.provider_name,
+    problemDescription: r.problem_description,
+    proposedSolution: r.proposed_solution,
+    correctiveAction: r.corrective_action,
+    kanbanColumn:     r.kanban_column || 'nuevo',
     documents:        (r.audit_documents || []).map((d: any) => ({
         id:         d.id,
         auditId:    d.audit_id,
@@ -130,6 +156,46 @@ export const useAudit = () => {
         return { success: !error, error };
     };
 
+    // ── Registrar entrada en la bitácora (audit_trail) ─────────────────────────
+    const logTrail = async (
+        auditId:      string,
+        action:       string,
+        fieldChanged?: string,
+        oldValue?:    string,
+        newValue?:    string
+    ) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            let userName: string | null = null;
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('name')
+                    .eq('id', user.id)
+                    .single();
+                userName = profile?.name || user.email || null;
+            }
+
+            const { error } = await supabase
+                .from('audit_trail')
+                .insert({
+                    audit_id:      auditId,
+                    action,
+                    field_changed: fieldChanged || null,
+                    old_value:     oldValue ?? null,
+                    new_value:     newValue ?? null,
+                    user_id:       user?.id || null,
+                    user_name:     userName,
+                });
+
+            if (error) throw error;
+            return { success: true };
+        } catch (err: any) {
+            console.error('[Audit] Error registrando bitácora:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     // ── Actualizar caso ───────────────────────────────────────────────────────
     const updateCase = async (id: string, updates: Partial<{
         status:            AuditCase['status'];
@@ -143,7 +209,17 @@ export const useAudit = () => {
         agrawallLevel:     number;
         agrawallReasoning: string;
         agrawallFindings:  string[];
+        nonconformityType: string;
+        severity:          string;
+        providerName:      string;
+        problemDescription: string;
+        proposedSolution:  string;
+        correctiveAction:  string;
+        kanbanColumn:      string;
     }>) => {
+        // Caso previo para comparar y registrar los cambios en la bitácora
+        const prev = cases.find(c => c.id === id);
+
         const dbUpdates: any = {};
         if (updates.status           !== undefined) dbUpdates.status              = updates.status;
         if (updates.doctorId         !== undefined) dbUpdates.doctor_id           = updates.doctorId;
@@ -156,14 +232,96 @@ export const useAudit = () => {
         if (updates.agrawallLevel    !== undefined) dbUpdates.agrawall_level      = updates.agrawallLevel;
         if (updates.agrawallReasoning !== undefined) dbUpdates.agrawall_reasoning = updates.agrawallReasoning;
         if (updates.agrawallFindings !== undefined) dbUpdates.agrawall_findings   = updates.agrawallFindings;
+        if (updates.nonconformityType !== undefined) dbUpdates.nonconformity_type = updates.nonconformityType;
+        if (updates.severity         !== undefined) dbUpdates.severity            = updates.severity;
+        if (updates.providerName     !== undefined) dbUpdates.provider_name       = updates.providerName;
+        if (updates.problemDescription !== undefined) dbUpdates.problem_description = updates.problemDescription;
+        if (updates.proposedSolution !== undefined) dbUpdates.proposed_solution   = updates.proposedSolution;
+        if (updates.correctiveAction !== undefined) dbUpdates.corrective_action   = updates.correctiveAction;
+        if (updates.kanbanColumn     !== undefined) dbUpdates.kanban_column        = updates.kanbanColumn;
 
         const { error } = await supabase
             .from('audit_reports')
             .update(dbUpdates)
             .eq('id', id);
 
-        if (!error) fetchCases();
+        if (!error) {
+            // Registrar en la bitácora qué cambió
+            if (updates.status !== undefined && updates.status !== prev?.status) {
+                await logTrail(id, `Cambió estado de ${prev?.status ?? '—'} a ${updates.status}`, 'status', prev?.status, updates.status);
+            }
+            if (updates.kanbanColumn !== undefined && updates.kanbanColumn !== prev?.kanbanColumn) {
+                await logTrail(id, `Movió de columna ${prev?.kanbanColumn ?? '—'} a ${updates.kanbanColumn}`, 'kanban_column', prev?.kanbanColumn, updates.kanbanColumn);
+            }
+            if (updates.severity !== undefined && updates.severity !== prev?.severity) {
+                await logTrail(id, `Cambió severidad de ${prev?.severity ?? '—'} a ${updates.severity}`, 'severity', prev?.severity, updates.severity);
+            }
+            if (updates.nonconformityType !== undefined && updates.nonconformityType !== prev?.nonconformityType) {
+                await logTrail(id, `Cambió tipo de no conformidad a ${updates.nonconformityType}`, 'nonconformity_type', prev?.nonconformityType, updates.nonconformityType);
+            }
+            if (updates.providerName !== undefined && updates.providerName !== prev?.providerName) {
+                await logTrail(id, `Asignó prestador ${updates.providerName}`, 'provider_name', prev?.providerName, updates.providerName);
+            }
+            if (updates.correctiveAction !== undefined && updates.correctiveAction !== prev?.correctiveAction) {
+                await logTrail(id, 'Registró acción correctiva', 'corrective_action', prev?.correctiveAction, updates.correctiveAction);
+            }
+            if (updates.proposedSolution !== undefined && updates.proposedSolution !== prev?.proposedSolution) {
+                await logTrail(id, 'Registró solución propuesta', 'proposed_solution', prev?.proposedSolution, updates.proposedSolution);
+            }
+            if (updates.problemDescription !== undefined && updates.problemDescription !== prev?.problemDescription) {
+                await logTrail(id, 'Actualizó descripción del problema', 'problem_description', prev?.problemDescription, updates.problemDescription);
+            }
+            fetchCases();
+        }
         return { success: !error, error };
+    };
+
+    // ── Mover caso en el tablero Kanban ─────────────────────────────────────────
+    const moveKanban = async (auditId: string, newColumn: string) => {
+        const prev = cases.find(c => c.id === auditId);
+
+        const { error } = await supabase
+            .from('audit_reports')
+            .update({ kanban_column: newColumn })
+            .eq('id', auditId);
+
+        if (!error) {
+            await logTrail(
+                auditId,
+                `Movió de columna ${prev?.kanbanColumn ?? '—'} a ${newColumn}`,
+                'kanban_column',
+                prev?.kanbanColumn,
+                newColumn
+            );
+            fetchCases();
+        }
+        return { success: !error, error };
+    };
+
+    // ── Obtener bitácora de un caso ─────────────────────────────────────────────
+    const fetchTrail = async (auditId: string): Promise<AuditTrailEntry[]> => {
+        const { data, error } = await supabase
+            .from('audit_trail')
+            .select('*')
+            .eq('audit_id', auditId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('[Audit] Error obteniendo bitácora:', error);
+            return [];
+        }
+
+        return (data || []).map((t: any): AuditTrailEntry => ({
+            id:           t.id,
+            auditId:      t.audit_id,
+            action:       t.action,
+            fieldChanged: t.field_changed,
+            oldValue:     t.old_value,
+            newValue:     t.new_value,
+            userId:       t.user_id,
+            userName:     t.user_name,
+            createdAt:    t.created_at,
+        }));
     };
 
     // ── Subir documento ───────────────────────────────────────────────────────
@@ -257,6 +415,9 @@ export const useAudit = () => {
         deleteDocument,
         addCommunication,
         archiveCase,
+        logTrail,
+        moveKanban,
+        fetchTrail,
         refresh: fetchCases,
     };
 };
