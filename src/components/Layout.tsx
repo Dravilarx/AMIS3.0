@@ -58,7 +58,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         { id: 'logistics', name: 'Logística Salud', icon: Truck },
         { id: 'institutions', name: 'Red de Centros', icon: Building2 },
         { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
-        { id: 'audit', name: 'Auditoría IA', icon: ShieldCheck },
+        { id: 'audit', name: 'Calidad', icon: ShieldCheck },
         { id: 'projects', name: 'Proyectos BPM', icon: Layers },
         { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
         { id: 'dispatch', name: 'Centro de Despacho', icon: Headphones },

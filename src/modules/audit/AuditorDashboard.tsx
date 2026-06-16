@@ -1,15 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Shield, Info, Search, FileText, Sparkles,
     ChevronRight, X, Upload, Mail, Send, Loader2, CheckCircle2,
     Plus, Trash2, Eye, MailOpen, MailIcon, Paperclip,
-    Building2, Stethoscope, CalendarDays,
+    Building2, Stethoscope, CalendarDays, LayoutList, LayoutGrid,
+    History, Lock, ArrowRight, FileDown,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useAudit, type AuditCase, type AuditDocument } from '../../hooks/useAudit';
+import { useAudit, type AuditCase, type AuditDocument, type AuditTrailEntry } from '../../hooks/useAudit';
 import { useProfessionals } from '../../hooks/useProfessionals';
 import { InlineAuditUploader } from './InlineAuditUploader';
 import { analyzeClinicalReportFromPDF } from './agrawallAI';
+import { KanbanBoard } from './KanbanBoard';
+import { exportCaseToPDF } from './exportCasePDF';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -34,6 +37,22 @@ const DOC_TYPES = [
     { value: 'otro',         label: 'Otro Antecedente' },
 ];
 
+const NONCONFORMITY_TYPES = [
+    { value: 'error_informe',  label: 'Error de informe' },
+    { value: 'retraso',        label: 'Retraso' },
+    { value: 'trato_paciente', label: 'Trato al paciente' },
+    { value: 'administrativo', label: 'Administrativo' },
+    { value: 'tecnico',        label: 'Técnico' },
+    { value: 'otro',           label: 'Otro' },
+];
+
+const SEVERITY_CONFIG: Record<string, { label: string; color: string }> = {
+    baja:    { label: 'Baja',    color: 'text-brand-text/60 bg-brand-text/5    border-brand-text/20' },
+    media:   { label: 'Media',   color: 'text-brand-primary  bg-brand-primary/10  border-brand-primary/20' },
+    alta:    { label: 'Alta',    color: 'text-brand-secondary bg-brand-secondary/10 border-brand-secondary/20' },
+    critica: { label: 'Crítica', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+};
+
 // ─── Badge Agrawall ───────────────────────────────────────────────────────────
 const AgrawallBadge: React.FC<{ level?: number; size?: 'sm' | 'lg' }> = ({ level, size = 'sm' }) => {
     if (!level) return <span className="text-[9px] text-brand-text/20 font-mono">—</span>;
@@ -55,21 +74,31 @@ const CaseDetailPanel: React.FC<{
     onClose:      () => void;
     professionals: { id: string; name: string; lastName: string }[];
 }> = ({ auditCase, onClose, professionals }) => {
-    const { updateCase, uploadDocument, deleteDocument, addCommunication } = useAudit();
+    const { updateCase, uploadDocument, deleteDocument, addCommunication, fetchTrail } = useAudit();
 
-    const [activeTab,    setActiveTab]    = useState<'info' | 'docs' | 'comms' | 'agrawall'>('info');
+    const [activeTab,    setActiveTab]    = useState<'info' | 'docs' | 'comms' | 'agrawall' | 'bitacora'>('info');
     const [saving,       setSaving]       = useState(false);
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [analyzingPDF, setAnalyzingPDF] = useState(false);
 
+    const [trail,        setTrail]        = useState<AuditTrailEntry[]>([]);
+    const [loadingTrail, setLoadingTrail] = useState(false);
+    const [exporting,    setExporting]    = useState(false);
+
     const [editData, setEditData] = useState({
-        status:          auditCase.status,
-        doctorId:        auditCase.doctorId        || '',
-        institution:     auditCase.institution     || '',
-        requestType:     auditCase.requestType     || 'Radiología',
-        resolutionDate:  auditCase.resolutionDate  ? auditCase.resolutionDate.split('T')[0] : '',
-        observations:    auditCase.observations    || '',
-        measuresTaken:   auditCase.measuresTaken   || '',
+        status:             auditCase.status,
+        doctorId:           auditCase.doctorId           || '',
+        institution:        auditCase.institution        || '',
+        requestType:        auditCase.requestType        || 'Radiología',
+        resolutionDate:     auditCase.resolutionDate      ? auditCase.resolutionDate.split('T')[0] : '',
+        observations:       auditCase.observations       || '',
+        measuresTaken:      auditCase.measuresTaken      || '',
+        nonconformityType:  auditCase.nonconformityType  || '',
+        severity:           auditCase.severity           || '',
+        providerName:       auditCase.providerName       || '',
+        problemDescription: auditCase.problemDescription || '',
+        proposedSolution:   auditCase.proposedSolution   || '',
+        correctiveAction:   auditCase.correctiveAction   || '',
     });
 
     const [newComm, setNewComm] = useState({
@@ -82,6 +111,29 @@ const CaseDetailPanel: React.FC<{
 
     const [selectedDocType, setSelectedDocType] = useState<AuditDocument['docType']>('informe');
 
+    const loadTrail = async () => {
+        setLoadingTrail(true);
+        const data = await fetchTrail(auditCase.id);
+        setTrail(data);
+        setLoadingTrail(false);
+    };
+
+    useEffect(() => {
+        if (activeTab === 'bitacora') loadTrail();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
+
+    const handleExportPDF = async () => {
+        setExporting(true);
+        try {
+            await exportCaseToPDF(auditCase, fetchTrail);
+        } catch (err) {
+            console.error('[Audit] Error exportando expediente PDF:', err);
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         const doctor = professionals.find(p => p.id === editData.doctorId);
@@ -89,6 +141,8 @@ const CaseDetailPanel: React.FC<{
             ...editData,
             doctorName:     doctor ? `${doctor.name} ${doctor.lastName}` : auditCase.doctorName,
             resolutionDate: editData.resolutionDate || undefined,
+            nonconformityType:  editData.nonconformityType  || undefined,
+            severity:           editData.severity           || undefined,
         });
         setSaving(false);
     };
@@ -134,6 +188,7 @@ const CaseDetailPanel: React.FC<{
         { id: 'docs',     label: 'Documentos',   icon: <Paperclip className="w-3.5 h-3.5" />, count: auditCase.documents.length },
         { id: 'comms',    label: 'Comunicaciones', icon: <Mail className="w-3.5 h-3.5" />, count: auditCase.communications.length },
         { id: 'agrawall', label: 'Agrawall IA',  icon: <Sparkles className="w-3.5 h-3.5" /> },
+        { id: 'bitacora', label: 'Bitácora',     icon: <History className="w-3.5 h-3.5" /> },
     ] as const;
 
     return (
@@ -158,9 +213,16 @@ const CaseDetailPanel: React.FC<{
                             {auditCase.institution} · {auditCase.requestType}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-brand-surface text-brand-text/40 hover:text-brand-text transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={handleExportPDF} disabled={exporting}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary text-[10px] font-black uppercase tracking-wider hover:bg-brand-secondary/20 transition-all disabled:opacity-50">
+                            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                            {exporting ? 'Generando...' : 'Exportar Expediente PDF'}
+                        </button>
+                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-brand-surface text-brand-text/40 hover:text-brand-text transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tabs */}
@@ -236,6 +298,67 @@ const CaseDetailPanel: React.FC<{
                                         value={editData.resolutionDate}
                                         onChange={e => setEditData(p => ({ ...p, resolutionDate: e.target.value }))} />
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Tipo de No-Conformidad</label>
+                                    <select value={editData.nonconformityType} onChange={e => setEditData(p => ({ ...p, nonconformityType: e.target.value }))}
+                                        className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none">
+                                        <option value="">Sin clasificar</option>
+                                        {NONCONFORMITY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Gravedad</label>
+                                    <div className="flex items-center gap-2">
+                                        <select value={editData.severity} onChange={e => setEditData(p => ({ ...p, severity: e.target.value }))}
+                                            className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none">
+                                            <option value="">Sin definir</option>
+                                            {Object.entries(SEVERITY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                                        </select>
+                                        {editData.severity && SEVERITY_CONFIG[editData.severity] && (
+                                            <span className={cn(
+                                                'text-[9px] font-black px-2 py-1 rounded-full border uppercase tracking-wider whitespace-nowrap',
+                                                SEVERITY_CONFIG[editData.severity].color
+                                            )}>
+                                                {SEVERITY_CONFIG[editData.severity].label}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest flex items-center gap-1">
+                                        <Building2 className="w-3 h-3" /> Proveedor / Institución Responsable
+                                    </label>
+                                    <input className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-2 text-sm text-brand-text outline-none"
+                                        placeholder="Entidad responsable de la no-conformidad"
+                                        value={editData.providerName}
+                                        onChange={e => setEditData(p => ({ ...p, providerName: e.target.value }))} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Descripción del Problema</label>
+                                <textarea rows={3} className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none resize-none"
+                                    placeholder="¿Qué ocurrió? Detalle de la no-conformidad..."
+                                    value={editData.problemDescription}
+                                    onChange={e => setEditData(p => ({ ...p, problemDescription: e.target.value }))} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Solución Propuesta</label>
+                                <textarea rows={3} className="bg-brand-surface border border-brand-border rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none resize-none"
+                                    placeholder="Acción propuesta para resolver la no-conformidad..."
+                                    value={editData.proposedSolution}
+                                    onChange={e => setEditData(p => ({ ...p, proposedSolution: e.target.value }))} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-bold text-brand-secondary tracking-widest flex items-center gap-1.5">
+                                    <Lock className="w-3 h-3" /> Acción Correctiva (queda registrada para auditoría)
+                                </label>
+                                <textarea rows={3} className="bg-brand-surface border border-brand-secondary/30 rounded-xl w-full px-4 py-3 text-sm text-brand-text outline-none resize-none focus:border-brand-secondary/60"
+                                    placeholder="Acción correctiva efectivamente implementada y verificable..."
+                                    value={editData.correctiveAction}
+                                    onChange={e => setEditData(p => ({ ...p, correctiveAction: e.target.value }))} />
                             </div>
 
                             <div className="space-y-2">
@@ -444,6 +567,64 @@ const CaseDetailPanel: React.FC<{
                             </div>
                         </div>
                     )}
+
+                    {/* ── Tab Bitácora ── */}
+                    {activeTab === 'bitacora' && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 p-3 bg-brand-surface border border-brand-border rounded-xl">
+                                <Lock className="w-3.5 h-3.5 text-brand-secondary flex-shrink-0" />
+                                <p className="text-[10px] text-brand-text/50 leading-relaxed">
+                                    Registro permanente e inmutable de todos los movimientos del caso. Cada cambio queda trazado para auditoría.
+                                </p>
+                            </div>
+
+                            {loadingTrail ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="w-6 h-6 text-brand-primary animate-spin" />
+                                </div>
+                            ) : trail.length === 0 ? (
+                                <div className="text-center py-12 border border-dashed border-brand-border rounded-2xl">
+                                    <History className="w-8 h-8 text-brand-text/10 mx-auto mb-3" />
+                                    <p className="text-sm text-brand-text/30">Sin movimientos registrados aún.</p>
+                                    <p className="text-xs text-brand-text/20 mt-1">Los cambios del caso aparecerán aquí automáticamente.</p>
+                                </div>
+                            ) : (
+                                <div className="relative pl-6">
+                                    {/* Línea vertical del timeline */}
+                                    <div className="absolute left-[7px] top-2 bottom-2 w-px bg-brand-border" />
+                                    <div className="space-y-5">
+                                        {trail.map(entry => (
+                                            <div key={entry.id} className="relative">
+                                                {/* Punto del timeline */}
+                                                <div className="absolute -left-[22px] top-1 w-3.5 h-3.5 rounded-full bg-brand-primary border-2 border-brand-bg" />
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-bold text-brand-text leading-snug">{entry.action}</p>
+                                                    {(entry.oldValue || entry.newValue) && (
+                                                        <div className="flex items-center gap-2 text-[10px] font-mono">
+                                                            <span className="px-2 py-0.5 rounded-md bg-brand-surface border border-brand-border text-brand-text/40 line-through">
+                                                                {entry.oldValue || '—'}
+                                                            </span>
+                                                            <ArrowRight className="w-3 h-3 text-brand-text/30" />
+                                                            <span className="px-2 py-0.5 rounded-md bg-brand-primary/10 border border-brand-primary/20 text-brand-primary">
+                                                                {entry.newValue || '—'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-2 text-[10px] text-brand-text/30">
+                                                        <span className="font-bold text-brand-text/50">{entry.userName || 'Sistema'}</span>
+                                                        <span>·</span>
+                                                        <span className="font-mono">
+                                                            {new Date(entry.createdAt).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -452,7 +633,7 @@ const CaseDetailPanel: React.FC<{
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 export const AuditorDashboard: React.FC = () => {
-    const { cases, loading } = useAudit();
+    const { cases, loading, moveKanban } = useAudit();
     const { professionals }  = useProfessionals();
 
     const [searchTerm,    setSearchTerm]    = useState('');
@@ -461,6 +642,7 @@ export const AuditorDashboard: React.FC = () => {
     const [filterDoctor,  setFilterDoctor]  = useState('');
     const [showUploader,  setShowUploader]  = useState(false);
     const [selectedCase,  setSelectedCase]  = useState<AuditCase | null>(null);
+    const [viewMode,      setViewMode]      = useState<'tabla' | 'kanban'>('tabla');
 
     const filtered = useMemo(() => cases.filter(c => {
         const s = searchTerm.toLowerCase();
@@ -488,13 +670,36 @@ export const AuditorDashboard: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-black text-brand-text">Auditoría Clínica IA</h2>
-                    <p className="text-brand-text/40 text-sm">Gestión de casos, reclamos y discrepancias — Escala Agrawall</p>
+                    <h2 className="text-2xl font-black text-brand-text">Gestión de Calidad</h2>
+                    <p className="text-brand-text/40 text-sm">Casos, no-conformidades y discrepancias — Escala Agrawall</p>
                 </div>
-                <button onClick={() => setShowUploader(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20">
-                    <Plus className="w-4 h-4" /> Nuevo Caso
-                </button>
+                <div className="flex items-center gap-3">
+                    {/* Toggle Tabla / Kanban */}
+                    <div className="flex border border-brand-border rounded-xl overflow-hidden bg-brand-surface">
+                        <button onClick={() => setViewMode('tabla')}
+                            className={cn(
+                                'flex items-center gap-1.5 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all',
+                                viewMode === 'tabla'
+                                    ? 'bg-brand-primary/10 border-r border-brand-primary/30 text-brand-primary'
+                                    : 'text-brand-text/40 hover:text-brand-text/70'
+                            )}>
+                            <LayoutList className="w-4 h-4" /> Tabla
+                        </button>
+                        <button onClick={() => setViewMode('kanban')}
+                            className={cn(
+                                'flex items-center gap-1.5 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all',
+                                viewMode === 'kanban'
+                                    ? 'bg-brand-primary/10 border-l border-brand-primary/30 text-brand-primary'
+                                    : 'text-brand-text/40 hover:text-brand-text/70'
+                            )}>
+                            <LayoutGrid className="w-4 h-4" /> Kanban
+                        </button>
+                    </div>
+                    <button onClick={() => setShowUploader(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20">
+                        <Plus className="w-4 h-4" /> Nuevo Caso
+                    </button>
+                </div>
             </div>
 
             {/* KPIs */}
@@ -555,6 +760,13 @@ export const AuditorDashboard: React.FC = () => {
                     <Shield className="w-12 h-12 text-brand-text/10 mx-auto mb-3" />
                     <p className="text-sm text-brand-text/30">Sin casos. Crea el primero con "Nuevo Caso".</p>
                 </div>
+            ) : viewMode === 'kanban' ? (
+                <KanbanBoard
+                    cases={filtered}
+                    onSelect={setSelectedCase}
+                    moveKanban={moveKanban}
+                    renderBadge={(level) => <AgrawallBadge level={level} />}
+                />
             ) : (
                 <div className="rounded-2xl border border-brand-border overflow-hidden">
                     <table className="w-full text-left border-collapse">

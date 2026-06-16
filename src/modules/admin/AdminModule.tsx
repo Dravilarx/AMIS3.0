@@ -21,7 +21,7 @@ const MODULES = [
     { id: 'logistics',            name: 'Logística Salud' },
     { id: 'institutions',         name: 'Red de Centros' },
     { id: 'clinical',             name: 'Procedimientos' },
-    { id: 'audit',                name: 'Auditoría IA' },
+    { id: 'audit',                name: 'Calidad' },
     { id: 'projects',             name: 'Proyectos BPM' },
     { id: 'messaging',            name: 'Mensajería' },
     { id: 'dispatch',             name: 'Centro de Despacho' },
