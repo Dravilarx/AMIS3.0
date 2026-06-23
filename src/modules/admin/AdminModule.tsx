@@ -18,6 +18,7 @@ const MODULES = [
     { id: 'tenders',              name: 'Licitaciones' },
     { id: 'staffing',             name: 'Gestión RR.HH.' },
     { id: 'shifts',               name: 'Turnos Médicos' },
+    { id: 'cuarto_turno',         name: '4° Turno' },
     { id: 'logistics',            name: 'Logística Salud' },
     { id: 'institutions',         name: 'Red de Centros' },
     { id: 'clinical',             name: 'Procedimientos' },

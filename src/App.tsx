@@ -32,6 +32,7 @@ const SecretaryCommandCenter = lazy(() => import('./modules/admin-secretary/Secr
 const RadiologistWorklist    = lazy(() => import('./modules/radiology-worklist/RadiologistWorklist').then(m => ({ default: m.RadiologistWorklist })));
 const PortalMedico           = lazy(() => import('./modules/portal-medico/PortalMedico').then(m => ({ default: m.PortalMedico })));
 const PortalMedicosAdmin     = lazy(() => import('./modules/portal-medico/PortalMedicosAdmin').then(m => ({ default: m.PortalMedicosAdmin })));
+const CuartoTurnoDashboard   = lazy(() => import('./modules/cuarto-turno/CuartoTurnoDashboard').then(m => ({ default: m.CuartoTurnoDashboard })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
 const ModuleLoader = () => (
@@ -49,7 +50,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin';
+    | 'portal_medicos_admin' | 'cuarto_turno';
 
 function App() {
     const { user } = useAuth();
@@ -138,6 +139,7 @@ function App() {
             case 'portal_medicos_admin':
                 if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalMedicosAdmin />;
                 return <DashboardModule />;
+            case 'cuarto_turno':        return <CuartoTurnoDashboard />;
             default:                    return <DashboardModule />;
         }
     };
