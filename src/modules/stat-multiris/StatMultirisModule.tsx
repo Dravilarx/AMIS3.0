@@ -30,7 +30,8 @@ import {
     Unlink,
     CircleCheck,
     CircleAlert,
-    Info
+    Info,
+    Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -49,6 +50,7 @@ import {
 } from './multirisService';
 import type { MedicoGroup } from './multirisService';
 import { useInstitutions } from '../../hooks/useInstitutions';
+import { suggestInstitutionMatch, type InstitutionLite } from './suggestInstitutionMatch';
 import { useProfessionals } from '../../hooks/useProfessionals';
 import { HighDensityChart } from './HighDensityChart';
 
@@ -365,6 +367,16 @@ export const StatMultirisModule: React.FC = () => {
     const institutionSuggestions = useMemo(() => institutions.map(i => i.commercialName || i.legalName).filter(Boolean) as string[], [institutions]);
     const professionalSuggestions = useMemo(() => professionals.map(p => `${p.lastName} ${p.name}`.trim()).filter(Boolean), [professionals]);
 
+    // Lista en formato InstitutionLite para el motor de sugerencias automáticas
+    const institutionsLite = useMemo<InstitutionLite[]>(() => institutions.map(i => ({
+        id:               i.id,
+        institution_code: i.institutionCode ?? '',
+        legal_name:       i.legalName ?? null,
+        commercial_name:  i.commercialName ?? null,
+        city:             i.city ?? null,
+        institution_type: i.institutionType ?? null,
+    })), [institutions]);
+
     // Grupos de médicos
     const [grupos, setGrupos] = useState<MedicoGroup[]>([]);
     const [editingGrupo, setEditingGrupo] = useState<MedicoGroup | null>(null);
@@ -593,6 +605,23 @@ export const StatMultirisModule: React.FC = () => {
             loadMappings();
         } catch (error: any) {
             alert('Error al actualizar mapeo: ' + error.message);
+        }
+    };
+
+    // Aplica una sugerencia automática SOLO cuando el usuario aprieta Confirmar
+    const handleConfirmSuggestion = async (
+        id: string,
+        suggestion: { legal_name: string; institution_id: string }
+    ) => {
+        try {
+            await saveNameMapping({
+                id,
+                formal_name: suggestion.legal_name,
+                formal_id:   suggestion.institution_id,
+            });
+            loadMappings();
+        } catch (error: any) {
+            alert('Error al confirmar sugerencia: ' + error.message);
         }
     };
 
@@ -933,6 +962,8 @@ export const StatMultirisModule: React.FC = () => {
                                         {mappings.filter(m => m.category === 'institucion').map(m => {
                                             const isLinked = !!m.formal_id;
                                             const hasEquiv = m.formal_name && m.formal_name !== m.raw_name;
+                                            // Sugerencia automática solo para las que están SIN vincular (formal_id null)
+                                            const suggestion = !isLinked ? suggestInstitutionMatch(m.raw_name, institutionsLite) : null;
                                             const statusColor = isLinked ? 'bg-success/20 text-success border-success/20'
                                                 : hasEquiv ? 'bg-amber-400/20 text-amber-400 border-amber-400/20'
                                                     : 'bg-brand-text/5 text-brand-text/20 border-brand-text/10';
@@ -969,6 +1000,28 @@ export const StatMultirisModule: React.FC = () => {
                                                             <div className="flex items-center gap-1.5 ml-1">
                                                                 <LinkIcon className="w-2.5 h-2.5 text-success/50" />
                                                                 <span className="text-[8px] font-bold text-success/50">ID: {m.formal_id.slice(0, 8)}...</span>
+                                                            </div>
+                                                        )}
+                                                        {suggestion && (
+                                                            <div className="flex items-center justify-between gap-2 mt-1 p-2.5 rounded-2xl bg-brand-primary/5 border border-brand-primary/20">
+                                                                <div className="flex items-start gap-2 min-w-0">
+                                                                    <Sparkles className="w-3.5 h-3.5 text-brand-primary shrink-0 mt-0.5" />
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-primary/70 leading-tight">
+                                                                            Sugerencia: <span className="text-brand-text normal-case">{suggestion.legal_name}</span>
+                                                                            <span className={`ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-black border ${suggestion.confidence === 'ALTA' ? 'bg-success/15 text-success border-success/25' : 'bg-amber-400/15 text-amber-400 border-amber-400/25'}`}>
+                                                                                {suggestion.confidence}
+                                                                            </span>
+                                                                        </p>
+                                                                        <p className="text-[8px] font-bold text-brand-text/30 mt-0.5">Coincidencia por: {suggestion.reason}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleConfirmSuggestion(m.id, suggestion)}
+                                                                    className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-primary text-white text-[9px] font-black uppercase tracking-wider hover:brightness-110 transition-all shadow-sm shadow-brand-primary/30"
+                                                                >
+                                                                    <Check className="w-3 h-3" /> Confirmar
+                                                                </button>
                                                             </div>
                                                         )}
                                                     </div>

@@ -33,6 +33,9 @@ const RadiologistWorklist    = lazy(() => import('./modules/radiology-worklist/R
 const PortalMedico           = lazy(() => import('./modules/portal-medico/PortalMedico').then(m => ({ default: m.PortalMedico })));
 const PortalMedicosAdmin     = lazy(() => import('./modules/portal-medico/PortalMedicosAdmin').then(m => ({ default: m.PortalMedicosAdmin })));
 const CuartoTurnoDashboard   = lazy(() => import('./modules/cuarto-turno/CuartoTurnoDashboard').then(m => ({ default: m.CuartoTurnoDashboard })));
+const SolicitudesDashboard   = lazy(() => import('./modules/solicitudes/SolicitudesDashboard').then(m => ({ default: m.SolicitudesDashboard })));
+const ProtocolosDashboard    = lazy(() => import('./modules/protocolos/ProtocolosDashboard').then(m => ({ default: m.ProtocolosDashboard })));
+const PortalInstitucionalAdmin = lazy(() => import('./modules/portal-institucional/PortalInstitucionalAdmin').then(m => ({ default: m.PortalInstitucionalAdmin })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
 const ModuleLoader = () => (
@@ -50,7 +53,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin' | 'cuarto_turno';
+    | 'portal_medicos_admin' | 'cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional';
 
 function App() {
     const { user } = useAuth();
@@ -140,6 +143,9 @@ function App() {
                 if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalMedicosAdmin />;
                 return <DashboardModule />;
             case 'cuarto_turno':        return <CuartoTurnoDashboard />;
+            case 'solicitudes':         return <SolicitudesDashboard />;
+            case 'protocolos':          return <ProtocolosDashboard />;
+            case 'portal_institucional': return <PortalInstitucionalAdmin />;
             default:                    return <DashboardModule />;
         }
     };
