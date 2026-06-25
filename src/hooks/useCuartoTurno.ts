@@ -342,9 +342,14 @@ export const useCuartoTurno = () => {
         fetchCategoriasTecnicas();
         fetchEstadosIncidencia();
 
+        // Realtime: refresca cada lista cuando su tabla cambia (alta desde otro tecnólogo, etc.)
         const sub = supabase
-            .channel('ct_turnos_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_turnos' }, fetchTurnos)
+            .channel('ct_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_turnos' },          fetchTurnos)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_incid_personal' },   fetchIncidencias)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_incid_sla' },         fetchSlaDesviaciones)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_casos_criticos' },    fetchCasosCriticos)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ct_incid_tecnicas' },    fetchIncidTecnicas)
             .subscribe();
 
         return () => { supabase.removeChannel(sub); };

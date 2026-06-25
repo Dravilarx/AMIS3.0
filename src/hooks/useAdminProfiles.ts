@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseSignup } from '../lib/supabase';
 import type { UserRole, UserPermissions } from './useAuth';
 
 export interface AdminProfile {
@@ -91,8 +91,55 @@ export const useAdminProfiles = () => {
         try {
             setLoading(true);
 
-            // 1. Crear usuario en Auth
-            const { data: authData, error: authError } = await supabase.auth.signUp({
+            // Aplica cargo en un perfil (best-effort: la columna puede no existir).
+            const aplicarCargo = async (profileId: string) => {
+                if (!cargo) return;
+                const { error: cargoIdErr } = await supabase
+                    .from('profiles')
+                    .update({ cargo_id: cargo.id })
+                    .eq('id', profileId);
+                if (cargoIdErr) {
+                    const { error: cargoTxtErr } = await supabase
+                        .from('profiles')
+                        .update({ cargo: cargo.nombre })
+                        .eq('id', profileId);
+                    if (cargoTxtErr) {
+                        console.warn('No se pudo guardar el cargo en el perfil (columna inexistente):', cargoTxtErr.message);
+                    }
+                }
+            };
+
+            // 0. ¿Ya existe un perfil con ese email? (incluye los archivados/soft-deleted)
+            //    Si existe, lo REACTIVAMOS en vez de fallar con "usuario ya registrado".
+            const { data: existing } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (existing) {
+                const updates: Record<string, any> = {
+                    is_deleted:  false,
+                    archived_at: null,
+                    full_name:   fullName,
+                    role,
+                };
+                if (permissions) updates.permissions = permissions;
+
+                const { error: reactErr } = await supabase
+                    .from('profiles')
+                    .update(updates)
+                    .eq('id', existing.id);
+                if (reactErr) throw reactErr;
+
+                await aplicarCargo(existing.id);
+                await fetchProfiles();
+                // La contraseña previa se mantiene (no se puede resetear desde el cliente).
+                return { success: true, reactivated: true };
+            }
+
+            // 1. Crear usuario en Auth usando el cliente AISLADO (no toca la sesión del admin).
+            const { data: authData, error: authError } = await supabaseSignup.auth.signUp({
                 email,
                 password,
                 options: {
@@ -103,8 +150,8 @@ export const useAdminProfiles = () => {
             if (authError) throw authError;
             if (!authData.user) throw new Error('No se pudo crear el usuario.');
 
-            // 2. Upsert en profiles (por si no hay trigger automático).
-            //    Aplicamos la plantilla de permisos del cargo como permisos iniciales.
+            // 2. Upsert en profiles. Se hace con el cliente AISLADO (sesión = usuario nuevo),
+            //    así el id coincide con auth.uid() para las políticas RLS.
             const baseProfile: Record<string, any> = {
                 id:         authData.user.id,
                 email,
@@ -114,7 +161,7 @@ export const useAdminProfiles = () => {
             };
             if (permissions) baseProfile.permissions = permissions;
 
-            const { error: profileError } = await supabase
+            const { error: profileError } = await supabaseSignup
                 .from('profiles')
                 .upsert(baseProfile);
 
@@ -122,24 +169,9 @@ export const useAdminProfiles = () => {
                 console.warn('Perfil posiblemente creado vía trigger:', profileError);
             }
 
-            // 3. Guardar el cargo en el perfil (best-effort: la columna puede no existir).
-            //    Probamos cargo_id; si falla, caemos a un campo de texto 'cargo'.
-            if (cargo) {
-                const { error: cargoIdErr } = await supabase
-                    .from('profiles')
-                    .update({ cargo_id: cargo.id })
-                    .eq('id', authData.user.id);
-
-                if (cargoIdErr) {
-                    const { error: cargoTxtErr } = await supabase
-                        .from('profiles')
-                        .update({ cargo: cargo.nombre })
-                        .eq('id', authData.user.id);
-                    if (cargoTxtErr) {
-                        console.warn('No se pudo guardar el cargo en el perfil (columna inexistente):', cargoTxtErr.message);
-                    }
-                }
-            }
+            // 3. Cargo (best-effort) y limpieza de la sesión temporal del cliente aislado.
+            await aplicarCargo(authData.user.id);
+            await supabaseSignup.auth.signOut();
 
             await fetchProfiles();
             return { success: true };
@@ -153,6 +185,14 @@ export const useAdminProfiles = () => {
 
     useEffect(() => {
         fetchProfiles();
+
+        // Realtime: refresca el panel cuando cambian los perfiles (alta/edición/baja)
+        const sub = supabase
+            .channel('profiles_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchProfiles)
+            .subscribe();
+
+        return () => { supabase.removeChannel(sub); };
     }, []);
 
     return { profiles, loading, refresh: fetchProfiles, createProfile, updateProfile, deleteProfile };

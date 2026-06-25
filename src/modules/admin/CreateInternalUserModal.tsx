@@ -15,7 +15,7 @@ interface CreateInternalUserModalProps {
         role: UserRole,
         permissions?: UserPermissions,
         cargo?: { id: string; nombre: string },
-    ) => Promise<{ success: boolean; error?: string }>;
+    ) => Promise<{ success: boolean; error?: string; reactivated?: boolean }>;
 }
 
 // El cargo define la plantilla de permisos; el rol base se deriva del tipo del cargo.
@@ -62,6 +62,9 @@ export const CreateInternalUserModal: React.FC<CreateInternalUserModalProps> = (
             { id: cargo.id, nombre: cargo.nombre },
         );
         if (result.success) {
+            if (result.reactivated) {
+                alert('Este correo ya existía y fue REACTIVADO con el cargo y datos indicados. La contraseña anterior se mantiene (usa "Recuperar contraseña" si necesita una nueva).');
+            }
             onClose();
             setEmail('');
             setPassword('AMIS007');
