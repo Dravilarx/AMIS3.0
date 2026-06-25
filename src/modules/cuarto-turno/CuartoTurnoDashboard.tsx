@@ -393,8 +393,9 @@ const NuevaIncidenciaModal: React.FC<{
                     <div className="space-y-1.5">
                         <label className={labelCls}>Tipo de incidencia</label>
                         <select value={form.tipoIncidencia} onChange={e => set('tipoIncidencia', e.target.value)}
-                            className={inputCls + ' appearance-none'}>
-                            <option value="">Seleccionar...</option>
+                            disabled={tiposIncidencia.length === 0}
+                            className={inputCls + ' appearance-none disabled:opacity-50'}>
+                            <option value="">{tiposIncidencia.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                             {tiposIncidencia.map(c => (
                                 <option key={c.id} value={c.valor}>{c.valor}</option>
                             ))}
@@ -414,8 +415,9 @@ const NuevaIncidenciaModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Causa</label>
                             <select value={form.causa} onChange={e => set('causa', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={causas.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{causas.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {causas.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -424,8 +426,9 @@ const NuevaIncidenciaModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Severidad</label>
                             <select value={form.severidad} onChange={e => set('severidad', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={severidades.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{severidades.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {severidades.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -612,8 +615,9 @@ const NuevaDesviacionModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Tipo de desviación</label>
                             <select value={form.tipoDesviacion} onChange={e => set('tipoDesviacion', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={tiposDesviacion.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{tiposDesviacion.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {tiposDesviacion.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -642,8 +646,9 @@ const NuevaDesviacionModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Severidad</label>
                             <select value={form.severidad} onChange={e => set('severidad', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={severidades.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{severidades.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {severidades.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -1044,8 +1049,9 @@ const NuevaIncidTecnicaModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Categoría técnica</label>
                             <select value={form.categoriaTecnica} onChange={e => set('categoriaTecnica', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={categoriasTecnicas.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{categoriasTecnicas.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {categoriasTecnicas.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -1072,8 +1078,9 @@ const NuevaIncidTecnicaModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Estado</label>
                             <select value={form.estado} onChange={e => set('estado', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={estadosIncidencia.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{estadosIncidencia.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {estadosIncidencia.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}
@@ -1082,8 +1089,9 @@ const NuevaIncidTecnicaModal: React.FC<{
                         <div className="space-y-1.5">
                             <label className={labelCls}>Severidad</label>
                             <select value={form.severidad} onChange={e => set('severidad', e.target.value)}
-                                className={inputCls + ' appearance-none'}>
-                                <option value="">Seleccionar...</option>
+                                disabled={severidades.length === 0}
+                                className={inputCls + ' appearance-none disabled:opacity-50'}>
+                                <option value="">{severidades.length === 0 ? 'Sin opciones' : 'Seleccione…'}</option>
                                 {severidades.map(c => (
                                     <option key={c.id} value={c.valor}>{c.valor}</option>
                                 ))}

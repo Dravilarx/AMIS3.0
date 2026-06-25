@@ -10,6 +10,7 @@ export const MODULES = [
     { id: 'staffing',             name: 'Gestión RR.HH.' },
     { id: 'shifts',               name: 'Turnos Médicos' },
     { id: 'cuarto_turno',         name: '4° Turno' },
+    { id: 'dashboard_cuarto_turno', name: 'Dashboard 4° Turno' },
     { id: 'logistics',            name: 'Logística Salud' },
     { id: 'institutions',         name: 'Red de Centros' },
     { id: 'clinical',             name: 'Procedimientos' },

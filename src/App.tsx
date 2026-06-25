@@ -35,6 +35,7 @@ const PortalMedicosAdmin     = lazy(() => import('./modules/portal-medico/Portal
 const CuartoTurnoDashboard   = lazy(() => import('./modules/cuarto-turno/CuartoTurnoDashboard').then(m => ({ default: m.CuartoTurnoDashboard })));
 const SolicitudesDashboard   = lazy(() => import('./modules/solicitudes/SolicitudesDashboard').then(m => ({ default: m.SolicitudesDashboard })));
 const ProtocolosDashboard    = lazy(() => import('./modules/protocolos/ProtocolosDashboard').then(m => ({ default: m.ProtocolosDashboard })));
+const DashboardCuartoTurno   = lazy(() => import('./modules/dashboard-cuarto-turno/DashboardCuartoTurno').then(m => ({ default: m.DashboardCuartoTurno })));
 const PortalInstitucionalAdmin = lazy(() => import('./modules/portal-institucional/PortalInstitucionalAdmin').then(m => ({ default: m.PortalInstitucionalAdmin })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
@@ -53,7 +54,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin' | 'cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional';
+    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional';
 
 function App() {
     const { user, hasModuleAccess, isSuperAdmin } = useAuth();
@@ -172,6 +173,7 @@ function App() {
                 if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalMedicosAdmin />;
                 return <DashboardModule />;
             case 'cuarto_turno':        return <CuartoTurnoDashboard />;
+            case 'dashboard_cuarto_turno': return <DashboardCuartoTurno />;
             case 'solicitudes':         return <SolicitudesDashboard />;
             case 'protocolos':          return <ProtocolosDashboard />;
             case 'portal_institucional': return <PortalInstitucionalAdmin />;
