@@ -1,5 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { Layout } from './components/Layout'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { Layout, NAV_ITEMS } from './components/Layout'
 import { AuthView } from './components/AuthView'
 import { useAuth } from './hooks/useAuth'
 
@@ -56,16 +56,45 @@ type CurrentView =
     | 'portal_medicos_admin' | 'cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional';
 
 function App() {
-    const { user } = useAuth();
+    const { user, hasModuleAccess, isSuperAdmin } = useAuth();
     const [currentView, setCurrentView] = useState<CurrentView>('dashboard');
+    const landedRef = useRef(false); // la vista inicial se decide una sola vez por sesión
 
+    // ¿Puede ver el Panel Principal? (SUPER_ADMIN o permiso explícito)
+    const canSeeDashboard = () => isSuperAdmin() || hasModuleAccess('dashboard');
+    // Primer módulo visible según el MISMO criterio del menú lateral
+    const firstVisibleModule = (): CurrentView => {
+        const first = NAV_ITEMS.find(i => hasModuleAccess(i.id));
+        return (first?.id as CurrentView) ?? 'dashboard';
+    };
+
+    // Vista inicial tras login, según permisos (nadie aterriza en el Dashboard si no le corresponde)
     useEffect(() => {
-        if (user?.app_role === 'ADMIN_SECRETARY' || user?.app_role === 'MED_CHIEF') {
+        if (!user) { landedRef.current = false; return; }
+        if (landedRef.current) return;
+        landedRef.current = true;
+
+        // Landings por rol especial, solo si tienen acceso a ese módulo
+        if ((user.app_role === 'ADMIN_SECRETARY' || user.app_role === 'MED_CHIEF') && hasModuleAccess('secretary_command')) {
             setCurrentView('secretary_command');
-        } else if (user?.app_role === 'MED_STAFF') {
-            setCurrentView('radiology_worklist');
+            return;
         }
+        if (user.app_role === 'MED_STAFF' && hasModuleAccess('radiology_worklist')) {
+            setCurrentView('radiology_worklist');
+            return;
+        }
+
+        // SUPER_ADMIN o con acceso explícito al Dashboard → Dashboard; si no, su primer módulo visible
+        setCurrentView(canSeeDashboard() ? 'dashboard' : firstVisibleModule());
     }, [user]);
+
+    // Guard: si alguien sin acceso al Dashboard llega a esa vista (navegando a mano), redirigir
+    useEffect(() => {
+        if (!user) return;
+        if (currentView === 'dashboard' && !canSeeDashboard()) {
+            setCurrentView(firstVisibleModule());
+        }
+    }, [currentView, user]);
 
     // ── Rutas especiales sin layout ───────────────────────────────────────────
     if (window.location.pathname.startsWith('/guia/')) {

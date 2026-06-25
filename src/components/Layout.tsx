@@ -5,6 +5,34 @@ import { ChangePasswordModal } from './ChangePasswordModal';
 
 import { cn } from '../lib/utils';
 
+// Orden del menú lateral = fuente única para el filtro por permisos y para la
+// vista inicial tras login (App.tsx). Mantener sincronizado con CurrentView.
+export const NAV_ITEMS = [
+    { id: 'dashboard', name: 'Panel Principal', icon: LayoutDashboard },
+    { id: 'tenders', name: 'Licitaciones', icon: FileText },
+    { id: 'staffing', name: 'Gestión RR.HH.', icon: Users },
+    { id: 'shifts', name: 'Turnos Médicos', icon: Calendar },
+    { id: 'cuarto_turno', name: '4° Turno', icon: Clock },
+    { id: 'solicitudes',  name: 'Solicitudes', icon: Inbox },
+    { id: 'protocolos',   name: 'Protocolos', icon: BookOpen },
+    { id: 'logistics', name: 'Logística Salud', icon: Truck },
+    { id: 'institutions', name: 'Red de Centros', icon: Building2 },
+    { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
+    { id: 'audit', name: 'Calidad', icon: ShieldCheck },
+    { id: 'projects', name: 'Proyectos BPM', icon: Layers },
+    { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
+    { id: 'dispatch', name: 'Centro de Despacho', icon: Headphones },
+    { id: 'dms', name: 'Archivo Digital', icon: FolderSearch },
+    { id: 'ideation', name: 'Innovación', icon: Lightbulb },
+    { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
+    { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
+    { id: 'stat_multiris_html', name: 'Stat Multiris (HTML)', icon: Globe },
+    { id: 'wizard_competencias', name: 'Mi Auto-evaluación', icon: ClipboardList },
+    { id: 'b2b_portal', name: 'Portal B2B', icon: Hospital },
+    { id: 'secretary_command', name: 'Torre de Control', icon: Activity },
+    { id: 'radiology_worklist', name: 'Worklist Radiológica', icon: FileText },
+] as const;
+
 interface SidebarItemProps {
     icon: React.ElementType;
     label: string;
@@ -54,31 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
 
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
-    const navItems = [
-        { id: 'dashboard', name: 'Panel Principal', icon: LayoutDashboard },
-        { id: 'tenders', name: 'Licitaciones', icon: FileText },
-        { id: 'staffing', name: 'Gestión RR.HH.', icon: Users },
-        { id: 'shifts', name: 'Turnos Médicos', icon: Calendar },
-        { id: 'cuarto_turno', name: '4° Turno', icon: Clock },
-        { id: 'solicitudes',  name: 'Solicitudes', icon: Inbox },
-        { id: 'protocolos',   name: 'Protocolos', icon: BookOpen },
-        { id: 'logistics', name: 'Logística Salud', icon: Truck },
-        { id: 'institutions', name: 'Red de Centros', icon: Building2 },
-        { id: 'clinical', name: 'Procedimientos', icon: Stethoscope },
-        { id: 'audit', name: 'Calidad', icon: ShieldCheck },
-        { id: 'projects', name: 'Proyectos BPM', icon: Layers },
-        { id: 'messaging', name: 'Mensajería', icon: MessageSquare },
-        { id: 'dispatch', name: 'Centro de Despacho', icon: Headphones },
-        { id: 'dms', name: 'Archivo Digital', icon: FolderSearch },
-        { id: 'ideation', name: 'Innovación', icon: Lightbulb },
-        { id: 'news', name: 'Noticias Corporativas', icon: Newspaper },
-        { id: 'stat_multiris', name: 'Stat Multiris', icon: Activity },
-        { id: 'stat_multiris_html', name: 'Stat Multiris (HTML)', icon: Globe },
-        { id: 'wizard_competencias', name: 'Mi Auto-evaluación', icon: ClipboardList },
-        { id: 'b2b_portal', name: 'Portal B2B', icon: Hospital },
-        { id: 'secretary_command', name: 'Torre de Control', icon: Activity },
-        { id: 'radiology_worklist', name: 'Worklist Radiológica', icon: FileText },
-    ] as const;
+    const navItems = NAV_ITEMS;
 
     const ROLE_LABELS: Record<string, string> = {
         'SUPER_ADMIN': 'DIRECCIÓN MÉDICA',
