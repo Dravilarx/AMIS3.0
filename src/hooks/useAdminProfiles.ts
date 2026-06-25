@@ -80,7 +80,14 @@ export const useAdminProfiles = () => {
         }
     };
 
-    const createProfile = async (email: string, password: string, fullName: string, role: UserRole) => {
+    const createProfile = async (
+        email: string,
+        password: string,
+        fullName: string,
+        role: UserRole,
+        permissions?: UserPermissions,            // plantilla_permisos del cargo (punto de partida, editable luego)
+        cargo?: { id: string; nombre: string },   // cargo elegido (etiqueta)
+    ) => {
         try {
             setLoading(true);
 
@@ -96,19 +103,42 @@ export const useAdminProfiles = () => {
             if (authError) throw authError;
             if (!authData.user) throw new Error('No se pudo crear el usuario.');
 
-            // 2. Upsert en profiles (por si no hay trigger automático)
+            // 2. Upsert en profiles (por si no hay trigger automático).
+            //    Aplicamos la plantilla de permisos del cargo como permisos iniciales.
+            const baseProfile: Record<string, any> = {
+                id:         authData.user.id,
+                email,
+                full_name:  fullName,
+                role,
+                is_deleted: false,
+            };
+            if (permissions) baseProfile.permissions = permissions;
+
             const { error: profileError } = await supabase
                 .from('profiles')
-                .upsert({
-                    id:         authData.user.id,
-                    email,
-                    full_name:  fullName,
-                    role,
-                    is_deleted: false,
-                });
+                .upsert(baseProfile);
 
             if (profileError) {
                 console.warn('Perfil posiblemente creado vía trigger:', profileError);
+            }
+
+            // 3. Guardar el cargo en el perfil (best-effort: la columna puede no existir).
+            //    Probamos cargo_id; si falla, caemos a un campo de texto 'cargo'.
+            if (cargo) {
+                const { error: cargoIdErr } = await supabase
+                    .from('profiles')
+                    .update({ cargo_id: cargo.id })
+                    .eq('id', authData.user.id);
+
+                if (cargoIdErr) {
+                    const { error: cargoTxtErr } = await supabase
+                        .from('profiles')
+                        .update({ cargo: cargo.nombre })
+                        .eq('id', authData.user.id);
+                    if (cargoTxtErr) {
+                        console.warn('No se pudo guardar el cargo en el perfil (columna inexistente):', cargoTxtErr.message);
+                    }
+                }
             }
 
             await fetchProfiles();

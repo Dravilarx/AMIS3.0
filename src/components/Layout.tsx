@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
@@ -11,20 +11,23 @@ interface SidebarItemProps {
     active?: boolean;
     onClick?: () => void;
     permission?: string;
+    collapsed?: boolean;
 }
 
-const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) => (
+const SidebarItem = ({ icon: Icon, label, active, onClick, collapsed }: SidebarItemProps) => (
     <div
         onClick={onClick}
+        title={collapsed ? label : undefined}
         className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group relative overflow-hidden",
+            "flex items-center gap-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group relative overflow-hidden",
+            collapsed ? "px-0 justify-center" : "px-3",
             active
                 ? "bg-brand-primary text-white shadow-lg shadow-teal-500/20"
                 : "text-brand-text/60 hover:text-brand-primary hover:bg-brand-primary/5"
         )}>
-        {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white opacity-20" />}
+        {active && !collapsed && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white opacity-20" />}
         <Icon className={cn("w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110", active ? "text-white" : "text-brand-text/40")} />
-        <span className="text-sm font-semibold">{label}</span>
+        {!collapsed && <span className="text-sm font-semibold whitespace-nowrap">{label}</span>}
     </div>
 );
 
@@ -38,6 +41,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
     const { user, signOut, isRecoveringPassword, hasModuleAccess } = useAuth();
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
         const saved = localStorage.getItem('brand-theme');
         return (saved as 'dark' | 'light') || 'dark';
@@ -90,18 +94,39 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     return (
         <div className="flex h-screen bg-brand-bg text-brand-text font-sans">
             {/* Sidebar */}
-            <aside className="w-72 border-r border-brand-border p-6 flex flex-col bg-brand-surface shadow-2xl z-20">
-                <div
-                    className="flex items-center gap-3 mb-10 px-2 cursor-pointer group"
-                    onClick={() => onNavigate('dashboard')}
+            <aside className={cn(
+                "border-r border-brand-border flex flex-col bg-brand-surface shadow-2xl z-20 transition-[width] duration-300 ease-in-out",
+                collapsed ? "w-20 p-3" : "w-72 p-6"
+            )}>
+                {/* Botón colapsar / expandir */}
+                <button
+                    onClick={() => setCollapsed(c => !c)}
+                    title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+                    className={cn(
+                        "flex items-center justify-center w-9 h-9 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-brand-primary/5 transition-all mb-4",
+                        collapsed ? "mx-auto" : "ml-auto"
+                    )}
                 >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary to-black shadow-xl shadow-teal-500/20 flex items-center justify-center group-hover:rotate-6 transition-transform">
+                    <Menu className="w-4 h-4" />
+                </button>
+
+                <div
+                    className={cn(
+                        "flex items-center gap-3 mb-10 cursor-pointer group",
+                        collapsed ? "justify-center px-0" : "px-2"
+                    )}
+                    onClick={() => onNavigate('dashboard')}
+                    title={collapsed ? 'AMIS' : undefined}
+                >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary to-black shadow-xl shadow-teal-500/20 flex items-center justify-center group-hover:rotate-6 transition-transform shrink-0">
                         <Stethoscope className="w-7 h-7 text-white" />
                     </div>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tight text-brand-primary leading-none">AMIS</h1>
-                        <p className="text-[9px] uppercase tracking-[0.25em] text-brand-text/40 font-bold mt-1">Administracion, Medicina, Innovación, Software</p>
-                    </div>
+                    {!collapsed && (
+                        <div>
+                            <h1 className="text-xl font-black tracking-tight text-brand-primary leading-none">AMIS</h1>
+                            <p className="text-[9px] uppercase tracking-[0.25em] text-brand-text/40 font-bold mt-1">Administracion, Medicina, Innovación, Software</p>
+                        </div>
+                    )}
                 </div>
 
                 <nav className="space-y-1.5 flex-1 overflow-y-auto custom-scrollbar pr-2">
@@ -112,85 +137,102 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             label={item.name}
                             active={currentView === item.id}
                             onClick={() => onNavigate(item.id)}
+                            collapsed={collapsed}
                         />
                     ))}
 
                         {/* Sección de Administración - Solo para VIPs */}
                         {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
                             <>
-                                <p className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-3 mb-3 text-center">Configuración Central</p>
+                                {collapsed
+                                    ? <div className="my-3 border-t border-brand-border" />
+                                    : <p className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-3 mb-3 text-center">Configuración Central</p>
+                                }
                                 <SidebarItem
                                     icon={ShieldCheck}
                                     label="Consola Admin"
                                     active={currentView === 'admin'}
                                     onClick={() => onNavigate('admin')}
+                                    collapsed={collapsed}
                                 />
                                 <SidebarItem
                                     icon={UserCheck}
                                     label="Configuración Bot"
                                     active={currentView === 'ai_access'}
                                     onClick={() => onNavigate('ai_access')}
+                                    collapsed={collapsed}
                                 />
                                 <SidebarItem
                                     icon={BarChart2}
                                     label="Resumen Competencias"
                                     active={currentView === 'resumen_competencias'}
                                     onClick={() => onNavigate('resumen_competencias')}
+                                    collapsed={collapsed}
                                 />
                                 <SidebarItem
                                     icon={ClipboardList}
                                     label="Auditoría RR.HH."
                                     active={currentView === 'auditoria_rrhh'}
                                     onClick={() => onNavigate('auditoria_rrhh')}
+                                    collapsed={collapsed}
                                 />
                                 <SidebarItem
                                     icon={Stethoscope}
                                     label="Portal Médicos"
                                     active={currentView === 'portal_medicos_admin'}
                                     onClick={() => onNavigate('portal_medicos_admin')}
+                                    collapsed={collapsed}
                                 />
                                 <SidebarItem
                                     icon={Building2}
                                     label="Portal Institucional"
                                     active={currentView === 'portal_institucional'}
                                     onClick={() => onNavigate('portal_institucional')}
+                                    collapsed={collapsed}
                                 />
                             </>
                         )}
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-brand-border space-y-4">
-                    <div className="flex items-center gap-3 p-3 bg-brand-surface border border-brand-border rounded-2xl group hover:border-brand-primary/30 transition-colors">
-                        <div className="relative">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center text-white text-xs font-black shadow-lg">
+                    <div className={cn(
+                        "flex items-center gap-3 bg-brand-surface border border-brand-border rounded-2xl group hover:border-brand-primary/30 transition-colors",
+                        collapsed ? "p-2 justify-center" : "p-3"
+                    )}>
+                        <div className="relative shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-black flex items-center justify-center text-white text-xs font-black shadow-lg" title={collapsed ? (user?.name || 'Usuario') : undefined}>
                                 {user?.name?.[0] || 'U'}
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-success border-2 border-brand-surface rounded-full" />
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="text-xs font-bold text-brand-text truncate">{user?.name || 'Cargando...'}</p>
-                            <p className="text-[10px] text-brand-primary font-bold uppercase tracking-tight">
-                                {user?.role ? ROLE_LABELS[user.role] : 'Usuario'}
-                            </p>
-                        </div>
+                        {!collapsed && (
+                            <div className="overflow-hidden">
+                                <p className="text-xs font-bold text-brand-text truncate">{user?.name || 'Cargando...'}</p>
+                                <p className="text-[10px] text-brand-primary font-bold uppercase tracking-tight">
+                                    {user?.role ? ROLE_LABELS[user.role] : 'Usuario'}
+                                </p>
+                            </div>
+                        )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className={cn("gap-2", collapsed ? "flex flex-col" : "grid grid-cols-2")}>
                         <button
                             onClick={() => setIsChangePasswordOpen(true)}
+                            title={collapsed ? 'Cambiar Clave' : undefined}
                             className="flex items-center justify-center p-2.5 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-teal-500/5 transition-all"
                         >
                             <Settings className="w-4 h-4" />
-                            <span className="ml-2 text-xs font-bold">Cambiar Clave</span>
+                            {!collapsed && <span className="ml-2 text-xs font-bold">Cambiar Clave</span>}
                         </button>
                         <button
                             onClick={async () => {
                                 await signOut();
                                 window.location.href = '/';
                             }}
+                            title={collapsed ? 'Salir' : undefined}
                             className="flex items-center justify-center p-2.5 rounded-xl border border-danger/20 text-danger hover:bg-danger hover:text-white hover:border-danger transition-all"
                         >
                             <LogOut className="w-4 h-4" />
-                            <span className="ml-2 text-xs font-bold">Salir</span>
+                            {!collapsed && <span className="ml-2 text-xs font-bold">Salir</span>}
                         </button>
                     </div>
                 </div>

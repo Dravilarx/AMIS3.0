@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, UserPlus, Lock, Trash2, X, CheckCircle2 } from 'lucide-react';
+import { Shield, UserPlus, Lock, Trash2, X, PanelLeftClose, PanelLeftOpen, Search, Users, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAdminProfiles } from '../../hooks/useAdminProfiles';
 import { useAuth, type UserRole, type UserPermissions } from '../../hooks/useAuth';
@@ -7,35 +7,8 @@ import { ClinicOnboarding } from './ClinicOnboarding';
 import { ProcedureHomologation } from './ProcedureHomologation';
 import { CriticalPathologies } from './CriticalPathologies';
 import { CreateInternalUserModal } from './CreateInternalUserModal';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FUENTE DE VERDAD ÚNICA: Debe estar sincronizado 1:1 con navItems en Layout.tsx
-// Al agregar un módulo al sidebar, agrégalo aquí también para que aparezca
-// automáticamente en la matriz de permisos del Centro de Control Red.
-// ─────────────────────────────────────────────────────────────────────────────
-const MODULES = [
-    { id: 'dashboard',            name: 'Panel Principal' },
-    { id: 'tenders',              name: 'Licitaciones' },
-    { id: 'staffing',             name: 'Gestión RR.HH.' },
-    { id: 'shifts',               name: 'Turnos Médicos' },
-    { id: 'cuarto_turno',         name: '4° Turno' },
-    { id: 'logistics',            name: 'Logística Salud' },
-    { id: 'institutions',         name: 'Red de Centros' },
-    { id: 'clinical',             name: 'Procedimientos' },
-    { id: 'audit',                name: 'Calidad' },
-    { id: 'projects',             name: 'Proyectos BPM' },
-    { id: 'messaging',            name: 'Mensajería' },
-    { id: 'dispatch',             name: 'Centro de Despacho' },
-    { id: 'dms',                  name: 'Archivo Digital' },
-    { id: 'ideation',             name: 'Innovación' },
-    { id: 'news',                 name: 'Noticias Corporativas' },
-    { id: 'stat_multiris',        name: 'Stat Multiris' },
-    { id: 'stat_multiris_html',   name: 'Stat Multiris (HTML)' },
-    { id: 'wizard_competencias',  name: 'Mi Auto-evaluación' },
-    { id: 'b2b_portal',           name: 'Portal B2B' },
-    { id: 'secretary_command',    name: 'Torre de Control' },
-    { id: 'radiology_worklist',   name: 'Worklist Radiológica' },
-] as const;
+import { CargosManager } from './CargosManager';
+import { MODULES } from './permissionModules';
 
 const ROLE_LABELS: Record<UserRole, string> = {
     'SUPER_ADMIN': 'DIRECCIÓN MÉDICA',
@@ -52,13 +25,45 @@ export const AdminModule: React.FC = () => {
     const { profiles, updateProfile, deleteProfile, createProfile } = useAdminProfiles();
     const { user: _currentUser } = useAuth();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'internal' | 'b2b' | 'homologation' | 'alertas'>('internal');
+    const [activeTab, setActiveTab] = useState<'internal' | 'cargos' | 'b2b' | 'homologation' | 'alertas'>('internal');
 
     const [showB2BModal, setShowB2BModal] = useState(false);
     const [showInternalModal, setShowInternalModal] = useState(false);
     const [localPerms, setLocalPerms] = useState<Partial<UserPermissions>>({});
 
+    // ── Estado del organigrama de tres columnas (solo UI) ──
+    const [personSearch, setPersonSearch] = useState('');
+    const [selectedRole, setSelectedRole] = useState<UserRole | 'ALL'>('ALL');
+    const [rolesCollapsed, setRolesCollapsed] = useState(false);
+
     const selectedProfile = profiles.find(p => p.id === selectedUserId);
+
+    // Conteo de personas por rol (solo roles con al menos una persona)
+    const ROLE_ORDER: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'MED_CHIEF', 'ADMIN_SECRETARY', 'PARTNER'];
+    const roleCounts = ROLE_ORDER
+        .map(role => ({ role, count: profiles.filter(p => p.role === role).length }))
+        .filter(r => r.count > 0);
+
+    // Personas visibles según rol seleccionado + buscador en vivo (nombre/correo)
+    const visiblePeople = profiles.filter(p => {
+        const matchRole = selectedRole === 'ALL' || p.role === selectedRole;
+        const q = personSearch.trim().toLowerCase();
+        const matchSearch = !q || p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+        return matchRole && matchSearch;
+    });
+
+    const roleBadgeCls = (role: UserRole) =>
+        role === 'SUPER_ADMIN' ? 'bg-warning/10 text-warning border-warning/20' :
+        role === 'ADMIN' ? 'bg-info/10 text-info border-info/20' :
+        'bg-brand-surface text-brand-text/40 border-brand-border';
+
+    // Etiquetas cortas de los cuatro permisos por módulo
+    const PERM_ACTIONS: { key: string; letter: string; label: string }[] = [
+        { key: 'read',   letter: 'L', label: 'Lectura'  },
+        { key: 'create', letter: 'C', label: 'Creación' },
+        { key: 'update', letter: 'E', label: 'Edición'  },
+        { key: 'delete', letter: 'B', label: 'Baja'     },
+    ];
 
     React.useEffect(() => {
         if (selectedProfile) {
@@ -67,10 +72,6 @@ export const AdminModule: React.FC = () => {
             setLocalPerms({});
         }
     }, [selectedUserId, selectedProfile]);
-
-    const handleRoleChange = (userId: string, newRole: UserRole) => {
-        updateProfile(userId, { role: newRole });
-    };
 
     const togglePermission = (moduleId: string, action: string) => {
         if (selectedProfile?.role === 'SUPER_ADMIN') return;
@@ -148,7 +149,13 @@ export const AdminModule: React.FC = () => {
                 >
                     Organigrama Interno
                 </button>
-                <button 
+                <button
+                  onClick={() => setActiveTab('cargos')}
+                  className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'cargos' ? 'bg-brand-bg text-brand-text shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80')}
+                >
+                    Gestor de Cargos
+                </button>
+                <button
                   onClick={() => setActiveTab('b2b')}
                   className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'b2b' ? 'bg-brand-bg text-brand-text shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80')}
                 >
@@ -169,202 +176,198 @@ export const AdminModule: React.FC = () => {
             </div>
 
             {activeTab === 'internal' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Lista de Usuarios */}
-                <div className="lg:col-span-1 space-y-4">
-                    <div className="flex items-center gap-2.5 mb-6 px-2">
-                        <div className="p-1.5 bg-brand-primary/10 rounded-lg">
-                            <Shield className="w-4 h-4 text-brand-primary" />
+                <div className="border border-brand-border rounded-3xl bg-brand-surface/30 overflow-hidden shadow-sm">
+                    {/* ── Barra superior ── */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-brand-border bg-brand-surface/50">
+                        <button
+                            onClick={() => setRolesCollapsed(c => !c)}
+                            title={rolesCollapsed ? 'Mostrar roles' : 'Colapsar roles'}
+                            className="p-2 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-text hover:bg-brand-bg transition-all shrink-0"
+                        >
+                            {rolesCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                        </button>
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text/30" />
+                            <input
+                                value={personSearch}
+                                onChange={e => setPersonSearch(e.target.value)}
+                                placeholder="Buscar por nombre o correo..."
+                                className="w-full bg-brand-bg border border-brand-border rounded-xl pl-9 pr-3 py-2 text-xs text-brand-text outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/20 placeholder:text-brand-text/20"
+                            />
                         </div>
-                        <h3 className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Cuerpo Médico y Administrativo</h3>
+                        <button
+                            onClick={() => setShowInternalModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-sm shrink-0"
+                        >
+                            <UserPlus className="w-3.5 h-3.5" /> Nuevo
+                        </button>
                     </div>
-                    <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 custom-scrollbar">
-                        {profiles.map(profile => (
-                            <div
-                                key={profile.id}
-                                onClick={() => setSelectedUserId(profile.id)}
-                                className={cn(
-                                    "group p-5 rounded-3xl border transition-all cursor-pointer relative overflow-hidden",
-                                    selectedUserId === profile.id
-                                        ? "bg-brand-surface border-brand-primary shadow-xl shadow-brand-primary/10 scale-[1.02] z-10"
-                                        : "bg-brand-surface/50 border-brand-border hover:bg-brand-surface hover:border-brand-text/10 hover:shadow-lg"
-                                )}
-                            >
-                                {profile.email === 'marcelo.avila@amis.global' && (
-                                    <div className="absolute top-4 right-4 p-1 px-2 bg-warning/10 rounded-lg border border-warning/20 transition-opacity">
-                                        <Lock className="w-3 h-3 text-warning" />
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-4">
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-sm border transition-colors",
-                                        selectedUserId === profile.id
-                                            ? "bg-brand-primary text-white border-brand-primary"
-                                            : "bg-brand-surface text-brand-text/40 border-brand-border"
-                                    )}>
-                                        {profile.full_name[0]}
-                                    </div>
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="text-sm font-black text-brand-text truncate">{profile.full_name}</p>
-                                        <p className="text-[10px] text-brand-text/40 font-bold truncate mt-0.5">{profile.email}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className={cn(
-                                            "text-[8px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider border shadow-sm",
-                                            profile.role === 'SUPER_ADMIN' ? "bg-warning/10 text-warning border-warning/20" :
-                                                profile.role === 'ADMIN' ? "bg-info/10 text-info border-info/20" : "bg-brand-surface text-brand-text/40 border-brand-border"
-                                        )}>
-                                            {ROLE_LABELS[profile.role]}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
 
-                {/* Detalle de Permisos */}
-                <div className="lg:col-span-2">
-                    {selectedProfile ? (
-                        <div className="card-premium space-y-8 animate-in slide-in-from-right-4 duration-500">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary to-blue-800 flex items-center justify-center text-3xl font-black text-white border-4 border-brand-surface shadow-2xl">
-                                        {selectedProfile.full_name[0]}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black text-brand-text tracking-tight">{selectedProfile.full_name}</h2>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="px-2 py-0.5 bg-info/10 text-info text-[10px] font-black rounded-lg border border-info/20 uppercase">{selectedProfile.email}</span>
-                                            <span className="text-brand-text/20">●</span>
-                                            <span className="text-[10px] font-bold text-brand-text/40 uppercase tracking-widest">{ROLE_LABELS[selectedProfile.role]}</span>
+                    {/* ── Tres columnas ── */}
+                    <div className="flex h-[calc(100vh-340px)] min-h-[440px]">
+                        {/* IZQUIERDA · Roles */}
+                        {!rolesCollapsed && (
+                            <div className="w-[140px] shrink-0 border-r border-brand-border bg-brand-surface/40 overflow-y-auto custom-scrollbar py-2">
+                                <button
+                                    onClick={() => setSelectedRole('ALL')}
+                                    className={cn(
+                                        'w-full flex items-center justify-between gap-1 px-3 py-2.5 text-left transition-colors border-l-2',
+                                        selectedRole === 'ALL'
+                                            ? 'border-brand-primary bg-brand-primary/5 text-brand-text'
+                                            : 'border-transparent text-brand-text/50 hover:text-brand-text hover:bg-brand-surface'
+                                    )}
+                                >
+                                    <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"><Users className="w-3 h-3" /> Todos</span>
+                                    <span className="text-[10px] font-mono text-brand-text/30">{profiles.length}</span>
+                                </button>
+                                {roleCounts.map(({ role, count }) => (
+                                    <button
+                                        key={role}
+                                        onClick={() => setSelectedRole(role)}
+                                        className={cn(
+                                            'w-full flex items-center justify-between gap-1 px-3 py-2.5 text-left transition-colors border-l-2',
+                                            selectedRole === role
+                                                ? 'border-brand-primary bg-brand-primary/5 text-brand-text'
+                                                : 'border-transparent text-brand-text/50 hover:text-brand-text hover:bg-brand-surface'
+                                        )}
+                                    >
+                                        <span className="text-[9px] font-black uppercase tracking-wider leading-tight">{ROLE_LABELS[role]}</span>
+                                        <span className="text-[10px] font-mono text-brand-text/30 shrink-0">{count}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* CENTRO · Personas */}
+                        <div className="flex-1 min-w-0 border-r border-brand-border overflow-y-auto custom-scrollbar">
+                            <div className="px-4 py-2.5 border-b border-brand-border bg-brand-surface/30 sticky top-0 z-10">
+                                <p className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">
+                                    {selectedRole === 'ALL' ? 'Cuerpo Médico y Administrativo' : ROLE_LABELS[selectedRole]} · {visiblePeople.length}
+                                </p>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                {visiblePeople.length === 0 ? (
+                                    <p className="text-center text-[10px] text-brand-text/30 py-10">Sin personas para este filtro.</p>
+                                ) : visiblePeople.map(profile => (
+                                    <button
+                                        key={profile.id}
+                                        onClick={() => setSelectedUserId(profile.id)}
+                                        className={cn(
+                                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all group',
+                                            selectedUserId === profile.id
+                                                ? 'bg-brand-primary/10 border-brand-primary/40'
+                                                : 'bg-brand-surface/50 border-transparent hover:bg-brand-surface hover:border-brand-border'
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            'w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border',
+                                            selectedUserId === profile.id
+                                                ? 'bg-brand-primary text-white border-brand-primary'
+                                                : 'bg-brand-surface text-brand-text/40 border-brand-border'
+                                        )}>
+                                            {profile.full_name[0]}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-black text-brand-text break-words leading-tight">{profile.full_name}</p>
+                                            <p className="text-[10px] text-brand-text/40 font-bold break-all leading-tight mt-0.5">{profile.email}</p>
+                                        </div>
+                                        {profile.email === 'marcelo.avila@amis.global' && <Lock className="w-3 h-3 text-warning shrink-0" />}
+                                        {selectedUserId === profile.id && <ChevronRight className="w-3.5 h-3.5 text-brand-primary shrink-0" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* DERECHA · Permisos */}
+                        <div className="w-[236px] shrink-0 bg-brand-surface/40 overflow-y-auto custom-scrollbar">
+                            {selectedProfile ? (
+                                <div className="flex flex-col h-full">
+                                    {/* Cabecera persona */}
+                                    <div className="px-4 py-3 border-b border-brand-border bg-brand-surface/30 sticky top-0 z-10">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-black text-brand-text break-words leading-tight">{selectedProfile.full_name}</p>
+                                                <p className="text-[9px] text-brand-text/40 font-bold break-all mt-0.5">{selectedProfile.email}</p>
+                                                <span className={cn('inline-block mt-1.5 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider border', roleBadgeCls(selectedProfile.role))}>
+                                                    {ROLE_LABELS[selectedProfile.role]}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col gap-1.5 shrink-0">
+                                                <button onClick={() => setSelectedUserId(null)} title="Cerrar" className="p-1.5 rounded-lg border border-brand-border text-brand-text/40 hover:text-brand-text hover:bg-brand-bg transition-all">
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                                {selectedProfile.email !== 'marcelo.avila@amis.global' && (
+                                                    <button onClick={() => handleDelete(selectedProfile.id)} title="Retirar" className="p-1.5 rounded-lg border border-danger/20 text-danger hover:bg-danger/10 transition-all">
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setSelectedUserId(null)}
-                                        className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:bg-brand-bg text-brand-text/40 hover:text-brand-text transition-all shadow-sm"
-                                        title="Cerrar Vista"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                    {selectedProfile.email !== 'marcelo.avila@amis.global' && (
-                                        <button
-                                            onClick={() => handleDelete(selectedProfile.id)}
-                                            className="p-3 bg-danger/10 border border-danger/20 rounded-2xl hover:bg-danger/20 text-danger transition-all shadow-sm"
-                                            title="Retirar del Sistema"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
 
-                            {/* Selector de Rol */}
-                            <div className="space-y-5">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="p-1 px-2 bg-brand-surface rounded text-[10px] font-black text-brand-text/50">01</div>
-                                    <h4 className="text-[10px] uppercase font-black text-brand-text/40 tracking-[0.2em]">Nivel de Acceso Institucional</h4>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {(['ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER'] as UserRole[]).map(role => (
-                                        <button
-                                            key={role}
-                                            disabled={selectedProfile.email === 'marcelo.avila@amis.global'}
-                                            onClick={() => handleRoleChange(selectedProfile.id, role)}
-                                            className={cn(
-                                                "px-4 py-4 rounded-2xl border text-[9px] font-black tracking-widest transition-all shadow-sm",
-                                                selectedProfile.role === role
-                                                    ? "bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-[1.05]"
-                                                    : "bg-brand-surface border-brand-border text-brand-text/40 hover:bg-brand-surface hover:border-brand-text/10 hover:text-brand-text/60",
-                                                selectedProfile.email === 'marcelo.avila@amis.global' && "opacity-50 cursor-not-allowed"
-                                            )}
-                                        >
-                                            {ROLE_LABELS[role]}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Matriz de Permisos por Módulo */}
-                            <div className="space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="p-1 px-2 bg-brand-surface rounded text-[10px] font-black text-brand-text/50">02</div>
-                                        <h4 className="text-[10px] uppercase font-black text-brand-text/40 tracking-[0.2em]">Directivas de Seguridad Clínica</h4>
-                                    </div>
-                                    <span className="text-[10px] text-warning font-bold italic px-3 py-1 bg-warning/10 border border-warning/20 rounded-full">
-                                        {selectedProfile.role === 'SUPER_ADMIN' ? 'DIRECCIÓN MÉDICA: Facultades Totales' : 'Permisos según Protocolo'}
-                                    </span>
-                                </div>
-
-                                <div className="bg-brand-surface/50 border border-brand-border rounded-3xl overflow-hidden shadow-sm">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-brand-border bg-brand-surface">
-                                                <th className="px-8 py-5 text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Protocolo / Módulo</th>
-                                                <th className="px-5 py-5 text-center text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Lectura</th>
-                                                <th className="px-5 py-5 text-center text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Creación</th>
-                                                <th className="px-5 py-5 text-center text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Edición</th>
-                                                <th className="px-5 py-5 text-center text-[10px] font-black text-brand-text/40 uppercase tracking-widest">Baja</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-brand-border bg-brand-surface/30">
-                                            {MODULES.map(module => (
-                                                <tr key={module.id} className="hover:bg-brand-primary/5 transition-colors group">
-                                                    <td className="px-8 py-5">
-                                                        <span className="text-sm font-extrabold text-brand-text/70 group-hover:text-brand-primary transition-colors uppercase tracking-tight">{module.name}</span>
-                                                    </td>
-                                                    {['read', 'create', 'update', 'delete'].map(action => {
-                                                        const moduleKey = module.id as keyof UserPermissions;
-                                                        const isActive = selectedProfile.role === 'SUPER_ADMIN' || (localPerms[moduleKey] as any)?.[action] === true;
-                                                        return (
-                                                            <td key={action} className="px-5 py-5 text-center">
-                                                                <div className="flex justify-center">
-                                                                    <button 
+                                    {/* Matriz de permisos por módulo */}
+                                    <div className="flex-1 px-2 py-2">
+                                        <div className="flex items-center justify-between px-2 mb-1.5">
+                                            <p className="text-[9px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Permisos</p>
+                                            <span className="text-[8px] font-bold text-warning/80">
+                                                {selectedProfile.role === 'SUPER_ADMIN' ? 'Totales' : 'Protocolo'}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            {MODULES.map(module => {
+                                                const moduleKey = module.id as keyof UserPermissions;
+                                                return (
+                                                    <div key={module.id} className="px-2 py-1.5 rounded-xl hover:bg-brand-surface/60 transition-colors">
+                                                        <p className="text-[10px] font-bold text-brand-text/70 truncate mb-1" title={module.name}>{module.name}</p>
+                                                        <div className="flex gap-1">
+                                                            {PERM_ACTIONS.map(({ key, letter, label }) => {
+                                                                const isActive = selectedProfile.role === 'SUPER_ADMIN' || (localPerms[moduleKey] as any)?.[key] === true;
+                                                                return (
+                                                                    <button
+                                                                        key={key}
+                                                                        title={label}
                                                                         disabled={selectedProfile.role === 'SUPER_ADMIN'}
-                                                                        onClick={() => togglePermission(module.id, action)}
+                                                                        onClick={() => togglePermission(module.id, key)}
                                                                         className={cn(
-                                                                            "transition-all duration-300",
-                                                                            selectedProfile.role !== 'SUPER_ADMIN' && "hover:scale-125"
+                                                                            'w-7 h-7 rounded-lg text-[9px] font-black border transition-all',
+                                                                            isActive
+                                                                                ? 'bg-brand-primary/15 text-brand-primary border-brand-primary/30'
+                                                                                : 'bg-brand-surface text-brand-text/20 border-brand-border',
+                                                                            selectedProfile.role !== 'SUPER_ADMIN' && 'hover:border-brand-primary/40'
                                                                         )}
                                                                     >
-                                                                        <CheckCircle2 className={cn(
-                                                                            "w-6 h-6 transition-colors",
-                                                                            isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(255,107,0,0.4)]" : "text-brand-text/10"
-                                                                        )} />
+                                                                        {letter}
                                                                     </button>
-                                                                </div>
-                                                            </td>
-                                                        );
-                                                    })}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                            <div className="pt-8 border-t border-brand-border flex justify-end">
-                                <button 
-                                    onClick={handleConsolidate}
-                                    className="px-10 py-4 bg-brand-text text-brand-bg rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-xl active:scale-95"
-                                >
-                                    Consolidar Configuración de Red
-                                </button>
-                            </div>
+                                    {/* Consolidar */}
+                                    <div className="px-3 py-3 border-t border-brand-border sticky bottom-0 bg-brand-surface/60 backdrop-blur">
+                                        <button
+                                            onClick={handleConsolidate}
+                                            className="w-full px-4 py-3 bg-brand-text text-brand-bg rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all active:scale-95"
+                                        >
+                                            Consolidar
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                                    <Shield className="w-12 h-12 text-brand-text/10 mb-3" />
+                                    <p className="text-brand-text/40 text-[9px] font-black uppercase tracking-[0.2em] leading-relaxed">Selecciona una persona<br />para editar sus permisos</p>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="h-[600px] flex flex-col items-center justify-center card-premium border-2 border-dashed border-brand-border bg-brand-surface/30">
-                            <div className="p-5 bg-brand-surface rounded-3xl shadow-lg mb-6 text-brand-text/10">
-                                <Shield className="w-16 h-16" />
-                            </div>
-                            <p className="text-brand-text/40 text-[10px] font-black uppercase tracking-[0.3em] max-w-xs text-center leading-loose">Selecciona un analista para auditar sus facultades en la red clínica</p>
-                        </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            ) : activeTab === 'cargos' ? (
+                <CargosManager />
             ) : activeTab === 'b2b' ? (
                 <ClinicOnboarding isAddModalOpen={showB2BModal} onCloseModal={() => setShowB2BModal(false)} />
             ) : activeTab === 'homologation' ? (
