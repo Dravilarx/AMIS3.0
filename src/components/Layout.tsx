@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
 import { cn } from '../lib/utils';
+import { Logo } from './Logo';
+
+// Temas disponibles (deben existir como [data-theme='id'] en index.css)
+const THEMES: { id: string; label: string; dot: string }[] = [
+    { id: 'dark',      label: 'Moro (oscuro)', dot: '#3db3a0' },
+    { id: 'light',     label: 'Claro',         dot: '#3db3a0' },
+    { id: 'vermellon', label: 'Vermellón',     dot: '#ff4536' },
+    { id: 'cobalto',   label: 'Cobalto',       dot: '#3b82f6' },
+    { id: 'esmeralda', label: 'Esmeralda',     dot: '#2fd08a' },
+    { id: 'violeta',   label: 'Violeta',       dot: '#9b7dff' },
+    { id: 'ambar',     label: 'Ámbar',         dot: '#f5a524' },
+];
 
 // Orden del menú lateral = fuente única para el filtro por permisos y para la
 // vista inicial tras login (App.tsx). Mantener sincronizado con CurrentView.
@@ -71,17 +83,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const { user, signOut, isRecoveringPassword, hasModuleAccess } = useAuth();
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
-    const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const [theme, setTheme] = useState<string>(() => {
         const saved = localStorage.getItem('brand-theme');
-        return (saved as 'dark' | 'light') || 'dark';
+        return saved || 'dark';
     });
+    const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('brand-theme', theme);
     }, [theme]);
-
-    const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
     const navItems = NAV_ITEMS;
 
@@ -123,8 +134,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                     onClick={() => onNavigate('dashboard')}
                     title={collapsed ? 'AMIS' : undefined}
                 >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary to-black shadow-xl shadow-teal-500/20 flex items-center justify-center group-hover:rotate-6 transition-transform shrink-0">
-                        <Stethoscope className="w-7 h-7 text-white" />
+                    <div className="shrink-0 group-hover:rotate-6 transition-transform">
+                        <Logo type="mark" height={28} />
                     </div>
                     {!collapsed && (
                         <div>
@@ -267,17 +278,48 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             />
                         </div>
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={toggleTheme}
-                                className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:border-brand-primary/30 transition-all group"
-                                title={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
-                            >
-                                {theme === 'dark' ? (
-                                    <Sun className="w-5 h-5 text-warning group-hover:scale-110 transition-transform" />
-                                ) : (
-                                    <Moon className="w-5 h-5 text-info group-hover:scale-110 transition-transform" />
+                            <div className="relative">
+                                <button
+                                    onClick={() => setThemeMenuOpen(o => !o)}
+                                    className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:border-brand-primary/30 transition-all group"
+                                    title="Cambiar tema"
+                                >
+                                    {theme === 'dark' ? (
+                                        <Moon className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
+                                    ) : theme === 'light' ? (
+                                        <Sun className="w-5 h-5 text-warning group-hover:scale-110 transition-transform" />
+                                    ) : (
+                                        <Palette className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
+                                    )}
+                                </button>
+
+                                {themeMenuOpen && (
+                                    <>
+                                        {/* Cierre al clic fuera */}
+                                        <div className="fixed inset-0 z-30" onClick={() => setThemeMenuOpen(false)} />
+                                        <div className="absolute right-0 mt-2 w-52 z-40 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-150">
+                                            <p className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-brand-text/40">Tema</p>
+                                            {THEMES.map(t => {
+                                                const active = theme === t.id;
+                                                return (
+                                                    <button
+                                                        key={t.id}
+                                                        onClick={() => { setTheme(t.id); setThemeMenuOpen(false); }}
+                                                        className={cn(
+                                                            'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors',
+                                                            active ? 'bg-brand-primary/10 text-brand-text' : 'text-brand-text/60 hover:bg-brand-bg hover:text-brand-text'
+                                                        )}
+                                                    >
+                                                        <span className="w-3 h-3 rounded-full shrink-0 border border-black/10" style={{ backgroundColor: t.dot }} />
+                                                        <span className="flex-1 text-xs font-bold">{t.label}</span>
+                                                        {active && <Check className="w-3.5 h-3.5 text-brand-primary" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
                                 )}
-                            </button>
+                            </div>
 
                             <button
                                 onClick={() => alert('Centro de Notificaciones')}

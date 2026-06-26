@@ -9,6 +9,11 @@
   --brand-black:  #0a0f0d;
   --brand-white:  #f5f7f6;
 
+  /* Tokens del logo AMIS */
+  --logo-accent:  #3db3a0;
+  --logo-deep:    #2c8475;
+  --logo-neutral: #bdbcbc;
+
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-danger:  #f87171;
@@ -141,3 +146,80 @@ body {
 .prose-protocolo th,
 .prose-protocolo td { border: 1px solid var(--brand-border); padding: 0.5em 0.75em; text-align: left; }
 .prose-protocolo th { background: var(--brand-surface); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--brand-text-muted); }
+
+/* ===========================================================================
+   AMIS · paletas adicionales (dark-first)
+   Mismas variables que el tema base: todo lo que usa tokens de marca
+   (bg-brand-surface, text-brand-primary, etc.) recolorea al cambiar data-theme.
+   El acento del tema vive en --brand-teal (que --color-brand-primary consume vía @theme).
+   =========================================================================== */
+
+:root[data-theme="vermellon"] {
+  --brand-bg: #0b0e12;
+  --brand-surface: #14171c;
+  --brand-surface-hover: #1a1e24;
+  --brand-border: #242a31;
+  --brand-text: #e7eaee;
+  --brand-text-muted: #8b939e;
+  --brand-teal: #ff4536;        /* acento primario del tema */
+  --color-info: #ff4536;
+  --logo-accent: #ff4536;
+  --logo-deep: #c2382b;
+  --logo-neutral: #bdbcbc;
+}
+
+:root[data-theme="cobalto"] {
+  --brand-bg: #080b14;
+  --brand-surface: #161b29;
+  --brand-surface-hover: #1e2538;
+  --brand-border: #222a3d;
+  --brand-text: #e6ebf5;
+  --brand-text-muted: #8892a8;
+  --brand-teal: #3b82f6;
+  --color-info: #3b82f6;
+  --logo-accent: #3b82f6;
+  --logo-deep: #2c60b6;
+  --logo-neutral: #bdbcbc;
+}
+
+:root[data-theme="esmeralda"] {
+  --brand-bg: #07100e;
+  --brand-surface: #13211d;
+  --brand-surface-hover: #1a2d27;
+  --brand-border: #1f2f2a;
+  --brand-text: #e4f0ec;
+  --brand-text-muted: #7e978f;
+  --brand-teal: #2fd08a;
+  --color-info: #2fd08a;
+  --logo-accent: #2fd08a;
+  --logo-deep: #239a66;
+  --logo-neutral: #bdbcbc;
+}
+
+:root[data-theme="violeta"] {
+  --brand-bg: #0c0a12;
+  --brand-surface: #1b1726;
+  --brand-surface-hover: #241f33;
+  --brand-border: #2a2438;
+  --brand-text: #ede9f5;
+  --brand-text-muted: #928aa6;
+  --brand-teal: #9b7dff;
+  --color-info: #9b7dff;
+  --logo-accent: #9b7dff;
+  --logo-deep: #7155c2;
+  --logo-neutral: #bdbcbc;
+}
+
+:root[data-theme="ambar"] {
+  --brand-bg: #0a0a0a;
+  --brand-surface: #1c1c18;
+  --brand-surface-hover: #262620;
+  --brand-border: #2a2a24;
+  --brand-text: #f4f2ea;
+  --brand-text-muted: #9a968a;
+  --brand-teal: #f5a524;
+  --color-info: #f5a524;
+  --logo-accent: #f5a524;
+  --logo-deep: #b5781a;
+  --logo-neutral: #bdbcbc;
+}

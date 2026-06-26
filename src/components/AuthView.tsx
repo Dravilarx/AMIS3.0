@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Stethoscope, Mail, Lock, Loader2, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Loader2, CheckCircle2 } from 'lucide-react';
+import { Logo } from './Logo';
 
 export const AuthView: React.FC = () => {
     const [email, setEmail]                 = useState('');
@@ -111,16 +112,11 @@ export const AuthView: React.FC = () => {
 
             <div className="w-full max-w-sm space-y-8 animate-in fade-in zoom-in-95 duration-1000 relative z-10">
                 <div className="text-center space-y-4">
-                    <div className="inline-flex p-1 rounded-3xl bg-gradient-to-br from-brand-primary/30 to-black mb-2 shadow-2xl shadow-teal-500/20">
-                        <div className="p-4 bg-brand-surface rounded-2xl border border-brand-border">
-                            <Stethoscope className="w-8 h-8 text-brand-primary" />
-                        </div>
+                    <div className="flex justify-center mb-2">
+                        <Logo height={48} />
                     </div>
                     <div>
-                        <h1 className="text-5xl font-black text-brand-primary tracking-tighter uppercase mb-1">
-                            AMIS <span className="text-brand-text">3.0</span>
-                        </h1>
-                        <p className="text-[9px] font-bold text-brand-text/40 uppercase tracking-[0.4em]">Intelligence & Management</p>
+                        <p className="text-[9px] font-bold text-brand-text/40 uppercase tracking-[0.4em]">Intelligence &amp; Management · 3.0</p>
                     </div>
                 </div>
 
