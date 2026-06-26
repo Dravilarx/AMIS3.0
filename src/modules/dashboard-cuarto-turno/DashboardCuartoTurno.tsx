@@ -151,6 +151,9 @@ export const DashboardCuartoTurno: React.FC = () => {
                             <Kpi label="% entregado fuera de plazo" value={operativa.pctEntregadoFueraPlazo} suffix="%" acento="warning" />
                             <Kpi label="% turnos estabilizados"     value={operativa.pctEstabilizados} suffix="%" acento="success" />
                         </div>
+                        <div className={cn(gridTables, 'mt-3')}>
+                            <BreakdownTable title="Turnos por tecnólogo" rows={operativa.porTecnologo} acento="teal" />
+                        </div>
                     </Section>
 
                     {/* 2) Personal y Cumplimiento */}

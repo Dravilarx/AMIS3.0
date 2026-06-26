@@ -22,6 +22,7 @@ export interface DashboardKpis {
         entregadosFueraPlazo:    number;
         pctEntregadoFueraPlazo:  number;
         pctEstabilizados:        number;
+        porTecnologo:            Breakdown[];   // turnos por tecnólogo (created_by → profiles)
     };
     personal: {
         total:               number;
@@ -72,7 +73,7 @@ const pct = (num: number, den: number): number =>
     den > 0 ? Math.round((num / den) * 1000) / 10 : 0;
 
 const EMPTY: DashboardKpis = {
-    operativa: { turnos: 0, recibidos: 0, recibidosFueraPlazo: 0, pctRecibidoFueraPlazo: 0, entregados: 0, entregadosFueraPlazo: 0, pctEntregadoFueraPlazo: 0, pctEstabilizados: 0 },
+    operativa: { turnos: 0, recibidos: 0, recibidosFueraPlazo: 0, pctRecibidoFueraPlazo: 0, entregados: 0, entregadosFueraPlazo: 0, pctEntregadoFueraPlazo: 0, pctEstabilizados: 0, porTecnologo: [] },
     personal:  { total: 0, atrasoTotalMin: 0, porTipoIncidencia: [], porCausa: [], porSeveridad: [] },
     sla:       { total: 0, minutosExcesoTotal: 0, porTipoDesviacion: [], porSeveridad: [] },
     criticos:  { registrados: 0, fueraPlazo: 0, retrasoTotalMin: 0 },
@@ -90,13 +91,14 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
         try {
             const rango = (q: any) => q.gte('fecha', desde).lte('fecha', hasta);
 
-            const [turnosRes, personalRes, slaRes, criticosRes, tecnicasRes] = await Promise.all([
-                rango(supabase.from('ct_turnos').select('recibidos, recibidos_fueraplazo, entregados, entregados_fueraplazo, estabilizado')),
+            const [turnosRes, personalRes, slaRes, criticosRes, tecnicasRes, profilesRes] = await Promise.all([
+                rango(supabase.from('ct_turnos').select('recibidos, recibidos_fueraplazo, entregados, entregados_fueraplazo, estabilizado, created_by')),
                 rango(supabase.from('ct_incid_personal').select('tipo_incidencia, minutos_atraso, causa, severidad')),
                 rango(supabase.from('ct_incid_sla').select('tipo_desviacion, minutos_exceso, severidad')),
                 // PRIVACIDAD: NO se piden paciente ni rut
                 rango(supabase.from('ct_casos_criticos').select('fuera_plazo, minutos_retraso')),
                 rango(supabase.from('ct_incid_tecnicas').select('estado, categoria_tecnica, severidad')),
+                supabase.from('profiles').select('id, full_name, email'),
             ]);
 
             const firstErr = turnosRes.error || personalRes.error || slaRes.error || criticosRes.error || tecnicasRes.error;
@@ -116,6 +118,18 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
             const turnosCount          = turnos.length;
             const estabilizados        = turnos.filter((t: any) => t.estabilizado === true).length;
 
+            // Turnos por tecnólogo: cruza created_by con profiles (nombre/correo)
+            const profMap = new Map<string, string>();
+            for (const p of (profilesRes.data || []) as any[]) profMap.set(p.id, p.full_name || p.email || p.id);
+            const tecnoCount = new Map<string, number>();
+            for (const t of turnos as any[]) {
+                const nombre = t.created_by ? (profMap.get(t.created_by) || 'Desconocido') : 'Sin asignar';
+                tecnoCount.set(nombre, (tecnoCount.get(nombre) ?? 0) + 1);
+            }
+            const porTecnologo: Breakdown[] = Array.from(tecnoCount.entries())
+                .map(([valor, count]) => ({ valor, count }))
+                .sort((a, b) => b.count - a.count);
+
             setKpis({
                 operativa: {
                     turnos:                 turnosCount,
@@ -126,6 +140,7 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
                     entregadosFueraPlazo,
                     pctEntregadoFueraPlazo: pct(entregadosFueraPlazo, entregados),
                     pctEstabilizados:       pct(estabilizados, turnosCount),
+                    porTecnologo,
                 },
                 personal: {
                     total:             personal.length,

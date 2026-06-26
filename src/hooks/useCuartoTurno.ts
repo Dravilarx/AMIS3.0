@@ -16,6 +16,8 @@ export interface Turno {
     tipoTurno:             string;
     horaInicio?:           string;
     horaFin?:              string;
+    estado?:               string;   // 'abierto' | 'cerrado'
+    cerradoAt?:            string;
     estabilizado:          boolean;
     horaEstabilizacion?:   string;
     apoyoMedicoExtra:      boolean;
@@ -32,6 +34,7 @@ export interface Turno {
 
 export interface IncidenciaTecnica {
     id:                string;
+    idTurno?:          string;
     fecha?:            string;
     categoriaTecnica?: string;
     centroAfectado?:   string;
@@ -42,6 +45,12 @@ export interface IncidenciaTecnica {
     accionTomada?:     string;
     createdBy?:        string;
     createdAt:         string;
+}
+
+export interface Tecnologo {
+    id:        string;
+    fullName?: string;
+    email?:    string;
 }
 
 export interface CasoCritico {
@@ -96,6 +105,8 @@ const mapTurno = (r: any): Turno => ({
     tipoTurno:             r.tipo_turno,
     horaInicio:            r.hora_inicio,
     horaFin:               r.hora_fin,
+    estado:                r.estado,
+    cerradoAt:             r.cerrado_at,
     estabilizado:          r.estabilizado,
     horaEstabilizacion:    r.hora_estabilizacion,
     apoyoMedicoExtra:      r.apoyo_medico_extra,
@@ -112,6 +123,7 @@ const mapTurno = (r: any): Turno => ({
 
 const mapIncidenciaTecnica = (r: any): IncidenciaTecnica => ({
     id:               r.id,
+    idTurno:          r.id_turno,
     fecha:            r.fecha,
     categoriaTecnica: r.categoria_tecnica,
     centroAfectado:   r.centro_afectado,
@@ -189,6 +201,11 @@ export const useCuartoTurno = () => {
     const [loadingTecnicas,     setLoadingTecnicas]      = useState(true);
     const [categoriasTecnicas,  setCategoriasTecnicas]   = useState<Catalogo[]>([]);
     const [estadosIncidencia,   setEstadosIncidencia]    = useState<Catalogo[]>([]);
+    const [userId,              setUserId]               = useState<string | null>(null);
+    const [tecnologos,          setTecnologos]           = useState<Record<string, Tecnologo>>({});
+
+    // Turno activo = turno del usuario actual con estado 'abierto'
+    const turnoActivo = turnos.find(t => t.createdBy === userId && (t.estado ?? 'abierto') === 'abierto') ?? null;
 
     const fetchTurnos = async () => {
         setLoading(true);
@@ -327,7 +344,28 @@ export const useCuartoTurno = () => {
         setLoadingCasos(false);
     };
 
+    // Mapa created_by → tecnólogo (nombre/correo), para que la jefa vea quién estuvo cada día.
+    const fetchTecnologos = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, email');
+
+        console.log('tecnologos (profiles):', data, 'error:', error);
+        if (!error && data) {
+            const map: Record<string, Tecnologo> = {};
+            for (const p of data as any[]) map[p.id] = { id: p.id, fullName: p.full_name, email: p.email };
+            setTecnologos(map);
+        }
+    };
+
+    const fetchUserId = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUserId(user?.id ?? null);
+    };
+
     useEffect(() => {
+        fetchUserId();
+        fetchTecnologos();
         fetchTurnos();
         fetchIncidencias();
         fetchCatalogos();
@@ -355,11 +393,13 @@ export const useCuartoTurno = () => {
         return () => { supabase.removeChannel(sub); };
     }, []);
 
+    // Abre un turno (modelo sesión): estado='abierto', created_by = tecnólogo del turno.
     const addTurno = async (payload: {
         fecha:                  string;
         tipoTurno:              string;
         horaInicio?:            string;
         horaFin?:               string;
+        estado?:                string;
         estabilizado?:          boolean;
         horaEstabilizacion?:    string;
         apoyoMedicoExtra?:      boolean;
@@ -373,11 +413,12 @@ export const useCuartoTurno = () => {
     }) => {
         const { data: { user } } = await supabase.auth.getUser();
 
-        const { error } = await supabase.from('ct_turnos').insert({
+        const { data, error } = await supabase.from('ct_turnos').insert({
             fecha:                  payload.fecha,
             tipo_turno:             payload.tipoTurno,
             hora_inicio:            payload.horaInicio            || null,
             hora_fin:               payload.horaFin               || null,
+            estado:                 payload.estado                || 'abierto',
             estabilizado:           payload.estabilizado          ?? false,
             hora_estabilizacion:    payload.horaEstabilizacion    || null,
             apoyo_medico_extra:     payload.apoyoMedicoExtra      ?? false,
@@ -389,9 +430,68 @@ export const useCuartoTurno = () => {
             entregados_pendientes:  payload.entregadosPendientes  ?? null,
             observaciones:          payload.observaciones         || null,
             created_by:             user?.id                      || null,
-        });
+        }).select().single();
 
         if (!error) await fetchTurnos();
+        return { success: !error, error, turno: data ? mapTurno(data) : null };
+    };
+
+    // Actualiza contadores / resumen del turno activo (estabilizado, recibidos, etc.)
+    const updateTurno = async (id: string, fields: {
+        estabilizado?:          boolean;
+        horaEstabilizacion?:    string | null;
+        apoyoMedicoExtra?:      boolean;
+        recibidos?:             number | null;
+        recibidosFueraPlazo?:   number | null;
+        recibidosPendientes?:   number | null;
+        entregados?:            number | null;
+        entregadosFueraPlazo?:  number | null;
+        entregadosPendientes?:  number | null;
+        observaciones?:         string | null;
+    }) => {
+        const updates: Record<string, any> = {};
+        if (fields.estabilizado          !== undefined) updates.estabilizado          = fields.estabilizado;
+        if (fields.horaEstabilizacion    !== undefined) updates.hora_estabilizacion   = fields.horaEstabilizacion || null;
+        if (fields.apoyoMedicoExtra      !== undefined) updates.apoyo_medico_extra     = fields.apoyoMedicoExtra;
+        if (fields.recibidos             !== undefined) updates.recibidos              = fields.recibidos;
+        if (fields.recibidosFueraPlazo   !== undefined) updates.recibidos_fueraplazo   = fields.recibidosFueraPlazo;
+        if (fields.recibidosPendientes   !== undefined) updates.recibidos_pendientes   = fields.recibidosPendientes;
+        if (fields.entregados            !== undefined) updates.entregados             = fields.entregados;
+        if (fields.entregadosFueraPlazo  !== undefined) updates.entregados_fueraplazo  = fields.entregadosFueraPlazo;
+        if (fields.entregadosPendientes  !== undefined) updates.entregados_pendientes  = fields.entregadosPendientes;
+        if (fields.observaciones         !== undefined) updates.observaciones          = fields.observaciones || null;
+
+        const { error } = await supabase.from('ct_turnos').update(updates).eq('id', id);
+        if (error) { console.error('updateTurno error:', error); alert('Error: ' + error.message); }
+        else await fetchTurnos();
+        return { success: !error, error };
+    };
+
+    // Cierra/valida el turno: estado='cerrado', cerrado_at=now(), + resumen final.
+    const closeTurno = async (id: string, resumen: {
+        estabilizado?:        boolean;
+        horaEstabilizacion?:  string | null;
+        recibidos?:           number | null;
+        recibidosFueraPlazo?: number | null;
+        entregados?:          number | null;
+        entregadosFueraPlazo?: number | null;
+        observaciones?:       string | null;
+    }) => {
+        const updates: Record<string, any> = {
+            estado:     'cerrado',
+            cerrado_at: new Date().toISOString(),
+        };
+        if (resumen.estabilizado         !== undefined) updates.estabilizado         = resumen.estabilizado;
+        if (resumen.horaEstabilizacion   !== undefined) updates.hora_estabilizacion  = resumen.horaEstabilizacion || null;
+        if (resumen.recibidos            !== undefined) updates.recibidos             = resumen.recibidos;
+        if (resumen.recibidosFueraPlazo  !== undefined) updates.recibidos_fueraplazo  = resumen.recibidosFueraPlazo;
+        if (resumen.entregados           !== undefined) updates.entregados            = resumen.entregados;
+        if (resumen.entregadosFueraPlazo !== undefined) updates.entregados_fueraplazo = resumen.entregadosFueraPlazo;
+        if (resumen.observaciones        !== undefined) updates.observaciones         = resumen.observaciones || null;
+
+        const { error } = await supabase.from('ct_turnos').update(updates).eq('id', id);
+        if (error) { console.error('closeTurno error:', error); alert('Error: ' + error.message); }
+        else await fetchTurnos();
         return { success: !error, error };
     };
 
@@ -531,6 +631,7 @@ export const useCuartoTurno = () => {
     };
 
     const addIncidTecnica = async (payload: {
+        idTurno?:          string;
         fecha?:            string;
         categoriaTecnica?: string;
         centroAfectado?:   string;
@@ -543,6 +644,7 @@ export const useCuartoTurno = () => {
         const { data: { user } } = await supabase.auth.getUser();
 
         const { error } = await supabase.from('ct_incid_tecnicas').insert({
+            id_turno:         payload.idTurno          || null,
             fecha:            payload.fecha            || null,
             categoria_tecnica: payload.categoriaTecnica || null,
             centro_afectado:  payload.centroAfectado   || null,
@@ -568,6 +670,8 @@ export const useCuartoTurno = () => {
         categoriasTecnicas, estadosIncidencia,
         loading, loadingIncid, loadingSla, loadingCasos, loadingTecnicas,
         addTurno, addIncidencia, addSlaDesviacion, addCasoCritico, addIncidTecnica,
+        updateTurno, closeTurno,
+        userId, turnoActivo, tecnologos,
         refresh: fetchTurnos,
         refreshIncidencias: fetchIncidencias,
         refreshSla: fetchSlaDesviaciones,

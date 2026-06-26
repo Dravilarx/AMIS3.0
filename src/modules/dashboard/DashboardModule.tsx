@@ -1,261 +1,131 @@
-import React from 'react';
-import { TrendingUp, Users, ShieldAlert, Cpu, ArrowUpRight, MessageSquare, AlertCircle, Newspaper } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldAlert, Timer, Clock, Activity, TrendingUp, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useTenders } from '../../hooks/useTenders';
-import { useProfessionals } from '../../hooks/useProfessionals';
-import { useMessaging } from '../../hooks/useMessaging';
-import { useNews } from '../../hooks/useNews';
-import { CATEGORY_LABELS, CATEGORY_ICONS } from '../../types/news';
+import { useDashboardCuartoTurno } from '../../hooks/useDashboardCuartoTurno';
+import { DashboardCuartoTurno } from '../dashboard-cuarto-turno/DashboardCuartoTurno';
 
-interface CardProps {
-    title: string;
-    value: string | number;
-    icon: React.ElementType;
-    trend?: string;
-    description?: string;
-}
+// Fecha ISO (YYYY-MM-DD)
+const isoDaysAgo = (n: number): string => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+};
+const isoToday = (): string => new Date().toISOString().slice(0, 10);
 
-function Card({ title, value, icon: Icon, trend, description }: CardProps) {
-    return (
-        <div className="card-premium group">
-            <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-brand-bg border border-brand-border group-hover:bg-brand-primary/10 group-hover:border-brand-primary/20 transition-all">
-                    <Icon className="w-5 h-5 text-brand-text/40 group-hover:text-brand-primary" />
-                </div>
-                {trend && (
-                    <div className="flex items-center gap-1 text-[10px] font-black text-success bg-success/10 px-2.5 py-1 rounded-full border border-success/20">
-                        <ArrowUpRight className="w-3 h-3" />
-                        <span>{trend}%</span>
-                    </div>
-                )}
+// ─── Tarjeta de urgente (estilo alerta) ───────────────────────────────────────
+const UrgentCard: React.FC<{ label: string; value: number | string; icon: React.ElementType; hint?: string }> =
+    ({ label, value, icon: Icon, hint }) => (
+        <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border bg-danger/5 border-danger/20 min-w-56">
+            <div className="p-2.5 rounded-xl bg-danger/10 border border-danger/20 shrink-0">
+                <Icon className="w-5 h-5 text-danger" />
             </div>
             <div>
-                <p className="text-[10px] uppercase font-black tracking-widest text-brand-text/40 mb-1.5">{title}</p>
-                <p className="text-3xl font-black text-brand-text tracking-tight">{value}</p>
-                {description && (
-                    <p className="text-[10px] text-brand-text/60 mt-2 font-medium italic">{description}</p>
-                )}
+                <p className="text-3xl font-black text-danger leading-none">{value}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-danger/70 mt-1 leading-tight">{label}</p>
+                {hint && <p className="text-[9px] text-brand-text/30 mt-0.5">{hint}</p>}
             </div>
         </div>
     );
-}
 
-import { useProjects } from '../../hooks/useProjects';
-import { Layers, Link as LinkIcon } from 'lucide-react';
+// ─── Pestañas por área ────────────────────────────────────────────────────────
+type AreaTab = '4turno' | 'clinico_red' | 'comercial' | 'calidad';
+
+// permiso: reservado para filtrar por rol más adelante (null = visible para todos
+// los que tengan acceso al Dashboard). Por ahora se muestran todas.
+const AREA_TABS: { id: AreaTab; label: string; icon: React.ElementType; permiso: string | null }[] = [
+    { id: '4turno',      label: '4° Turno',      icon: Clock,          permiso: null },
+    { id: 'clinico_red', label: 'Clínico / Red', icon: Activity,       permiso: null },
+    { id: 'comercial',   label: 'Comercial',     icon: TrendingUp,     permiso: null },
+    { id: 'calidad',     label: 'Calidad',       icon: ClipboardCheck, permiso: null },
+];
+
+const Placeholder: React.FC<{ titulo: string }> = ({ titulo }) => (
+    <div className="flex flex-col items-center justify-center py-24 text-center gap-4 border border-dashed border-brand-border rounded-2xl">
+        <div className="w-16 h-16 rounded-3xl bg-brand-surface border border-brand-border flex items-center justify-center">
+            <AlertTriangle className="w-7 h-7 text-brand-text/20" />
+        </div>
+        <div>
+            <p className="text-sm font-black text-brand-text/50">{titulo}</p>
+            <p className="text-xs text-brand-text/30 mt-1 max-w-md">Próximamente — se conectará con datos reales.</p>
+        </div>
+    </div>
+);
 
 export const DashboardModule: React.FC = () => {
-    const { tenders, loading: loadingTenders } = useTenders();
-    const { professionals, loading: loadingProfessionals } = useProfessionals();
-    const { messages } = useMessaging();
-    const { projects, loading: loadingProjects } = useProjects();
-    const { articles: newsArticles } = useNews();
+    const [activeTab, setActiveTab] = useState<AreaTab>('4turno');
 
-    const activeTenders = tenders.length;
-    const activeProjects = projects.filter(p => p.status === 'active').length;
-    const totalStaff = professionals.length;
-    const highRiskTenders = tenders.filter(t => t.riesgoSLA.escala > 6).length;
+    // Franja de urgentes: por ahora SOLO datos reales del 4° Turno (últimos 7 días).
+    // El contenedor queda preparado para sumar riesgos de otras áreas en las siguientes partes.
+    const { kpis, loading } = useDashboardCuartoTurno({ desde: isoDaysAgo(7), hasta: isoToday() });
+
+    // Filtrado de pestañas por permiso (placeholder: hoy se muestran todas).
+    const visibleTabs = AREA_TABS;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+            {/* Encabezado */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-brand-text tracking-tight uppercase mb-1">Centro de Gestión Médica</h1>
-                    <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em]">Red AMIS ● Sincronización Clínica en Tiempo Real</p>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border rounded-2xl shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-[10px] font-black text-brand-text/60 uppercase tracking-widest">Sistemas Operativos Activos</span>
+                    <h1 className="text-3xl font-black text-brand-text tracking-tight">Panel Principal</h1>
+                    <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-[0.3em] mt-1">Red AMIS ● Centro de Gestión</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card
-                    title="Propuestas Red"
-                    value={loadingTenders ? '...' : activeTenders}
-                    icon={TrendingUp}
-                    trend="12.5"
-                    description="Casos en análisis de viabilidad"
-                />
-                <Card
-                    title="Planes de Salud"
-                    value={loadingProjects ? '...' : activeProjects}
-                    icon={Layers}
-                    description="Ejecución activa de protocolos"
-                />
-                <Card
-                    title="Equipo Clínico"
-                    value={loadingProfessionals ? '...' : totalStaff}
-                    icon={Users}
-                    description="Especialistas activos en red"
-                />
-                <Card
-                    title="Riesgos Detectados"
-                    value={highRiskTenders}
-                    icon={ShieldAlert}
-                    trend={highRiskTenders > 0 ? "HIGH" : ""}
-                    description="Casos con prioridad crítica (SLA > 6)"
-                />
+            {/* ── FRANJA DE URGENTES (siempre visible) ── */}
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-danger" />
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-danger/80">Requiere acción</h2>
+                    <span className="text-[9px] text-brand-text/30 font-bold">· 4° Turno, últimos 7 días</span>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                    <UrgentCard
+                        label="Casos críticos fuera de plazo"
+                        value={loading ? '…' : kpis.criticos.fueraPlazo}
+                        icon={ShieldAlert}
+                    />
+                    <UrgentCard
+                        label="Desviaciones SLA"
+                        value={loading ? '…' : kpis.sla.total}
+                        icon={Timer}
+                    />
+                    {/* Aquí se sumarán los urgentes de otras áreas (Clínico/Red, Comercial, Calidad) */}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="card-premium h-full">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h3 className="text-sm font-black text-brand-text/40 uppercase tracking-[0.2em]">Monitor de Actividad Clínica</h3>
-                                <p className="text-[10px] text-brand-text/40 font-bold">Top 5 Instituciones por Prioridad</p>
-                            </div>
-                            <button className="text-[10px] font-black text-brand-primary hover:text-brand-text transition-colors uppercase tracking-widest px-4 py-2 bg-brand-primary/5 rounded-xl border border-brand-primary/10">Ver historial completo</button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {tenders.slice(0, 5).map((tender, i) => {
-                                const hasProject = projects.some(p => p.tenderId === tender.id);
-                                return (
-                                    <div key={i} className="group flex items-center justify-between p-5 bg-brand-surface hover:border-brand-primary/30 rounded-2xl border border-brand-border transition-all duration-300">
-                                        <div className="flex items-center gap-5">
-                                            <div className={cn(
-                                                "w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs border shadow-sm",
-                                                tender.riesgoSLA.escala > 6
-                                                    ? "bg-danger/10 border-danger/20 text-danger"
-                                                    : "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
-                                            )}>
-                                                {tender.id.split('-').pop()}
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-3">
-                                                    <p className="font-extrabold text-sm text-brand-text">{tender.identificacion.tipoServicio}</p>
-                                                    {hasProject && (
-                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-success/10 border border-success/20 rounded-lg text-[8px] font-black text-success uppercase tracking-tighter">
-                                                            <LinkIcon className="w-2.5 h-2.5" /> PROTOCOLO ACTIVO
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <p className="text-[10px] text-brand-text/40 font-bold uppercase tracking-widest mt-1">Ref: {tender.id.slice(0, 8)}...</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={cn(
-                                                "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest mb-1.5 border shadow-sm",
-                                                tender.riesgoSLA.escala > 6
-                                                    ? "bg-danger/10 text-danger border-danger/20"
-                                                    : "bg-success/10 text-success border-success/20"
-                                            )}>
-                                                Estado: {tender.riesgoSLA.escala > 6 ? 'Prioritario' : 'Normal'}
-                                            </div>
-                                            <p className="text-[10px] text-brand-text/40 font-medium italic">Efectividad: {tender.economia.margenProyectado}%</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {tenders.length === 0 && (
-                                <div className="text-center py-20 bg-brand-surface rounded-3xl border-2 border-dashed border-brand-border">
-                                    <AlertCircle className="w-10 h-10 text-brand-text/20 mx-auto mb-4" />
-                                    <p className="text-brand-text/40 text-sm font-semibold italic">No hay casos clínicos activos.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    <div className="card-premium border-brand-primary/10 bg-gradient-to-br from-brand-primary/10 to-transparent">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-brand-surface rounded-lg shadow-sm border border-brand-border">
-                                <Cpu className="w-5 h-5 text-brand-primary" />
-                            </div>
-                            <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Analítica IA AMIS</h3>
-                        </div>
-                        <div className="relative group p-4 bg-brand-surface/50 rounded-2xl border border-brand-border">
-                            <div className="absolute -left-0 top-0 bottom-0 w-1 bg-brand-primary rounded-full shadow-[0_0_15px_rgba(249,115,22,0.4)]" />
-                            <p className="text-xs text-brand-text/80 leading-relaxed font-semibold pl-4 italic">
-                                "El sistema ha detectado una alta demanda en la red norte. Se recomienda optimizar la asignación de turnos médicos para asegurar el cumplimiento de los protocolos de atención inmediata."
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="card-premium">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-success/10 rounded-lg">
-                                    <MessageSquare className="w-5 h-5 text-success" />
-                                </div>
-                                <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Comunicación Global</h3>
-                            </div>
-                            <span className="flex items-center gap-1.5 text-[10px] font-black text-success">
-                                <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                                EN VIVO
-                            </span>
-                        </div>
-                        <div className="space-y-5">
-                            {messages.slice(-3).reverse().map((msg, i) => (
-                                <div key={i} className="flex flex-col gap-1.5 border-l-2 border-brand-border pl-4 transition-all hover:border-brand-primary/30">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-black text-brand-primary uppercase tracking-tight">{msg.senderName}</span>
-                                        <span className="text-[10px] font-bold text-brand-text/40">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    <p className="text-xs text-brand-text/60 font-medium line-clamp-1">{msg.content}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="card-premium">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-warning/10 rounded-lg">
-                                    <Newspaper className="w-5 h-5 text-warning" />
-                                </div>
-                                <h3 className="text-xs font-black text-brand-text/40 uppercase tracking-[0.2em]">Actualidad AMIS</h3>
-                            </div>
+            {/* ── PESTAÑAS POR ÁREA ── */}
+            <div>
+                <div className="flex gap-1 border-b border-brand-border pb-px flex-wrap">
+                    {visibleTabs.map(tab => {
+                        const Icon = tab.icon;
+                        const active = activeTab === tab.id;
+                        return (
                             <button
-                                onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
-                                className="text-[10px] text-brand-primary hover:text-brand-text font-black transition-colors uppercase tracking-widest"
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    'flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all',
+                                    active ? 'border-brand-primary text-brand-text bg-brand-surface' : 'border-transparent text-brand-text/40'
+                                )}
                             >
-                                Todas →
+                                <Icon className={cn('w-3.5 h-3.5', active ? 'text-brand-primary' : 'text-brand-text/30')} />
+                                {tab.label}
                             </button>
-                        </div>
-                        <div className="space-y-4">
-                            {newsArticles.slice(0, 3).map((article) => (
-                                <div
-                                    key={article.id}
-                                    className="flex gap-4 p-3 -mx-2 rounded-2xl hover:bg-brand-bg transition-all cursor-pointer group border border-transparent hover:border-brand-border"
-                                    onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'news' }))}
-                                >
-                                    {(article.imageUrls?.[0] || article.coverImageUrl) && (
-                                        <div className="flex-none w-16 h-16 rounded-xl overflow-hidden border border-brand-border shadow-sm">
-                                            <img
-                                                src={article.imageUrls?.[0] || article.coverImageUrl}
-                                                alt=""
-                                                className="w-full h-full object-cover transition-transform group-hover:scale-110 opacity-80 group-hover:opacity-100"
-                                            />
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={cn(
-                                                "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border shadow-sm",
-                                                article.category === 'urgente' ? "bg-danger/10 text-danger border-danger/20" :
-                                                    article.category === 'evento' ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                                                        "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
-                                            )}>
-                                                {CATEGORY_ICONS[article.category]} {CATEGORY_LABELS[article.category]}
-                                            </span>
-                                            <span className="text-[9px] font-bold text-brand-text/40">
-                                                {new Date(article.publishedAt || article.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-brand-text/90 font-black line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">
-                                            {article.title}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                            {newsArticles.length === 0 && (
-                                <p className="text-[11px] text-brand-text/40 font-medium italic text-center py-6">Sin novedades corporativas</p>
-                            )}
-                        </div>
-                    </div>
+                        );
+                    })}
+                </div>
+
+                <div className="pt-6">
+                    {activeTab === '4turno' ? (
+                        // Reutiliza el componente real (hook + 5 secciones + selector de fechas)
+                        <DashboardCuartoTurno />
+                    ) : activeTab === 'clinico_red' ? (
+                        <Placeholder titulo="Clínico / Red" />
+                    ) : activeTab === 'comercial' ? (
+                        <Placeholder titulo="Comercial" />
+                    ) : (
+                        <Placeholder titulo="Calidad" />
+                    )}
                 </div>
             </div>
         </div>
