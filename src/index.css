@@ -168,6 +168,21 @@ body {
   --logo-neutral: #bdbcbc;
 }
 
+:root[data-theme="vermellon-light"] {
+  --brand-bg: #faf8f7;
+  --brand-surface: #ffffff;
+  --brand-surface-hover: #f3f1ef;
+  --brand-border: #e7e3e1;
+  --brand-text: #1a1715;
+  --brand-text-muted: #6c6560;
+  --brand-teal: #e5392b;        /* acento primario (rojo, profundo para claro) */
+  --color-info: #e5392b;
+  --logo-accent: #ff291c;
+  --logo-deep: #b31d14;
+  --logo-neutral: #bdbcbc;
+  color-scheme: light;          /* añadido: sin esto los controles nativos (date/time) salen oscuros */
+}
+
 :root[data-theme="cobalto"] {
   --brand-bg: #080b14;
   --brand-surface: #161b29;

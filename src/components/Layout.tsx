@@ -17,6 +17,9 @@ const THEMES: { id: string; label: string; dot: string }[] = [
     { id: 'ambar',     label: 'Ámbar',         dot: '#f5a524' },
 ];
 
+// data-theme válidos en index.css (para el toggle claro/oscuro)
+const VALID_THEMES = ['dark', 'light', 'vermellon', 'vermellon-light', 'cobalto', 'esmeralda', 'violeta', 'ambar'];
+
 // Orden del menú lateral = fuente única para el filtro por permisos y para la
 // vista inicial tras login (App.tsx). Mantener sincronizado con CurrentView.
 export const NAV_ITEMS = [
@@ -85,7 +88,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<string>(() => {
         const saved = localStorage.getItem('brand-theme');
-        return saved || 'dark';
+        return saved || 'vermellon';   // default: vermellón (oscuro) = tema de marca AMIS
     });
     const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
@@ -93,6 +96,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('brand-theme', theme);
     }, [theme]);
+
+    // ¿El tema activo es "claro"? (moro 'light' o cualquier '<paleta>-light')
+    const esClaro = theme === 'light' || theme.endsWith('-light');
+
+    // Toggle claro/oscuro: alterna el sufijo '-light' del tema activo.
+    // Si la paleta no tiene variante '-light', mantiene el tema actual.
+    const toggleLightDark = () => {
+        setTheme(prev => {
+            if (prev === 'dark')  return 'light';
+            if (prev === 'light') return 'dark';
+            if (prev.endsWith('-light')) return prev.slice(0, -'-light'.length); // → versión oscura
+            const claro = `${prev}-light`;
+            return VALID_THEMES.includes(claro) ? claro : prev; // solo si existe el '-light'
+        });
+    };
 
     const navItems = NAV_ITEMS;
 
@@ -278,19 +296,26 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             />
                         </div>
                         <div className="flex items-center gap-4">
+                            {/* Toggle claro/oscuro del tema activo (alterna sufijo -light) */}
+                            <button
+                                onClick={toggleLightDark}
+                                className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:border-brand-primary/30 transition-all group"
+                                title={esClaro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+                            >
+                                {esClaro ? (
+                                    <Moon className="w-5 h-5 text-info group-hover:scale-110 transition-transform" />
+                                ) : (
+                                    <Sun className="w-5 h-5 text-warning group-hover:scale-110 transition-transform" />
+                                )}
+                            </button>
+
                             <div className="relative">
                                 <button
                                     onClick={() => setThemeMenuOpen(o => !o)}
                                     className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:border-brand-primary/30 transition-all group"
-                                    title="Cambiar tema"
+                                    title="Cambiar paleta"
                                 >
-                                    {theme === 'dark' ? (
-                                        <Moon className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
-                                    ) : theme === 'light' ? (
-                                        <Sun className="w-5 h-5 text-warning group-hover:scale-110 transition-transform" />
-                                    ) : (
-                                        <Palette className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
-                                    )}
+                                    <Palette className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
                                 </button>
 
                                 {themeMenuOpen && (
@@ -300,7 +325,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                         <div className="absolute right-0 mt-2 w-52 z-40 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-150">
                                             <p className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-brand-text/40">Tema</p>
                                             {THEMES.map(t => {
-                                                const active = theme === t.id;
+                                                const active = theme === t.id || theme === `${t.id}-light`;
                                                 return (
                                                     <button
                                                         key={t.id}
