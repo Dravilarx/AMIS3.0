@@ -27,3 +27,6 @@ dist-ssr
 # Installers
 *.dmg
 *.pkg
+
+# Claude Code (config local del agente)
+.claude/
