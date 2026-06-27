@@ -217,7 +217,7 @@ export const CargosManager: React.FC = () => {
                         return (
                             <div key={c.id} className="group p-5 rounded-3xl border border-brand-border bg-brand-surface/50 hover:border-brand-primary/30 transition-all">
                                 <div className="flex items-start gap-3">
-                                    <span className="w-3 h-3 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: c.color || '#8a9d96' }} />
+                                    <span className="w-3 h-3 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: c.color || 'var(--brand-text-muted)' }} />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <h4 className="text-sm font-black text-brand-text truncate">{c.nombre}</h4>

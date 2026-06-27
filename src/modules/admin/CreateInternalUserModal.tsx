@@ -78,7 +78,7 @@ export const CreateInternalUserModal: React.FC<CreateInternalUserModalProps> = (
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[2.5rem] shadow-2xl shadow-teal-500/10 animate-in zoom-in-95 duration-500 overflow-hidden">
+            <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-[2.5rem] shadow-2xl shadow-brand-primary/10 animate-in zoom-in-95 duration-500 overflow-hidden">
                 {/* Header */}
                 <div className="p-8 border-b border-brand-border bg-gradient-to-r from-brand-primary/10 to-transparent flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -187,7 +187,7 @@ export const CreateInternalUserModal: React.FC<CreateInternalUserModalProps> = (
                                                     : "bg-brand-bg border-brand-border text-brand-text/40 hover:border-brand-text/20"
                                             )}
                                         >
-                                            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color || '#8a9d96' }} />
+                                            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color || 'var(--brand-text-muted)' }} />
                                             <span className="truncate flex items-center gap-1.5">
                                                 {cargoId === c.id ? null : <Tag className="w-3 h-3 text-brand-text/20" />}
                                                 {c.nombre}
