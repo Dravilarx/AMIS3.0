@@ -7,6 +7,8 @@ import {
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useCuartoTurno, type Catalogo, type Turno } from '../../hooks/useCuartoTurno';
+import { HistorialTurnos } from './HistorialTurnos';
+import { TurnoDetalle } from './TurnoDetalle';
 
 const inputCls = 'w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2.5 text-sm text-brand-text outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/20';
 const labelCls = 'text-[10px] font-black uppercase tracking-widest text-brand-text/50';
@@ -533,64 +535,27 @@ const FormTecnica: React.FC<{ ct: any; turno: Turno; onDone: () => void }> = ({ 
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 4) HISTORIAL DE TURNOS (con tecnólogo) — para la jefatura
-// ═══════════════════════════════════════════════════════════════════════════════
-const HistorialTurnos: React.FC<{ ct: ReturnType<typeof useCuartoTurno> }> = ({ ct }) => {
-    const tecnologoDe = (id?: string) => {
-        if (!id) return '—';
-        const t = ct.tecnologos[id];
-        return t?.fullName || t?.email || '—';
-    };
-    return (
-        <div className="rounded-2xl border border-brand-border overflow-hidden">
-            <div className="px-4 py-3 border-b border-brand-border bg-brand-surface/50 flex items-center gap-2">
-                <History className="w-4 h-4 text-brand-primary" />
-                <h3 className="text-xs font-black uppercase tracking-wide text-brand-text">Historial de turnos</h3>
-            </div>
-            {ct.loading ? (
-                <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 text-brand-primary animate-spin" /></div>
-            ) : ct.turnos.length === 0 ? (
-                <p className="px-4 py-8 text-center text-xs text-brand-text/30">Sin turnos registrados.</p>
-            ) : (
-                <table className="w-full text-left border-collapse">
-                    <thead><tr className="bg-brand-surface/30 border-b border-brand-border">
-                        {['Fecha', 'Tipo', 'Horario', 'Tecnólogo', 'Recibidos', 'Entregados', 'Estado'].map(h => (
-                            <th key={h} className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap">{h}</th>
-                        ))}
-                    </tr></thead>
-                    <tbody className="divide-y divide-brand-border/30">
-                        {ct.turnos.map(t => (
-                            <tr key={t.id} className="hover:bg-brand-surface/30 transition-colors">
-                                <td className="px-4 py-2.5 text-xs text-brand-text/70 whitespace-nowrap">{fmtFecha(t.fecha)}</td>
-                                <td className="px-4 py-2.5 text-xs font-bold text-brand-text">{t.tipoTurno}</td>
-                                <td className="px-4 py-2.5 text-[10px] font-mono text-brand-text/50">{t.horaInicio ?? '?'}–{t.horaFin ?? '?'}</td>
-                                <td className="px-4 py-2.5 text-xs text-brand-text/70 flex items-center gap-1"><User className="w-3 h-3 text-brand-text/30" />{tecnologoDe(t.createdBy)}</td>
-                                <td className="px-4 py-2.5 text-xs text-brand-text/70">{t.recibidos ?? '—'}</td>
-                                <td className="px-4 py-2.5 text-xs text-brand-text/70">{t.entregados ?? '—'}</td>
-                                <td className="px-4 py-2.5">
-                                    <span className={cn('text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider', (t.estado ?? 'abierto') === 'cerrado' ? 'text-brand-text/50 bg-brand-border/20 border-brand-border/40' : 'text-success bg-success/10 border-success/20')}>
-                                        {(t.estado ?? 'abierto') === 'cerrado' ? 'Cerrado' : 'Abierto'}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-        </div>
-    );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 export const CuartoTurnoDashboard: React.FC = () => {
     const ct = useCuartoTurno();
     const { user } = useAuth();
     const [verHistorial, setVerHistorial] = useState(false);
+    const [detalleId, setDetalleId] = useState<string | null>(null);
 
     const tecnologoNombre = (ct.userId && ct.tecnologos[ct.userId]?.fullName)
         || user?.name || user?.email || 'Yo';
+
+    const resolveTecnologo = (id?: string) => {
+        if (!id) return '—';
+        const t = ct.tecnologos[id];
+        return t?.fullName || t?.email || '—';
+    };
+
+    // Vista de detalle de turno (página completa)
+    if (detalleId) {
+        return <TurnoDetalle turnoId={detalleId} onVolver={() => setDetalleId(null)} />;
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -613,7 +578,14 @@ export const CuartoTurnoDashboard: React.FC = () => {
                 <AbrirTurno tiposTurno={ct.tiposTurno} addTurno={ct.addTurno} />
             )}
 
-            {verHistorial && <HistorialTurnos ct={ct} />}
+            {verHistorial && (
+                <HistorialTurnos
+                    turnos={ct.turnos}
+                    loading={ct.loading}
+                    resolveTecnologo={resolveTecnologo}
+                    onOpen={setDetalleId}
+                />
+            )}
         </div>
     );
 };

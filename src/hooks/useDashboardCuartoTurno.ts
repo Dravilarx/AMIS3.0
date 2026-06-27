@@ -80,10 +80,18 @@ const EMPTY: DashboardKpis = {
     tecnicas:  { total: 0, porEstado: [], porCategoria: [], porSeveridad: [] },
 };
 
+export interface TurnoHistRow {
+    id: string; fecha: string; tipoTurno: string;
+    horaInicio?: string; horaFin?: string;
+    createdBy?: string; recibidos?: number; entregados?: number; estado?: string;
+}
+
 export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta: string }) => {
     const [kpis, setKpis]       = useState<DashboardKpis>(EMPTY);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState<string | null>(null);
+    const [turnosList, setTurnosList] = useState<TurnoHistRow[]>([]);
+    const [tecnologos, setTecnologos] = useState<Record<string, string>>({});
 
     const recalcular = useCallback(async () => {
         setLoading(true);
@@ -92,7 +100,7 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
             const rango = (q: any) => q.gte('fecha', desde).lte('fecha', hasta);
 
             const [turnosRes, personalRes, slaRes, criticosRes, tecnicasRes, profilesRes] = await Promise.all([
-                rango(supabase.from('ct_turnos').select('recibidos, recibidos_fueraplazo, entregados, entregados_fueraplazo, estabilizado, created_by')),
+                rango(supabase.from('ct_turnos').select('id, fecha, tipo_turno, hora_inicio, hora_fin, estado, recibidos, recibidos_fueraplazo, entregados, entregados_fueraplazo, estabilizado, created_by')),
                 rango(supabase.from('ct_incid_personal').select('tipo_incidencia, minutos_atraso, causa, severidad')),
                 rango(supabase.from('ct_incid_sla').select('tipo_desviacion, minutos_exceso, severidad')),
                 // PRIVACIDAD: NO se piden paciente ni rut
@@ -129,6 +137,14 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
             const porTecnologo: Breakdown[] = Array.from(tecnoCount.entries())
                 .map(([valor, count]) => ({ valor, count }))
                 .sort((a, b) => b.count - a.count);
+
+            // Lista de turnos (para el historial clicable) + mapa de tecnólogos
+            setTecnologos(Object.fromEntries(profMap));
+            setTurnosList((turnos as any[]).map((t) => ({
+                id: t.id, fecha: t.fecha, tipoTurno: t.tipo_turno,
+                horaInicio: t.hora_inicio, horaFin: t.hora_fin, estado: t.estado,
+                recibidos: t.recibidos, entregados: t.entregados, createdBy: t.created_by,
+            })));
 
             setKpis({
                 operativa: {
@@ -178,5 +194,5 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
 
     useEffect(() => { recalcular(); }, []); // carga inicial (últimos 7 días)
 
-    return { kpis, loading, error, recalcular };
+    return { kpis, loading, error, recalcular, turnos: turnosList, tecnologos };
 };

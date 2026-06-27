@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useDashboardCuartoTurno, type Breakdown } from '../../hooks/useDashboardCuartoTurno';
+import { HistorialTurnos } from '../cuarto-turno/HistorialTurnos';
+import { TurnoDetalle } from '../cuarto-turno/TurnoDetalle';
 
 // Fecha ISO (YYYY-MM-DD) hace N días
 const isoDaysAgo = (n: number): string => {
@@ -87,9 +89,15 @@ const Section: React.FC<{ title: string; icon: React.ElementType; children: Reac
 export const DashboardCuartoTurno: React.FC = () => {
     const [desde, setDesde] = useState(isoDaysAgo(7));
     const [hasta, setHasta] = useState(isoToday());
-    const { kpis, loading, recalcular } = useDashboardCuartoTurno({ desde, hasta });
+    const { kpis, loading, recalcular, turnos, tecnologos } = useDashboardCuartoTurno({ desde, hasta });
+    const [detalleId, setDetalleId] = useState<string | null>(null);
 
     const { operativa, personal, sla, criticos, tecnicas } = kpis;
+
+    // Vista de detalle de turno (página completa)
+    if (detalleId) {
+        return <TurnoDetalle turnoId={detalleId} onVolver={() => setDetalleId(null)} />;
+    }
 
     const inputCls = 'bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-brand-text outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/20';
     const gridCards = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3';
@@ -201,6 +209,14 @@ export const DashboardCuartoTurno: React.FC = () => {
                             <BreakdownTable title="Por severidad"         rows={tecnicas.porSeveridad} acento="danger" />
                         </div>
                     </Section>
+
+                    {/* Historial de turnos del período (clicable → detalle) */}
+                    <HistorialTurnos
+                        turnos={turnos}
+                        loading={loading}
+                        resolveTecnologo={(id) => (id && tecnologos[id]) || '—'}
+                        onOpen={setDetalleId}
+                    />
                 </div>
             )}
         </div>
