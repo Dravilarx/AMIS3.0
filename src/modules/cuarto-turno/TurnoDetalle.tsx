@@ -50,7 +50,23 @@ const Section: React.FC<{ title: string; icon: React.ElementType; count: number;
 const Empty: React.FC = () => <p className="px-4 py-6 text-center text-xs text-brand-text/30">Sin incidencias en este turno.</p>;
 
 const th = 'px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap';
-const td = 'px-4 py-2.5 text-xs text-brand-text/70';
+const td = 'px-4 py-2.5 text-xs text-brand-text/70 align-top';
+
+// Bloque de texto libre completo (detalle, acción tomada, etc.), en su propia
+// línea debajo de la fila: sin truncar, con wrap, altura libre según contenido.
+const DetalleBlock: React.FC<{ label: string; texto?: string | null }> = ({ label, texto }) =>
+    !texto ? null : (
+        <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-brand-text/30 mb-0.5">{label}</p>
+            <p className="text-xs text-brand-text/80 whitespace-pre-wrap break-words leading-relaxed">{texto}</p>
+        </div>
+    );
+
+const DetalleRow: React.FC<{ colSpan: number; children: React.ReactNode }> = ({ colSpan, children }) => (
+    <tr className="bg-brand-surface/10">
+        <td colSpan={colSpan} className="px-4 pb-3 pt-0 space-y-2">{children}</td>
+    </tr>
+);
 
 export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> = ({ turnoId, onVolver }) => {
     const { user } = useAuth();
@@ -87,7 +103,7 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
             //    ct_casos_criticos: SELECT distinto según rol (privacidad a nivel de consulta).
             const casosCols = esJefatura
                 ? '*'
-                : 'id, id_turno, fecha, institucion, modalidad, id_estudio, fuera_plazo, minutos_retraso, medico_responsable, detalle, created_by, created_at';
+                : 'id, id_turno, fecha, institucion, modalidad, id_estudio, fuera_plazo, minutos_retraso, medico_responsable, severidad, detalle, created_by, created_at';
 
             const [perRes, slaRes, casosRes, tecRes] = await Promise.all([
                 supabase.from('ct_incid_personal').select('*').eq('id_turno', turnoId).order('fecha', { ascending: false }),
@@ -168,19 +184,25 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
                     {/* PERSONAL */}
                     <Section title="Incidencias de Personal" icon={AlertTriangle} count={personal.length}>
                         {personal.length === 0 ? <Empty /> : (
-                            <table className="w-full text-left border-collapse">
-                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Tipo', 'Médico', 'Bloque', 'Causa', 'Min. atraso', 'Severidad', 'Detalle'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
+                            <table className="w-full text-left border-collapse table-fixed">
+                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Tipo', 'Médico', 'Bloque', 'Causa', 'Min. atraso', 'Severidad'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
                                 <tbody className="divide-y divide-brand-border/30">
                                     {personal.map(i => (
-                                        <tr key={i.id} className="hover:bg-brand-surface/20">
-                                            <td className={td}>{i.tipo_incidencia || '—'}</td>
-                                            <td className={td}>{i.medico || '—'}</td>
-                                            <td className={td}>{i.bloque_horario || '—'}</td>
-                                            <td className={td}>{i.causa || '—'}</td>
-                                            <td className={td}>{i.minutos_atraso ?? '—'}</td>
-                                            <td className={td}><SevBadge sev={i.severidad} /></td>
-                                            <td className={cn(td, 'max-w-xs truncate')} title={i.detalle}>{i.detalle || '—'}</td>
-                                        </tr>
+                                        <React.Fragment key={i.id}>
+                                            <tr className="hover:bg-brand-surface/20">
+                                                <td className={cn(td, 'break-words')}>{i.tipo_incidencia || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.medico || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.bloque_horario || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.causa || '—'}</td>
+                                                <td className={td}>{i.minutos_atraso ?? '—'}</td>
+                                                <td className={td}><SevBadge sev={i.severidad} /></td>
+                                            </tr>
+                                            {i.detalle && (
+                                                <DetalleRow colSpan={6}>
+                                                    <DetalleBlock label="Detalle" texto={i.detalle} />
+                                                </DetalleRow>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
@@ -190,26 +212,32 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
                     {/* SLA */}
                     <Section title="Desviaciones SLA" icon={Timer} count={sla.length}>
                         {sla.length === 0 ? <Empty /> : (
-                            <table className="w-full text-left border-collapse">
-                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Tipo', 'Médico', 'Modalidad', 'Min. exceso', 'Severidad', 'Detalle'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
+                            <table className="w-full text-left border-collapse table-fixed">
+                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Tipo', 'Médico', 'Modalidad', 'Min. exceso', 'Severidad'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
                                 <tbody className="divide-y divide-brand-border/30">
                                     {sla.map(i => (
-                                        <tr key={i.id} className="hover:bg-brand-surface/20">
-                                            <td className={td}>{i.tipo_desviacion || '—'}</td>
-                                            <td className={td}>{i.medico || '—'}</td>
-                                            <td className={td}>{i.modalidad || '—'}</td>
-                                            <td className={td}>{i.minutos_exceso ?? '—'}</td>
-                                            <td className={td}><SevBadge sev={i.severidad} /></td>
-                                            <td className={cn(td, 'max-w-xs truncate')} title={i.detalle}>{i.detalle || '—'}</td>
-                                        </tr>
+                                        <React.Fragment key={i.id}>
+                                            <tr className="hover:bg-brand-surface/20">
+                                                <td className={cn(td, 'break-words')}>{i.tipo_desviacion || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.medico || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.modalidad || '—'}</td>
+                                                <td className={td}>{i.minutos_exceso ?? '—'}</td>
+                                                <td className={td}><SevBadge sev={i.severidad} /></td>
+                                            </tr>
+                                            {i.detalle && (
+                                                <DetalleRow colSpan={5}>
+                                                    <DetalleBlock label="Detalle" texto={i.detalle} />
+                                                </DetalleRow>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
                         )}
                     </Section>
 
-                    {/* CRÍTICOS — paciente/rut solo si jefatura (controlado en el SELECT) */}
-                    <Section title="Casos Críticos" icon={ShieldAlert} count={casos.length}>
+                    {/* INCIDENTE GRAVE DEL TURNO (antes "Casos Críticos") — paciente/rut solo si jefatura (controlado en el SELECT) */}
+                    <Section title="Incidente grave del turno" icon={ShieldAlert} count={casos.length}>
                         {!esJefatura && (
                             <div className="flex items-center gap-2 px-4 py-2 bg-warning/5 border-b border-warning/20">
                                 <Lock className="w-3.5 h-3.5 text-warning/70 shrink-0" />
@@ -217,26 +245,33 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
                             </div>
                         )}
                         {casos.length === 0 ? <Empty /> : (
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed">
                                 <thead><tr className="bg-brand-surface/30 border-b border-brand-border">
                                     {(esJefatura
-                                        ? ['Institución', 'Modalidad', 'N° Estudio', 'Paciente', 'RUT', 'Fuera plazo', 'Min. retraso', 'Médico resp.', 'Detalle']
-                                        : ['Institución', 'Modalidad', 'N° Estudio', 'Fuera plazo', 'Min. retraso', 'Médico resp.', 'Detalle']
+                                        ? ['Institución', 'N° Acceso', 'Severidad', 'Paciente', 'RUT', 'Modalidad', 'Fuera plazo', 'Min. retraso', 'Médico resp.']
+                                        : ['Institución', 'N° Acceso', 'Severidad', 'Modalidad', 'Fuera plazo', 'Min. retraso', 'Médico resp.']
                                     ).map(h => <th key={h} className={th}>{h}</th>)}
                                 </tr></thead>
                                 <tbody className="divide-y divide-brand-border/30">
                                     {casos.map(i => (
-                                        <tr key={i.id} className="hover:bg-brand-surface/20">
-                                            <td className={td}>{i.institucion || '—'}</td>
-                                            <td className={td}>{i.modalidad || '—'}</td>
-                                            <td className={td}>{i.id_estudio || '—'}</td>
-                                            {esJefatura && <td className={cn(td, 'text-warning/80')}><span className="inline-flex items-center gap-1"><Lock className="w-2.5 h-2.5" />{i.paciente || '—'}</span></td>}
-                                            {esJefatura && <td className={cn(td, 'text-warning/80')}>{i.rut || '—'}</td>}
-                                            <td className={td}>{i.fuera_plazo ? <span className="text-danger font-bold">Sí</span> : 'No'}</td>
-                                            <td className={td}>{i.minutos_retraso ?? '—'}</td>
-                                            <td className={td}>{i.medico_responsable || '—'}</td>
-                                            <td className={cn(td, 'max-w-xs truncate')} title={i.detalle}>{i.detalle || '—'}</td>
-                                        </tr>
+                                        <React.Fragment key={i.id}>
+                                            <tr className="hover:bg-brand-surface/20">
+                                                <td className={cn(td, 'break-words')}>{i.institucion || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.id_estudio || '—'}</td>
+                                                <td className={td}><SevBadge sev={i.severidad} /></td>
+                                                {esJefatura && <td className={cn(td, 'text-warning/80 break-words')}><span className="inline-flex items-center gap-1"><Lock className="w-2.5 h-2.5 shrink-0" />{i.paciente || '—'}</span></td>}
+                                                {esJefatura && <td className={cn(td, 'text-warning/80 break-words')}>{i.rut || '—'}</td>}
+                                                <td className={cn(td, 'break-words')}>{i.modalidad || '—'}</td>
+                                                <td className={td}>{i.fuera_plazo ? <span className="text-danger font-bold">Sí</span> : 'No'}</td>
+                                                <td className={td}>{i.minutos_retraso ?? '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.medico_responsable || '—'}</td>
+                                            </tr>
+                                            {i.detalle && (
+                                                <DetalleRow colSpan={esJefatura ? 9 : 7}>
+                                                    <DetalleBlock label="Detalle" texto={i.detalle} />
+                                                </DetalleRow>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
@@ -246,19 +281,25 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
                     {/* TÉCNICAS */}
                     <Section title="Incidencias Técnicas" icon={Wrench} count={tecnicas.length}>
                         {tecnicas.length === 0 ? <Empty /> : (
-                            <table className="w-full text-left border-collapse">
-                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Categoría', 'Centro', 'Sistema', 'Estado', 'Severidad', 'Detalle', 'Acción'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
+                            <table className="w-full text-left border-collapse table-fixed">
+                                <thead><tr className="bg-brand-surface/30 border-b border-brand-border">{['Categoría', 'Centro', 'Sistema', 'Estado', 'Severidad'].map(h => <th key={h} className={th}>{h}</th>)}</tr></thead>
                                 <tbody className="divide-y divide-brand-border/30">
                                     {tecnicas.map(i => (
-                                        <tr key={i.id} className="hover:bg-brand-surface/20">
-                                            <td className={td}>{i.categoria_tecnica || '—'}</td>
-                                            <td className={td}>{i.centro_afectado || '—'}</td>
-                                            <td className={td}>{i.sistema || '—'}</td>
-                                            <td className={td}>{i.estado || '—'}</td>
-                                            <td className={td}><SevBadge sev={i.severidad} /></td>
-                                            <td className={cn(td, 'max-w-xs truncate')} title={i.detalle}>{i.detalle || '—'}</td>
-                                            <td className={cn(td, 'max-w-xs truncate')} title={i.accion_tomada}>{i.accion_tomada || '—'}</td>
-                                        </tr>
+                                        <React.Fragment key={i.id}>
+                                            <tr className="hover:bg-brand-surface/20">
+                                                <td className={cn(td, 'break-words')}>{i.categoria_tecnica || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.centro_afectado || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.sistema || '—'}</td>
+                                                <td className={cn(td, 'break-words')}>{i.estado || '—'}</td>
+                                                <td className={td}><SevBadge sev={i.severidad} /></td>
+                                            </tr>
+                                            {(i.detalle || i.accion_tomada) && (
+                                                <DetalleRow colSpan={5}>
+                                                    <DetalleBlock label="Detalle" texto={i.detalle} />
+                                                    <DetalleBlock label="Acción tomada" texto={i.accion_tomada} />
+                                                </DetalleRow>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>

@@ -189,8 +189,8 @@ export const DashboardCuartoTurno: React.FC = () => {
                         </div>
                     </Section>
 
-                    {/* 4) Casos Críticos */}
-                    <Section title="Casos Críticos" icon={ShieldAlert}>
+                    {/* 4) Incidente grave del turno (antes "Casos Críticos") */}
+                    <Section title="Incidente grave del turno" icon={ShieldAlert}>
                         <div className={gridCards}>
                             <Kpi label="Registrados"       value={criticos.registrados} acento="teal" />
                             <Kpi label="Fuera de plazo"    value={criticos.fueraPlazo} acento="danger" />

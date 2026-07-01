@@ -65,6 +65,7 @@ export interface CasoCritico {
     fueraPlazo:          boolean;
     minutosRetraso?:     number;
     medicoResponsable?:  string;
+    severidad?:          string;
     detalle?:            string;
     createdBy?:          string;
     createdAt:           string;
@@ -148,6 +149,7 @@ const mapCasoCritico = (r: any): CasoCritico => ({
     fueraPlazo:         r.fuera_plazo ?? false,
     minutosRetraso:     r.minutos_retraso,
     medicoResponsable:  r.medico_responsable,
+    severidad:          r.severidad,
     detalle:            r.detalle,
     createdBy:          r.created_by,
     createdAt:          r.created_at,
@@ -606,6 +608,7 @@ export const useCuartoTurno = () => {
         fueraPlazo?:        boolean;
         minutosRetraso?:    number;
         medicoResponsable?: string;
+        severidad?:         string;
         detalle?:           string;
     }) => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -621,6 +624,7 @@ export const useCuartoTurno = () => {
             fuera_plazo:        payload.fueraPlazo        ?? false,
             minutos_retraso:    payload.minutosRetraso    ?? null,
             medico_responsable: payload.medicoResponsable || null,
+            severidad:          payload.severidad         || null,
             detalle:            payload.detalle           || null,
             created_by:         user?.id                  || null,
         });
