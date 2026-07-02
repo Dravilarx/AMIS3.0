@@ -92,11 +92,11 @@ export const TurnoDetalle: React.FC<{ turnoId: string; onVolver: () => void }> =
             // 1. Turno por id
             const { data: t } = await supabase.from('ct_turnos').select('*').eq('id', turnoId).maybeSingle();
 
-            // 2. Tecnólogo (created_by → profiles)
+            // 2. Tecnólogo (created_by → profiles_publicos, sin rut/email)
             let tecno = '—';
             if (t?.created_by) {
-                const { data: p } = await supabase.from('profiles').select('full_name, email').eq('id', t.created_by).maybeSingle();
-                tecno = p?.full_name || p?.email || '—';
+                const { data: p } = await supabase.from('profiles_publicos').select('full_name').eq('id', t.created_by).maybeSingle();
+                tecno = p?.full_name || '—';
             }
 
             // 3. Incidencias por id_turno.
