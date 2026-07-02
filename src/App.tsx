@@ -229,7 +229,9 @@ function App() {
             case 'dashboard_cuarto_turno': return <DashboardCuartoTurno />;
             case 'solicitudes':         return <SolicitudesDashboard />;
             case 'protocolos':          return <ProtocolosDashboard />;
-            case 'portal_institucional': return <PortalInstitucionalAdmin />;
+            case 'portal_institucional':
+                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalInstitucionalAdmin />;
+                return <DashboardModule />;
             default:                    return <DashboardModule />;
         }
     };
