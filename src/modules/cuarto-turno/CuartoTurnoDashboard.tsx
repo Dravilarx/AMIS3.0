@@ -666,7 +666,7 @@ export const CuartoTurnoDashboard: React.FC = () => {
     const resolveTecnologo = (id?: string) => {
         if (!id) return '—';
         const t = ct.tecnologos[id];
-        return t?.fullName || t?.email || '—';
+        return t?.fullName || '—';
     };
 
     // Vista de detalle de turno (página completa)

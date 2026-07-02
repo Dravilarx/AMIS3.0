@@ -80,9 +80,9 @@ export const MessagingHub: React.FC = () => {
                 const queryText = `%${parts.join('%')}%`;
 
                 const [profilesRes, profsRes] = await Promise.all([
-                    supabase.from('profiles')
-                        .select('id, full_name, role, rut')
-                        .or(`full_name.ilike.${queryText},rut.ilike.${queryText}`)
+                    supabase.from('profiles_publicos')
+                        .select('id, full_name, role')
+                        .ilike('full_name', queryText)
                         .limit(10),
                     supabase.from('professionals')
                         .select('id, name, last_name, role, national_id')
@@ -95,7 +95,6 @@ export const MessagingHub: React.FC = () => {
                     combinedProfiles.push(...profilesRes.data.map((p: any) => ({
                         id: p.id,
                         full_name: p.full_name,
-                        rut: p.rut,
                         role: p.role || 'Admin/App',
                         source: 'perfil'
                     })));
@@ -747,7 +746,7 @@ export const MessagingHub: React.FC = () => {
                                                 type="text"
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                placeholder="Buscar por nombre o RUT..."
+                                                placeholder="Buscar por nombre..."
                                                 className="w-full bg-brand-bg border border-brand-border rounded-xl pl-10 pr-4 py-3 text-xs text-brand-text focus:outline-none focus:border-info/50"
                                             />
                                         </div>

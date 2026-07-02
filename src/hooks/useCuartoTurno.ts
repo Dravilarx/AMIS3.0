@@ -50,7 +50,6 @@ export interface IncidenciaTecnica {
 export interface Tecnologo {
     id:        string;
     fullName?: string;
-    email?:    string;
 }
 
 export interface CasoCritico {
@@ -346,16 +345,17 @@ export const useCuartoTurno = () => {
         setLoadingCasos(false);
     };
 
-    // Mapa created_by → tecnólogo (nombre/correo), para que la jefa vea quién estuvo cada día.
+    // Mapa created_by → tecnólogo (nombre), para que la jefa vea quién estuvo cada día.
+    // Lee de profiles_publicos (sin rut/email) — evita exponer datos sensibles de otros usuarios.
     const fetchTecnologos = async () => {
         const { data, error } = await supabase
-            .from('profiles')
-            .select('id, full_name, email');
+            .from('profiles_publicos')
+            .select('id, full_name');
 
-        console.log('tecnologos (profiles):', data, 'error:', error);
+        console.log('tecnologos (profiles_publicos):', data, 'error:', error);
         if (!error && data) {
             const map: Record<string, Tecnologo> = {};
-            for (const p of data as any[]) map[p.id] = { id: p.id, fullName: p.full_name, email: p.email };
+            for (const p of data as any[]) map[p.id] = { id: p.id, fullName: p.full_name };
             setTecnologos(map);
         }
     };

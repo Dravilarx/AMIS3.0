@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 export interface HRManager {
     id: string;
     fullName: string;
-    email: string;
     role: string;
 }
 
@@ -14,16 +13,12 @@ export const useHRManagers = () => {
 
     const fetchManagers = async () => {
         try {
-            // BUG #1 CORREGIDO: Se agrega 'email' al SELECT — existía en la tabla
-            // pero no se pedía, dejando el campo siempre vacío.
-            //
-            // BUG #2 CORREGIDO: Los roles eran 'ADM', 'Manager', 'RRHH' —
-            // ninguno coincide con los roles reales del sistema definidos en
-            // useAuth.tsx ('SUPER_ADMIN', 'ADMIN', 'MANAGER').
-            // Resultado anterior: lista de managers siempre vacía.
+            // Lee de profiles_publicos (sin rut/email) — evita exponer datos
+            // sensibles de otros usuarios. Los roles coinciden con los reales
+            // del sistema definidos en useAuth.tsx ('SUPER_ADMIN', 'ADMIN', 'MANAGER').
             const { data, error } = await supabase
-                .from('profiles')
-                .select('id, full_name, email, role')
+                .from('profiles_publicos')
+                .select('id, full_name, role')
                 .in('role', ['SUPER_ADMIN', 'ADMIN', 'MANAGER'])
                 .order('full_name', { ascending: true });
 
@@ -32,8 +27,7 @@ export const useHRManagers = () => {
             setManagers(
                 (data || []).map(m => ({
                     id:       m.id,
-                    fullName: m.full_name || m.email,
-                    email:    m.email || '',
+                    fullName: m.full_name || m.id,
                     role:     m.role,
                 }))
             );

@@ -106,7 +106,7 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
                 // PRIVACIDAD: NO se piden paciente ni rut
                 rango(supabase.from('ct_casos_criticos').select('fuera_plazo, minutos_retraso')),
                 rango(supabase.from('ct_incid_tecnicas').select('estado, categoria_tecnica, severidad')),
-                supabase.from('profiles').select('id, full_name, email'),
+                supabase.from('profiles_publicos').select('id, full_name'),
             ]);
 
             const firstErr = turnosRes.error || personalRes.error || slaRes.error || criticosRes.error || tecnicasRes.error;
@@ -126,9 +126,9 @@ export const useDashboardCuartoTurno = ({ desde, hasta }: { desde: string; hasta
             const turnosCount          = turnos.length;
             const estabilizados        = turnos.filter((t: any) => t.estabilizado === true).length;
 
-            // Turnos por tecnólogo: cruza created_by con profiles (nombre/correo)
+            // Turnos por tecnólogo: cruza created_by con profiles_publicos (solo nombre)
             const profMap = new Map<string, string>();
-            for (const p of (profilesRes.data || []) as any[]) profMap.set(p.id, p.full_name || p.email || p.id);
+            for (const p of (profilesRes.data || []) as any[]) profMap.set(p.id, p.full_name || p.id);
             const tecnoCount = new Map<string, number>();
             for (const t of turnos as any[]) {
                 const nombre = t.created_by ? (profMap.get(t.created_by) || 'Desconocido') : 'Sin asignar';

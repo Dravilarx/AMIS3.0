@@ -61,7 +61,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                     setTasks(taskData);
                 }
 
-                const { data: profData } = await supabase.from('profiles').select('id, full_name, role').limit(10);
+                const { data: profData } = await supabase.from('profiles_publicos').select('id, full_name, role').limit(10);
                 if (profData) {
                     setProfiles(profData);
                 }

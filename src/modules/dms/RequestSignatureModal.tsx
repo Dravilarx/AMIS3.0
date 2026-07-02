@@ -26,11 +26,11 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
             try {
                 const queryText = `%${searchTerm.toLowerCase()}%`;
 
-                // Promesa 1: System Profiles
+                // Promesa 1: System Profiles (vista pública — sin rut/email, búsqueda solo por nombre)
                 const profilesPromise = supabase
-                    .from('profiles')
-                    .select('id, full_name, role, rut')
-                    .or(`full_name.ilike.${queryText},rut.ilike.${queryText}`)
+                    .from('profiles_publicos')
+                    .select('id, full_name, role')
+                    .ilike('full_name', queryText)
                     .limit(10);
 
                 // Promesa 2: Clinical Professionals
@@ -55,7 +55,6 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
                     combinedProfiles.push(...profilesRes.data.map(p => ({
                         id: p.id,
                         full_name: p.full_name,
-                        rut: p.rut,
                         role: p.role || 'Admin/App',
                         source: 'perfil'
                     })));
@@ -205,7 +204,7 @@ export const RequestSignatureModal: React.FC<RequestSignatureModalProps> = ({ do
                                         )}
                                     </p>
                                     <p className="text-[10px] text-white/40 uppercase tracking-widest mt-0.5">
-                                        {profile.rut || 'Sin Identificación'} • {profile.role || 'Colaborador'}
+                                        {profile.role || 'Colaborador'}
                                     </p>
                                 </div>
                             </div>
