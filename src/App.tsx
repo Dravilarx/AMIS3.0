@@ -22,7 +22,10 @@ const StatMultirisModule     = lazy(() => import('./modules/stat-multiris/StatMu
 const StatMultirisHTML       = lazy(() => import('./modules/stat-multiris/StatMultirisHTML').then(m => ({ default: m.StatMultirisHTML })));
 const WizardCompetencias     = lazy(() => import('./modules/rrhh-clinico/WizardCompetencias').then(m => ({ default: m.WizardCompetencias })));
 const ResumenCompetenciasAdmin = lazy(() => import('./modules/rrhh-clinico/ResumenCompetenciasAdmin').then(m => ({ default: m.ResumenCompetenciasAdmin })));
-const PatientGuideView       = lazy(() => import('./modules/clinical/PatientGuideView').then(m => ({ default: m.PatientGuideView })));
+// Guía pública del paciente RETIRADA (clinical_appointments ya no permite acceso
+// sin login). PatientGuideView.tsx queda en el repo sin conectar, por si se
+// reactiva de forma segura más adelante. No borrar el archivo.
+// const PatientGuideView    = lazy(() => import('./modules/clinical/PatientGuideView').then(m => ({ default: m.PatientGuideView })));
 const AiAccessManager        = lazy(() => import('./modules/ai-access/AiAccessManager').then(m => ({ default: m.AiAccessManager })));
 const DispatchCenter         = lazy(() => import('./modules/dispatch/DispatchCenter').then(m => ({ default: m.DispatchCenter })));
 const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickViewBridge').then(m => ({ default: m.QuickViewBridge })));
@@ -137,13 +140,17 @@ function App() {
     }, [currentView, user]);
 
     // ── Rutas especiales sin layout ───────────────────────────────────────────
-    if (window.location.pathname.startsWith('/guia/')) {
-        return (
-            <Suspense fallback={<ModuleLoader />}>
-                <PatientGuideView />
-            </Suspense>
-        );
-    }
+    // Guía pública del paciente (/guia/:id → PatientGuideView) RETIRADA: clinical_appointments
+    // ya no permite acceso sin login y esta función no se usará por ahora. El código
+    // del componente sigue en modules/clinical/PatientGuideView.tsx sin conectar,
+    // por si se reactiva de forma segura (con auth) más adelante.
+    // if (window.location.pathname.startsWith('/guia/')) {
+    //     return (
+    //         <Suspense fallback={<ModuleLoader />}>
+    //             <PatientGuideView />
+    //         </Suspense>
+    //     );
+    // }
 
     if (window.location.pathname === '/quick-view') {
         return (
