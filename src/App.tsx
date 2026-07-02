@@ -48,6 +48,27 @@ const ModuleLoader = () => (
     </div>
 );
 
+// ─── Estado de acceso no autorizado (guard genérico de renderView) ───────────
+const AccesoNoAutorizado = ({ onIrAVistaSegura }: { onIrAVistaSegura: () => void }) => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 text-center px-6">
+        <div className="w-14 h-14 rounded-2xl bg-danger/10 border border-danger/20 flex items-center justify-center">
+            <span className="text-2xl">🔒</span>
+        </div>
+        <div>
+            <h3 className="text-brand-text font-black text-sm uppercase tracking-widest">Acceso no autorizado</h3>
+            <p className="text-brand-text/40 text-xs mt-1 max-w-xs">
+                No tienes permiso para ver este módulo.
+            </p>
+        </div>
+        <button
+            onClick={onIrAVistaSegura}
+            className="px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
+        >
+            Ir a mi panel
+        </button>
+    </div>
+);
+
 type CurrentView =
     | 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical'
     | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation'
@@ -55,6 +76,13 @@ type CurrentView =
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
     | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional';
+
+// Vistas gateadas por permissions[modulo].read: exactamente las del menú lateral
+// (NAV_ITEMS ya es la fuente única que usa Layout.tsx para filtrar el sidebar).
+// Las vistas de consola admin (admin, ai_access, resumen_competencias,
+// auditoria_rrhh, portal_medicos_admin, portal_institucional) NO están acá:
+// se gatean por rol directamente dentro de renderView/Layout, no por permissions.
+const MODULE_GATED_VIEWS = new Set<string>(NAV_ITEMS.map(i => i.id));
 
 function App() {
     const { user, hasModuleAccess, isSuperAdmin } = useAuth();
@@ -68,6 +96,10 @@ function App() {
         const first = NAV_ITEMS.find(i => hasModuleAccess(i.id));
         return (first?.id as CurrentView) ?? 'dashboard';
     };
+    // Guard genérico: ¿el usuario puede ver esta vista? Las vistas fuera de
+    // MODULE_GATED_VIEWS (consola admin) no pasan por acá — ya se gatean por rol.
+    const canSeeView = (view: CurrentView) =>
+        !MODULE_GATED_VIEWS.has(view) || hasModuleAccess(view);
 
     // Vista inicial tras login, según permisos (nadie aterriza en el Dashboard si no le corresponde)
     useEffect(() => {
@@ -89,10 +121,17 @@ function App() {
         setCurrentView(canSeeDashboard() ? 'dashboard' : firstVisibleModule());
     }, [user]);
 
-    // Guard: si alguien sin acceso al Dashboard llega a esa vista (navegando a mano), redirigir
+    // Guard: si currentView queda en una vista sin permiso por CUALQUIER vía (no
+    // solo clic en el sidebar — un botón que navegue, un onNavigate directo, etc.),
+    // corrige el estado a una vista segura. Cubre 'dashboard' (caso especial vía
+    // canSeeDashboard) y, en general, cualquier vista de MODULE_GATED_VIEWS.
     useEffect(() => {
         if (!user) return;
         if (currentView === 'dashboard' && !canSeeDashboard()) {
+            setCurrentView(firstVisibleModule());
+            return;
+        }
+        if (!canSeeView(currentView)) {
             setCurrentView(firstVisibleModule());
         }
     }, [currentView, user]);
@@ -138,6 +177,13 @@ function App() {
     if (!user) return <AuthView />;
 
     const renderView = () => {
+        // Guard genérico: antes de renderizar, verifica hasModuleAccess(currentView)
+        // para las vistas gateadas por permisos (NAV_ITEMS). Cubre cualquier vía por
+        // la que currentView haya llegado acá, no solo el clic en el sidebar.
+        if (!canSeeView(currentView)) {
+            return <AccesoNoAutorizado onIrAVistaSegura={() => setCurrentView(firstVisibleModule())} />;
+        }
+
         switch (currentView) {
             case 'dashboard':           return <DashboardModule />;
             case 'tenders':             return <TenderDashboard />;
