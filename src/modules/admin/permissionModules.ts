@@ -20,6 +20,7 @@ export const MODULES = [
     { id: 'projects',             name: 'Proyectos BPM' },
     { id: 'messaging',            name: 'Mensajería' },
     { id: 'dispatch',             name: 'Centro de Despacho' },
+    { id: 'asistente',            name: 'Asistente' },
     { id: 'dms',                  name: 'Archivo Digital' },
     { id: 'ideation',             name: 'Innovación' },
     { id: 'news',                 name: 'Noticias Corporativas' },
