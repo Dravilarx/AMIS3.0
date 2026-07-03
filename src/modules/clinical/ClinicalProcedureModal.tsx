@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, ClipboardList, Loader2, Save, Activity, Landmark } from 'lucide-react';
-import { type ClinicalAppointment, type MedicalProcedure, type ClinicalCenter, type MedicalProfessional } from '../../types/clinical';
+import { type ClinicalAppointment, type MedicalProcedure, type MedicalProfessional } from '../../types/clinical';
 import { formatName, formatRUT, formatPhone } from '../../lib/utils';
 import { SmartCombobox } from '../../components/ui/SmartCombobox';
 import type { Institution } from '../../types/institutions';
@@ -11,7 +11,6 @@ interface ClinicalProcedureModalProps {
     onSave: (data: Partial<ClinicalAppointment>) => Promise<{ success: boolean; error?: string }>;
     initialData?: ClinicalAppointment | null;
     catalog: MedicalProcedure[];
-    centers: ClinicalCenter[];
     doctors: MedicalProfessional[];
     institutions: Institution[];
 }
@@ -22,7 +21,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
     onSave,
     initialData,
     catalog,
-    centers,
     doctors,
     institutions
 }) => {
@@ -35,13 +33,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
     const institutionOptions = institutions.map(i => ({
         id: i.id,
         label: i.legalName,
-        sublabel: i.institutionCategory.replace('_', ' ')
-    }));
-
-    const centerOptions = centers.map(c => ({
-        id: c.id,
-        label: c.name,
-        sublabel: c.city || 'Sede AMIS'
+        sublabel: i.city || i.institutionCategory.replace('_', ' ')
     }));
 
     const [formData, setFormData] = useState<Partial<ClinicalAppointment>>({
@@ -55,7 +47,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
         referrerName: '',
         institutionId: '',
         procedureId: '',
-        centerId: '',
         appointmentDate: new Date().toISOString().split('T')[0],
         appointmentTime: '09:00',
         logisticsStatus: {
@@ -88,7 +79,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                 referrerName: '',
                 institutionId: institutions[0]?.id || '',
                 procedureId: catalog[0]?.id || '',
-                centerId: centers[0]?.id || '',
                 appointmentDate: new Date().toISOString().split('T')[0],
                 appointmentTime: '09:00',
                 logisticsStatus: {
@@ -103,7 +93,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                 doctorId: doctors[0]?.id || ''
             });
         }
-    }, [initialData, isOpen, catalog, centers]);
+    }, [initialData, isOpen, catalog, institutions]);
 
     if (!isOpen) return null;
 
@@ -292,7 +282,7 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Institución</label>
+                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Institución / Sede de Atención</label>
                                 <SmartCombobox
                                     options={institutionOptions}
                                     value={formData.institutionId || ''}
@@ -327,17 +317,6 @@ export const ClinicalProcedureModal: React.FC<ClinicalProcedureModalProps> = ({
                                     onChange={(val) => setFormData({ ...formData, doctorId: val })}
                                     placeholder="Buscar médico por nombre o especialidad..."
                                     storageKey="amis_frequent_doctors"
-                                />
-                            </div>
-                            <div className="space-y-2.5">
-                                <label className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-1">Sede de Atención</label>
-                                <SmartCombobox
-                                    options={centerOptions}
-                                    value={formData.centerId || ''}
-                                    onChange={(val) => setFormData({ ...formData, centerId: val })}
-                                    placeholder="Buscar sede o ingresar nueva..."
-                                    storageKey="amis_frequent_centers"
-                                    allowCustomText={true}
                                 />
                             </div>
                         </div>

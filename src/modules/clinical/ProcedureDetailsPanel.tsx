@@ -29,7 +29,7 @@ interface ProcedureDetailsPanelProps {
     onClose: () => void;
     appointment: ClinicalAppointment | null;
     onVerifyDoc: (docId: string, verified: boolean, file?: File) => Promise<{ success: boolean; error?: string }>;
-    onGetIndications: (procedureId: string, centerId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
+    onGetIndications: (procedureId: string, institutionId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
     onUpdateStatus: (id: string, status: any) => Promise<{ success: boolean; error?: string }>;
     onEdit?: (appointment: ClinicalAppointment) => void;
     onGetHistory: (rut: string) => Promise<ClinicalAppointment[]>;
@@ -70,7 +70,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
     useEffect(() => {
         if (isOpen && appointment) {
             setLoadingInd(true);
-            onGetIndications(appointment.procedureId, appointment.centerId || '')
+            onGetIndications(appointment.procedureId, appointment.institutionId || '')
                 .then(res => {
                     if (res.success && res.data) setIndications(res.data);
                     else setIndications(null);
@@ -154,7 +154,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
             .replace(/{procedimiento}/g, appointment.procedure?.name || '')
             .replace(/{fecha}/g, appointment.appointmentDate)
             .replace(/{hora}/g, appointment.appointmentTime)
-            .replace(/{sede}/g, appointment.center?.name || '')
+            .replace(/{sede}/g, appointment.institution?.legalName || '')
             .replace(/{alertas}/g, alertText) + accessMessage;
     };
 
@@ -259,7 +259,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                             <div>
                                                 <p className="text-[11px] font-black text-brand-text uppercase">{h.procedure?.name}</p>
                                                 <p className="text-[10px] text-brand-text/40 font-bold mt-1">
-                                                    {new Date(`${h.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} - {h.center?.name || 'Sede'}
+                                                    {new Date(`${h.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} - {h.institution?.legalName || 'Sede'}
                                                 </p>
                                             </div>
                                             <span className={cn("px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg", h.status === 'completed' ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>
@@ -323,7 +323,7 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                         <div className="grid grid-cols-2 gap-8 pt-6 border-t border-success/20">
                             <div>
                                 <p className="text-[9px] font-black text-brand-text/40 uppercase tracking-[0.2em] mb-1.5 font-bold">Sede Operativa</p>
-                                <p className="text-xs font-black text-brand-text/60 uppercase">{appointment.center?.name}</p>
+                                <p className="text-xs font-black text-brand-text/60 uppercase">{appointment.institution?.legalName}</p>
                             </div>
                             <div>
                                 <p className="text-[9px] font-black text-brand-text/40 uppercase tracking-[0.2em] mb-1.5 font-bold">Centro de Costo</p>

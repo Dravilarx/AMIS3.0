@@ -1,3 +1,5 @@
+import type { Institution } from './institutions';
+
 export type ClinicalStep = 'Admisión' | 'Preparación' | 'Ejecución' | 'Cierre';
 export type AppointmentStatus = 'scheduled' | 'requirements_pending' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -33,13 +35,6 @@ export interface RequirementBattery {
     requirements: MedicalRequirement[];
 }
 
-export interface ClinicalCenter {
-    id: string;
-    name: string;
-    city: string;
-    address: string;
-}
-
 export interface ClinicalAppointment {
     id: string;
     patientName: string;
@@ -53,9 +48,8 @@ export interface ClinicalAppointment {
 
     procedureId: string;
     procedure?: MedicalProcedure;
-    centerId?: string;
-    center?: ClinicalCenter;
     institutionId?: string;
+    institution?: Institution;
 
     doctorId: string;
     doctor?: MedicalProfessional;
@@ -100,8 +94,8 @@ export interface ClinicalIndications {
     id: string;
     procedureId: string;
     procedureName?: string;
-    centerId: string;
-    centerName?: string;
+    institutionId: string;
+    institutionName?: string;
     emailFormat: string;
     whatsappFormat: string;
 }

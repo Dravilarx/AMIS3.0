@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import type {
     ClinicalAppointment,
     MedicalProcedure,
-    ClinicalCenter,
     AppointmentStatus,
     MedicalRequirement,
     RequirementBattery,
@@ -12,10 +11,29 @@ import type {
 import type { Institution } from '../../types/institutions';
 import { supabase } from '../../lib/supabase';
 
+const mapInstitution = (i: any): Institution | undefined => {
+    if (!i) return undefined;
+    return {
+        id: i.id,
+        legalName: i.legal_name,
+        commercialName: i.commercial_name,
+        rut: i.rut,
+        address: i.address,
+        city: i.city,
+        region: i.region,
+        institutionCategory: i.institution_category,
+        sector: i.sector,
+        institutionType: i.institution_type,
+        criticality: i.criticality,
+        isActive: i.is_active,
+        createdAt: i.created_at,
+        updatedAt: i.updated_at
+    };
+};
+
 export const useClinicalProcedures = () => {
     const [appointments, setAppointments] = useState<ClinicalAppointment[]>([]);
     const [catalog, setCatalog] = useState<MedicalProcedure[]>([]);
-    const [centers, setCenters] = useState<ClinicalCenter[]>([]);
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const [requirements, setRequirements] = useState<MedicalRequirement[]>([]);
     const [batteries, setBatteries] = useState<RequirementBattery[]>([]);
@@ -35,7 +53,7 @@ export const useClinicalProcedures = () => {
                 .select(`
                     *,
                     procedure:medical_procedures_catalog(*),
-                    center:clinical_centers(*),
+                    institution:institutions(*),
                     documents:appointment_documents(
                         *,
                         requirement:medical_requirements(*)
@@ -46,20 +64,18 @@ export const useClinicalProcedures = () => {
 
             if (appError) throw appError;
 
-            // Fetch Catalog, Centers, Requirements, Batteries, all Indications and Addendum Requests
-            const [catRes, centerRes, reqRes, battRes, indRes, docRes, instRes, addendumRes] = await Promise.all([
+            // Fetch Catalog, Requirements, Batteries, all Indications and Addendum Requests
+            const [catRes, reqRes, battRes, indRes, docRes, instRes, addendumRes] = await Promise.all([
                 supabase.from('medical_procedures_catalog').select('*').order('name'),
-                supabase.from('clinical_centers').select('*').order('name'),
                 supabase.from('medical_requirements').select('*').order('name'),
                 supabase.from('requirement_batteries').select('*, requirements:medical_requirements(*)').order('name'),
-                supabase.from('clinical_indications').select('*, procedure:medical_procedures_catalog(name), center:clinical_centers(name)'),
+                supabase.from('clinical_indications').select('*, procedure:medical_procedures_catalog(name), institution:institutions(legal_name)'),
                 supabase.from('professionals').select('*').order('name'),
                 supabase.from('institutions').select('*').order('legal_name'),
                 supabase.from('addendum_requests').select('*').eq('status', 'ASSIGNED_TO_MEDIC')
             ]);
 
             if (catRes.error) throw catRes.error;
-            if (centerRes.error) throw centerRes.error;
             if (reqRes.error) throw reqRes.error;
             if (battRes.error) throw battRes.error;
             if (docRes.error) throw docRes.error;
@@ -97,9 +113,8 @@ export const useClinicalProcedures = () => {
                         rut: d.national_id || ''
                     };
                 })(),
-                centerId: app.center_id,
-                center: app.center,
                 institutionId: app.institution_id,
+                institution: mapInstitution(app.institution),
                 appointmentDate: app.appointment_date,
                 appointmentTime: app.appointment_time?.substring(0, 5),
                 status: app.status,
@@ -141,21 +156,8 @@ export const useClinicalProcedures = () => {
                 baterias: battRes.data?.length
             });
 
-            setCenters(centerRes.data || []);
             setAddendumRequests(addendumRes.data || []);
-            setInstitutions((instRes.data || []).map((i: any) => ({
-                id: i.id,
-                legalName: i.legal_name,
-                commercialName: i.commercial_name,
-                rut: i.rut,
-                institutionCategory: i.institution_category,
-                sector: i.sector,
-                institutionType: i.institution_type,
-                criticality: i.criticality,
-                isActive: i.is_active,
-                createdAt: i.created_at,
-                updatedAt: i.updated_at
-            })));
+            setInstitutions((instRes.data || []).map((i: any) => mapInstitution(i)!));
             setDoctors((docRes.data || []).map((d: any) => ({
                 id: d.id,
                 name: `${d.name} ${d.last_name}`,
@@ -187,11 +189,11 @@ export const useClinicalProcedures = () => {
             setIndications((indRes.data || []).map((i: any) => ({
                 id: i.id,
                 procedureId: i.procedure_id,
-                centerId: i.center_id,
+                institutionId: i.institution_id,
                 emailFormat: i.email_format,
                 whatsappFormat: i.whatsapp_format,
                 procedureName: i.procedure?.name,
-                centerName: i.center?.name
+                institutionName: i.institution?.legal_name
             })));
         } catch (err: any) {
             console.error('❌ Error crítico en fetchData:', {
@@ -274,7 +276,6 @@ export const useClinicalProcedures = () => {
                     healthcare_provider: data.healthcareProvider || null,
                     referrer_name: data.referrerName || null,
                     procedure_id: data.procedureId || null,
-                    center_id: data.centerId || null,
                     institution_id: data.institutionId || null,
                     appointment_date: data.appointmentDate || null,
                     appointment_time: data.appointmentTime || null,
@@ -326,7 +327,6 @@ export const useClinicalProcedures = () => {
                     referrer_name: data.referrerName || null,
                     procedure_id: data.procedureId || null,
                     institution_id: data.institutionId || null,
-                    center_id: data.centerId || null,
                     appointment_date: data.appointmentDate || null,
                     appointment_time: data.appointmentTime || null,
                     medical_background: data.medicalBackground,
@@ -440,13 +440,13 @@ export const useClinicalProcedures = () => {
         }
     };
 
-    const getIndications = async (procedureId: string, centerId: string) => {
+    const getIndications = async (procedureId: string, institutionId: string) => {
         try {
             const { data, error } = await supabase
                 .from('clinical_indications')
                 .select('*')
                 .eq('procedure_id', procedureId)
-                .eq('center_id', centerId)
+                .eq('institution_id', institutionId)
                 .single();
 
             if (error && error.code !== 'PGRST116') throw error;
@@ -454,7 +454,7 @@ export const useClinicalProcedures = () => {
             const mapped = data ? {
                 id: data.id,
                 procedureId: data.procedure_id,
-                centerId: data.center_id,
+                institutionId: data.institution_id,
                 emailFormat: data.email_format,
                 whatsappFormat: data.whatsapp_format
             } : null;
@@ -499,7 +499,7 @@ export const useClinicalProcedures = () => {
         try {
             const payload: any = {
                 procedure_id: ind.procedureId,
-                center_id: ind.centerId,
+                institution_id: ind.institutionId,
                 email_format: ind.emailFormat,
                 whatsapp_format: ind.whatsappFormat
             };
@@ -654,7 +654,7 @@ export const useClinicalProcedures = () => {
                 .select(`
                     *,
                     procedure:medical_procedures_catalog(*),
-                    center:clinical_centers(*)
+                    institution:institutions(*)
                 `)
                 .order('appointment_date', { ascending: false });
 
@@ -689,14 +689,8 @@ export const useClinicalProcedures = () => {
                     basePrice: app.procedure.base_price,
                     isActive: app.procedure.is_active
                 } : undefined,
-                centerId: app.center_id,
-                center: app.center ? {
-                    id: app.center.id,
-                    name: app.center.name,
-                    city: app.center.city,
-                    address: app.center.address
-                } : undefined,
                 institutionId: app.institution_id,
+                institution: mapInstitution(app.institution),
                 doctorId: app.doctor_id,
                 appointmentDate: app.appointment_date,
                 appointmentTime: app.appointment_time?.substring(0, 5),
@@ -773,7 +767,6 @@ export const useClinicalProcedures = () => {
     return {
         appointments,
         catalog,
-        centers,
         institutions,
         requirements,
         batteries,

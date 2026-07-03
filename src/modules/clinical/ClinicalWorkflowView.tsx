@@ -176,7 +176,7 @@ const LogisticsTab: React.FC<LogisticsTabProps> = ({ appointments, onSelectAppoi
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-black text-brand-text">{selectedApp.patientName}</p>
-                                <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.center?.name}</p>
+                                <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.institution?.legalName}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-mono text-brand-text/30">
@@ -557,7 +557,7 @@ const ResultsTab: React.FC<ResultsTabProps> = ({ appointments, doctors, onUpload
                             </div>
                             <p className="text-[10px] text-brand-text/40 truncate">{app.procedure?.name}</p>
                             <p className="text-[9px] text-brand-text/30 font-mono mt-1">
-                                {new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} — {app.center?.name}
+                                {new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} — {app.institution?.legalName}
                             </p>
                         </button>
                     ))}
@@ -569,7 +569,7 @@ const ResultsTab: React.FC<ResultsTabProps> = ({ appointments, doctors, onUpload
                 <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
                     <div className="p-4 bg-brand-surface/50 border border-brand-border rounded-2xl">
                         <p className="text-xs font-black text-brand-text">{selectedApp.patientName}</p>
-                        <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.center?.name}</p>
+                        <p className="text-[10px] text-brand-text/40">{selectedApp.procedure?.name} · {selectedApp.institution?.legalName}</p>
                         <p className="text-[9px] font-mono text-brand-text/30 mt-1">
                             {new Date(`${selectedApp.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })}
                         </p>
@@ -649,7 +649,6 @@ export const ClinicalWorkflowView: React.FC = () => {
     const {
         appointments,
         catalog,
-        centers,
         institutions,
         loading,
         error: fetchError,
@@ -684,7 +683,7 @@ export const ClinicalWorkflowView: React.FC = () => {
     const [doctorFilter, setDoctorFilter] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'worklist'>('worklist');
     const [filterStatus, setFilterStatus]   = useState('');
-    const [filterCenter, setFilterCenter]   = useState('');
+    const [filterInstitution, setFilterInstitution] = useState('');
     const [filterDateFrom, setFilterDateFrom] = useState('');
     const [filterDateTo, setFilterDateTo]   = useState('');
 
@@ -704,14 +703,14 @@ export const ClinicalWorkflowView: React.FC = () => {
             app.patientName.toLowerCase().includes(search) ||
             app.patientRut.toLowerCase().includes(search) ||
             app.procedure?.name.toLowerCase().includes(search) ||
-            app.center?.name.toLowerCase().includes(search)
+            app.institution?.legalName.toLowerCase().includes(search)
         );
         const matchesDoctor  = !doctorFilter  || app.doctorId   === doctorFilter;
         const matchesStatus  = !filterStatus  || app.status     === filterStatus;
-        const matchesCenter  = !filterCenter  || app.centerId   === filterCenter;
+        const matchesInstitution = !filterInstitution || app.institutionId === filterInstitution;
         const matchesDateFrom = !filterDateFrom || app.appointmentDate >= filterDateFrom;
         const matchesDateTo   = !filterDateTo   || app.appointmentDate <= filterDateTo;
-        return matchesSearch && matchesDoctor && matchesStatus && matchesCenter && matchesDateFrom && matchesDateTo;
+        return matchesSearch && matchesDoctor && matchesStatus && matchesInstitution && matchesDateFrom && matchesDateTo;
     });
 
     // KPIs calculados
@@ -822,10 +821,10 @@ export const ClinicalWorkflowView: React.FC = () => {
                     ))}
                 </select>
 
-                <select value={filterCenter} onChange={e => setFilterCenter(e.target.value)}
+                <select value={filterInstitution} onChange={e => setFilterInstitution(e.target.value)}
                     className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50 appearance-none">
-                    <option value="">Todos los centros</option>
-                    {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="">Todas las instituciones</option>
+                    {institutions.map(i => <option key={i.id} value={i.id}>{i.legalName}</option>)}
                 </select>
 
                 <div className="flex items-center gap-2">
@@ -840,8 +839,8 @@ export const ClinicalWorkflowView: React.FC = () => {
                         className="bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-xs text-brand-text outline-none focus:border-info/50" />
                 </div>
 
-                {(filterStatus || filterCenter || filterDateFrom || filterDateTo) && (
-                    <button onClick={() => { setFilterStatus(''); setFilterCenter(''); setFilterDateFrom(''); setFilterDateTo(''); }}
+                {(filterStatus || filterInstitution || filterDateFrom || filterDateTo) && (
+                    <button onClick={() => { setFilterStatus(''); setFilterInstitution(''); setFilterDateFrom(''); setFilterDateTo(''); }}
                         className="px-3 py-2 text-[10px] font-black uppercase text-danger hover:bg-danger/10 rounded-xl transition-colors">
                         Limpiar filtros
                     </button>
@@ -1001,7 +1000,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             Centro Clínico
                                                         </div>
                                                         <p className="text-[13px] font-black text-brand-text leading-tight uppercase">
-                                                            {app.center?.name} <span className="text-brand-text/40 font-bold text-[10px]">({app.center?.city})</span>
+                                                            {app.institution?.legalName} <span className="text-brand-text/40 font-bold text-[10px]">({app.institution?.city})</span>
                                                         </p>
                                                     </div>
                                                     <div className="space-y-4">
@@ -1073,7 +1072,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                         <button
                                                              onClick={(e) => {
                                                                  e.stopPropagation();
-                                                                 const texto = `📋 *Agendamiento AMIS*\n\n👤 Paciente: ${app.patientName}\n🔬 Procedimiento: ${app.procedure?.name}\n📍 Centro: ${app.center?.name}\n📅 Fecha: ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })} ${app.appointmentTime}\n👨‍⚕️ Médico: ${app.doctor?.name || 'Por asignar'}\n\n_Enviado desde AMIS 3.0_`;
+                                                                 const texto = `📋 *Agendamiento AMIS*\n\n👤 Paciente: ${app.patientName}\n🔬 Procedimiento: ${app.procedure?.name}\n📍 Centro: ${app.institution?.legalName}\n📅 Fecha: ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long' })} ${app.appointmentTime}\n👨‍⚕️ Médico: ${app.doctor?.name || 'Por asignar'}\n\n_Enviado desde AMIS 3.0_`;
                                                                  navigator.clipboard.writeText(texto);
                                                                  alert('Resumen copiado al portapapeles ✅');
                                                              }}
@@ -1135,8 +1134,8 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                             <p className="text-[10px] text-brand-text/40 truncate max-w-[200px]">{app.doctor?.name || 'S/E'}</p>
                                                         </td>
                                                         <td className="py-4 px-6">
-                                                            <p className="text-[11px] font-black text-brand-text truncate max-w-[150px]">{institutions.find(i => i.id === app.institutionId)?.legalName || 'Mutuales'}</p>
-                                                            <p className="text-[10px] text-brand-text/40">{app.center?.name || 'Centro AMIS'}</p>
+                                                            <p className="text-[11px] font-black text-brand-text truncate max-w-[150px]">{app.institution?.legalName || 'Mutuales'}</p>
+                                                            <p className="text-[10px] text-brand-text/40">{app.institution?.city || 'Centro AMIS'}</p>
                                                         </td>
                                                         <td className="py-4 px-6">
                                                             <div className={cn(
@@ -1183,7 +1182,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {
-                                                                        const texto = `📋 *Agendamiento AMIS*\n\n👤 ${app.patientName} · ${app.patientRut}\n🔬 ${app.procedure?.name}\n📍 ${app.center?.name}\n📅 ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} ${app.appointmentTime}\n👨‍⚕️ ${app.doctor?.name || 'Por asignar'}`;
+                                                                        const texto = `📋 *Agendamiento AMIS*\n\n👤 ${app.patientName} · ${app.patientRut}\n🔬 ${app.procedure?.name}\n📍 ${app.institution?.legalName}\n📅 ${new Date(`${app.appointmentDate}T12:00:00`).toLocaleDateString('es-CL')} ${app.appointmentTime}\n👨‍⚕️ ${app.doctor?.name || 'Por asignar'}`;
                                                                         navigator.clipboard.writeText(texto);
                                                                         alert('Resumen copiado');
                                                                     }}
@@ -1248,7 +1247,7 @@ export const ClinicalWorkflowView: React.FC = () => {
                 {activeTab === 'config' && (
                     <ClinicalConfigPanel
                         catalog={catalog}
-                        centers={centers}
+                        institutions={institutions}
                         requirements={requirements}
                         batteries={batteries}
                         onUpsertProcedure={upsertProcedure}
@@ -1280,7 +1279,6 @@ export const ClinicalWorkflowView: React.FC = () => {
                 }}
                 initialData={selectedApp}
                 catalog={catalog}
-                centers={centers}
                 doctors={doctors}
                 institutions={institutions}
             />

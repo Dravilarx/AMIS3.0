@@ -24,20 +24,20 @@ import type {
     MedicalProcedure,
     MedicalRequirement,
     RequirementBattery,
-    ClinicalCenter,
     ClinicalIndications
 } from '../../types/clinical';
+import type { Institution } from '../../types/institutions';
 
 interface ClinicalConfigPanelProps {
     catalog: MedicalProcedure[];
-    centers: ClinicalCenter[];
+    institutions: Institution[];
     requirements: MedicalRequirement[];
     batteries: RequirementBattery[];
     onUpsertProcedure: (proc: Partial<MedicalProcedure>) => Promise<any>;
     onUpsertRequirement: (req: Partial<MedicalRequirement>) => Promise<any>;
     onUpsertBattery: (batt: Partial<RequirementBattery>) => Promise<any>;
     onUpsertIndications: (ind: any) => Promise<any>;
-    onGetIndications: (procId: string, centerId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
+    onGetIndications: (procId: string, institutionId: string) => Promise<{ success: boolean; data?: ClinicalIndications | null }>;
     indications: ClinicalIndications[];
     onDeleteIndications?: (id: string) => Promise<any>;
     onDeleteProcedure?: (id: string) => Promise<any>;
@@ -47,7 +47,7 @@ interface ClinicalConfigPanelProps {
 
 export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
     catalog,
-    centers,
+    institutions,
     requirements,
     batteries,
     onUpsertProcedure,
@@ -71,7 +71,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
 
     // Indications Editing State
     const [selectedProcId, setSelectedProcId] = useState<string>('');
-    const [selectedCenterId, setSelectedCenterId] = useState<string>('');
+    const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('');
     const [indTemplates, setIndTemplates] = useState<{ email: string; whatsapp: string; id?: string }>({ email: '', whatsapp: '' });
 
     // Additional config states
@@ -355,7 +355,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     onClick={() => {
                                         setEditingInd({ emailFormat: '', whatsappFormat: '' });
                                         setSelectedProcId('');
-                                        setSelectedCenterId('');
+                                        setSelectedInstitutionId('');
                                         setIndTemplates({ email: '', whatsapp: '' });
                                     }}
                                     className="h-full min-h-[160px] border-2 border-dashed border-brand-border rounded-[2.5rem] flex flex-col items-center justify-center gap-4 hover:border-brand-primary/50 hover:bg-brand-primary/5 group transition-all"
@@ -376,7 +376,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={async () => {
-                                                            const { id, procedureName, centerName, ...copyData } = ind;
+                                                            const { id, procedureName, institutionName, ...copyData } = ind;
                                                             await onUpsertIndications(copyData);
                                                             alert('Plantilla duplicada');
                                                         }}
@@ -388,7 +388,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                                         onClick={() => {
                                                             setEditingInd(ind);
                                                             setSelectedProcId(ind.procedureId);
-                                                            setSelectedCenterId(ind.centerId);
+                                                            setSelectedInstitutionId(ind.institutionId);
                                                             setIndTemplates({
                                                                 id: ind.id,
                                                                 email: ind.emailFormat || '',
@@ -413,7 +413,7 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                             </div>
                                             <div>
                                                 <h4 className="text-sm font-black text-brand-text leading-tight uppercase tracking-tight">{ind.procedureName}</h4>
-                                                <p className="text-[10px] text-brand-primary font-mono mt-1 uppercase tracking-widest">{ind.centerName}</p>
+                                                <p className="text-[10px] text-brand-primary font-mono mt-1 uppercase tracking-widest">{ind.institutionName}</p>
                                             </div>
                                             <div className="flex gap-2 pt-2">
                                                 <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full", ind.emailFormat ? "bg-success/10 text-success border border-success/20" : "bg-brand-bg text-brand-text/20")}>EMAIL</span>
@@ -452,15 +452,15 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <Activity className="w-4 h-4 text-brand-primary" />
-                                            <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Sede de Atención</label>
+                                            <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">Institución / Sede de Atención</label>
                                         </div>
                                         <select
-                                            value={selectedCenterId}
-                                            onChange={(e) => setSelectedCenterId(e.target.value)}
+                                            value={selectedInstitutionId}
+                                            onChange={(e) => setSelectedInstitutionId(e.target.value)}
                                             className="w-full bg-brand-bg border border-brand-border rounded-2xl px-5 py-4 text-sm text-brand-text focus:border-brand-primary outline-none transition-all appearance-none font-bold"
                                         >
-                                            <option value="">Seleccionar Sede...</option>
-                                            {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            <option value="">Seleccionar Institución...</option>
+                                            {institutions.map(i => <option key={i.id} value={i.id}>{i.legalName}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -525,14 +525,14 @@ export const ClinicalConfigPanel: React.FC<ClinicalConfigPanelProps> = ({
                                     </button>
                                     <button
                                         onClick={async () => {
-                                            if (!selectedProcId || !selectedCenterId) {
+                                            if (!selectedProcId || !selectedInstitutionId) {
                                                 alert('Por favor selecciona procedimiento y sede');
                                                 return;
                                             }
                                             const res = await onUpsertIndications({
                                                 id: indTemplates.id,
                                                 procedureId: selectedProcId,
-                                                centerId: selectedCenterId,
+                                                institutionId: selectedInstitutionId,
                                                 emailFormat: indTemplates.email,
                                                 whatsappFormat: indTemplates.whatsapp
                                             });
