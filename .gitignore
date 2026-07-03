@@ -30,3 +30,4 @@ dist-ssr
 
 # Claude Code (config local del agente)
 .claude/
+supabase/.temp/
