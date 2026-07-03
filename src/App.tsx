@@ -29,7 +29,9 @@ const ResumenCompetenciasAdmin = lazy(() => import('./modules/rrhh-clinico/Resum
 const AiAccessManager        = lazy(() => import('./modules/ai-access/AiAccessManager').then(m => ({ default: m.AiAccessManager })));
 const DispatchCenter         = lazy(() => import('./modules/dispatch/DispatchCenter').then(m => ({ default: m.DispatchCenter })));
 const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickViewBridge').then(m => ({ default: m.QuickViewBridge })));
-const MobileMicView          = lazy(() => import('./modules/remote-mic/MobileMicView').then(m => ({ default: m.MobileMicView })));
+// Feature "dictado por micrófono móvil" retirado (descartado, no se construirá). MobileMicView.tsx
+// queda en el repo sin conectar, por si se reactiva de forma segura más adelante. No borrar el archivo.
+// const MobileMicView          = lazy(() => import('./modules/remote-mic/MobileMicView').then(m => ({ default: m.MobileMicView })));
 const B2BPortal              = lazy(() => import('./modules/b2b-portal/B2BPortal').then(m => ({ default: m.B2BPortal })));
 const SecretaryCommandCenter = lazy(() => import('./modules/admin-secretary/SecretaryCommandCenter').then(m => ({ default: m.SecretaryCommandCenter })));
 const RadiologistWorklist    = lazy(() => import('./modules/radiology-worklist/RadiologistWorklist').then(m => ({ default: m.RadiologistWorklist })));
@@ -169,17 +171,7 @@ function App() {
         );
     }
 
-    const mobileMicToken = window.location.pathname.startsWith('/mobile-mic/')
-        ? window.location.pathname.split('/mobile-mic/')[1]
-        : null;
-
-    if (mobileMicToken) {
-        return (
-            <Suspense fallback={<ModuleLoader />}>
-                <MobileMicView token={mobileMicToken} />
-            </Suspense>
-        );
-    }
+    // Ruta pública /mobile-mic/:token retirada junto con el feature de dictado remoto (ver nota arriba).
 
     if (!user) return <AuthView />;
 
