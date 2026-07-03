@@ -35,7 +35,8 @@ const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickView
 const B2BPortal              = lazy(() => import('./modules/b2b-portal/B2BPortal').then(m => ({ default: m.B2BPortal })));
 const SecretaryCommandCenter = lazy(() => import('./modules/admin-secretary/SecretaryCommandCenter').then(m => ({ default: m.SecretaryCommandCenter })));
 const RadiologistWorklist    = lazy(() => import('./modules/radiology-worklist/RadiologistWorklist').then(m => ({ default: m.RadiologistWorklist })));
-const PortalMedico           = lazy(() => import('./modules/portal-medico/PortalMedico').then(m => ({ default: m.PortalMedico })));
+// Portal Médico (acceso anónimo sin login) APARCADO — ver nota en la ruta más abajo.
+// const PortalMedico           = lazy(() => import('./modules/portal-medico/PortalMedico').then(m => ({ default: m.PortalMedico })));
 const PortalMedicosAdmin     = lazy(() => import('./modules/portal-medico/PortalMedicosAdmin').then(m => ({ default: m.PortalMedicosAdmin })));
 const CuartoTurnoDashboard   = lazy(() => import('./modules/cuarto-turno/CuartoTurnoDashboard').then(m => ({ default: m.CuartoTurnoDashboard })));
 const SolicitudesDashboard   = lazy(() => import('./modules/solicitudes/SolicitudesDashboard').then(m => ({ default: m.SolicitudesDashboard })));
@@ -162,14 +163,18 @@ function App() {
         );
     }
 
-    if (window.location.pathname === '/portal-medico' ||
-        window.location.search.includes('token=')) {
-        return (
-            <Suspense fallback={<ModuleLoader />}>
-                <PortalMedico />
-            </Suspense>
-        );
-    }
+    // Portal Médico (acceso anónimo sin login por /portal-medico o ?token=) APARCADO:
+    // su diseño de acceso directo a la base ya no es válido (tablas cerradas por RLS,
+    // acceso anónimo roto). PortalMedico.tsx y componentes de src/modules/portal-medico/
+    // quedan en el repo sin conectar, para rediseñarlo más adelante. No borrar los archivos.
+    // if (window.location.pathname === '/portal-medico' ||
+    //     window.location.search.includes('token=')) {
+    //     return (
+    //         <Suspense fallback={<ModuleLoader />}>
+    //             <PortalMedico />
+    //         </Suspense>
+    //     );
+    // }
 
     // Ruta pública /mobile-mic/:token retirada junto con el feature de dictado remoto (ver nota arriba).
 

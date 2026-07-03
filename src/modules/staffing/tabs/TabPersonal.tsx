@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Briefcase, User, UploadCloud, X, CheckCircle2, Loader2, Link as LinkIcon } from 'lucide-react';
+import React from 'react';
+// useState solo se usaba para el estado del botón del Portal Médico (aparcado, ver abajo).
+import { Briefcase, User, UploadCloud, X, CheckCircle2 } from 'lucide-react';
+// Loader2 y "Link as LinkIcon" solo se usaban en el botón del Portal Médico (aparcado, ver abajo).
 import { cn, formatRUT, formatPhone } from '../../../lib/utils';
-import { supabase } from '../../../lib/supabase';
+// import { supabase } from '../../../lib/supabase'; // solo se usaba en handleGeneratePortalLink (aparcado)
 import { useAuth } from '../../../hooks/useAuth';
 import { useRoles, useTeams } from '../../../hooks/useCatalogs';
 import { EditableCatalogField } from './EditableCatalogField';
@@ -25,29 +27,33 @@ export const TabPersonal: React.FC<TabPersonalProps> = ({
     const { items: roleItems, add: addRole, remove: removeRole, rename: renameRole } = useRoles();
     const { items: teamItems, add: addTeam, remove: removeTeam, rename: renameTeam } = useTeams();
 
-    const [generatingLink, setGeneratingLink] = useState(false);
-    const [portalLink,     setPortalLink]     = useState<string | null>(null);
+    // Portal Médico APARCADO (ver nota en App.tsx): su ruta pública /portal-medico
+    // fue retirada porque el acceso anónimo directo a la base ya no es válido
+    // (tablas cerradas por RLS). Lógica del botón de generación de link queda
+    // comentada, no borrada, para cuando se rediseñe el portal.
+    // const [generatingLink, setGeneratingLink] = useState(false);
+    // const [portalLink,     setPortalLink]     = useState<string | null>(null);
 
-    const handleGeneratePortalLink = async () => {
-        if (!initialData?.id) return;
-        setGeneratingLink(true);
-        try {
-            await supabase.from('portal_tokens').delete().eq('professional_id', initialData.id);
-            const { data, error } = await supabase
-                .from('portal_tokens')
-                .insert({ professional_id: initialData.id })
-                .select('token')
-                .single();
-            if (error) throw error;
-            const url = `${window.location.origin}/portal-medico?token=${data.token}`;
-            setPortalLink(url);
-            await navigator.clipboard.writeText(url);
-        } catch (err: any) {
-            console.error('Error generando link:', err.message);
-        } finally {
-            setGeneratingLink(false);
-        }
-    };
+    // const handleGeneratePortalLink = async () => {
+    //     if (!initialData?.id) return;
+    //     setGeneratingLink(true);
+    //     try {
+    //         await supabase.from('portal_tokens').delete().eq('professional_id', initialData.id);
+    //         const { data, error } = await supabase
+    //             .from('portal_tokens')
+    //             .insert({ professional_id: initialData.id })
+    //             .select('token')
+    //             .single();
+    //         if (error) throw error;
+    //         const url = `${window.location.origin}/portal-medico?token=${data.token}`;
+    //         setPortalLink(url);
+    //         await navigator.clipboard.writeText(url);
+    //     } catch (err: any) {
+    //         console.error('Error generando link:', err.message);
+    //     } finally {
+    //         setGeneratingLink(false);
+    //     }
+    // };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -140,7 +146,9 @@ export const TabPersonal: React.FC<TabPersonalProps> = ({
                         <User className="w-4 h-4 text-emerald-400" />
                         <h3 className="text-sm font-bold uppercase tracking-widest text-brand-text/60">Datos Personales</h3>
                     </div>
-                    {initialData?.id && (
+                    {/* Botón "Generar link" del Portal Médico APARCADO — ver nota junto
+                        a handleGeneratePortalLink más arriba. No borrado, solo desactivado. */}
+                    {/* {initialData?.id && (
                         <div className="flex items-center gap-2">
                             {portalLink && (
                                 <span className="text-[9px] text-emerald-400 font-black uppercase tracking-wider flex items-center gap-1">
@@ -153,15 +161,15 @@ export const TabPersonal: React.FC<TabPersonalProps> = ({
                                 {portalLink ? 'Regenerar link' : 'Enviar link al médico'}
                             </button>
                         </div>
-                    )}
+                    )} */}
                 </div>
-                {portalLink && (
+                {/* {portalLink && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-info/5 border border-info/20 rounded-xl mb-3">
                         <span className="text-[10px] text-info/70 font-mono truncate flex-1">{portalLink}</span>
                         <button type="button" onClick={() => navigator.clipboard.writeText(portalLink)}
                             className="text-[9px] font-black uppercase text-info hover:text-info/80 flex-shrink-0">Copiar</button>
                     </div>
-                )}
+                )} */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-[10px] uppercase font-bold text-brand-text/40 tracking-widest">Nombres</label>
