@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -16,6 +16,7 @@ import { BatteryConfigModal } from './BatteryConfigModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
 import { DigitalSignatureModal } from './DigitalSignatureModal';
 import { RequestSignatureModal } from './RequestSignatureModal';
+import { DocumentVersionsModal } from './DocumentVersionsModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
 import { getSignedDocumentUrl } from '../../lib/storageUrls';
 import { getLevelForRole } from '../../lib/accessLevels';
@@ -81,6 +82,8 @@ export const SemanticDMS: React.FC = () => {
 
     // ¿Puede archivar este documento? Jefatura+ o el propio autor.
     const puedeArchivar = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
+    // ¿Puede gestionar versiones (subir nueva / restaurar)? Jefatura+ o el propio autor.
+    const puedeGestionarVersiones = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
 
     const handleArchive = async (doc: Document) => {
         const res = await archiveDocument(doc.id);
@@ -106,6 +109,7 @@ export const SemanticDMS: React.FC = () => {
     const [signingDoc,       setSigningDoc]       = useState<Document | null>(null);
     const [confirmDelete,    setConfirmDelete]    = useState<Document | null>(null);
     const [requestingDoc,    setRequestingDoc]    = useState<Document | null>(null);
+    const [versionsDoc,      setVersionsDoc]      = useState<Document | null>(null);
 
     // ── Filtros ───────────────────────────────────────────────────────────────
     const [searchTerm,       setSearchTerm]       = useState('');
@@ -143,7 +147,9 @@ export const SemanticDMS: React.FC = () => {
         total:    documents.length,
         firmados: documents.filter(d => d.signed).length,
         vencen:   documents.filter(d => d.expiryDate &&
-            new Date(d.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length,
+            new Date(d.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) &&
+            new Date(d.expiryDate) >= new Date()).length,
+        vencidos: documents.filter(d => d.expiryDate && new Date(d.expiryDate) < new Date()).length,
         pendFirma: documents.filter(d =>
             d.requestedSigners?.includes(user?.id || '') && !d.signed).length,
     }), [documents, user]);
@@ -304,6 +310,7 @@ export const SemanticDMS: React.FC = () => {
                         { label: 'Firmados',    val: kpis.firmados,  color: 'text-emerald-400' },
                         { label: 'Mi firma',    val: kpis.pendFirma, color: 'text-amber-400' },
                         { label: 'Vencen 30d',  val: kpis.vencen,   color: 'text-red-400' },
+                        { label: 'Vencidos',    val: kpis.vencidos, color: 'text-danger' },
                     ].map(k => (
                         <div key={k.label} className="flex items-center justify-between px-2">
                             <span className="text-[10px] text-brand-text/40">{k.label}</span>
@@ -420,8 +427,9 @@ export const SemanticDMS: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {filteredDocs.map(doc => {
                             const isMySignaturePending = doc.requestedSigners?.includes(user?.id || '') && !doc.signed;
-                            const isExpiringSoon = doc.expiryDate &&
-                                new Date(doc.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                            const isExpired = !!(doc.expiryDate && new Date(doc.expiryDate) < new Date());
+                            const isExpiringSoon = !isExpired && !!(doc.expiryDate &&
+                                new Date(doc.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
                             return (
                                 <motion.div key={doc.id}
@@ -430,6 +438,7 @@ export const SemanticDMS: React.FC = () => {
                                         'group bg-brand-surface/40 border border-brand-border rounded-2xl p-5 flex flex-col hover:bg-brand-surface transition-all duration-300 relative overflow-hidden',
                                         selectedIds.has(doc.id) && 'ring-2 ring-info border-info/30 bg-info/5',
                                         isMySignaturePending && 'ring-1 ring-amber-500/50',
+                                        isExpired && 'ring-1 ring-danger/60',
                                         isExpiringSoon && 'ring-1 ring-red-500/30'
                                     )}>
 
@@ -449,6 +458,12 @@ export const SemanticDMS: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {isExpired && !isMySignaturePending && (
+                                        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-1.5 py-0.5 bg-danger/20 border border-danger/40 text-danger rounded-full">
+                                            <AlertTriangle className="w-2.5 h-2.5" />
+                                            <span className="text-[7px] font-black uppercase tracking-widest">Vencido</span>
+                                        </div>
+                                    )}
                                     {isExpiringSoon && !isMySignaturePending && (
                                         <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full">
                                             <Clock className="w-2.5 h-2.5" />
@@ -492,6 +507,10 @@ export const SemanticDMS: React.FC = () => {
                                             <button onClick={e => { e.stopPropagation(); duplicateDocument(doc); }}
                                                 className="p-1.5 rounded-lg text-brand-text/20 hover:text-info hover:bg-info/10 transition-colors opacity-0 group-hover:opacity-100">
                                                 <Copy className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button onClick={e => { e.stopPropagation(); setVersionsDoc(doc); }} title="Versiones"
+                                                className="p-1.5 rounded-lg text-brand-text/20 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors opacity-0 group-hover:opacity-100">
+                                                <History className="w-3.5 h-3.5" />
                                             </button>
                                             {showArchived ? (
                                                 <button onClick={e => { e.stopPropagation(); handleRestore(doc); }} title="Restaurar"
@@ -576,7 +595,7 @@ export const SemanticDMS: React.FC = () => {
                                 <div className="text-[10px] font-mono text-brand-text/30">
                                     {new Date(doc.createdAt).toLocaleDateString('es-CL')}
                                 </div>
-                                <div>
+                                <div className="flex items-center gap-1 flex-wrap">
                                     <span className={cn(
                                         'text-[8px] font-black px-2 py-0.5 rounded-full uppercase border',
                                         doc.signed
@@ -585,6 +604,11 @@ export const SemanticDMS: React.FC = () => {
                                     )}>
                                         {doc.signed ? 'Firmado' : 'Pendiente'}
                                     </span>
+                                    {!!(doc.expiryDate && new Date(doc.expiryDate) < new Date()) && (
+                                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border bg-danger/20 text-danger border-danger/40">
+                                            Vencido
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button onClick={() => setSigningDoc(doc)}
@@ -595,6 +619,10 @@ export const SemanticDMS: React.FC = () => {
                                     <button onClick={() => duplicateDocument(doc)}
                                         className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-info hover:border-info/20 transition-all">
                                         <Copy className="w-3 h-3" />
+                                    </button>
+                                    <button onClick={() => setVersionsDoc(doc)} title="Versiones"
+                                        className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-brand-primary hover:border-brand-primary/20 transition-all">
+                                        <History className="w-3 h-3" />
                                     </button>
                                     {showArchived ? (
                                         <button onClick={() => handleRestore(doc)} title="Restaurar"
@@ -689,6 +717,16 @@ export const SemanticDMS: React.FC = () => {
                 <RequestSignatureModal documentId={requestingDoc.id}
                     onClose={() => setRequestingDoc(null)}
                     onSuccess={() => { setRequestingDoc(null); refresh(); }} />
+            )}
+
+            {versionsDoc && (
+                <DocumentVersionsModal
+                    doc={versionsDoc}
+                    canManage={puedeGestionarVersiones(versionsDoc)}
+                    onClose={() => setVersionsDoc(null)}
+                    onChanged={refresh}
+                    notify={showToast}
+                />
             )}
 
             {/* Toast de feedback / errores RLS */}

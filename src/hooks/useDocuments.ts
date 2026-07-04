@@ -10,6 +10,20 @@ export const isRlsError = (err: any): boolean => {
     return code === '42501' || code === '403' || msg.includes('row-level security') || msg.includes('permission denied') || msg.includes('violates row-level');
 };
 
+// Reglas de subida compartidas (documento nuevo y nueva versión de uno existente).
+export const ALLOWED_DOCUMENT_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+    'image/jpeg',
+    'image/png',
+    'video/mp4',
+    'video/quicktime'
+];
+export const MAX_DOCUMENT_SIZE = 50 * 1024 * 1024; // 50 MB (límite real del bucket)
+
 export const useDocuments = (_options?: { limit?: number }) => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,28 +79,14 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
     const uploadDocument = async (file: File, metadata: Partial<Document>) => {
         try {
-            // Validación de tipos extendida
-            const allowedTypes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-                'application/vnd.ms-excel',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
-                'image/jpeg',
-                'image/png',
-                'video/mp4',
-                'video/quicktime'
-            ];
-
-            if (!allowedTypes.includes(file.type)) {
+            if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
                 return {
                     success: false,
                     error: `Tipo de archivo no permitido: ${file.type}. Formatos aceptados: PDF, Word, Excel, Imágenes (JPG/PNG) y Vídeos (MP4/MOV)`
                 };
             }
 
-            const maxSize = 50 * 1024 * 1024; // 50 MB (límite real del bucket)
-            if (file.size > maxSize) {
+            if (file.size > MAX_DOCUMENT_SIZE) {
                 return {
                     success: false,
                     error: `El archivo excede el límite de 50 MB`

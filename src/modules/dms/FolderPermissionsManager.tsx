@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Lock, FolderKanban, Loader2, ShieldCheck, Eye, UploadCloud, Archive, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Lock, FolderKanban, Loader2, ShieldCheck, Eye, UploadCloud, Archive, CheckCircle2, AlertTriangle, HardDriveDownload, Search } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useFolders } from '../../hooks/useFolders';
-import { useMyLevel } from '../../lib/accessLevels';
-import { NIVEL_OPTIONS } from '../../lib/accessLevels';
+import { useMyLevel, NIVEL_OPTIONS } from '../../lib/accessLevels';
+import { supabase } from '../../lib/supabase';
+import { isRlsError } from '../../hooks/useDocuments';
 
 type Campo = 'nivelVer' | 'nivelSubir' | 'nivelArchivar';
 
@@ -20,11 +21,100 @@ const NivelSelect: React.FC<{ value: number; onChange: (n: number) => void }> = 
     </select>
 );
 
+// Formatea bytes a una unidad legible (KB/MB/GB).
+const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let val = bytes;
+    let i = -1;
+    do { val /= 1024; i++; } while (val >= 1024 && i < units.length - 1);
+    return `${val.toFixed(1)} ${units[i]}`;
+};
+
+interface ArchivoHuerfano {
+    archivo: string;
+    tamanoBytes: number;
+    creado: string;
+}
+
+const OrphanFilesPanel: React.FC<{ notify: (msg: string, ok: boolean) => void }> = ({ notify }) => {
+    const [archivos, setArchivos] = useState<ArchivoHuerfano[] | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const buscar = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.rpc('fn_archivos_huerfanos');
+            if (error) throw error;
+            setArchivos((data || []).map((r: any) => ({
+                archivo: r.archivo,
+                tamanoBytes: r.tamano_bytes,
+                creado: r.creado,
+            })));
+        } catch (err: any) {
+            setArchivos(null);
+            notify(isRlsError(err) ? 'No tienes permisos para esta acción' : (err.message || 'No se pudo buscar huérfanos'), false);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text/50">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
+                <p className="text-[11px] font-bold leading-relaxed">
+                    Archivos en Storage sin registro en el sistema. La eliminación se realiza manualmente desde Supabase.
+                </p>
+            </div>
+
+            <button
+                onClick={buscar}
+                disabled={loading}
+                className="flex items-center gap-2 px-5 py-3 bg-brand-primary text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 disabled:opacity-50"
+            >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                Buscar huérfanos
+            </button>
+
+            {archivos !== null && (
+                <div className="bg-brand-surface border border-brand-border rounded-2xl shadow-xl overflow-x-auto">
+                    {archivos.length === 0 ? (
+                        <p className="text-center text-brand-text/30 text-xs py-16 uppercase font-black tracking-widest">Sin archivos huérfanos</p>
+                    ) : (
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-brand-bg">
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/50 border-b border-brand-border">Archivo</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/50 border-b border-brand-border w-32">Tamaño</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-brand-text/50 border-b border-brand-border w-48">Creado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {archivos.map((a, i) => (
+                                    <tr key={`${a.archivo}-${i}`} className="hover:bg-brand-bg/40 transition-colors">
+                                        <td className="px-4 py-3 border-b border-brand-border text-xs font-mono text-brand-text truncate max-w-md">{a.archivo}</td>
+                                        <td className="px-4 py-3 border-b border-brand-border text-xs font-bold text-brand-text/60">{formatBytes(a.tamanoBytes)}</td>
+                                        <td className="px-4 py-3 border-b border-brand-border text-xs text-brand-text/40">
+                                            {new Date(a.creado).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const FolderPermissionsManager: React.FC = () => {
     const { level, loading: levelLoading } = useMyLevel();
     const { folders, loading, setFolderPermissions } = useFolders();
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
     const [savingId, setSavingId] = useState<string | null>(null);
+    const [tab, setTab] = useState<'permisos' | 'huerfanos'>('permisos');
 
     const showToast = (msg: string, ok: boolean) => {
         setToast({ msg, ok });
@@ -70,6 +160,26 @@ export const FolderPermissionsManager: React.FC = () => {
                 </div>
             </div>
 
+            {/* Tabs */}
+            <div className="flex bg-brand-surface/50 border border-brand-border p-1.5 rounded-2xl w-fit gap-1">
+                <button
+                    onClick={() => setTab('permisos')}
+                    className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'permisos' ? 'bg-brand-bg text-brand-text shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80')}
+                >
+                    Permisos por Carpeta
+                </button>
+                <button
+                    onClick={() => setTab('huerfanos')}
+                    className={cn("flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'huerfanos' ? 'bg-brand-bg text-brand-text shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80')}
+                >
+                    <HardDriveDownload className="w-3.5 h-3.5" /> Archivos Huérfanos
+                </button>
+            </div>
+
+            {tab === 'huerfanos' ? (
+                <OrphanFilesPanel notify={showToast} />
+            ) : (
+            <>
             <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text/50">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
                 <p className="text-[11px] font-bold leading-relaxed">
@@ -127,6 +237,8 @@ export const FolderPermissionsManager: React.FC = () => {
                     </table>
                 )}
             </div>
+            </>
+            )}
 
             {/* Toast */}
             {toast && (

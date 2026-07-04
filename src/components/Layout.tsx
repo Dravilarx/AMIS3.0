@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send, Lock } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send, Lock } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
 import { cn } from '../lib/utils';
 import { Logo } from './Logo';
 import { getLevelForRole, getLabelForRole } from '../lib/accessLevels';
+import { NotificationBell } from './NotificationBell';
 
 // Temas disponibles (deben existir como [data-theme='id'] en index.css)
 const THEMES: { id: string; label: string; dot: string }[] = [
@@ -361,13 +362,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                 )}
                             </div>
 
-                            <button
-                                onClick={() => alert('Centro de Notificaciones')}
-                                className="p-3 bg-brand-surface border border-brand-border rounded-2xl hover:border-brand-primary/30 transition-all relative group"
-                            >
-                                <Bell className="w-5 h-5 text-brand-text/40 group-hover:text-brand-primary transition-colors" />
-                                <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-primary rounded-full border-2 border-brand-surface shadow-sm" />
-                            </button>
+                            <NotificationBell onNavigate={onNavigate} />
                             <div className="h-10 w-px bg-brand-border mx-2" />
                             <div className="text-right hidden sm:block">
                                 <p className="text-[10px] font-bold text-brand-text/40 uppercase tracking-widest">Estado Sistema</p>
