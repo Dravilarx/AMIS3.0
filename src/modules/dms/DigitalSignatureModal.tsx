@@ -12,6 +12,7 @@ import {
     Plus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useSignedUrl } from '../../lib/storageUrls';
 
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -128,6 +129,9 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     onClose,
     onConfirm
 }) => {
+    // El documento vive en el bucket privado: resolvemos la URL firmada del prop.
+    const { url: signedDocUrl } = useSignedUrl(documentUrl);
+
     const [step, setStep] = useState(1);
     const [signerName, setSignerName] = useState('Marcelo Avila');
     const [selectedStyle, setSelectedStyle] = useState('1');
@@ -406,15 +410,19 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                                         !isNavigating ? "cursor-crosshair ring-2 ring-success/20" : "cursor-default"
                                     )}
                                 >
-                                    {documentUrl ? (
+                                    {documentUrl && !signedDocUrl ? (
+                                        <div className="min-h-full w-full flex items-center justify-center">
+                                            <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+                                        </div>
+                                    ) : signedDocUrl ? (
                                         <div className="relative min-h-full w-full bg-brand-surface/50 p-4 flex flex-col items-center">
                                             {/* Contenedor del PDF que determina el tamaño real */}
                                             <div ref={docContentRef} className="doc-content relative w-full max-w-4xl bg-white shadow-2xl flex flex-col items-center min-h-[800px]">
                                                 {isPdf ? (
-                                                    <PdfViewer url={documentUrl} />
+                                                    <PdfViewer url={signedDocUrl} />
                                                 ) : (
                                                     <iframe
-                                                        src={`${documentUrl}#toolbar=0&navpanes=0`}
+                                                        src={`${signedDocUrl}#toolbar=0&navpanes=0`}
                                                         className={cn(
                                                             "w-full h-[1200px] border-none transition-all duration-300",
                                                             !isNavigating ? "pointer-events-none opacity-40 grayscale" : "pointer-events-auto opacity-100"

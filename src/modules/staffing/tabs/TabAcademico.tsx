@@ -3,7 +3,14 @@ import { GraduationCap, BookOpen, ShieldCheck, AlertOctagon, AlertCircle, CheckC
 import { useState, useEffect } from 'react';
 import { cn } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
+import { getSignedDocumentUrl } from '../../../lib/storageUrls';
 import type { TabProps } from './types';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 
 // ─── AcademicDocRow (movido aquí desde ProfessionalModal) ─────────────────────
 interface AcademicDocRowProps {
@@ -55,13 +62,13 @@ const AcademicDocRow: React.FC<AcademicDocRowProps> = ({ docType, label, hint, r
             const filePath = `academic/${professionalId}/${docType}-${Date.now()}.${ext}`;
             const { error: storageError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
             if (storageError) throw storageError;
-            const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
+            // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
             await supabase.from('professional_academic_docs').upsert({
                 professional_id: professionalId, doc_type: docType,
-                file_name: file.name, file_url: publicUrl,
+                file_name: file.name, file_url: filePath,
                 is_pending: false, uploaded_at: new Date().toISOString(),
             }, { onConflict: 'professional_id,doc_type' });
-            setDocUrl(publicUrl); setFileName(file.name); setIsPending(false);
+            setDocUrl(filePath); setFileName(file.name); setIsPending(false);
         } catch (err: any) {
             console.error(`Error subiendo ${docType}:`, err.message);
         } finally {
@@ -110,7 +117,7 @@ const AcademicDocRow: React.FC<AcademicDocRowProps> = ({ docType, label, hint, r
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
                 {docUrl && !isPending && (
-                    <button type="button" onClick={() => window.open(docUrl, '_blank')}
+                    <button type="button" onClick={() => abrirDocumentoFirmado(docUrl)}
                         className="px-2.5 py-1 bg-brand-surface border border-brand-border rounded-lg text-[10px] font-bold uppercase text-brand-text hover:bg-brand-primary/10 transition-all">
                         Ver
                     </button>

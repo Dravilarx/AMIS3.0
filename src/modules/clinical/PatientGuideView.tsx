@@ -115,13 +115,10 @@ export const PatientGuideView: React.FC = () => {
 
             if (uploadError) throw uploadError;
 
-            const { data: urlData } = supabase.storage
-                .from('documents')
-                .getPublicUrl(filePath);
-
+            // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al renderizar.
             const { error: updateError } = await supabase
                 .from('appointment_documents')
-                .update({ document_url: urlData.publicUrl })
+                .update({ document_url: filePath })
                 .eq('id', selectedDocId);
 
             if (updateError) throw updateError;
@@ -132,7 +129,7 @@ export const PatientGuideView: React.FC = () => {
                 return {
                     ...prev,
                     documents: prev.documents?.map(d =>
-                        d.id === selectedDocId ? { ...d, document_url: urlData.publicUrl } : d
+                        d.id === selectedDocId ? { ...d, document_url: filePath } : d
                     )
                 };
             });

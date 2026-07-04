@@ -7,8 +7,15 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
+import { getSignedDocumentUrl } from '../../lib/storageUrls';
 import { useAuth } from '../../hooks/useAuth';
 import { useNews } from '../../hooks/useNews';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 import {
     CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS,
     type NewsArticle,
@@ -140,10 +147,10 @@ export const MisDocumentosView: React.FC<{ targetEmail?: string }> = ({ targetEm
                                         </p>
                                     </div>
                                     {doc.url && !doc.isPending && (
-                                        <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                                        <button type="button" onClick={() => abrirDocumentoFirmado(doc.url)}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all">
                                             <ExternalLink className="w-3 h-3" /> Ver
-                                        </a>
+                                        </button>
                                     )}
                                 </div>
                             ))}
@@ -164,10 +171,10 @@ export const MisDocumentosView: React.FC<{ targetEmail?: string }> = ({ targetEm
                                         <p className="text-[10px] text-brand-text/30">Firmado el {formatDate(doc.date)}</p>
                                     </div>
                                     {doc.url && (
-                                        <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                                        <button type="button" onClick={() => abrirDocumentoFirmado(doc.url)}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all">
                                             <Download className="w-3 h-3" /> Descargar
-                                        </a>
+                                        </button>
                                     )}
                                 </div>
                             ))}

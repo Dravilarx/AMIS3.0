@@ -378,11 +378,8 @@ export const useClinicalProcedures = () => {
 
                 if (uploadError) throw uploadError;
 
-                const { data: urlData } = supabase.storage
-                    .from('documents')
-                    .getPublicUrl(filePath);
-
-                documentUrl = urlData.publicUrl;
+                // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al renderizar.
+                documentUrl = filePath;
             }
 
             const updatePayload: Record<string, any> = {

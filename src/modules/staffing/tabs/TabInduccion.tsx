@@ -3,6 +3,13 @@ import { ShieldCheck, BookOpen, UserCheck, BellRing, CheckCircle2, Save, Sparkle
 import { useState, useEffect } from 'react';
 import { cn } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
+import { getSignedDocumentUrl } from '../../../lib/storageUrls';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 import type { TabProps } from './types';
 import type { HRManager } from '../../../hooks/useHRManagers';
 
@@ -78,9 +85,9 @@ const CertificadoGenerator: React.FC<{ professionalId: string; professionalName:
                 .upload(filePath, new Blob([html], { type: 'text/html' }), { contentType: 'text/html', upsert: true });
             if (storageError) throw storageError;
 
-            const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
-            await supabase.from('documents').update({ url: publicUrl }).eq('id', insertData.id);
-            setDocUrl(publicUrl); setDone(true);
+            // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
+            await supabase.from('documents').update({ url: filePath }).eq('id', insertData.id);
+            setDocUrl(filePath); setDone(true);
         } catch (err: any) {
             console.error('Error generando certificado:', err.message);
         } finally {
@@ -107,7 +114,7 @@ const CertificadoGenerator: React.FC<{ professionalId: string; professionalName:
             </div>
             <div className="flex items-center gap-2">
                 {docUrl && (
-                    <button type="button" onClick={() => window.open(docUrl, '_blank')}
+                    <button type="button" onClick={() => abrirDocumentoFirmado(docUrl)}
                         className="px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-[10px] font-bold uppercase text-brand-text hover:bg-brand-primary/10 transition-all">
                         Ver
                     </button>

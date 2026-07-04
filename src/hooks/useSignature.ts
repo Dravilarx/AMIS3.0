@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import type { Document } from '../types/communication';
 import { useAuth } from './useAuth';
+import { getSignedDocumentUrl, extractDocumentPath } from '../lib/storageUrls';
 
 export const useSignature = () => {
     const { user } = useAuth();
@@ -16,8 +17,10 @@ export const useSignature = () => {
 
     const signNativeDocument = async (doc: Document, signerName: string, styleId: string) => {
         try {
-            // 1. Obtener contenido actual
-            const response = await fetch(doc.url);
+            // 1. Obtener contenido actual (URL firmada del bucket privado)
+            const signedUrl = await getSignedDocumentUrl(doc.url);
+            if (!signedUrl) throw new Error('No se pudo acceder al documento');
+            const response = await fetch(signedUrl);
             let content = await response.text();
 
             const fingerprint = generateFingerprint();
@@ -53,8 +56,8 @@ export const useSignature = () => {
                 content += signatureHTML;
             }
 
-            // 4. Re-subir al storage (sobreescribir)
-            const filePath = doc.url.split('/storage/v1/object/public/documents/')[1];
+            // 4. Re-subir al storage (sobreescribir). La ruta acepta path o URL heredada.
+            const filePath = extractDocumentPath(doc.url) ?? doc.url;
             const blob = new Blob([content], { type: 'text/html' });
 
             const { error: uploadError } = await supabase.storage
@@ -122,8 +125,10 @@ export const useSignature = () => {
         color: 'blue' | 'black' | 'gray' = 'blue'
     ) => {
         try {
-            // 1. Descargar PDF
-            const response = await fetch(doc.url);
+            // 1. Descargar PDF (URL firmada del bucket privado)
+            const signedUrl = await getSignedDocumentUrl(doc.url);
+            if (!signedUrl) throw new Error('No se pudo acceder al documento');
+            const response = await fetch(signedUrl);
             const pdfBytes = await response.arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes);
 
@@ -223,9 +228,9 @@ export const useSignature = () => {
                     });
             }
 
-            // 4. Guardar y Re-subir
+            // 4. Guardar y Re-subir. La ruta acepta path o URL heredada.
             const modifiedPdfBytes = await pdfDoc.save();
-            const filePath = doc.url.split('/storage/v1/object/public/documents/')[1].split('?')[0];
+            const filePath = extractDocumentPath(doc.url) ?? doc.url;
 
             const { error: uploadError } = await supabase.storage
                 .from('documents')
@@ -250,14 +255,12 @@ export const useSignature = () => {
             // Si el documento nace de "Solicitar firmantes", se completará solo si todos firmaron
             const isFullySigned = reqSigners.length === 0 || reqSigners.every(req => existingSigners.has(req));
 
-            const timestamp = Date.now();
-            const newUrl = doc.url.split('?')[0] + `?v=${timestamp}`;
-
+            // Se normaliza a la RUTA interna (el bucket privado ya no usa URLs con ?v).
             const { error: updateError } = await supabase
                 .from('documents')
                 .update({
                     signed: isFullySigned,
-                    url: newUrl,
+                    url: filePath,
                     signer_name: signerName,
                     status: isFullySigned ? 'signed' : (doc.status === 'draft' ? 'pending' : doc.status)
                 })
@@ -265,7 +268,7 @@ export const useSignature = () => {
 
             if (updateError) throw updateError;
 
-            return { success: true, url: newUrl };
+            return { success: true, url: filePath };
         } catch (err: any) {
             console.error('Error signing PDF:', err);
             return { success: false, error: err.message };

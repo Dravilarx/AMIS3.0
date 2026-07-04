@@ -137,7 +137,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                             type="file"
                             onChange={handleFileChange}
                             className="absolute inset-0 opacity-0 cursor-pointer"
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.md,.txt,.jpg,.png,.mp4,.mov"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.png,.mp4,.mov"
                         />
                         <div className={cn(
                             "w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
@@ -150,7 +150,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                                 {file ? file.name : "Arrastra o selecciona un archivo"}
                             </p>
                             <p className="text-[10px] text-brand-text/30 uppercase mt-1">
-                                PDF, Office, Markdown, Imagen o Vídeo (Máx 100MB)
+                                PDF, Office, Imagen o Vídeo (Máx 50MB)
                             </p>
                         </div>
                     </div>

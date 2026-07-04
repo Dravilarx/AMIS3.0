@@ -25,6 +25,13 @@ import { cn } from '../../lib/utils';
 import { useMessaging } from '../../hooks/useMessaging';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+import { getSignedDocumentUrl } from '../../lib/storageUrls';
+
+// Abre un adjunto del bucket privado firmando la ruta (o URL heredada).
+const abrirAdjuntoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 
 export const MessagingHub: React.FC = () => {
     const { user } = useAuth();
@@ -159,8 +166,8 @@ export const MessagingHub: React.FC = () => {
                 let fileUrl = '';
 
                 if (!uploadError) {
-                    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
-                    fileUrl = publicUrl;
+                    // Bucket privado: se embebe la RUTA en el mensaje; se firma al abrir.
+                    fileUrl = filePath;
                 }
 
                 const attachMd = fileUrl ? `\n\n[📎 Archivo Adjunto: ${attachment.name}](${fileUrl})` : `\n\n[📎 Archivo Adjunto: ${attachment.name}]`;
@@ -479,10 +486,10 @@ export const MessagingHub: React.FC = () => {
                                                         <div className="flex flex-col gap-2">
                                                             {textPart && <span>{textPart}</span>}
                                                             {url ? (
-                                                                <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-info/10 hover:bg-info/20 rounded-xl border border-info/30 transition-colors font-medium text-xs break-all text-info mt-1">
+                                                                <button type="button" onClick={() => abrirAdjuntoFirmado(url)} className="flex items-center gap-2 p-3 bg-info/10 hover:bg-info/20 rounded-xl border border-info/30 transition-colors font-medium text-xs break-all text-info mt-1 text-left w-full">
                                                                     <Paperclip className="w-4 h-4 shrink-0" />
                                                                     <span className="truncate">{name}</span>
-                                                                </a>
+                                                                </button>
                                                             ) : (
                                                                 <div className="flex items-center gap-2 p-3 bg-black/10 rounded-xl border border-black/5 font-medium text-xs opacity-60 mt-1">
                                                                     <Paperclip className="w-4 h-4 shrink-0" />

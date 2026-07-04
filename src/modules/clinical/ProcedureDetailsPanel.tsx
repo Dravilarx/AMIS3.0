@@ -23,6 +23,13 @@ import {
 } from 'lucide-react';
 import { type ClinicalAppointment, type ClinicalIndications } from '../../types/clinical';
 import { cn, formatRUT, formatName, formatPhone } from '../../lib/utils';
+import { getSignedDocumentUrl } from '../../lib/storageUrls';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada) antes de abrir.
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 
 interface ProcedureDetailsPanelProps {
     isOpen: boolean;
@@ -378,15 +385,14 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                             /* Verified state — show status + revert button */
                                             <>
                                                 {doc.documentUrl && (
-                                                    <a
-                                                        href={doc.documentUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => abrirDocumentoFirmado(doc.documentUrl!)}
                                                         className="p-2.5 rounded-xl bg-success/20 text-success hover:bg-success hover:text-white transition-all shadow-sm"
                                                         title="Ver documento adjunto"
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
-                                                    </a>
+                                                    </button>
                                                 )}
                                                 <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-success/20 text-success">
                                                     <ShieldCheck className="w-4 h-4" />
@@ -406,15 +412,14 @@ export const ProcedureDetailsPanel: React.FC<ProcedureDetailsPanelProps> = ({
                                             /* Not verified — show VALIDAR dropdown */
                                             <div className="flex items-center gap-2 relative">
                                                 {doc.documentUrl && (
-                                                    <a
-                                                        href={doc.documentUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => abrirDocumentoFirmado(doc.documentUrl!)}
                                                         className="p-3 rounded-2xl bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-all shadow-sm animate-pulse"
                                                         title="Documento subido por el paciente"
                                                     >
                                                         <ExternalLink className="w-5 h-5" />
-                                                    </a>
+                                                    </button>
                                                 )}
                                                 <button
                                                     onClick={() => setOpenDropdownId(openDropdownId === doc.id ? null : doc.id)}

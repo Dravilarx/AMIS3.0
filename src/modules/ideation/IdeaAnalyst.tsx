@@ -2,6 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Sparkles, Target, FileText, Upload, Loader2, Radar, Clipboard, Zap, TrendingUp, Activity, Scale, BrainCircuit, FileSpreadsheet, MousePointer2, Trash2, Eye, Table2, LayoutGrid, ArrowUpDown, ExternalLink, BarChart3 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useIdeas } from '../../hooks/useIdeas';
+import { getSignedDocumentUrl } from '../../lib/storageUrls';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 
 export const IdeaAnalyst: React.FC = () => {
     const { analyses, loading, processNewIdea, processTextIdea, deleteIdea, updateIdeaStatus } = useIdeas();
@@ -355,12 +362,12 @@ export const IdeaAnalyst: React.FC = () => {
                                                         <Eye className="w-3.5 h-3.5" />
                                                     </button>
                                                     {report.original_document_url && (
-                                                        <a href={report.original_document_url} target="_blank" rel="noopener noreferrer"
+                                                        <button type="button" onClick={() => abrirDocumentoFirmado(report.original_document_url)}
                                                             className="p-1.5 rounded-lg hover:bg-brand-primary/10 text-brand-text/30 hover:text-brand-primary transition-all"
                                                             title="Ver documento original"
                                                         >
                                                             <ExternalLink className="w-3.5 h-3.5" />
-                                                        </a>
+                                                        </button>
                                                     )}
                                                     {confirmDelete === report.id ? (
                                                         <div className="flex items-center gap-1">
@@ -437,12 +444,12 @@ export const IdeaAnalyst: React.FC = () => {
                                         {/* Action Buttons */}
                                         <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                             {report.original_document_url && (
-                                                <a href={report.original_document_url} target="_blank" rel="noopener noreferrer"
+                                                <button type="button" onClick={() => abrirDocumentoFirmado(report.original_document_url)}
                                                     className="p-1 rounded-lg hover:bg-brand-primary/10 text-brand-text/20 hover:text-brand-primary transition-all"
                                                     title="Ver documento"
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
-                                                </a>
+                                                </button>
                                             )}
                                             {confirmDelete === report.id ? (
                                                 <div className="flex items-center gap-1 bg-brand-surface border border-danger/30 rounded-lg px-1 py-0.5">

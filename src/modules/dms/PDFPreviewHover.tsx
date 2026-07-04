@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, ExternalLink, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useSignedUrl } from '../../lib/storageUrls';
 
 interface PDFPreviewHoverProps {
-    url:      string;
+    url:      string;   // ruta interna del bucket documents (o URL heredada)
     title:    string;
     children: React.ReactNode;
 }
@@ -14,6 +15,10 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
     const [previewMode, setPreviewMode]   = useState<'hover' | 'modal'>('hover');
     const timerRef                        = useRef<ReturnType<typeof setTimeout> | null>(null);
     const containerRef                    = useRef<HTMLDivElement>(null);
+
+    // La detección de tipo usa la ruta/URL original (conserva la extensión);
+    // el src real de render es la URL firmada del bucket privado.
+    const { url: signedUrl } = useSignedUrl(url);
 
     const isPDF   = url.toLowerCase().includes('.pdf') ||
                     url.toLowerCase().includes('pdf');
@@ -73,7 +78,7 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
                             </div>
                         )}
                         <iframe
-                            src={isPDF ? `${url}#toolbar=0&navpanes=0` : url}
+                            src={signedUrl ? (isPDF ? `${signedUrl}#toolbar=0&navpanes=0` : signedUrl) : undefined}
                             className="w-full h-full border-0"
                             title={title}
                             onLoad={() => setIsLoading(false)}
@@ -94,7 +99,7 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
                             <p className="text-sm font-bold text-brand-text truncate flex-1">{title}</p>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => window.open(url, '_blank')}
+                                    onClick={() => signedUrl && window.open(signedUrl, '_blank')}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all"
                                 >
                                     <ExternalLink className="w-3.5 h-3.5" /> Abrir
@@ -118,14 +123,14 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
                             )}
                             {isImage ? (
                                 <img
-                                    src={url}
+                                    src={signedUrl || undefined}
                                     alt={title}
                                     className="w-full h-full object-contain"
                                     onLoad={() => setIsLoading(false)}
                                 />
                             ) : (
                                 <iframe
-                                    src={isPDF ? `${url}#toolbar=1&navpanes=1` : url}
+                                    src={signedUrl ? (isPDF ? `${signedUrl}#toolbar=1&navpanes=1` : signedUrl) : undefined}
                                     className="w-full h-full border-0"
                                     title={title}
                                     onLoad={() => setIsLoading(false)}

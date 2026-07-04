@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { extractDocumentPath } from '../lib/storageUrls';
 import type { Document } from '../types/communication';
 
 export const useDocuments = (_options?: { limit?: number }) => {
@@ -63,8 +64,6 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
                 'application/vnd.ms-excel',
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
-                'text/markdown',
-                'text/plain',
                 'image/jpeg',
                 'image/png',
                 'video/mp4',
@@ -74,15 +73,15 @@ export const useDocuments = (_options?: { limit?: number }) => {
             if (!allowedTypes.includes(file.type)) {
                 return {
                     success: false,
-                    error: `Tipo de archivo no permitido: ${file.type}. Formatos aceptados: PDF, Word, Excel, Markdown, Imágenes (JPG/PNG) y Vídeos (MP4/MOV)`
+                    error: `Tipo de archivo no permitido: ${file.type}. Formatos aceptados: PDF, Word, Excel, Imágenes (JPG/PNG) y Vídeos (MP4/MOV)`
                 };
             }
 
-            const maxSize = 100 * 1024 * 1024; // Aumentado a 100 MB para vídeos
+            const maxSize = 50 * 1024 * 1024; // 50 MB (límite real del bucket)
             if (file.size > maxSize) {
                 return {
                     success: false,
-                    error: `El archivo excede el límite de 100 MB`
+                    error: `El archivo excede el límite de 50 MB`
                 };
             }
 
@@ -97,9 +96,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
             if (uploadError) throw new Error(`Error al subir archivo: ${uploadError.message}`);
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('documents')
-                .getPublicUrl(filePath);
+            // Se guarda la RUTA interna (bucket privado); la URL firmada se resuelve al renderizar.
 
             // Validación por IA si es un requerimiento de batería
             let aiValidation = null;
@@ -121,7 +118,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     type: metadata.type || (file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'pdf'),
                     category: metadata.category || 'other',
                     content_summary: aiValidation?.observation || 'Procesando por Agrawall AI...',
-                    url: publicUrl,
+                    url: filePath,
                     signed: false,
                     visibility: metadata.visibility || 'community',
                     target_id: metadata.targetId,
@@ -166,10 +163,6 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
             if (uploadError) throw new Error(`Error de Almacenamiento (RLS/MIME): ${uploadError.message}`);
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('documents')
-                .getPublicUrl(filePath);
-
             const { error: dbError } = await supabase
                 .from('documents')
                 .insert([{
@@ -177,7 +170,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     type: 'pdf', // Clasificación visual como documento formal
                     category: metadata.category || 'other',
                     content_summary: content.substring(0, 300).replace(/<[^>]*>?/gm, '') || 'Documento nativo creado en la plataforma.',
-                    url: publicUrl,
+                    url: filePath,
                     signed: false,
                     visibility: metadata.visibility || 'community',
                     target_id: metadata.targetId,
@@ -219,8 +212,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
     const deleteDocument = async (id: string, url: string) => {
         try {
-            // 1. Obtener la ruta del archivo en Storage
-            const filePath = url?.split('/storage/v1/object/public/documents/')[1]?.split('?')[0];
+            // 1. Obtener la ruta del archivo en Storage (acepta ruta o URL heredada)
+            const filePath = url ? (extractDocumentPath(url) ?? url) : null;
 
             if (filePath) {
                 const { error: storageError } = await supabase.storage
@@ -247,8 +240,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
     const duplicateDocument = async (doc: Document) => {
         try {
-            // 1. Clonar el archivo en Storage
-            const originalPath = doc.url.split('/storage/v1/object/public/documents/')[1].split('?')[0];
+            // 1. Clonar el archivo en Storage (acepta ruta o URL heredada)
+            const originalPath = extractDocumentPath(doc.url) ?? doc.url;
             const fileExt = originalPath.split('.').pop();
             const newPath = `expedientes/copy-${Date.now()}.${fileExt}`;
 
@@ -258,11 +251,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
 
             if (copyError) throw copyError;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('documents')
-                .getPublicUrl(newPath);
-
-            // 2. Insertar nuevo registro con metadata clonada (Skill URMA)
+            // 2. Insertar nuevo registro con metadata clonada (Skill URMA). Guarda la RUTA.
             const { error: insertError } = await supabase
                 .from('documents')
                 .insert([{
@@ -270,7 +259,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     type: doc.type,
                     category: doc.category,
                     content_summary: doc.contentSummary,
-                    url: publicUrl,
+                    url: newPath,
                     signed: false, // Las copias nacen sin firmar por seguridad
                     visibility: doc.visibility,
                     target_id: doc.targetId,

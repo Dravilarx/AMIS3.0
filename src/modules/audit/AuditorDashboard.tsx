@@ -7,6 +7,13 @@ import {
     History, Lock, ArrowRight, FileDown,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { getSignedDocumentUrl } from '../../lib/storageUrls';
+
+// Abre una evidencia del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 import { useAudit, type AuditCase, type AuditDocument, type AuditTrailEntry } from '../../hooks/useAudit';
 import { useProfessionals } from '../../hooks/useProfessionals';
 import { InlineAuditUploader } from './InlineAuditUploader';
@@ -423,7 +430,7 @@ const CaseDetailPanel: React.FC<{
                                             </span>
                                         </div>
                                     </div>
-                                    <button onClick={() => window.open(doc.fileUrl, '_blank')}
+                                    <button onClick={() => abrirDocumentoFirmado(doc.fileUrl)}
                                         className="p-1.5 rounded-lg text-brand-text/20 hover:text-info hover:bg-info/10 transition-colors">
                                         <Eye className="w-3.5 h-3.5" />
                                     </button>

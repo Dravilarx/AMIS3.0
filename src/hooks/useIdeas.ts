@@ -40,7 +40,7 @@ export const useIdeas = () => {
             );
 
             // 3. Subir archivo a Storage (Vía opcional si falla no bloquea el análisis)
-            let publicUrl = null;
+            let documentPath = null;
             try {
                 const fileExt = file.name.split('.').pop();
                 const filePath = `brainstorming/${Math.random()}.${fileExt}`;
@@ -48,10 +48,8 @@ export const useIdeas = () => {
                     .from('documents')
                     .upload(filePath, file);
 
-                const { data: { publicUrl: url } } = supabase.storage
-                    .from('documents')
-                    .getPublicUrl(filePath);
-                publicUrl = url;
+                // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
+                documentPath = filePath;
             } catch (storageErr) {
                 console.warn('Storage upload failed, continuing with analysis save', storageErr);
             }
@@ -61,7 +59,7 @@ export const useIdeas = () => {
                 .from('brainstorming_analysis')
                 .insert([{
                     title: analysis.title,
-                    original_document_url: publicUrl,
+                    original_document_url: documentPath,
                     executive_summary: analysis.strategicJustification,
                     strategic_analysis: analysis,
                     status: 'completed'

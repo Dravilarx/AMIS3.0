@@ -341,23 +341,20 @@ export const useAudit = () => {
 
             if (storageError) throw storageError;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('documents')
-                .getPublicUrl(filePath);
-
+            // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
             const { error } = await supabase
                 .from('audit_documents')
                 .insert({
                     audit_id:  auditId,
                     doc_type:  docType,
                     file_name: file.name,
-                    file_url:  publicUrl,
+                    file_url:  filePath,
                     notes:     notes || null,
                 });
 
             if (error) throw error;
             await fetchCases();
-            return { success: true, url: publicUrl };
+            return { success: true, url: filePath };
         } catch (err: any) {
             console.error('[Audit] Error subiendo documento:', err);
             return { success: false, error: err.message };
