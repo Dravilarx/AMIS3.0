@@ -67,9 +67,11 @@ export const useDocumentVersions = () => {
         }
     }, []);
 
-    // Sube un archivo nuevo y actualiza documents.url. El trigger de la BD
-    // archiva automáticamente la versión anterior (y limpia la firma si aplica).
-    const uploadNewVersion = async (doc: Document, file: File) => {
+    // Sube un archivo nuevo y actualiza documents.url (+ expiry_date si se indica,
+    // en el mismo UPDATE). El trigger de la BD archiva automáticamente la versión
+    // anterior (y limpia la firma si aplica). `expiryDate === undefined` significa
+    // "no tocar esa columna"; `null` la limpia; un string la fija.
+    const uploadNewVersion = async (doc: Document, file: File, expiryDate?: string | null) => {
         try {
             if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
                 return { success: false, error: `Tipo de archivo no permitido: ${file.type}` };
@@ -85,9 +87,12 @@ export const useDocumentVersions = () => {
             const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
             if (uploadError) throw uploadError;
 
+            const payload: Record<string, any> = { url: filePath };
+            if (expiryDate !== undefined) payload.expiry_date = expiryDate;
+
             const { error: dbError } = await supabase
                 .from('documents')
-                .update({ url: filePath })
+                .update(payload)
                 .eq('id', doc.id);
             if (dbError) throw dbError;
 

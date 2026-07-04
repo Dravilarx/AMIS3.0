@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, CalendarClock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -17,6 +17,7 @@ import { NativeDocumentEditor } from './NativeDocumentEditor';
 import { DigitalSignatureModal } from './DigitalSignatureModal';
 import { RequestSignatureModal } from './RequestSignatureModal';
 import { DocumentVersionsModal } from './DocumentVersionsModal';
+import { ExpiryDateModal } from './ExpiryDateModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
 import { getSignedDocumentUrl } from '../../lib/storageUrls';
 import { getLevelForRole } from '../../lib/accessLevels';
@@ -53,7 +54,7 @@ export const SemanticDMS: React.FC = () => {
     const {
         documents, archivedDocuments, loading, error,
         uploadDocument, createNativeDocument,
-        deleteDocument, archiveDocument, restoreDocument,
+        deleteDocument, archiveDocument, restoreDocument, updateExpiryDate,
         duplicateDocument, refresh,
     } = useDocuments();
 
@@ -84,6 +85,8 @@ export const SemanticDMS: React.FC = () => {
     const puedeArchivar = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
     // ¿Puede gestionar versiones (subir nueva / restaurar)? Jefatura+ o el propio autor.
     const puedeGestionarVersiones = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
+    // ¿Puede editar el vencimiento? Jefatura+ o el propio autor.
+    const puedeEditarVencimiento = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
 
     const handleArchive = async (doc: Document) => {
         const res = await archiveDocument(doc.id);
@@ -110,6 +113,7 @@ export const SemanticDMS: React.FC = () => {
     const [confirmDelete,    setConfirmDelete]    = useState<Document | null>(null);
     const [requestingDoc,    setRequestingDoc]    = useState<Document | null>(null);
     const [versionsDoc,      setVersionsDoc]      = useState<Document | null>(null);
+    const [expiryDoc,        setExpiryDoc]        = useState<Document | null>(null);
 
     // ── Filtros ───────────────────────────────────────────────────────────────
     const [searchTerm,       setSearchTerm]       = useState('');
@@ -512,6 +516,12 @@ export const SemanticDMS: React.FC = () => {
                                                 className="p-1.5 rounded-lg text-brand-text/20 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors opacity-0 group-hover:opacity-100">
                                                 <History className="w-3.5 h-3.5" />
                                             </button>
+                                            {puedeEditarVencimiento(doc) && (
+                                                <button onClick={e => { e.stopPropagation(); setExpiryDoc(doc); }} title="Vencimiento"
+                                                    className="p-1.5 rounded-lg text-brand-text/20 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors opacity-0 group-hover:opacity-100">
+                                                    <CalendarClock className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
                                             {showArchived ? (
                                                 <button onClick={e => { e.stopPropagation(); handleRestore(doc); }} title="Restaurar"
                                                     className="p-1.5 rounded-lg text-brand-text/20 hover:text-success hover:bg-success/10 transition-colors opacity-0 group-hover:opacity-100">
@@ -624,6 +634,12 @@ export const SemanticDMS: React.FC = () => {
                                         className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-brand-primary hover:border-brand-primary/20 transition-all">
                                         <History className="w-3 h-3" />
                                     </button>
+                                    {puedeEditarVencimiento(doc) && (
+                                        <button onClick={() => setExpiryDoc(doc)} title="Vencimiento"
+                                            className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-brand-primary hover:border-brand-primary/20 transition-all">
+                                            <CalendarClock className="w-3 h-3" />
+                                        </button>
+                                    )}
                                     {showArchived ? (
                                         <button onClick={() => handleRestore(doc)} title="Restaurar"
                                             className="p-1.5 border border-success/20 text-success rounded-lg hover:bg-success/10 transition-all">
@@ -725,6 +741,15 @@ export const SemanticDMS: React.FC = () => {
                     canManage={puedeGestionarVersiones(versionsDoc)}
                     onClose={() => setVersionsDoc(null)}
                     onChanged={refresh}
+                    notify={showToast}
+                />
+            )}
+
+            {expiryDoc && (
+                <ExpiryDateModal
+                    doc={expiryDoc}
+                    onClose={() => setExpiryDoc(null)}
+                    onSave={updateExpiryDate}
                     notify={showToast}
                 />
             )}

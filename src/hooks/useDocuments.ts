@@ -138,7 +138,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     is_locked: !!metadata.requirementId, // Bloqueo automático para acreditación
                     is_validated: aiValidation?.isValid || false,
                     ai_observation: aiValidation?.observation,
-                    expiry_date: aiValidation?.extractedExpiryDate
+                    // Fecha manual (formulario de subida) tiene prioridad sobre la extraída por IA.
+                    expiry_date: metadata.expiryDate || aiValidation?.extractedExpiryDate || null
                 }]);
 
             if (dbError) throw new Error(`Error al registrar documento: ${dbError.message}`);
@@ -238,6 +239,23 @@ export const useDocuments = (_options?: { limit?: number }) => {
         }
     };
 
+    // Actualiza (o quita, con null) la fecha de vencimiento de un documento existente.
+    const updateExpiryDate = async (id: string, expiryDate: string | null) => {
+        try {
+            const { error: updateError } = await supabase
+                .from('documents')
+                .update({ expiry_date: expiryDate })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error updating expiry date:', err);
+            return { success: false, error: err.message, rls: isRlsError(err) };
+        }
+    };
+
     const deleteDocument = async (id: string, url: string) => {
         try {
             // 1. Obtener la ruta del archivo en Storage (acepta ruta o URL heredada)
@@ -323,6 +341,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
         createNativeDocument,
         archiveDocument,
         restoreDocument,
+        updateExpiryDate,
         deleteDocument,
         duplicateDocument
     };

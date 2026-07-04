@@ -11,7 +11,8 @@ import {
     Globe,
     Loader2,
     FileText,
-    Sparkles
+    Sparkles,
+    CalendarClock
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
@@ -35,6 +36,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     const [title, setTitle] = useState(prefill?.title || '');
     const [category, setCategory] = useState<Document['category']>(prefill?.category || 'other');
     const [visibility, setVisibility] = useState<Document['visibility']>(prefill?.visibility || 'interna');
+    const [expiryDate, setExpiryDate] = useState('');
     const [targetId] = useState(prefill?.targetId || '');
     const [projectId, setProjectId] = useState('');
     const [taskId, setTaskId] = useState('');
@@ -89,6 +91,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             title: title || file.name,
             category,
             visibility,
+            expiryDate: expiryDate || undefined,
             targetId: targetId || undefined,
             projectId: projectId || undefined,
             taskId: taskId || undefined,
@@ -226,6 +229,19 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1 flex items-center gap-1">
+                                    <CalendarClock className="w-3 h-3" /> Fecha de vencimiento
+                                </label>
+                                <input
+                                    type="date"
+                                    value={expiryDate}
+                                    onChange={(e) => setExpiryDate(e.target.value)}
+                                    className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none focus:border-info/40"
+                                />
+                                <p className="text-[9px] text-brand-text/30 font-bold ml-1">Opcional — genera alertas 30 y 7 días antes</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
