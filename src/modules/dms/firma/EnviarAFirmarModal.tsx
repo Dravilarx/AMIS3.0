@@ -3,7 +3,7 @@ import { X, Search, UserPlus, FileSignature, Send, Loader2, Trash2, ChevronLeft,
 import { cn } from '../../../lib/utils';
 import { getSignedDocumentUrl } from '../../../lib/storageUrls';
 import { useAuth } from '../../../hooks/useAuth';
-import { useFirma, buscarUsuariosActivos } from '../../../hooks/useFirma';
+import { useFirma, buscarUsuariosActivos, resolverTieneRubrica } from '../../../hooks/useFirma';
 import { useRubrica } from '../../../hooks/useRubrica';
 import { usePdfDocument, PdfPageCanvas } from './PdfPageCanvas';
 import { RubricaEditor } from './RubricaEditor';
@@ -43,6 +43,7 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
     const [activeId, setActiveId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<{ id: string; fullName: string }[]>([]);
+    const [rubricaPorUsuario, setRubricaPorUsuario] = useState<Map<string, boolean>>(new Map());
     const [buscando, setBuscando] = useState(false);
 
     const [plazo, setPlazo] = useState(hoyMasDias(7));
@@ -92,13 +93,19 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [modo, user?.id]);
 
+    // Se ejecuta también con searchTerm vacío (sin exigir mínimo de caracteres):
+    // así la lista de firmantes seleccionables se puebla con TODOS los activos
+    // apenas se abre el selector, sin que el usuario tenga que escribir nada.
     useEffect(() => {
-        if (searchTerm.trim().length < 2) { setSearchResults([]); return; }
         let cancelled = false;
         setBuscando(true);
         const t = setTimeout(async () => {
             const res = await buscarUsuariosActivos(searchTerm);
-            if (!cancelled) { setSearchResults(res); setBuscando(false); }
+            if (cancelled) return;
+            setSearchResults(res);
+            setBuscando(false);
+            const mapa = await resolverTieneRubrica(res.map(u => u.id));
+            if (!cancelled) setRubricaPorUsuario(mapa);
         }, 250);
         return () => { cancelled = true; clearTimeout(t); };
     }, [searchTerm]);
@@ -311,16 +318,22 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
                                             className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-brand-border bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                                         />
                                     </div>
-                                    {buscando && <p className="text-[10px] text-brand-text/30">Buscando...</p>}
+                                    {buscando && searchResults.length === 0 && <p className="text-[10px] text-brand-text/30">Cargando usuarios...</p>}
                                     {searchResults.length > 0 && (
-                                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        <div className="space-y-1 max-h-56 overflow-y-auto">
                                             {searchResults.map(u => (
                                                 <button key={u.id} onClick={() => agregarFirmante(u)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-brand-bg text-left">
                                                     <UserPlus className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                                                    <span className="text-xs font-semibold text-brand-text truncate">{u.fullName}</span>
+                                                    <span className="text-xs font-semibold text-brand-text truncate flex-1">{u.fullName}</span>
+                                                    {rubricaPorUsuario.get(u.id) === false && (
+                                                        <span className="text-[9px] text-brand-text/30 font-semibold shrink-0">sin rúbrica aún</span>
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
+                                    )}
+                                    {!buscando && searchResults.length === 0 && searchTerm.trim().length >= 2 && (
+                                        <p className="text-[10px] text-brand-text/30">Sin resultados para "{searchTerm.trim()}"</p>
                                     )}
                                 </div>
                             )}

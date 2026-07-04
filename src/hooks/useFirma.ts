@@ -66,12 +66,31 @@ export const obtenerSolicitudDeDocumento = async (documentId: string): Promise<S
 };
 
 // ─── Listado de usuarios activos (para elegir firmantes) ─────────────────────
+// Tener rúbrica NO es requisito para ser seleccionable: se listan TODOS los
+// activos (profiles_publicos, is_deleted=false), tengan rúbrica o no. `term`
+// vacío devuelve los primeros por nombre (usado para poblar la lista al abrir
+// el selector, antes de que el usuario escriba nada).
 export const buscarUsuariosActivos = async (term: string): Promise<{ id: string; fullName: string }[]> => {
     let q = supabase.from('profiles_publicos').select('id, full_name').eq('is_deleted', false).order('full_name').limit(30);
     if (term.trim().length >= 2) q = q.ilike('full_name', `%${term.trim()}%`);
     const { data, error } = await q;
     if (error) { console.error('Error buscando usuarios:', error); return []; }
     return (data || []).map((p: any) => ({ id: p.id, fullName: p.full_name }));
+};
+
+// Booleano "¿ya tiene rúbrica?" por usuario, solo para mostrar una etiqueta
+// informativa (nunca bloquea la selección). NUNCA expone rubrica_path ni
+// otros datos de "profiles" (rut/email): se selecciona únicamente id +
+// rubrica_path, y solo para derivar el flag. La política RLS de "profiles"
+// solo deja ver la fila propia o, si el usuario es Jefatura+, todas — para
+// el resto, los ids ajenos simplemente no vuelven en la respuesta y quedan
+// sin marcar (nunca se asume "sin rúbrica" ante la duda).
+export const resolverTieneRubrica = async (ids: string[]): Promise<Map<string, boolean>> => {
+    const unique = Array.from(new Set(ids.filter(Boolean)));
+    if (unique.length === 0) return new Map();
+    const { data, error } = await supabase.from('profiles').select('id, rubrica_path').in('id', unique);
+    if (error) { console.error('Error verificando rúbricas registradas:', error); return new Map(); }
+    return new Map((data || []).map((p: any) => [p.id, !!p.rubrica_path]));
 };
 
 // ─── Hook principal ───────────────────────────────────────────────────────────
