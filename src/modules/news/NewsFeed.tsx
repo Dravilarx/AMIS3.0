@@ -7,6 +7,7 @@ import {
 import { cn } from '../../lib/utils';
 import { useNews, type NewsReaction, type NewsComment, type NewsAttachment } from '../../hooks/useNews';
 import { useAuth } from '../../hooks/useAuth';
+import { getLevelForRole } from '../../lib/accessLevels';
 import { NewsComposer } from './NewsComposer';
 import { NewsArticleView } from './NewsArticleView';
 import type { NewsArticle, NewsCategory, NewsPriority } from '../../types/news';
@@ -314,9 +315,8 @@ export const NewsFeed: React.FC = () => {
     const [editingArticle,  setEditingArticle]   = useState<NewsArticle | null>(null);
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
 
-    const isAdmin = user?.role === 'SUPER_ADMIN' ||
-                    user?.role === 'ADMIN'        ||
-                    user?.role === 'MANAGER';
+    // "Puede administrar noticias": Jefatura y Dirección (nivel ≤ 2).
+    const isAdmin = getLevelForRole(user?.role) <= 2;
 
     const filteredArticles = useMemo(() => articles.filter(a => {
         if (searchTerm &&

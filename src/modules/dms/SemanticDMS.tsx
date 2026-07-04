@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -18,6 +18,7 @@ import { DigitalSignatureModal } from './DigitalSignatureModal';
 import { RequestSignatureModal } from './RequestSignatureModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
 import { getSignedDocumentUrl } from '../../lib/storageUrls';
+import { getLevelForRole } from '../../lib/accessLevels';
 import type { Document } from '../../types/communication';
 
 // Abre un documento del bucket privado firmando la ruta antes de window.open.
@@ -49,15 +50,52 @@ const getCategoryColor = (cat: string) => {
 // ─── Componente principal ─────────────────────────────────────────────────────
 export const SemanticDMS: React.FC = () => {
     const {
-        documents, loading, error,
+        documents, archivedDocuments, loading, error,
         uploadDocument, createNativeDocument,
-        deleteDocument,
+        deleteDocument, archiveDocument, restoreDocument,
         duplicateDocument, refresh,
     } = useDocuments();
 
     const { signNativeDocument, signPDFDocument } = useSignature();
     const { canPerform, user }                     = useAuth();
-    const { folders, addFolder, moveDocument } = useFolders();
+    const { folders, addFolder, deleteFolder, moveDocument } = useFolders();
+
+    // Nivel de acceso del usuario (menor = más acceso). ADMIN ya no existe.
+    const miNivel = getLevelForRole(user?.role);
+    const puedeCrearCarpeta = miNivel <= 2;   // crear/editar carpeta: Jefatura+
+    const puedeBorrarCarpeta = miNivel <= 1;  // eliminar carpeta: solo Dirección
+
+    // Toast de feedback (incluye rechazos RLS).
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const showToast = (msg: string, ok: boolean) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3500); };
+    const notifyRls = (res: { rls?: boolean; error?: string }) =>
+        showToast(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'Ocurrió un error'), false);
+
+    // Vista de archivados.
+    const [showArchived, setShowArchived] = useState(false);
+
+    // Carpetas visibles según nivel (RLS también las filtra; esto refleja la regla).
+    const visibleFolders = useMemo(() => folders.filter(f => miNivel <= f.nivelVer), [folders, miNivel]);
+    // Carpetas donde el usuario puede subir/asignar documentos.
+    const uploadableFolders = useMemo(() => folders.filter(f => miNivel <= f.nivelSubir), [folders, miNivel]);
+
+    // ¿Puede archivar este documento? Jefatura+ o el propio autor.
+    const puedeArchivar = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
+
+    const handleArchive = async (doc: Document) => {
+        const res = await archiveDocument(doc.id);
+        if (res.success) showToast(`"${doc.title}" archivado`, true); else notifyRls(res);
+    };
+    const handleRestore = async (doc: Document) => {
+        const res = await restoreDocument(doc.id);
+        if (res.success) showToast(`"${doc.title}" restaurado`, true); else notifyRls(res);
+    };
+    const handleDeleteFolder = async (id: string, name: string) => {
+        if (!window.confirm(`¿Eliminar la carpeta "${name}"? Los documentos quedarán sin carpeta.`)) return;
+        const res = await deleteFolder(id);
+        if (res.success) { if (filterFolder === id) setFilterFolder(null); showToast('Carpeta eliminada', true); }
+        else notifyRls(res);
+    };
 
     // ── Estado UI ─────────────────────────────────────────────────────────────
     const [viewMode,         setViewMode]         = useState<'grid' | 'list'>('grid');
@@ -84,7 +122,8 @@ export const SemanticDMS: React.FC = () => {
     const [savingFolder,     setSavingFolder]     = useState(false);
 
     // ── Docs filtrados ────────────────────────────────────────────────────────
-    const filteredDocs = useMemo(() => documents.filter(d => {
+    const baseDocs = showArchived ? archivedDocuments : documents;
+    const filteredDocs = useMemo(() => baseDocs.filter(d => {
         const s = searchTerm.toLowerCase();
         const matchSearch  = !searchTerm ||
             d.title.toLowerCase().includes(s) ||
@@ -97,7 +136,7 @@ export const SemanticDMS: React.FC = () => {
             (filterSigned === 'unsigned' && !d.signed);
         const matchDate    = !filterDateFrom || d.createdAt >= filterDateFrom;
         return matchSearch && matchFolder && matchType && matchSigned && matchDate;
-    }), [documents, searchTerm, filterFolder, filterType, filterSigned, filterDateFrom]);
+    }), [baseDocs, searchTerm, filterFolder, filterType, filterSigned, filterDateFrom]);
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
     const kpis = useMemo(() => ({
@@ -138,10 +177,10 @@ export const SemanticDMS: React.FC = () => {
     const handleAddFolder = async () => {
         if (!newFolderName.trim()) return;
         setSavingFolder(true);
-        await addFolder(newFolderName.trim(), newFolderColor);
-        setNewFolderName('');
-        setShowNewFolder(false);
+        const res = await addFolder(newFolderName.trim(), newFolderColor);
         setSavingFolder(false);
+        if (res.success) { setNewFolderName(''); setShowNewFolder(false); showToast('Carpeta creada', true); }
+        else notifyRls(res);
     };
 
     // ── Loading / Error ───────────────────────────────────────────────────────
@@ -170,10 +209,12 @@ export const SemanticDMS: React.FC = () => {
             <div className="w-56 flex-shrink-0 space-y-2">
                 <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Carpetas</p>
-                    <button onClick={() => setShowNewFolder(v => !v)}
-                        className="p-1 rounded-lg hover:bg-brand-surface text-brand-text/30 hover:text-brand-text transition-colors">
-                        <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    {puedeCrearCarpeta && (
+                        <button onClick={() => setShowNewFolder(v => !v)} title="Nueva carpeta"
+                            className="p-1 rounded-lg hover:bg-brand-surface text-brand-text/30 hover:text-brand-text transition-colors">
+                            <Plus className="w-3.5 h-3.5" />
+                        </button>
+                    )}
                 </div>
 
                 {/* Nueva carpeta */}
@@ -222,20 +263,38 @@ export const SemanticDMS: React.FC = () => {
                     <span className="text-[9px] font-mono opacity-60">{unassigned}</span>
                 </button>
 
-                {/* Carpetas */}
-                {folders.map(folder => (
-                    <button key={folder.id} onClick={() => setFilterFolder(folder.id)}
-                        className={cn(
-                            'w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left group',
-                            filterFolder === folder.id ? 'bg-brand-surface border border-brand-border text-brand-text' : 'hover:bg-brand-surface text-brand-text/60'
-                        )}>
-                        <div className="flex items-center gap-2 min-w-0">
+                {/* Carpetas (ocultas si miNivel > nivel_ver) */}
+                {visibleFolders.map(folder => (
+                    <div key={folder.id} className={cn(
+                        'w-full flex items-center gap-1 px-3 py-2 rounded-xl transition-all group',
+                        filterFolder === folder.id ? 'bg-brand-surface border border-brand-border text-brand-text' : 'hover:bg-brand-surface text-brand-text/60'
+                    )}>
+                        <button onClick={() => { setFilterFolder(folder.id); setShowArchived(false); }} className="flex items-center gap-2 min-w-0 flex-1 text-left">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: folder.color }} />
                             <span className="text-xs truncate">{folder.name}</span>
-                        </div>
+                        </button>
                         <span className="text-[9px] font-mono opacity-60">{docCountByFolder[folder.id] || 0}</span>
-                    </button>
+                        {puedeBorrarCarpeta && (
+                            <button onClick={() => handleDeleteFolder(folder.id, folder.name)} title="Eliminar carpeta"
+                                className="p-0.5 rounded text-brand-text/20 hover:text-danger opacity-0 group-hover:opacity-100 transition-all">
+                                <Trash2 className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
                 ))}
+
+                {/* Archivados */}
+                <button onClick={() => { setShowArchived(v => !v); setFilterFolder(null); }}
+                    className={cn(
+                        'w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left mt-1 border',
+                        showArchived ? 'bg-warning/10 border-warning/30 text-warning' : 'border-transparent hover:bg-brand-surface text-brand-text/40'
+                    )}>
+                    <div className="flex items-center gap-2">
+                        <Archive className="w-3.5 h-3.5" />
+                        <span className="text-xs font-bold">Archivados</span>
+                    </div>
+                    <span className="text-[9px] font-mono opacity-60">{archivedDocuments.length}</span>
+                </button>
 
                 {/* KPIs */}
                 <div className="mt-4 pt-4 border-t border-brand-border space-y-2">
@@ -421,7 +480,7 @@ export const SemanticDMS: React.FC = () => {
                                         onClick={e => e.stopPropagation()}
                                         className="bg-brand-bg border border-brand-border rounded-lg w-full px-2 py-1 text-[10px] text-brand-text/50 outline-none appearance-none mb-3">
                                         <option value="">Sin carpeta</option>
-                                        {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                        {uploadableFolders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                                     </select>
 
                                     {/* Footer */}
@@ -434,10 +493,25 @@ export const SemanticDMS: React.FC = () => {
                                                 className="p-1.5 rounded-lg text-brand-text/20 hover:text-info hover:bg-info/10 transition-colors opacity-0 group-hover:opacity-100">
                                                 <Copy className="w-3.5 h-3.5" />
                                             </button>
-                                            <button onClick={e => { e.stopPropagation(); setConfirmDelete(doc); }}
+                                            {showArchived ? (
+                                                <button onClick={e => { e.stopPropagation(); handleRestore(doc); }} title="Restaurar"
+                                                    className="p-1.5 rounded-lg text-brand-text/20 hover:text-success hover:bg-success/10 transition-colors opacity-0 group-hover:opacity-100">
+                                                    <RotateCcw className="w-3.5 h-3.5" />
+                                                </button>
+                                            ) : (
+                                                puedeArchivar(doc) && (
+                                                <button onClick={e => { e.stopPropagation(); handleArchive(doc); }} title="Archivar"
+                                                    className="p-1.5 rounded-lg text-brand-text/20 hover:text-warning hover:bg-warning/10 transition-colors opacity-0 group-hover:opacity-100">
+                                                    <Archive className="w-3.5 h-3.5" />
+                                                </button>
+                                                )
+                                            )}
+                                            {puedeBorrarCarpeta && (
+                                            <button onClick={e => { e.stopPropagation(); setConfirmDelete(doc); }} title="Eliminar definitivamente"
                                                 className="p-1.5 rounded-lg text-brand-text/20 hover:text-danger hover:bg-danger/10 transition-colors opacity-0 group-hover:opacity-100">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
+                                            )}
                                             <button onClick={e => { e.stopPropagation(); setSigningDoc(doc); }}
                                                 className={cn(
                                                     'flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase',
@@ -522,10 +596,25 @@ export const SemanticDMS: React.FC = () => {
                                         className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-info hover:border-info/20 transition-all">
                                         <Copy className="w-3 h-3" />
                                     </button>
-                                    <button onClick={() => setConfirmDelete(doc)}
+                                    {showArchived ? (
+                                        <button onClick={() => handleRestore(doc)} title="Restaurar"
+                                            className="p-1.5 border border-success/20 text-success rounded-lg hover:bg-success/10 transition-all">
+                                            <RotateCcw className="w-3 h-3" />
+                                        </button>
+                                    ) : (
+                                        puedeArchivar(doc) && (
+                                        <button onClick={() => handleArchive(doc)} title="Archivar"
+                                            className="p-1.5 border border-warning/20 text-warning rounded-lg hover:bg-warning/10 transition-all">
+                                            <Archive className="w-3 h-3" />
+                                        </button>
+                                        )
+                                    )}
+                                    {puedeBorrarCarpeta && (
+                                    <button onClick={() => setConfirmDelete(doc)} title="Eliminar definitivamente"
                                         className="p-1.5 border border-red-500/20 text-red-400 rounded-lg hover:bg-red-500/10 transition-all">
                                         <Trash2 className="w-3 h-3" />
                                     </button>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
@@ -574,17 +663,17 @@ export const SemanticDMS: React.FC = () => {
                             <div className="w-16 h-16 bg-danger/10 border border-danger/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                                 <AlertTriangle className="w-8 h-8 text-danger" />
                             </div>
-                            <h3 className="text-lg font-black text-brand-text mb-2">¿Eliminar documento?</h3>
+                            <h3 className="text-lg font-black text-brand-text mb-2">¿Eliminar definitivamente?</h3>
                             <p className="text-xs text-brand-text/40 mb-6">
-                                <span className="text-brand-text font-bold">"{confirmDelete.title}"</span> será eliminado permanentemente.
+                                <span className="text-brand-text font-bold">"{confirmDelete.title}"</span> se borrará de la base y del almacenamiento. Esta acción NO se puede deshacer. Para conservarlo recuperable, usa "Archivar".
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button onClick={async () => {
                                     const res = await deleteDocument(confirmDelete.id, confirmDelete.url);
-                                    if (res.success) setConfirmDelete(null);
-                                    else alert('Error: ' + res.error);
+                                    if (res.success) { setConfirmDelete(null); showToast('Documento eliminado', true); }
+                                    else { setConfirmDelete(null); notifyRls(res); }
                                 }} className="w-full py-3 bg-danger text-white rounded-2xl text-xs font-black uppercase hover:bg-red-600 transition-all">
-                                    Eliminar
+                                    Eliminar definitivamente
                                 </button>
                                 <button onClick={() => setConfirmDelete(null)}
                                     className="w-full py-3 bg-brand-surface text-brand-text/40 rounded-2xl text-xs font-black uppercase hover:bg-brand-surface/80 transition-all">
@@ -600,6 +689,17 @@ export const SemanticDMS: React.FC = () => {
                 <RequestSignatureModal documentId={requestingDoc.id}
                     onClose={() => setRequestingDoc(null)}
                     onSuccess={() => { setRequestingDoc(null); refresh(); }} />
+            )}
+
+            {/* Toast de feedback / errores RLS */}
+            {toast && (
+                <div className={cn(
+                    'fixed bottom-6 right-6 z-[300] flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl border animate-in slide-in-from-bottom-4',
+                    toast.ok ? 'bg-success/10 border-success/30 text-success' : 'bg-danger/10 border-danger/30 text-danger'
+                )}>
+                    {toast.ok ? <ShieldCheck className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                    <span className="text-xs font-bold">{toast.msg}</span>
+                </div>
             )}
         </div>
     );

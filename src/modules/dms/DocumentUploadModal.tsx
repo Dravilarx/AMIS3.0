@@ -4,6 +4,7 @@ import {
     Upload,
     Users,
     User,
+    Lock,
     Shield,
     Briefcase,
     CheckSquare,
@@ -33,8 +34,8 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState(prefill?.title || '');
     const [category, setCategory] = useState<Document['category']>(prefill?.category || 'other');
-    const [visibility, setVisibility] = useState<Document['visibility']>(prefill?.visibility || 'community');
-    const [targetId, setTargetId] = useState(prefill?.targetId || '');
+    const [visibility, setVisibility] = useState<Document['visibility']>(prefill?.visibility || 'interna');
+    const [targetId] = useState(prefill?.targetId || '');
     const [projectId, setProjectId] = useState('');
     const [taskId, setTaskId] = useState('');
     const [requirementId] = useState(prefill?.requirementId || '');
@@ -44,7 +45,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     // Listas para selectores
     const [projects, setProjects] = useState<{ id: string, name: string }[]>([]);
     const [tasks, setTasks] = useState<{ id: string, title: string }[]>([]);
-    const [profiles, setProfiles] = useState<{ id: string, full_name: string, role: string }[]>([]);
 
     useEffect(() => {
         console.log("[DMS Modal] Cargando metadatos...");
@@ -61,10 +61,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
                     setTasks(taskData);
                 }
 
-                const { data: profData } = await supabase.from('profiles_publicos').select('id, full_name, role').limit(10);
-                if (profData) {
-                    setProfiles(profData);
-                }
             } catch (err) {
                 console.error("[DMS Modal] Crash en fetchMetadata:", err);
             }
@@ -93,7 +89,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             title: title || file.name,
             category,
             visibility,
-            targetId: visibility !== 'community' ? targetId : undefined,
+            targetId: targetId || undefined,
             projectId: projectId || undefined,
             taskId: taskId || undefined,
             requirementId: requirementId || undefined,
@@ -203,59 +199,34 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                         <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Visibilidad Principal</label>
-                                <div className="grid grid-cols-3 gap-2">
+                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Visibilidad</label>
+                                <div className="grid grid-cols-1 gap-2">
                                     {[
-                                        { id: 'community', label: 'Comunidad', icon: Globe },
-                                        { id: 'profile', label: 'Específico', icon: Users },
-                                        { id: 'user', label: 'Privado/Sola Firma', icon: User }
+                                        { id: 'interna',      label: 'Interna',      hint: 'Visible según carpeta', icon: Globe },
+                                        { id: 'restringida',  label: 'Restringida',  hint: 'Solo Jefatura y Dirección', icon: Users },
+                                        { id: 'confidencial', label: 'Confidencial', hint: 'Solo Dirección y firmantes designados', icon: Lock },
+                                        { id: 'personal',     label: 'Personal',     hint: 'Solo yo y Dirección', icon: User },
                                     ].map((opt) => (
                                         <button
                                             key={opt.id}
                                             type="button"
                                             onClick={() => setVisibility(opt.id as any)}
                                             className={cn(
-                                                "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all",
+                                                "p-3 rounded-xl border flex items-center gap-3 text-left transition-all",
                                                 visibility === opt.id
                                                     ? "bg-blue-600/20 border-blue-500/50 text-blue-400"
-                                                    : "bg-brand-surface border-brand-border text-brand-text/30 hover:bg-brand-primary/10"
+                                                    : "bg-brand-surface border-brand-border text-brand-text/40 hover:bg-brand-primary/10"
                                             )}
                                         >
-                                            <opt.icon className="w-4 h-4" />
-                                            <span className="text-[9px] font-bold uppercase">{opt.label}</span>
+                                            <opt.icon className="w-4 h-4 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-[11px] font-black uppercase">{opt.label}</p>
+                                                <p className="text-[9px] font-bold text-brand-text/30">{opt.hint}</p>
+                                            </div>
                                         </button>
                                     ))}
                                 </div>
                             </div>
-
-                            {visibility !== 'community' && (
-                                <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">
-                                        Seleccionar {visibility === 'profile' ? 'Perfil/Cargo' : 'Usuario'}
-                                    </label>
-                                    <select
-                                        value={targetId}
-                                        onChange={(e) => setTargetId(e.target.value)}
-                                        className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none"
-                                        required
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        {visibility === 'profile' ? (
-                                            <>
-                                                <option value="ADM">Administradores</option>
-                                                <option value="AUDITOR">Auditores Clínicos</option>
-                                                <option value="ARCHITECT">Arquitectos de Sistema</option>
-                                                <option value="MED">Médicos / Staff</option>
-                                            </>
-                                        ) : (
-                                            profiles?.map(p => (
-                                                <option key={p.id} value={p.id}>{p.full_name || 'Sin nombre'} ({p.role || 'Sin rol'})</option>
-                                            ))
-
-                                        )}
-                                    </select>
-                                </div>
-                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                 <div className="space-y-1.5">

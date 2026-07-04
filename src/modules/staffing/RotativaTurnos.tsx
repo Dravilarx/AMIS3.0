@@ -12,14 +12,14 @@ import { diasDelMes, MESES, mesAnterior, mesSiguiente } from './turnos/fechas';
 import { exportarPDF, exportarExcel, type ExportData } from './turnos/exportTurnos';
 import { CeldaPopover } from './turnos/CeldaPopover';
 import type { TurnoAsignacion } from '../../types/turnos';
-
-const ROLES_EDICION = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'];
+import { getLevelForRole } from '../../lib/accessLevels';
 
 const cellKey = (fecha: string, puestoId: string) => `${fecha}|${puestoId}`;
 
 export const RotativaTurnos: React.FC = () => {
     const { user } = useAuth();
-    const canEdit = ROLES_EDICION.includes(user?.role || '');
+    // Edición de la rotativa: Jefatura y Dirección (nivel ≤ 2).
+    const canEdit = getLevelForRole(user?.role) <= 2;
 
     const hoy = new Date();
     const [anio, setAnio] = useState(hoy.getFullYear());

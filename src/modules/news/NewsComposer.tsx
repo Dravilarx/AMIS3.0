@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import { useNews } from '../../hooks/useNews';
 import type { NewsArticle, NewsCategory, NewsPriority, NewsVisibility } from '../../types/news';
 import { CATEGORY_LABELS, PRIORITY_LABELS, VISIBILITY_LABELS } from '../../types/news';
+import { ROLE_LEVEL_ORDER, getLabelForRole } from '../../lib/accessLevels';
 
 interface NewsComposerProps {
     article?: NewsArticle | null;
@@ -14,7 +15,8 @@ interface NewsComposerProps {
     onSuccess: () => void;
 }
 
-const AVAILABLE_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER'];
+// Roles jerárquicos disponibles como audiencia (sin ADMIN, con etiquetas ES).
+const AVAILABLE_ROLES = ROLE_LEVEL_ORDER;
 const MAX_IMAGES = 5;
 
 export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, onSuccess }) => {
@@ -366,7 +368,7 @@ export const NewsComposer: React.FC<NewsComposerProps> = ({ article, onClose, on
                                                 : "bg-brand-surface text-brand-text/30 border-brand-border hover:text-brand-text/50"
                                         )}
                                     >
-                                        {role}
+                                        {getLabelForRole(role)}
                                     </button>
                                 ))}
                             </div>

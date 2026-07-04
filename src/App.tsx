@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Layout, NAV_ITEMS } from './components/Layout'
 import { AuthView } from './components/AuthView'
 import { useAuth } from './hooks/useAuth'
+import { getLevelForRole } from './lib/accessLevels'
 
 // ─── Lazy imports — cada módulo carga solo cuando se necesita ─────────────────
 const DashboardModule        = lazy(() => import('./modules/dashboard/DashboardModule').then(m => ({ default: m.DashboardModule })));
@@ -44,6 +45,7 @@ const ProtocolosDashboard    = lazy(() => import('./modules/protocolos/Protocolo
 const DashboardCuartoTurno   = lazy(() => import('./modules/dashboard-cuarto-turno/DashboardCuartoTurno').then(m => ({ default: m.DashboardCuartoTurno })));
 const PortalInstitucionalAdmin = lazy(() => import('./modules/portal-institucional/PortalInstitucionalAdmin').then(m => ({ default: m.PortalInstitucionalAdmin })));
 const AsistenteDashboard     = lazy(() => import('./modules/asistente/AsistenteDashboard').then(m => ({ default: m.AsistenteDashboard })));
+const FolderPermissionsManager = lazy(() => import('./modules/dms/FolderPermissionsManager').then(m => ({ default: m.FolderPermissionsManager })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
 const ModuleLoader = () => (
@@ -82,7 +84,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente';
+    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas';
 
 // Vistas gateadas por permissions[modulo].read: exactamente las del menú lateral
 // (NAV_ITEMS ya es la fuente única que usa Layout.tsx para filtrar el sidebar).
@@ -204,32 +206,37 @@ function App() {
             case 'secretary_command':   return <SecretaryCommandCenter />;
             case 'radiology_worklist':  return <RadiologistWorklist />;
             case 'admin':
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AdminModule />;
+                // Gestión de usuarios/permisos: exclusiva del dueño del sistema (nivel 1).
+                if (getLevelForRole(user?.role) <= 1) return <AdminModule />;
                 return <DashboardModule />;
             case 'institutions':        return <InstitutionsDashboard />;
             case 'news':                return <NewsFeed />;
             case 'stat_multiris':       return <StatMultirisModule />;
             case 'stat_multiris_html':  return <StatMultirisHTML />;
             case 'ai_access':
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <AiAccessManager />;
+                if (getLevelForRole(user?.role) <= 2) return <AiAccessManager />;
                 return <DashboardModule />;
             case 'dispatch':            return <DispatchCenter />;
             case 'asistente':           return <AsistenteDashboard />;
+            case 'permisos_carpetas':
+                // Pantalla de permisos de carpetas: solo Dirección (nivel 1).
+                if (getLevelForRole(user?.role) <= 1) return <FolderPermissionsManager />;
+                return <DashboardModule />;
             case 'b2b_portal':          return <B2BPortal />;
             case 'wizard_competencias': return <WizardCompetencias />;
             case 'resumen_competencias':
             case 'auditoria_rrhh':
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <ResumenCompetenciasAdmin />;
+                if (getLevelForRole(user?.role) <= 2) return <ResumenCompetenciasAdmin />;
                 return <WizardCompetencias />;
             case 'portal_medicos_admin':
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalMedicosAdmin />;
+                if (getLevelForRole(user?.role) <= 2) return <PortalMedicosAdmin />;
                 return <DashboardModule />;
             case 'cuarto_turno':        return <CuartoTurnoDashboard />;
             case 'dashboard_cuarto_turno': return <DashboardCuartoTurno />;
             case 'solicitudes':         return <SolicitudesDashboard />;
             case 'protocolos':          return <ProtocolosDashboard />;
             case 'portal_institucional':
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return <PortalInstitucionalAdmin />;
+                if (getLevelForRole(user?.role) <= 2) return <PortalInstitucionalAdmin />;
                 return <DashboardModule />;
             default:                    return <DashboardModule />;
         }

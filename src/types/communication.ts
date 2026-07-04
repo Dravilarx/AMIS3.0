@@ -35,7 +35,10 @@ export interface Document {
     signedAt?: string;
     signerName?: string;
     signatureFingerprint?: string;
-    visibility: 'community' | 'profile' | 'user';
+    // Visibilidad (nueva semántica; RLS por nivel/carpeta/visibilidad):
+    //   interna (defecto) · restringida · confidencial · personal
+    visibility: 'interna' | 'restringida' | 'confidencial' | 'personal';
+    createdBy?: string; // uuid del autor (documents.created_by)
     targetId?: string; // UID del usuario o ID del perfil
     projectId?: string;
     taskId?: string;
@@ -47,7 +50,7 @@ export interface Document {
     expiryDate?: string; // Fecha de vencimiento para alertas
     requestedSigners?: string[]; // Roles o UIDs permitidos para firmar
     folderId?: string | null;
-    status?: 'draft' | 'pending' | 'signed' | 'rejected';
+    status?: 'draft' | 'pending' | 'signed' | 'rejected' | 'archived' | 'publicado';
 }
 
 export interface DocumentRequirement {

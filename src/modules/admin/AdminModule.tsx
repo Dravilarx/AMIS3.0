@@ -3,6 +3,7 @@ import { Shield, UserPlus, Lock, Trash2, X, PanelLeftClose, PanelLeftOpen, Searc
 import { cn } from '../../lib/utils';
 import { useAdminProfiles } from '../../hooks/useAdminProfiles';
 import { useAuth, type UserRole, type UserPermissions } from '../../hooks/useAuth';
+import { getLevelForRole, getLabelForRole, ROLE_LEVEL_ORDER } from '../../lib/accessLevels';
 import { ClinicOnboarding } from './ClinicOnboarding';
 import { ProcedureHomologation } from './ProcedureHomologation';
 import { CriticalPathologies } from './CriticalPathologies';
@@ -10,16 +11,18 @@ import { CreateInternalUserModal } from './CreateInternalUserModal';
 import { CargosManager } from './CargosManager';
 import { MODULES } from './permissionModules';
 
-const ROLE_LABELS: Record<UserRole, string> = {
-    'SUPER_ADMIN': 'DIRECCIÓN MÉDICA',
-    'ADMIN': 'ADMINISTRADOR',
-    'MANAGER': 'GERENTE DE RED',
-    'OPERATOR': 'GESTOR CLÍNICO',
+// Etiquetas de roles de aplicación no jerárquicos. Los 5 roles con nivel se
+// muestran vía getLabelForRole (accessLevels). El rol ADMIN ya no existe.
+const APP_ROLE_LABELS: Record<string, string> = {
     'VIEWER': 'AUDITOR EXTERNO',
     'ADMIN_SECRETARY': 'SECRETARÍA ADN',
     'PARTNER': 'LABORATORIO/SOCIO',
     'MED_CHIEF': 'JEFE DE SERVICIO'
 };
+
+// Etiqueta española para cualquier rol (nivel jerárquico o app_role).
+const roleLabel = (role?: string | null): string =>
+    getLevelForRole(role) !== 99 ? getLabelForRole(role) : (APP_ROLE_LABELS[role || ''] || role || 'Sin rol');
 
 export const AdminModule: React.FC = () => {
     const { profiles, updateProfile, deleteProfile, createProfile } = useAdminProfiles();
@@ -39,7 +42,7 @@ export const AdminModule: React.FC = () => {
     const selectedProfile = profiles.find(p => p.id === selectedUserId);
 
     // Conteo de personas por rol (solo roles con al menos una persona)
-    const ROLE_ORDER: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'MED_CHIEF', 'ADMIN_SECRETARY', 'PARTNER'];
+    const ROLE_ORDER: UserRole[] = ['SUPER_ADMIN', 'MANAGER', 'COORDINATOR', 'STAFF', 'OPERATOR', 'VIEWER', 'MED_CHIEF', 'ADMIN_SECRETARY', 'PARTNER'];
     const roleCounts = ROLE_ORDER
         .map(role => ({ role, count: profiles.filter(p => p.role === role).length }))
         .filter(r => r.count > 0);
@@ -54,7 +57,7 @@ export const AdminModule: React.FC = () => {
 
     const roleBadgeCls = (role: UserRole) =>
         role === 'SUPER_ADMIN' ? 'bg-warning/10 text-warning border-warning/20' :
-        role === 'ADMIN' ? 'bg-info/10 text-info border-info/20' :
+        role === 'MANAGER' ? 'bg-info/10 text-info border-info/20' :
         'bg-brand-surface text-brand-text/40 border-brand-border';
 
     // Etiquetas cortas de los cuatro permisos por módulo
@@ -87,6 +90,12 @@ export const AdminModule: React.FC = () => {
                 }
             };
         });
+    };
+
+    const handleRoleChange = async (newRole: UserRole) => {
+        if (!selectedUserId) return;
+        const result = await updateProfile(selectedUserId, { role: newRole });
+        if (!result.success) alert('❌ Error al cambiar el rol: ' + result.error);
     };
 
     const handleConsolidate = async () => {
@@ -231,7 +240,7 @@ export const AdminModule: React.FC = () => {
                                                 : 'border-transparent text-brand-text/50 hover:text-brand-text hover:bg-brand-surface'
                                         )}
                                     >
-                                        <span className="text-[9px] font-black uppercase tracking-wider leading-tight">{ROLE_LABELS[role]}</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wider leading-tight">{roleLabel(role)}</span>
                                         <span className="text-[10px] font-mono text-brand-text/30 shrink-0">{count}</span>
                                     </button>
                                 ))}
@@ -242,7 +251,7 @@ export const AdminModule: React.FC = () => {
                         <div className="flex-1 min-w-0 border-r border-brand-border overflow-y-auto custom-scrollbar">
                             <div className="px-4 py-2.5 border-b border-brand-border bg-brand-surface/30 sticky top-0 z-10">
                                 <p className="text-[10px] font-black text-brand-text/40 uppercase tracking-[0.2em]">
-                                    {selectedRole === 'ALL' ? 'Cuerpo Médico y Administrativo' : ROLE_LABELS[selectedRole]} · {visiblePeople.length}
+                                    {selectedRole === 'ALL' ? 'Cuerpo Médico y Administrativo' : roleLabel(selectedRole)} · {visiblePeople.length}
                                 </p>
                             </div>
                             <div className="p-2 space-y-1">
@@ -289,8 +298,24 @@ export const AdminModule: React.FC = () => {
                                                 <p className="text-sm font-black text-brand-text break-words leading-tight">{selectedProfile.full_name}</p>
                                                 <p className="text-[9px] text-brand-text/40 font-bold break-all mt-0.5">{selectedProfile.email}</p>
                                                 <span className={cn('inline-block mt-1.5 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider border', roleBadgeCls(selectedProfile.role))}>
-                                                    {ROLE_LABELS[selectedProfile.role]}
+                                                    {roleLabel(selectedProfile.role)}
                                                 </span>
+                                                {/* Selector de rol jerárquico (5 niveles, etiqueta ES). No aplica a SUPER_ADMIN dueño. */}
+                                                <div className="mt-2">
+                                                    <label className="block text-[8px] font-black text-brand-text/30 uppercase tracking-widest mb-1">Nivel de acceso</label>
+                                                    <select
+                                                        value={ROLE_LEVEL_ORDER.includes(selectedProfile.role) ? selectedProfile.role : ''}
+                                                        onChange={(e) => e.target.value && handleRoleChange(e.target.value as UserRole)}
+                                                        className="w-full bg-brand-bg border border-brand-border rounded-lg px-2 py-1.5 text-[10px] font-bold text-brand-text outline-none focus:border-brand-primary/50"
+                                                    >
+                                                        {!ROLE_LEVEL_ORDER.includes(selectedProfile.role) && (
+                                                            <option value="">{roleLabel(selectedProfile.role)} (sin nivel)</option>
+                                                        )}
+                                                        {ROLE_LEVEL_ORDER.map(r => (
+                                                            <option key={r} value={r}>{getLabelForRole(r)}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-1.5 shrink-0">
                                                 <button onClick={() => setSelectedUserId(null)} title="Cerrar" className="p-1.5 rounded-lg border border-brand-border text-brand-text/40 hover:text-brand-text hover:bg-brand-bg transition-all">

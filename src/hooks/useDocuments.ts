@@ -3,6 +3,13 @@ import { supabase } from '../lib/supabase';
 import { extractDocumentPath } from '../lib/storageUrls';
 import type { Document } from '../types/communication';
 
+// Detecta rechazos por RLS (403 / 42501 / permission denied) para avisar al usuario.
+export const isRlsError = (err: any): boolean => {
+    const code = String(err?.code ?? err?.status ?? '');
+    const msg = (err?.message || '').toLowerCase();
+    return code === '42501' || code === '403' || msg.includes('row-level security') || msg.includes('permission denied') || msg.includes('violates row-level');
+};
+
 export const useDocuments = (_options?: { limit?: number }) => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +38,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 signedAt: d.signed_at,
                 signerName: d.signer_name,
                 signatureFingerprint: d.signature_fingerprint,
-                visibility: d.visibility || 'community',
+                visibility: d.visibility || 'interna',
+                createdBy: d.created_by,
                 targetId: d.target_id,
                 projectId: d.project_id,
                 taskId: d.task_id,
@@ -97,6 +105,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
             if (uploadError) throw new Error(`Error al subir archivo: ${uploadError.message}`);
 
             // Se guarda la RUTA interna (bucket privado); la URL firmada se resuelve al renderizar.
+            const { data: { user } } = await supabase.auth.getUser();
 
             // Validación por IA si es un requerimiento de batería
             let aiValidation = null;
@@ -120,7 +129,8 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     content_summary: aiValidation?.observation || 'Procesando por Agrawall AI...',
                     url: filePath,
                     signed: false,
-                    visibility: metadata.visibility || 'community',
+                    visibility: metadata.visibility || 'interna',
+                    created_by: user?.id,
                     target_id: metadata.targetId,
                     project_id: metadata.projectId,
                     task_id: metadata.taskId,
@@ -172,7 +182,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     content_summary: content.substring(0, 300).replace(/<[^>]*>?/gm, '') || 'Documento nativo creado en la plataforma.',
                     url: filePath,
                     signed: false,
-                    visibility: metadata.visibility || 'community',
+                    visibility: metadata.visibility || 'interna',
                     target_id: metadata.targetId,
                     project_id: metadata.projectId,
                     task_id: metadata.taskId,
@@ -194,11 +204,12 @@ export const useDocuments = (_options?: { limit?: number }) => {
     };
 
 
+    // Archivar (recuperable): status='archived'.
     const archiveDocument = async (id: string) => {
         try {
             const { error: updateError } = await supabase
                 .from('documents')
-                .update({ status: 'rejected' })
+                .update({ status: 'archived' })
                 .eq('id', id);
 
             if (updateError) throw updateError;
@@ -206,7 +217,24 @@ export const useDocuments = (_options?: { limit?: number }) => {
             return { success: true };
         } catch (err: any) {
             console.error('Error archiving document:', err);
-            return { success: false, error: err.message };
+            return { success: false, error: err.message, rls: isRlsError(err) };
+        }
+    };
+
+    // Restaurar un documento archivado a 'publicado'.
+    const restoreDocument = async (id: string) => {
+        try {
+            const { error: updateError } = await supabase
+                .from('documents')
+                .update({ status: 'publicado' })
+                .eq('id', id);
+
+            if (updateError) throw updateError;
+            await fetchDocuments();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error restoring document:', err);
+            return { success: false, error: err.message, rls: isRlsError(err) };
         }
     };
 
@@ -234,7 +262,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
             return { success: true };
         } catch (err: any) {
             console.error('Error deleting document:', err);
-            return { success: false, error: err.message };
+            return { success: false, error: err.message, rls: isRlsError(err) };
         }
     };
 
@@ -283,14 +311,18 @@ export const useDocuments = (_options?: { limit?: number }) => {
         fetchDocuments();
     }, []);
 
+    // 'rejected' es legado (oculto). Los 'archived' se exponen para la vista de Archivados.
+    const visibles = documents.filter(d => d.status !== 'rejected');
     return {
-        documents: documents.filter(d => d.status !== 'rejected'),
+        documents: visibles.filter(d => d.status !== 'archived'),
+        archivedDocuments: visibles.filter(d => d.status === 'archived'),
         loading,
         error,
         refresh: fetchDocuments,
         uploadDocument,
         createNativeDocument,
         archiveDocument,
+        restoreDocument,
         deleteDocument,
         duplicateDocument
     };

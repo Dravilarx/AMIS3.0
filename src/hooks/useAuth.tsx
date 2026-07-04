@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER' | 'ADMIN_SECRETARY' | 'PARTNER' | 'MED_CHIEF';
+// Roles jerárquicos (public.role_levels): SUPER_ADMIN, MANAGER, COORDINATOR, STAFF, OPERATOR.
+// El rol ADMIN fue eliminado. Se conservan roles de aplicación no jerárquicos
+// (VIEWER, ADMIN_SECRETARY, PARTNER, MED_CHIEF) usados por otros flujos.
+export type UserRole = 'SUPER_ADMIN' | 'MANAGER' | 'COORDINATOR' | 'STAFF' | 'OPERATOR' | 'VIEWER' | 'ADMIN_SECRETARY' | 'PARTNER' | 'MED_CHIEF';
 
 export interface ModulePermission {
     read: boolean;

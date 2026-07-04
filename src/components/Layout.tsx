@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Bell, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send, Lock } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
 import { cn } from '../lib/utils';
 import { Logo } from './Logo';
+import { getLevelForRole, getLabelForRole } from '../lib/accessLevels';
 
 // Temas disponibles (deben existir como [data-theme='id'] en index.css)
 const THEMES: { id: string; label: string; dot: string }[] = [
@@ -78,9 +79,9 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, collapsed }: SidebarI
 
 interface LayoutProps {
     children: React.ReactNode;
-    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente';
+    currentView: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas';
 
-    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente') => void;
+    onNavigate: (view: 'dashboard' | 'tenders' | 'staffing' | 'logistics' | 'clinical' | 'audit' | 'shifts' | 'projects' | 'messaging' | 'dms' | 'ideation' | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html' | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command' | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh' | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas') => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
@@ -115,16 +116,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
 
     const navItems = NAV_ITEMS;
 
+    // Etiquetas de roles de aplicación (no jerárquicos). Los 5 roles con nivel
+    // se muestran vía getLabelForRole; este mapa cubre el resto.
     const ROLE_LABELS: Record<string, string> = {
-        'SUPER_ADMIN': 'DIRECCIÓN MÉDICA',
-        'ADMIN': 'ADMINISTRADOR',
-        'MANAGER': 'GERENTE DE RED',
-        'OPERATOR': 'GESTOR CLÍNICO',
         'VIEWER': 'AUDITOR EXTERNO',
         'PARTNER': 'CENTRO DERIVADOR',
         'MED_CHIEF': 'JEFE DE SERVICIO',
         'ADMIN_SECRETARY': 'SECRETARÍA ADM.'
     };
+
+    const miNivel = getLevelForRole(user?.role);
 
     return (
         <div className="flex h-screen bg-brand-bg text-brand-text font-sans">
@@ -176,13 +177,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                         />
                     ))}
 
-                        {/* Sección de Administración - Solo para VIPs */}
-                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+                        {/* Configuración Central — consolas admin (Jefatura y Dirección, nivel ≤ 2) */}
+                        {miNivel <= 2 && (
                             <>
                                 {collapsed
                                     ? <div className="my-3 border-t border-brand-border" />
                                     : <p className="text-[10px] uppercase font-black text-brand-text/40 tracking-widest px-3 mb-3 text-center">Configuración Central</p>
                                 }
+                                {/* Consola Admin (gestión de usuarios/permisos): solo Dirección (nivel 1) */}
+                                {miNivel <= 1 && (
                                 <SidebarItem
                                     icon={ShieldCheck}
                                     label="Consola Admin"
@@ -190,6 +193,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                                     onClick={() => onNavigate('admin')}
                                     collapsed={collapsed}
                                 />
+                                )}
+                                {/* Permisos de carpetas (Archivo Digital): solo Dirección (nivel 1) */}
+                                {miNivel <= 1 && (
+                                <SidebarItem
+                                    icon={Lock}
+                                    label="Permisos de Carpetas"
+                                    active={currentView === 'permisos_carpetas'}
+                                    onClick={() => onNavigate('permisos_carpetas')}
+                                    collapsed={collapsed}
+                                />
+                                )}
                                 <SidebarItem
                                     icon={UserCheck}
                                     label="Configuración Bot"
@@ -244,7 +258,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             <div className="overflow-hidden">
                                 <p className="text-xs font-bold text-brand-text truncate">{user?.name || 'Cargando...'}</p>
                                 <p className="text-[10px] text-brand-primary font-bold uppercase tracking-tight">
-                                    {user?.role ? ROLE_LABELS[user.role] : 'Usuario'}
+                                    {user?.role ? (getLevelForRole(user.role) !== 99 ? getLabelForRole(user.role) : (ROLE_LABELS[user.role] || 'Usuario')) : 'Usuario'}
                                 </p>
                             </div>
                         )}
