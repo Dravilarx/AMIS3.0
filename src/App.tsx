@@ -10,7 +10,7 @@ const ProfessionalMatrix     = lazy(() => import('./modules/staffing/Professiona
 const ExpenseTracker         = lazy(() => import('./modules/logistics/ExpenseTracker').then(m => ({ default: m.ExpenseTracker })));
 const ClinicalWorkflowView   = lazy(() => import('./modules/clinical/ClinicalWorkflowView').then(m => ({ default: m.ClinicalWorkflowView })));
 const AuditorDashboard       = lazy(() => import('./modules/audit/AuditorDashboard').then(m => ({ default: m.AuditorDashboard })));
-const ShiftManager           = lazy(() => import('./modules/staffing/ShiftManager').then(m => ({ default: m.ShiftManager })));
+const RotativaTurnos         = lazy(() => import('./modules/staffing/RotativaTurnos').then(m => ({ default: m.RotativaTurnos })));
 const ProjectBPM             = lazy(() => import('./modules/projects/ProjectBPM').then(m => ({ default: m.ProjectBPM })));
 const MessagingHub           = lazy(() => import('./modules/messaging/MessagingHub').then(m => ({ default: m.MessagingHub })));
 const SemanticDMS            = lazy(() => import('./modules/dms/SemanticDMS').then(m => ({ default: m.SemanticDMS })));
@@ -196,7 +196,7 @@ function App() {
             case 'logistics':           return <ExpenseTracker />;
             case 'clinical':            return <ClinicalWorkflowView />;
             case 'audit':               return <AuditorDashboard />;
-            case 'shifts':              return <ShiftManager />;
+            case 'shifts':              return <RotativaTurnos />;
             case 'projects':            return <ProjectBPM />;
             case 'messaging':           return <MessagingHub />;
             case 'dms':                 return <SemanticDMS />;
