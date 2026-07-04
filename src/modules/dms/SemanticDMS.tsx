@@ -16,6 +16,7 @@ import { BatteryConfigModal } from './BatteryConfigModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
 import { EnviarAFirmarModal } from './firma/EnviarAFirmarModal';
 import { FirmarModal } from './firma/FirmarModal';
+import { SeguimientoFirmaModal } from './firma/SeguimientoFirmaModal';
 import { DocumentVersionsModal } from './DocumentVersionsModal';
 import { ExpiryDateModal } from './ExpiryDateModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
@@ -105,6 +106,7 @@ export const SemanticDMS: React.FC = () => {
     const [showEditor,       setShowEditor]       = useState(false);
     const [enviarAFirmarDoc, setEnviarAFirmarDoc] = useState<Document | null>(null);
     const [firmarPendiente,  setFirmarPendiente]  = useState<(typeof pendientesParaMi)[number] | null>(null);
+    const [seguimientoFirmaDoc, setSeguimientoFirmaDoc] = useState<Document | null>(null);
     const [confirmDelete,    setConfirmDelete]    = useState<Document | null>(null);
     const [versionsDoc,      setVersionsDoc]      = useState<Document | null>(null);
     const [expiryDoc,        setExpiryDoc]        = useState<Document | null>(null);
@@ -554,19 +556,23 @@ export const SemanticDMS: React.FC = () => {
                                             </button>
                                             )}
                                             {doc.signed ? (
-                                                <span className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-emerald-500/5 border-emerald-500/10 text-emerald-500">
+                                                <button onClick={e => { e.stopPropagation(); setSeguimientoFirmaDoc(doc); }}
+                                                    aria-label="Ver estado de firmas"
+                                                    className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-emerald-500/5 border-emerald-500/10 text-emerald-500 hover:bg-emerald-500/15 transition-all cursor-pointer">
                                                     <ShieldCheck className="w-2.5 h-2.5" /> Firmado
-                                                </span>
+                                                </button>
                                             ) : miPendiente ? (
                                                 <button onClick={e => { e.stopPropagation(); setFirmarPendiente(miPendiente); }}
                                                     className="flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20 animate-pulse">
                                                     <PenTool className="w-2.5 h-2.5" /> Firmar
                                                 </button>
                                             ) : solicitudActiva ? (
-                                                <span className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-blue-500/10 border-blue-500/20 text-blue-400">
+                                                <button onClick={e => { e.stopPropagation(); setSeguimientoFirmaDoc(doc); }}
+                                                    aria-label="Ver estado de firmas"
+                                                    className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer">
                                                     <FileSignature className="w-2.5 h-2.5" />
                                                     En firma {solicitudActiva.firmantes.filter(f => f.estado === 'firmado').length}/{solicitudActiva.firmantes.length}
-                                                </span>
+                                                </button>
                                             ) : doc.type === 'pdf' && (
                                                 <button onClick={e => { e.stopPropagation(); setEnviarAFirmarDoc(doc); }}
                                                     className="flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20">
@@ -629,20 +635,26 @@ export const SemanticDMS: React.FC = () => {
                                     {new Date(doc.createdAt).toLocaleDateString('es-CL')}
                                 </div>
                                 <div className="flex items-center gap-1 flex-wrap">
-                                    <span className={cn(
-                                        'text-[8px] font-black px-2 py-0.5 rounded-full uppercase border',
-                                        doc.signed
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : solicitudActiva
-                                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                    )}>
-                                        {doc.signed
-                                            ? 'Firmado'
-                                            : solicitudActiva
-                                            ? `En firma ${solicitudActiva.firmantes.filter(f => f.estado === 'firmado').length}/${solicitudActiva.firmantes.length}`
-                                            : 'Pendiente'}
-                                    </span>
+                                    {(doc.signed || solicitudActiva) ? (
+                                        <button
+                                            onClick={e => { e.stopPropagation(); setSeguimientoFirmaDoc(doc); }}
+                                            aria-label="Ver estado de firmas"
+                                            className={cn(
+                                                'text-[8px] font-black px-2 py-0.5 rounded-full uppercase border transition-all cursor-pointer',
+                                                doc.signed
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                                    : 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                                            )}
+                                        >
+                                            {doc.signed
+                                                ? 'Firmado'
+                                                : `En firma ${solicitudActiva!.firmantes.filter(f => f.estado === 'firmado').length}/${solicitudActiva!.firmantes.length}`}
+                                        </button>
+                                    ) : (
+                                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                                            Pendiente
+                                        </span>
+                                    )}
                                     {!!(doc.expiryDate && new Date(doc.expiryDate) < new Date()) && (
                                         <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border bg-danger/20 text-danger border-danger/40">
                                             Vencido
@@ -739,6 +751,15 @@ export const SemanticDMS: React.FC = () => {
                     documentCategory={documents.find(d => d.id === firmarPendiente.solicitud.documentId)?.category || 'other'}
                     onClose={() => setFirmarPendiente(null)}
                     onFirmado={async () => { await refresh(); await refreshFirma(); }}
+                />
+            )}
+
+            {seguimientoFirmaDoc && (
+                <SeguimientoFirmaModal
+                    documentId={seguimientoFirmaDoc.id}
+                    documentTitle={seguimientoFirmaDoc.title}
+                    onClose={() => setSeguimientoFirmaDoc(null)}
+                    onChanged={async () => { await refresh(); await refreshFirma(); }}
                 />
             )}
 

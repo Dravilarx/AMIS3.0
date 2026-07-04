@@ -65,7 +65,10 @@ export const SolicitudFirmaPanel: React.FC<SolicitudFirmaPanelProps> = ({ solici
                     const badge = ESTADO_BADGE[f.estado];
                     return (
                         <div key={f.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-brand-bg border border-brand-border">
-                            <span className="text-xs font-bold text-brand-text truncate">{f.userName}</span>
+                            <div className="min-w-0">
+                                <span className="text-xs font-bold text-brand-text truncate block">{f.userName}</span>
+                                <span className="text-[9px] text-brand-text/30">Página {f.pagina + 1}</span>
+                            </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 {f.estado === 'firmado' && f.firmadoAt && (
                                     <span className="text-[10px] text-brand-text/30">{timeAgo(f.firmadoAt)}</span>
