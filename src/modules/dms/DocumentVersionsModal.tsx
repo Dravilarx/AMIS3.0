@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, History, UploadCloud, RotateCcw, ExternalLink, ShieldCheck, Loader2, AlertTriangle, FileText, CalendarClock } from 'lucide-react';
+import { X, History, UploadCloud, RotateCcw, ExternalLink, ShieldCheck, Loader2, AlertTriangle, FileText, CalendarClock, Eye, Download, PenTool, Archive, Trash2, ShieldAlert } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useDocumentVersions } from '../../hooks/useDocumentVersions';
+import { useDocumentAccessLog } from '../../hooks/useDocumentAccessLog';
 import { getSignedDocumentUrl } from '../../lib/storageUrls';
+import { logDocumentAccess } from '../../hooks/useDocuments';
+import { useMyLevel } from '../../lib/accessLevels';
+import { timeAgo } from '../../lib/timeAgo';
 import type { Document } from '../../types/communication';
 
 interface DocumentVersionsModalProps {
@@ -25,8 +29,20 @@ const fmtFechaSolo = (iso?: string | null) => {
 
 type ExpiryMode = 'keep' | 'new' | 'clear';
 
+const ACCESS_ACTION_META: Record<string, { label: string; icon: React.ElementType }> = {
+    ver:            { label: 'Vio el documento',        icon: Eye },
+    descargar:      { label: 'Abrió/descargó el archivo', icon: Download },
+    firmar:         { label: 'Firmó el documento',       icon: PenTool },
+    nueva_version:  { label: 'Subió una nueva versión',  icon: UploadCloud },
+    restaurar:      { label: 'Restauró una versión',     icon: RotateCcw },
+    archivar:       { label: 'Archivó el documento',     icon: Archive },
+    eliminar:       { label: 'Eliminó el documento',     icon: Trash2 },
+};
+
 export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ doc, canManage, onClose, onChanged, notify }) => {
     const { versions, loading, fetchVersions, uploadNewVersion, restoreVersion } = useDocumentVersions();
+    const { level } = useMyLevel();
+    const { entries: accessEntries, loading: accessLoading, unavailable: accessUnavailable, fetchLog } = useDocumentAccessLog();
     const [uploading, setUploading] = useState(false);
     const [restoringId, setRestoringId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,11 +53,16 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
     const [expiryInput, setExpiryInput] = useState(''); // usado en modo 'new', o para asignar si el doc no tenía vencimiento
 
     useEffect(() => { fetchVersions(doc.id); }, [doc.id, fetchVersions]);
+    useEffect(() => { if (level <= 2) fetchLog(doc.id); }, [doc.id, level, fetchLog]);
 
     const abrirVersion = async (url: string) => {
         const signed = await getSignedDocumentUrl(url);
-        if (signed) window.open(signed, '_blank');
-        else notify('No se pudo abrir la versión', false);
+        if (signed) {
+            window.open(signed, '_blank');
+            logDocumentAccess(doc.id, 'descargar');
+        } else {
+            notify('No se pudo abrir la versión', false);
+        }
     };
 
     const handlePickFile = () => fileInputRef.current?.click();
@@ -78,9 +99,11 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
         const res = await uploadNewVersion(doc, pendingFile, expiryDateToSend);
         setUploading(false);
         if (res.success) {
+            logDocumentAccess(doc.id, 'nueva_version');
             notify('Nueva versión subida', true);
             cancelPending();
             await fetchVersions(doc.id);
+            if (level <= 2) fetchLog(doc.id);
             onChanged();
         } else {
             notify(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'No se pudo subir la nueva versión'), false);
@@ -94,8 +117,10 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
         const res = await restoreVersion(doc.id, versionUrl);
         setRestoringId(null);
         if (res.success) {
+            logDocumentAccess(doc.id, 'restaurar');
             notify(`Versión ${versionNum} restaurada`, true);
             await fetchVersions(doc.id);
+            if (level <= 2) fetchLog(doc.id);
             onChanged();
         } else {
             notify(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'No se pudo restaurar'), false);
@@ -286,6 +311,38 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
                         </div>
                     )}
                 </div>
+
+                {/* Accesos — visible solo si useMyLevel <= 2. Si la consulta falla
+                    (RLS u otro motivo), se oculta la sección sin mostrar error. */}
+                {level <= 2 && !accessUnavailable && (
+                    <div className="px-6 py-4 border-t border-brand-border max-h-56 overflow-y-auto custom-scrollbar">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-brand-text/30 mb-2 flex items-center gap-1.5">
+                            <ShieldAlert className="w-3.5 h-3.5" /> Accesos
+                        </p>
+                        {accessLoading ? (
+                            <div className="flex justify-center py-6"><Loader2 className="w-4 h-4 text-brand-primary animate-spin" /></div>
+                        ) : accessEntries.length === 0 ? (
+                            <p className="text-center text-brand-text/30 text-[11px] py-6 uppercase font-black tracking-widest">Sin accesos registrados</p>
+                        ) : (
+                            <div className="space-y-1.5">
+                                {accessEntries.map(entry => {
+                                    const meta = ACCESS_ACTION_META[entry.accion] || { label: entry.accion, icon: Eye };
+                                    const Icon = meta.icon;
+                                    return (
+                                        <div key={entry.id} className="flex items-center gap-2.5 px-3 py-2 bg-brand-bg/50 rounded-lg">
+                                            <Icon className="w-3.5 h-3.5 text-brand-text/30 shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <span className="text-[11px] font-bold text-brand-text truncate">{entry.userName}</span>
+                                                <span className="text-[11px] text-brand-text/50"> · {meta.label}</span>
+                                            </div>
+                                            <span className="text-[9px] text-brand-text/30 font-bold shrink-0">{timeAgo(entry.createdAt)}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -24,6 +24,25 @@ export const ALLOWED_DOCUMENT_TYPES = [
 ];
 export const MAX_DOCUMENT_SIZE = 50 * 1024 * 1024; // 50 MB (límite real del bucket)
 
+export type DocumentAccessAction =
+    | 'ver' | 'descargar' | 'firmar' | 'nueva_version' | 'restaurar' | 'archivar' | 'eliminar';
+
+// Registra un acceso en document_access_log. Fire-and-forget: si falla (RLS,
+// red, etc.) solo se loguea en consola — NUNCA bloquea ni muestra error al
+// usuario, ya que es solo auditoría, no parte del flujo principal.
+export const logDocumentAccess = async (documentId: string, accion: DocumentAccessAction): Promise<void> => {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase
+            .from('document_access_log')
+            .insert({ document_id: documentId, user_id: user.id, accion });
+        if (error) console.warn('No se pudo registrar el acceso al documento:', error.message);
+    } catch (err) {
+        console.warn('No se pudo registrar el acceso al documento:', err);
+    }
+};
+
 export const useDocuments = (_options?: { limit?: number }) => {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);

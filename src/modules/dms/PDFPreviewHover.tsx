@@ -2,14 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, ExternalLink, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useSignedUrl } from '../../lib/storageUrls';
+import { logDocumentAccess } from '../../hooks/useDocuments';
 
 interface PDFPreviewHoverProps {
-    url:      string;   // ruta interna del bucket documents (o URL heredada)
-    title:    string;
-    children: React.ReactNode;
+    url:        string;   // ruta interna del bucket documents (o URL heredada)
+    title:      string;
+    documentId?: string;  // id en `documents`, para el log de accesos
+    children:   React.ReactNode;
 }
 
-export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, children }) => {
+export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, documentId, children }) => {
     const [showPreview, setShowPreview]   = useState(false);
     const [isLoading,   setIsLoading]     = useState(false);
     const [previewMode, setPreviewMode]   = useState<'hover' | 'modal'>('hover');
@@ -48,6 +50,8 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
         setShowPreview(true);
         setPreviewMode('modal');
         setIsLoading(true);
+        // Se registra 'ver' solo al abrir el visor fullscreen, no en cada hover.
+        if (documentId) logDocumentAccess(documentId, 'ver');
     };
 
     useEffect(() => {
@@ -99,7 +103,11 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, ch
                             <p className="text-sm font-bold text-brand-text truncate flex-1">{title}</p>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => signedUrl && window.open(signedUrl, '_blank')}
+                                    onClick={() => {
+                                        if (!signedUrl) return;
+                                        window.open(signedUrl, '_blank');
+                                        if (documentId) logDocumentAccess(documentId, 'descargar');
+                                    }}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all"
                                 >
                                     <ExternalLink className="w-3.5 h-3.5" /> Abrir

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
-import { useDocuments } from '../../hooks/useDocuments';
+import { useDocuments, logDocumentAccess } from '../../hooks/useDocuments';
 import { useSignature } from '../../hooks/useSignature';
 import { useAuth } from '../../hooks/useAuth';
 import { useFolders } from '../../hooks/useFolders';
@@ -24,9 +24,12 @@ import { getLevelForRole } from '../../lib/accessLevels';
 import type { Document } from '../../types/communication';
 
 // Abre un documento del bucket privado firmando la ruta antes de window.open.
-const abrirDocumentoFirmado = async (input: string) => {
+const abrirDocumentoFirmado = async (input: string, documentId?: string) => {
     const signed = await getSignedDocumentUrl(input);
-    if (signed) window.open(signed, '_blank');
+    if (signed) {
+        window.open(signed, '_blank');
+        if (documentId) logDocumentAccess(documentId, 'descargar');
+    }
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -90,7 +93,8 @@ export const SemanticDMS: React.FC = () => {
 
     const handleArchive = async (doc: Document) => {
         const res = await archiveDocument(doc.id);
-        if (res.success) showToast(`"${doc.title}" archivado`, true); else notifyRls(res);
+        if (res.success) { showToast(`"${doc.title}" archivado`, true); logDocumentAccess(doc.id, 'archivar'); }
+        else notifyRls(res);
     };
     const handleRestore = async (doc: Document) => {
         const res = await restoreDocument(doc.id);
@@ -476,7 +480,7 @@ export const SemanticDMS: React.FC = () => {
                                     )}
 
                                     {/* Ícono + visor */}
-                                    <PDFPreviewHover url={doc.url} title={doc.title}>
+                                    <PDFPreviewHover url={doc.url} title={doc.title} documentId={doc.id}>
                                         <div className={cn(
                                             'w-10 h-10 rounded-xl flex items-center justify-center border mb-3 cursor-pointer',
                                             getCategoryColor(doc.category)
@@ -584,8 +588,8 @@ export const SemanticDMS: React.FC = () => {
                                         ? <CheckSquare className="w-4 h-4 text-info" />
                                         : <Square className="w-4 h-4 text-brand-text/10 group-hover:text-brand-text/20" />}
                                 </div>
-                                <PDFPreviewHover url={doc.url} title={doc.title}>
-                                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => abrirDocumentoFirmado(doc.url)}>
+                                <PDFPreviewHover url={doc.url} title={doc.title} documentId={doc.id}>
+                                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => abrirDocumentoFirmado(doc.url, doc.id)}>
                                         <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', getCategoryColor(doc.category))}>
                                             {getFileIcon(doc.type, 'w-4 h-4')}
                                         </div>
@@ -694,7 +698,7 @@ export const SemanticDMS: React.FC = () => {
                         const result = isNative
                             ? await signNativeDocument(signingDoc, name, style)
                             : await signPDFDocument(signingDoc, name, signatures || [], size as any, color as any);
-                        if (result.success) { await refresh(); setSigningDoc(null); }
+                        if (result.success) { logDocumentAccess(signingDoc.id, 'firmar'); await refresh(); setSigningDoc(null); }
                         else alert('Error al firmar: ' + result.error);
                     }} />
             )}
@@ -713,6 +717,9 @@ export const SemanticDMS: React.FC = () => {
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button onClick={async () => {
+                                    // Se registra ANTES de borrar: tras el DELETE, document_id ya no
+                                    // existiría para el INSERT del log (FK a documents.id).
+                                    logDocumentAccess(confirmDelete.id, 'eliminar');
                                     const res = await deleteDocument(confirmDelete.id, confirmDelete.url);
                                     if (res.success) { setConfirmDelete(null); showToast('Documento eliminado', true); }
                                     else { setConfirmDelete(null); notifyRls(res); }
