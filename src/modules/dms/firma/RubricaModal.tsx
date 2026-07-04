@@ -1,7 +1,7 @@
-import React from 'react';
-import { X, PenTool } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, PenTool, RefreshCw } from 'lucide-react';
 import { useRubrica } from '../../../hooks/useRubrica';
-import { RubricaPad } from './RubricaPad';
+import { RubricaEditor } from './RubricaEditor';
 
 interface RubricaModalProps {
     onClose: () => void;
@@ -11,14 +11,19 @@ interface RubricaModalProps {
 
 // Modal standalone para gestionar la rúbrica desde el perfil, y también se
 // reutiliza embebido (sin cerrar) dentro del flujo de firma cuando el usuario
-// no tiene rúbrica registrada aún.
+// no tiene rúbrica registrada aún. "Subir imagen" es la vía principal (foto
+// real de la firma); "Dibujar" queda como alternativa con mouse/touch.
 export const RubricaModal: React.FC<RubricaModalProps> = ({ onClose, onGuardado, subtitulo }) => {
-    const { guardarRubrica, signedUrl, loading } = useRubrica();
+    const { guardarRubrica, signedUrl, loading, tieneRubrica } = useRubrica();
+    const [reemplazando, setReemplazando] = useState(false);
+
+    const mostrarEditor = reemplazando || (!loading && !tieneRubrica);
+    const handleGuardado = () => { onGuardado?.(); onClose(); };
 
     return (
         <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-            <div className="w-full max-w-lg bg-brand-surface border border-brand-border rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border">
+            <div className="w-full max-w-3xl max-h-[90vh] bg-brand-surface border border-brand-border rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
                             <PenTool className="w-4.5 h-4.5 text-brand-primary" />
@@ -33,16 +38,21 @@ export const RubricaModal: React.FC<RubricaModalProps> = ({ onClose, onGuardado,
                     </button>
                 </div>
 
-                <div className="p-6 space-y-4">
-                    {!loading && signedUrl && (
-                        <div className="space-y-1.5">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {!mostrarEditor && !loading && signedUrl && (
+                        <div className="space-y-3">
                             <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/30">Rúbrica actual</p>
-                            <div className="bg-white border border-brand-border rounded-xl p-4 flex items-center justify-center">
-                                <img src={signedUrl} alt="Rúbrica actual" className="max-h-20 object-contain" />
+                            <div className="bg-white border border-brand-border rounded-xl p-6 flex items-center justify-center">
+                                <img src={signedUrl} alt="Rúbrica actual" className="max-h-28 object-contain" />
                             </div>
+                            <button onClick={() => setReemplazando(true)}
+                                className="w-full flex items-center justify-center gap-2 py-3 border border-brand-border rounded-xl text-[11px] font-black uppercase tracking-widest text-brand-text/50 hover:bg-brand-bg transition-all">
+                                <RefreshCw className="w-4 h-4" /> Reemplazar
+                            </button>
                         </div>
                     )}
-                    <RubricaPad onGuardar={guardarRubrica} onGuardado={() => { onGuardado?.(); onClose(); }} />
+
+                    {mostrarEditor && <RubricaEditor onGuardar={guardarRubrica} onGuardado={handleGuardado} />}
                 </div>
             </div>
         </div>

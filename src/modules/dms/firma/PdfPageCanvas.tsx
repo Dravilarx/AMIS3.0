@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
@@ -38,25 +38,28 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNum, onRe
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [rendering, setRendering] = useState(true);
     const [sizePx, setSizePx] = useState<{ width: number; height: number } | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const render = useCallback(async () => {
         if (!pdf || !canvasRef.current) return;
         setRendering(true);
+        setError(null);
         try {
             const page = await pdf.getPage(pageNum);
             const scale = 1.6; // buena resolución sin ser excesivamente pesado
             const viewport = page.getViewport({ scale });
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d');
-            if (!ctx) return;
+            if (!ctx) throw new Error('No se pudo obtener el contexto 2D del canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             await page.render({ canvasContext: ctx, viewport }).promise;
             const size = { width: viewport.width, height: viewport.height };
             setSizePx(size);
             onRendered?.(size);
-        } catch (err) {
+        } catch (err: any) {
             console.error(`Error renderizando página ${pageNum}:`, err);
+            setError(err.message || 'No se pudo mostrar esta página');
         } finally {
             setRendering(false);
         }
@@ -71,6 +74,11 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({ pdf, pageNum, onRe
             {rendering && (
                 <div className="absolute inset-0 flex items-center justify-center bg-brand-surface/80">
                     <Loader2 className="w-6 h-6 text-brand-primary animate-spin" />
+                </div>
+            )}
+            {!rendering && error && (
+                <div className="flex items-center gap-2 px-4 py-3 text-danger text-xs font-bold">
+                    <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
                 </div>
             )}
             {!rendering && sizePx && children}

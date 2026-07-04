@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, PenTool, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, PenTool, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getSignedDocumentUrl } from '../../../lib/storageUrls';
 import { useFirma } from '../../../hooks/useFirma';
 import { useRubrica } from '../../../hooks/useRubrica';
 import { usePdfDocument, PdfPageCanvas } from './PdfPageCanvas';
-import { RubricaPad } from './RubricaPad';
+import { RubricaEditor } from './RubricaEditor';
 import type { FirmanteRow, SolicitudRow } from '../../../types/firma';
 
 interface FirmarModalProps {
@@ -24,30 +24,51 @@ export const FirmarModal: React.FC<FirmarModalProps> = ({ solicitud, miFirmante,
 
     const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
     const [cargando, setCargando] = useState(true);
+    const [pdfError, setPdfError] = useState<string | null>(null);
     const { pdf } = usePdfDocument(pdfBytes);
     const [firmando, setFirmando] = useState(false);
     const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
     useEffect(() => {
+        let cancelado = false;
         (async () => {
             setCargando(true);
-            const signed = await getSignedDocumentUrl(documentUrl);
-            if (signed) setPdfBytes(await (await fetch(signed)).arrayBuffer());
-            setCargando(false);
+            setPdfError(null);
+            try {
+                const signed = await getSignedDocumentUrl(documentUrl);
+                if (!signed) throw new Error('No se pudo generar el enlace del documento');
+                const res = await fetch(signed);
+                if (!res.ok) throw new Error(`No se pudo descargar el documento (HTTP ${res.status})`);
+                const bytes = await res.arrayBuffer();
+                if (!cancelado) setPdfBytes(bytes);
+            } catch (err: any) {
+                console.error('Error cargando el PDF para firmar:', err);
+                if (!cancelado) setPdfError(err.message || 'No se pudo cargar el documento');
+            } finally {
+                if (!cancelado) setCargando(false);
+            }
         })();
+        return () => { cancelado = true; };
     }, [documentUrl]);
 
     const handleFirmar = async () => {
         setFirmando(true);
         setMsg(null);
-        const res = await firmarDocumento(solicitud, miFirmante, documentCategory);
-        if (res.success) {
-            setMsg({ text: 'Documento firmado correctamente', ok: true });
-            setTimeout(() => { onFirmado?.(); onClose(); }, 900);
-        } else {
-            setMsg({ text: res.error || 'No se pudo firmar', ok: false });
+        try {
+            const res = await firmarDocumento(solicitud, miFirmante, documentCategory);
+            if (res.success) {
+                setMsg({ text: 'Documento firmado correctamente', ok: true });
+                setTimeout(() => { onFirmado?.(); onClose(); }, 900);
+            } else {
+                console.error('Error firmando el documento:', res.error);
+                setMsg({ text: res.error || 'No se pudo firmar', ok: false });
+            }
+        } catch (err: any) {
+            console.error('Error inesperado al firmar:', err);
+            setMsg({ text: err.message || 'Error inesperado al firmar', ok: false });
+        } finally {
+            setFirmando(false);
         }
-        setFirmando(false);
     };
 
     return (
@@ -69,13 +90,23 @@ export const FirmarModal: React.FC<FirmarModalProps> = ({ solicitud, miFirmante,
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6">
-                    {!rubricaLoading && !tieneRubrica ? (
+                    {rubricaLoading ? (
+                        <div className="flex flex-col items-center justify-center gap-2 py-20">
+                            <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+                            <p className="text-[11px] text-brand-text/40 font-bold">Verificando tu rúbrica...</p>
+                        </div>
+                    ) : !tieneRubrica ? (
                         <div className="space-y-4">
                             <p className="text-xs font-bold text-brand-text/60">Necesitas registrar tu rúbrica antes de firmar.</p>
-                            <RubricaPad onGuardar={guardarRubrica} />
+                            <RubricaEditor onGuardar={guardarRubrica} />
                         </div>
                     ) : cargando ? (
                         <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-brand-primary animate-spin" /></div>
+                    ) : pdfError ? (
+                        <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
+                            <AlertTriangle className="w-8 h-8 text-danger" />
+                            <p className="text-xs font-bold text-danger">{pdfError}</p>
+                        </div>
                     ) : (
                         <div className="flex flex-col items-center">
                             <p className="text-[11px] font-bold text-brand-text/50 mb-3">Tu recuadro de firma está destacado en la página {miFirmante.pagina + 1}</p>
@@ -96,7 +127,7 @@ export const FirmarModal: React.FC<FirmarModalProps> = ({ solicitud, miFirmante,
                     )}
                 </div>
 
-                {tieneRubrica && !cargando && (
+                {!rubricaLoading && tieneRubrica && !cargando && !pdfError && (
                     <div className="p-6 border-t border-brand-border shrink-0 space-y-3">
                         {msg && (
                             <p className={`text-[11px] font-bold flex items-center gap-1.5 ${msg.ok ? 'text-emerald-600' : 'text-danger'}`}>

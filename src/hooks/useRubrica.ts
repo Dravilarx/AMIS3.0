@@ -64,18 +64,30 @@ export const useRubrica = () => {
     return { rubricaPath, signedUrl, loading, tieneRubrica: !!rubricaPath, guardarRubrica, refresh: fetchRubrica };
 };
 
-// Obtiene la rúbrica de CUALQUIER usuario (para estampar al firmar), no solo la propia.
-export const obtenerRubricaDeUsuario = async (userId: string): Promise<{ path: string | null; bytes: ArrayBuffer | null }> => {
-    const { data } = await supabase.from('profiles').select('rubrica_path').eq('id', userId).maybeSingle();
+// Obtiene la rúbrica de CUALQUIER usuario (para estampar al firmar), no solo la
+// propia. Distingue "sin rúbrica registrada" de "falló la consulta/descarga"
+// para que el llamador pueda mostrar un mensaje correcto (nunca uno genérico
+// que oculte un error real).
+export const obtenerRubricaDeUsuario = async (userId: string): Promise<{ path: string | null; bytes: ArrayBuffer | null; error?: string }> => {
+    const { data, error: queryError } = await supabase.from('profiles').select('rubrica_path').eq('id', userId).maybeSingle();
+    if (queryError) {
+        console.error('Error consultando rubrica_path:', queryError);
+        return { path: null, bytes: null, error: 'No se pudo verificar tu rúbrica' };
+    }
     const path = data?.rubrica_path || null;
     if (!path) return { path: null, bytes: null };
+
     const signed = await getSignedDocumentUrl(path);
-    if (!signed) return { path, bytes: null };
+    if (!signed) {
+        console.error('Error firmando URL de rúbrica: getSignedDocumentUrl devolvió null para', path);
+        return { path, bytes: null, error: 'No se pudo acceder a tu rúbrica en el almacenamiento' };
+    }
     try {
         const res = await fetch(signed);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return { path, bytes: await res.arrayBuffer() };
     } catch (err) {
         console.error('Error descargando rúbrica:', err);
-        return { path, bytes: null };
+        return { path, bytes: null, error: 'No se pudo descargar tu rúbrica' };
     }
 };

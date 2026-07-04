@@ -200,9 +200,40 @@ export const useFirma = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: 'No hay sesión activa' };
 
-        const { path: rubricaPath, bytes: rubricaBytes } = await obtenerRubricaDeUsuario(user.id);
-        if (!rubricaPath || !rubricaBytes) {
-            return { success: false, error: 'No tienes una rúbrica registrada' };
+        const { path: rubricaPath, bytes: rubricaBytes, error: rubricaError } = await obtenerRubricaDeUsuario(user.id);
+        if (rubricaError) {
+            console.error('firmarDocumento: no se pudo obtener la rúbrica:', rubricaError);
+            return { success: false, error: rubricaError };
+        }
+        if (!rubricaPath) {
+            return { success: false, error: 'No tienes una rúbrica registrada. Regístrala en "Mi rúbrica" antes de firmar.' };
+        }
+        if (!rubricaBytes) {
+            return { success: false, error: 'No se pudo descargar tu rúbrica. Intenta nuevamente.' };
+        }
+
+        // La política RLS de UPDATE en "documents" permite modificar el documento
+        // a: (a) su autor, (b) Jefatura+ (nivel <= 2), o (c) un firmante con fila
+        // 'pendiente' en doc_firma_firmantes cuya solicitud también está
+        // 'pendiente' (fn_puedo_estampar) — dato que ya tenemos en `solicitud`/
+        // `miFirmante`, sin necesidad de otra consulta. Sin este chequeo, un
+        // firmante sin ninguna de las tres condiciones gastaría 3 ciclos de
+        // descarga/estampado/subida solo para terminar con un falso "conflicto
+        // de concurrencia" en vez del problema real de permisos.
+        const tengoFirmaPendiente = miFirmante.estado === 'pendiente' && solicitud.estado === 'pendiente';
+        let puedeActualizarDocumento = tengoFirmaPendiente;
+        if (!puedeActualizarDocumento) {
+            const { data: docMeta, error: docMetaErr } = await supabase.from('documents').select('created_by').eq('id', solicitud.documentId).maybeSingle();
+            if (docMetaErr) {
+                console.error('firmarDocumento: no se pudo verificar el autor del documento:', docMetaErr);
+                return { success: false, error: 'No se pudo verificar los permisos sobre el documento' };
+            }
+            const { data: miNivel, error: nivelErr } = await supabase.rpc('get_my_level');
+            if (nivelErr) console.error('firmarDocumento: no se pudo verificar el nivel de acceso (se continúa de todos modos):', nivelErr);
+            puedeActualizarDocumento = docMeta?.created_by === user.id || (typeof miNivel === 'number' && miNivel <= 2);
+        }
+        if (!puedeActualizarDocumento) {
+            return { success: false, error: 'No tienes permisos para completar la firma de este documento (debes ser el autor, Jefatura+, o tener una firma pendiente en la solicitud). Pide a un administrador o al autor que lo firme.' };
         }
 
         for (let intento = 0; intento < 3; intento++) {
@@ -304,11 +335,11 @@ export const useFirma = () => {
                 await fetchTodo();
                 return { success: true };
             } catch (err: any) {
+                console.error(`firmarDocumento: intento ${intento + 1}/3 falló:`, err);
                 if (intento === 2) {
-                    console.error('Error firmando documento:', err);
                     return { success: false, error: err.message || 'No se pudo firmar el documento' };
                 }
-                // reintentar
+                // reintentar (posible carrera con otro firmante actualizando documents.url)
             }
         }
         return { success: false, error: 'Conflicto al firmar (otro firmante estampó al mismo tiempo). Intenta de nuevo.' };

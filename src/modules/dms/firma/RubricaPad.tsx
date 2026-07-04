@@ -8,8 +8,8 @@ interface RubricaPadProps {
     compact?: boolean;
 }
 
-const CANVAS_W = 640;
-const CANVAS_H = 220;
+const CANVAS_W = 900;
+const CANVAS_H = 310; // ~40% más alto que la versión anterior (220 → 310)
 const PADDING = 12; // margen alrededor del recorte final
 
 interface Punto { x: number; y: number }
