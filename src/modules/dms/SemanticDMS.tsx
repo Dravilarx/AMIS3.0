@@ -1,21 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
-    LayoutList, Search, Sparkles, FileDown, ShieldCheck,
+    LayoutList, Search, Sparkles, FileDown, ShieldCheck, FileSignature,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
     Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, CalendarClock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { useDocuments, logDocumentAccess } from '../../hooks/useDocuments';
-import { useSignature } from '../../hooks/useSignature';
+import { useFirma } from '../../hooks/useFirma';
 import { useAuth } from '../../hooks/useAuth';
 import { useFolders } from '../../hooks/useFolders';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
-import { DigitalSignatureModal } from './DigitalSignatureModal';
-import { RequestSignatureModal } from './RequestSignatureModal';
+import { EnviarAFirmarModal } from './firma/EnviarAFirmarModal';
+import { FirmarModal } from './firma/FirmarModal';
 import { DocumentVersionsModal } from './DocumentVersionsModal';
 import { ExpiryDateModal } from './ExpiryDateModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
@@ -61,7 +61,7 @@ export const SemanticDMS: React.FC = () => {
         duplicateDocument, refresh,
     } = useDocuments();
 
-    const { signNativeDocument, signPDFDocument } = useSignature();
+    const { solicitudesPorDocumento, pendientesParaMi, refresh: refreshFirma } = useFirma();
     const { canPerform, user }                     = useAuth();
     const { folders, addFolder, deleteFolder, moveDocument } = useFolders();
 
@@ -113,9 +113,9 @@ export const SemanticDMS: React.FC = () => {
     const [showUploadModal,  setShowUploadModal]  = useState(false);
     const [showConfigModal,  setShowConfigModal]  = useState(false);
     const [showEditor,       setShowEditor]       = useState(false);
-    const [signingDoc,       setSigningDoc]       = useState<Document | null>(null);
+    const [enviarAFirmarDoc, setEnviarAFirmarDoc] = useState<Document | null>(null);
+    const [firmarPendiente,  setFirmarPendiente]  = useState<(typeof pendientesParaMi)[number] | null>(null);
     const [confirmDelete,    setConfirmDelete]    = useState<Document | null>(null);
-    const [requestingDoc,    setRequestingDoc]    = useState<Document | null>(null);
     const [versionsDoc,      setVersionsDoc]      = useState<Document | null>(null);
     const [expiryDoc,        setExpiryDoc]        = useState<Document | null>(null);
 
@@ -158,9 +158,8 @@ export const SemanticDMS: React.FC = () => {
             new Date(d.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) &&
             new Date(d.expiryDate) >= new Date()).length,
         vencidos: documents.filter(d => d.expiryDate && new Date(d.expiryDate) < new Date()).length,
-        pendFirma: documents.filter(d =>
-            d.requestedSigners?.includes(user?.id || '') && !d.signed).length,
-    }), [documents, user]);
+        pendFirma: pendientesParaMi.length,
+    }), [documents, pendientesParaMi]);
 
     // ── Docs por carpeta ──────────────────────────────────────────────────────
     const docCountByFolder = useMemo(() => {
@@ -310,6 +309,23 @@ export const SemanticDMS: React.FC = () => {
                     <span className="text-[9px] font-mono opacity-60">{archivedDocuments.length}</span>
                 </button>
 
+                {/* Pendientes de firma */}
+                {pendientesParaMi.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-brand-border space-y-1.5">
+                        <div className="flex items-center justify-between px-1 mb-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Pendientes de firma</p>
+                            <span className="w-4 h-4 bg-amber-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">{pendientesParaMi.length}</span>
+                        </div>
+                        {pendientesParaMi.map(p => (
+                            <button key={p.id} onClick={() => setFirmarPendiente(p)}
+                                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 transition-all text-left">
+                                <FileSignature className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                <span className="text-xs font-bold text-brand-text truncate">{p.documentTitle}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* KPIs */}
                 <div className="mt-4 pt-4 border-t border-brand-border space-y-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/30">Resumen</p>
@@ -434,7 +450,9 @@ export const SemanticDMS: React.FC = () => {
                 {viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {filteredDocs.map(doc => {
-                            const isMySignaturePending = doc.requestedSigners?.includes(user?.id || '') && !doc.signed;
+                            const miPendiente = pendientesParaMi.find(p => p.solicitud.documentId === doc.id);
+                            const solicitudActiva = solicitudesPorDocumento.get(doc.id);
+                            const isMySignaturePending = !!miPendiente;
                             const isExpired = !!(doc.expiryDate && new Date(doc.expiryDate) < new Date());
                             const isExpiringSoon = !isExpired && !!(doc.expiryDate &&
                                 new Date(doc.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
@@ -545,18 +563,26 @@ export const SemanticDMS: React.FC = () => {
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                             )}
-                                            <button onClick={e => { e.stopPropagation(); setSigningDoc(doc); }}
-                                                className={cn(
-                                                    'flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase',
-                                                    doc.signed
-                                                        ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10'
-                                                        : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
-                                                )}>
-                                                {doc.signed
-                                                    ? <><ShieldCheck className="w-2.5 h-2.5" /> Firmado</>
-                                                    : <><PenTool className="w-2.5 h-2.5" /> Firmar</>
-                                                }
-                                            </button>
+                                            {doc.signed ? (
+                                                <span className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-emerald-500/5 border-emerald-500/10 text-emerald-500">
+                                                    <ShieldCheck className="w-2.5 h-2.5" /> Firmado
+                                                </span>
+                                            ) : miPendiente ? (
+                                                <button onClick={e => { e.stopPropagation(); setFirmarPendiente(miPendiente); }}
+                                                    className="flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20 animate-pulse">
+                                                    <PenTool className="w-2.5 h-2.5" /> Firmar
+                                                </button>
+                                            ) : solicitudActiva ? (
+                                                <span className="flex items-center gap-1 px-2 py-1 border rounded-lg text-[8px] font-bold uppercase bg-blue-500/10 border-blue-500/20 text-blue-400">
+                                                    <FileSignature className="w-2.5 h-2.5" />
+                                                    En firma {solicitudActiva.firmantes.filter(f => f.estado === 'firmado').length}/{solicitudActiva.firmantes.length}
+                                                </span>
+                                            ) : doc.type === 'pdf' && (
+                                                <button onClick={e => { e.stopPropagation(); setEnviarAFirmarDoc(doc); }}
+                                                    className="flex items-center gap-1 px-2 py-1 border rounded-lg transition-all text-[8px] font-bold uppercase bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20">
+                                                    <PenTool className="w-2.5 h-2.5" /> Firmar
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -576,7 +602,10 @@ export const SemanticDMS: React.FC = () => {
                                 <div key={h} className="text-[10px] font-black uppercase tracking-widest text-brand-text/30">{h}</div>
                             ))}
                         </div>
-                        {filteredDocs.map(doc => (
+                        {filteredDocs.map(doc => {
+                          const miPendiente = pendientesParaMi.find(p => p.solicitud.documentId === doc.id);
+                          const solicitudActiva = solicitudesPorDocumento.get(doc.id);
+                          return (
                             <motion.div key={doc.id}
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                 className={cn(
@@ -614,9 +643,15 @@ export const SemanticDMS: React.FC = () => {
                                         'text-[8px] font-black px-2 py-0.5 rounded-full uppercase border',
                                         doc.signed
                                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                            : solicitudActiva
+                                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                             : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                     )}>
-                                        {doc.signed ? 'Firmado' : 'Pendiente'}
+                                        {doc.signed
+                                            ? 'Firmado'
+                                            : solicitudActiva
+                                            ? `En firma ${solicitudActiva.firmantes.filter(f => f.estado === 'firmado').length}/${solicitudActiva.firmantes.length}`
+                                            : 'Pendiente'}
                                     </span>
                                     {!!(doc.expiryDate && new Date(doc.expiryDate) < new Date()) && (
                                         <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border bg-danger/20 text-danger border-danger/40">
@@ -625,11 +660,17 @@ export const SemanticDMS: React.FC = () => {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button onClick={() => setSigningDoc(doc)}
-                                        className={cn('p-1.5 rounded-lg border transition-all',
-                                            doc.signed ? 'border-emerald-500/20 text-emerald-400' : 'border-info/20 text-info')}>
-                                        <PenTool className="w-3 h-3" />
-                                    </button>
+                                    {!doc.signed && (miPendiente ? (
+                                        <button onClick={() => setFirmarPendiente(miPendiente)} title="Firmar"
+                                            className="p-1.5 rounded-lg border border-amber-500/20 text-amber-500 animate-pulse">
+                                            <PenTool className="w-3 h-3" />
+                                        </button>
+                                    ) : (!solicitudActiva && doc.type === 'pdf') && (
+                                        <button onClick={() => setEnviarAFirmarDoc(doc)} title="Firmar"
+                                            className="p-1.5 rounded-lg border border-info/20 text-info">
+                                            <PenTool className="w-3 h-3" />
+                                        </button>
+                                    ))}
                                     <button onClick={() => duplicateDocument(doc)}
                                         className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-info hover:border-info/20 transition-all">
                                         <Copy className="w-3 h-3" />
@@ -665,7 +706,8 @@ export const SemanticDMS: React.FC = () => {
                                     )}
                                 </div>
                             </motion.div>
-                        ))}
+                          );
+                        })}
                         {filteredDocs.length === 0 && (
                             <div className="py-12 text-center text-brand-text/20 text-xs">Sin documentos.</div>
                         )}
@@ -688,19 +730,26 @@ export const SemanticDMS: React.FC = () => {
                     onSave={async (title, content) => createNativeDocument(title, content, { category: 'other' })} />
             )}
 
-            {signingDoc && (
-                <DigitalSignatureModal
-                    documentTitle={signingDoc.title} documentUrl={signingDoc.url}
-                    isPdf={!signingDoc.url.endsWith('.html')}
-                    onClose={() => setSigningDoc(null)}
-                    onConfirm={async (name, style, signatures, size, color) => {
-                        const isNative = signingDoc.url.endsWith('.html');
-                        const result = isNative
-                            ? await signNativeDocument(signingDoc, name, style)
-                            : await signPDFDocument(signingDoc, name, signatures || [], size as any, color as any);
-                        if (result.success) { logDocumentAccess(signingDoc.id, 'firmar'); await refresh(); setSigningDoc(null); }
-                        else alert('Error al firmar: ' + result.error);
-                    }} />
+            {enviarAFirmarDoc && (
+                <EnviarAFirmarModal
+                    documentId={enviarAFirmarDoc.id}
+                    documentUrl={enviarAFirmarDoc.url}
+                    documentCategory={enviarAFirmarDoc.category}
+                    onClose={() => setEnviarAFirmarDoc(null)}
+                    onListo={async () => { await refresh(); await refreshFirma(); }}
+                />
+            )}
+
+            {firmarPendiente && (
+                <FirmarModal
+                    solicitud={firmarPendiente.solicitud}
+                    miFirmante={firmarPendiente}
+                    documentUrl={firmarPendiente.documentUrl}
+                    documentTitle={firmarPendiente.documentTitle}
+                    documentCategory={documents.find(d => d.id === firmarPendiente.solicitud.documentId)?.category || 'other'}
+                    onClose={() => setFirmarPendiente(null)}
+                    onFirmado={async () => { await refresh(); await refreshFirma(); }}
+                />
             )}
 
             <AnimatePresence>
@@ -735,12 +784,6 @@ export const SemanticDMS: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
-
-            {requestingDoc && (
-                <RequestSignatureModal documentId={requestingDoc.id}
-                    onClose={() => setRequestingDoc(null)}
-                    onSuccess={() => { setRequestingDoc(null); refresh(); }} />
-            )}
 
             {versionsDoc && (
                 <DocumentVersionsModal

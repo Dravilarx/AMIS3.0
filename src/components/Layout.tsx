@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send, Lock } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Calendar, Truck, Stethoscope, ShieldCheck, Layers, MessageSquare, FolderSearch, Settings, Lightbulb, Search, Building2, Newspaper, Moon, Sun, Activity, UserCheck, Headphones, LogOut, Hospital, Globe, ClipboardList, BarChart2, Clock, Inbox, BookOpen, Menu, Palette, Check, Send, Lock, PenTool } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import { RubricaModal } from '../modules/dms/firma/RubricaModal';
 
 import { cn } from '../lib/utils';
 import { Logo } from './Logo';
@@ -88,6 +89,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
     const { user, signOut, isRecoveringPassword, hasModuleAccess } = useAuth();
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+    const [isRubricaOpen, setIsRubricaOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<string>(() => {
         const saved = localStorage.getItem('brand-theme');
@@ -264,14 +266,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                             </div>
                         )}
                     </div>
-                    <div className={cn("gap-2", collapsed ? "flex flex-col" : "grid grid-cols-2")}>
+                    <div className={cn("gap-2", collapsed ? "flex flex-col" : "grid grid-cols-3")}>
                         <button
                             onClick={() => setIsChangePasswordOpen(true)}
                             title={collapsed ? 'Cambiar Clave' : undefined}
                             className="flex items-center justify-center p-2.5 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-teal-500/5 transition-all"
                         >
                             <Settings className="w-4 h-4" />
-                            {!collapsed && <span className="ml-2 text-xs font-bold">Cambiar Clave</span>}
+                            {!collapsed && <span className="ml-2 text-xs font-bold">Clave</span>}
+                        </button>
+                        <button
+                            onClick={() => setIsRubricaOpen(true)}
+                            title={collapsed ? 'Mi Rúbrica' : undefined}
+                            className="flex items-center justify-center p-2.5 rounded-xl border border-brand-border text-brand-text/40 hover:text-brand-primary hover:border-brand-primary/30 hover:bg-teal-500/5 transition-all"
+                        >
+                            <PenTool className="w-4 h-4" />
+                            {!collapsed && <span className="ml-2 text-xs font-bold">Rúbrica</span>}
                         </button>
                         <button
                             onClick={async () => {
@@ -382,11 +392,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 </div>
             </main>
 
-            <ChangePasswordModal 
+            <ChangePasswordModal
                 isOpen={isChangePasswordOpen || isRecoveringPassword}
                 onClose={() => setIsChangePasswordOpen(false)}
                 forceMode={isRecoveringPassword}
             />
+
+            {isRubricaOpen && <RubricaModal onClose={() => setIsRubricaOpen(false)} />}
         </div>
     );
 };

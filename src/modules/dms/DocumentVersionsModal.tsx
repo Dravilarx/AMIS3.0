@@ -7,7 +7,10 @@ import { getSignedDocumentUrl } from '../../lib/storageUrls';
 import { logDocumentAccess } from '../../hooks/useDocuments';
 import { useMyLevel } from '../../lib/accessLevels';
 import { timeAgo } from '../../lib/timeAgo';
+import { obtenerSolicitudDeDocumento } from '../../hooks/useFirma';
+import { SolicitudFirmaPanel } from './firma/SolicitudFirmaPanel';
 import type { Document } from '../../types/communication';
+import type { SolicitudRow } from '../../types/firma';
 
 interface DocumentVersionsModalProps {
     doc: Document;
@@ -52,8 +55,13 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
     const [expiryMode, setExpiryMode] = useState<ExpiryMode>('keep');
     const [expiryInput, setExpiryInput] = useState(''); // usado en modo 'new', o para asignar si el doc no tenía vencimiento
 
+    // Solicitud de firma asociada (si existe), para la sección de seguimiento.
+    const [solicitud, setSolicitud] = useState<SolicitudRow | null>(null);
+    const cargarSolicitud = async () => setSolicitud(await obtenerSolicitudDeDocumento(doc.id));
+
     useEffect(() => { fetchVersions(doc.id); }, [doc.id, fetchVersions]);
     useEffect(() => { if (level <= 2) fetchLog(doc.id); }, [doc.id, level, fetchLog]);
+    useEffect(() => { cargarSolicitud(); }, [doc.id]);
 
     const abrirVersion = async (url: string) => {
         const signed = await getSignedDocumentUrl(url);
@@ -311,6 +319,13 @@ export const DocumentVersionsModal: React.FC<DocumentVersionsModalProps> = ({ do
                         </div>
                     )}
                 </div>
+
+                {/* Firma — visible solo si existe una solicitud asociada al documento. */}
+                {solicitud && (
+                    <div className="px-6 py-4 border-t border-brand-border">
+                        <SolicitudFirmaPanel solicitud={solicitud} onAnulada={cargarSolicitud} />
+                    </div>
+                )}
 
                 {/* Accesos — visible solo si useMyLevel <= 2. Si la consulta falla
                     (RLS u otro motivo), se oculta la sección sin mostrar error. */}
