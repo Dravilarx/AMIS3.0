@@ -48,6 +48,11 @@ export interface PosicionEnEdicion {
 // Recuadro fijo de tamaño relativo usado como default al soltar un firmante.
 export const RECUADRO_DEFAULT = { ancho: 0.28, alto: 0.07 };
 
+// Límites de redimensionado (fracción de la página): evita una firma
+// microscópica ilegible o un recuadro que tape media página.
+export const RECUADRO_MIN = { ancho: 0.08, alto: 0.03 };
+export const RECUADRO_MAX = { ancho: 0.60, alto: 0.25 };
+
 export const COLORES_FIRMANTES = [
     '#3b82f6', // blue
     '#22c55e', // green

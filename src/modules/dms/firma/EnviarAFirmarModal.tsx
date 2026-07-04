@@ -7,7 +7,10 @@ import { useFirma, buscarUsuariosActivos } from '../../../hooks/useFirma';
 import { useRubrica } from '../../../hooks/useRubrica';
 import { usePdfDocument, PdfPageCanvas } from './PdfPageCanvas';
 import { RubricaEditor } from './RubricaEditor';
-import { RECUADRO_DEFAULT, COLORES_FIRMANTES, type PosicionEnEdicion } from '../../../types/firma';
+import { RECUADRO_DEFAULT, RECUADRO_MIN, RECUADRO_MAX, COLORES_FIRMANTES, type PosicionEnEdicion } from '../../../types/firma';
+
+type Corner = 'tl' | 'tr' | 'bl' | 'br';
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 const hoyMasDias = (dias: number) => {
     const d = new Date();
@@ -26,7 +29,7 @@ interface EnviarAFirmarModalProps {
 export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ documentId, documentUrl, documentCategory, onClose, onListo }) => {
     const { user } = useAuth();
     const { crearSolicitud, firmarDocumento } = useFirma();
-    const { tieneRubrica, guardarRubrica, loading: rubricaLoading } = useRubrica();
+    const { tieneRubrica, guardarRubrica, loading: rubricaLoading, signedUrl: miRubricaUrl } = useRubrica();
 
     const [modo, setModo] = useState<'enviar' | 'ahora'>('enviar');
     const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
@@ -48,6 +51,7 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
     const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
     const dragRef = useRef<{ id: string; offX: number; offY: number } | null>(null);
+    const resizeRef = useRef<{ id: string; corner: Corner; anchorX: number; anchorY: number } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -117,7 +121,7 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
         setFirmantes(prev => prev.map(f => f.userId === userId ? { ...f, pagina: Math.max(0, Math.min(numPages - 1, f.pagina + delta)) } : f));
     };
 
-    // Arrastre del recuadro dentro de la página visible.
+    // Arrastre del recuadro dentro de la página visible (se toma por el cuerpo).
     const onBoxPointerDown = (e: React.PointerEvent, userId: string) => {
         e.stopPropagation();
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -128,10 +132,57 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
         setActiveId(userId);
     };
 
+    // Redimensionado desde una esquina: la esquina OPUESTA queda fija como ancla.
+    const onHandlePointerDown = (e: React.PointerEvent, userId: string, corner: Corner) => {
+        e.stopPropagation();
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        const f = firmantes.find(x => x.userId === userId);
+        if (!f) return;
+        let anchorX: number, anchorY: number;
+        if (corner === 'br') { anchorX = f.posX; anchorY = f.posY; }
+        else if (corner === 'tl') { anchorX = f.posX + f.ancho; anchorY = f.posY + f.alto; }
+        else if (corner === 'tr') { anchorX = f.posX; anchorY = f.posY + f.alto; }
+        else { anchorX = f.posX + f.ancho; anchorY = f.posY; } // 'bl'
+        resizeRef.current = { id: userId, corner, anchorX, anchorY };
+        setActiveId(userId);
+    };
+
     const onContainerPointerMove = (e: React.PointerEvent) => {
-        const drag = dragRef.current;
-        if (!drag || !containerRef.current || !sizePx) return;
+        if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
+
+        const resize = resizeRef.current;
+        if (resize) {
+            const px = clamp01((e.clientX - rect.left) / rect.width);
+            const py = clamp01((e.clientY - rect.top) / rect.height);
+            const { corner, anchorX, anchorY } = resize;
+
+            let ancho: number, alto: number;
+            if (corner === 'br') { ancho = px - anchorX; alto = py - anchorY; }
+            else if (corner === 'tl') { ancho = anchorX - px; alto = anchorY - py; }
+            else if (corner === 'tr') { ancho = px - anchorX; alto = anchorY - py; }
+            else { ancho = anchorX - px; alto = py - anchorY; } // 'bl'
+
+            ancho = Math.max(RECUADRO_MIN.ancho, Math.min(RECUADRO_MAX.ancho, ancho));
+            alto = Math.max(RECUADRO_MIN.alto, Math.min(RECUADRO_MAX.alto, alto));
+
+            let posX: number, posY: number;
+            if (corner === 'br') { posX = anchorX; posY = anchorY; }
+            else if (corner === 'tl') { posX = anchorX - ancho; posY = anchorY - alto; }
+            else if (corner === 'tr') { posX = anchorX; posY = anchorY - alto; }
+            else { posX = anchorX - ancho; posY = anchorY; } // 'bl'
+
+            // Nunca salirse de los bordes de la página, aunque eso implique
+            // desplazar levemente la esquina "ancla" en casos extremos de borde.
+            posX = Math.max(0, Math.min(1 - ancho, posX));
+            posY = Math.max(0, Math.min(1 - alto, posY));
+
+            setFirmantes(prev => prev.map(x => x.userId === resize.id ? { ...x, posX, posY, ancho, alto } : x));
+            return;
+        }
+
+        const drag = dragRef.current;
+        if (!drag || !sizePx) return;
         const f = firmantes.find(x => x.userId === drag.id);
         if (!f) return;
         let posX = (e.clientX - rect.left - drag.offX) / rect.width;
@@ -141,7 +192,7 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
         setFirmantes(prev => prev.map(x => x.userId === drag.id ? { ...x, posX, posY } : x));
     };
 
-    const onContainerPointerUp = () => { dragRef.current = null; };
+    const onContainerPointerUp = () => { dragRef.current = null; resizeRef.current = null; };
 
     const firmantesEnPagina = useMemo(() => firmantes.filter(f => f.pagina === currentPage - 1), [firmantes, currentPage]);
 
@@ -352,21 +403,48 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
                                         className="relative"
                                     >
                                         <PdfPageCanvas pdf={pdf} pageNum={currentPage} onRendered={setSizePx}>
-                                            {firmantesEnPagina.map(f => (
-                                                <div
-                                                    key={f.userId}
-                                                    onPointerDown={(e) => onBoxPointerDown(e, f.userId)}
-                                                    className="absolute rounded-md border-2 cursor-move flex items-center justify-center px-1 text-center"
-                                                    style={{
-                                                        left: `${f.posX * 100}%`, top: `${f.posY * 100}%`,
-                                                        width: `${f.ancho * 100}%`, height: `${f.alto * 100}%`,
-                                                        borderColor: f.color, background: `${f.color}33`,
-                                                        touchAction: 'none',
-                                                    }}
-                                                >
-                                                    <span className="text-[10px] font-black truncate" style={{ color: f.color }}>{f.userName}</span>
-                                                </div>
-                                            ))}
+                                            {firmantesEnPagina.map(f => {
+                                                const esMio = f.userId === user?.id;
+                                                return (
+                                                    <div
+                                                        key={f.userId}
+                                                        onPointerDown={(e) => onBoxPointerDown(e, f.userId)}
+                                                        className="absolute rounded-md border-2 cursor-move flex items-center justify-center px-1 text-center overflow-hidden"
+                                                        style={{
+                                                            left: `${f.posX * 100}%`, top: `${f.posY * 100}%`,
+                                                            width: `${f.ancho * 100}%`, height: `${f.alto * 100}%`,
+                                                            borderColor: f.color, background: `${f.color}33`,
+                                                            touchAction: 'none',
+                                                        }}
+                                                    >
+                                                        {esMio && miRubricaUrl ? (
+                                                            <img src={miRubricaUrl} alt={f.userName} className="max-w-full max-h-full object-contain pointer-events-none" draggable={false} />
+                                                        ) : (
+                                                            <span className="text-[10px] font-black truncate" style={{ color: f.color }}>{f.userName}</span>
+                                                        )}
+
+                                                        {([
+                                                            ['tl', 'nwse-resize'], ['tr', 'nesw-resize'],
+                                                            ['bl', 'nesw-resize'], ['br', 'nwse-resize'],
+                                                        ] as [Corner, string][]).map(([corner, cursor]) => (
+                                                            <div
+                                                                key={corner}
+                                                                onPointerDown={(e) => onHandlePointerDown(e, f.userId, corner)}
+                                                                className="absolute w-3 h-3 rounded-full border-2 border-white shadow"
+                                                                style={{
+                                                                    background: f.color,
+                                                                    cursor,
+                                                                    touchAction: 'none',
+                                                                    left: corner.includes('l') ? -6 : undefined,
+                                                                    right: corner.includes('r') ? -6 : undefined,
+                                                                    top: corner.includes('t') ? -6 : undefined,
+                                                                    bottom: corner.includes('b') ? -6 : undefined,
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                );
+                                            })}
                                         </PdfPageCanvas>
                                     </div>
                                 </>
