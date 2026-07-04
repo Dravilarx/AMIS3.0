@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, ExternalLink, X } from 'lucide-react';
+import { Loader2, Download, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useSignedUrl } from '../../lib/storageUrls';
+import { useSignedUrl, getSignedDownloadUrl } from '../../lib/storageUrls';
 import { logDocumentAccess } from '../../hooks/useDocuments';
 
 interface PDFPreviewHoverProps {
@@ -41,6 +41,21 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, do
     const handleMouseLeave = () => {
         if (timerRef.current) clearTimeout(timerRef.current);
         if (previewMode === 'hover') setShowPreview(false);
+    };
+
+    // Descarga explícita: URL firmada aparte que SÍ fuerza Content-Disposition
+    // attachment (nunca la URL inline usada por el visor).
+    const [descargando, setDescargando] = useState(false);
+    const handleDescargar = async () => {
+        setDescargando(true);
+        try {
+            const downloadUrl = await getSignedDownloadUrl(url, title);
+            if (!downloadUrl) { console.error('No se pudo generar el enlace de descarga para', url); return; }
+            window.open(downloadUrl, '_blank');
+            if (documentId) logDocumentAccess(documentId, 'descargar');
+        } finally {
+            setDescargando(false);
+        }
     };
 
     const handleClick = (e: React.MouseEvent) => {
@@ -103,14 +118,11 @@ export const PDFPreviewHover: React.FC<PDFPreviewHoverProps> = ({ url, title, do
                             <p className="text-sm font-bold text-brand-text truncate flex-1">{title}</p>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => {
-                                        if (!signedUrl) return;
-                                        window.open(signedUrl, '_blank');
-                                        if (documentId) logDocumentAccess(documentId, 'descargar');
-                                    }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all"
+                                    onClick={handleDescargar}
+                                    disabled={descargando}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs font-bold text-brand-text hover:bg-brand-primary/10 transition-all disabled:opacity-50"
                                 >
-                                    <ExternalLink className="w-3.5 h-3.5" /> Abrir
+                                    {descargando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Descargar
                                 </button>
                                 <button
                                     onClick={() => { setShowPreview(false); setIsLoading(false); }}

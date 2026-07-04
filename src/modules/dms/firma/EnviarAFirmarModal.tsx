@@ -184,11 +184,17 @@ export const EnviarAFirmarModal: React.FC<EnviarAFirmarModalProps> = ({ document
 
             if (modo === 'ahora' && user) {
                 const mio = firmantes[0];
+                const miFirmanteCreado = res.firmantes?.find(f => f.userId === user.id);
+                if (!miFirmanteCreado) {
+                    console.error('No se encontró el id del firmante recién creado para "Firmar ahora":', res.firmantes);
+                    setMsg({ text: 'Solicitud creada, pero no se pudo iniciar la firma automática. Firma manualmente desde "Pendientes de firma".', ok: false });
+                    return;
+                }
                 const solicitudParaFirmar = {
                     id: res.solicitudId, documentId, solicitante: user.id, mensaje: mensaje.trim() || null,
                     plazo, estado: 'pendiente' as const, createdAt: new Date().toISOString(),
                     firmantes: [{
-                        id: '', solicitudId: res.solicitudId, userId: user.id, userName: user.name,
+                        id: miFirmanteCreado.id, solicitudId: res.solicitudId, userId: user.id, userName: user.name,
                         pagina: mio.pagina, posX: mio.posX, posY: mio.posY, ancho: mio.ancho, alto: mio.alto,
                         estado: 'pendiente' as const, firmadoAt: null, fingerprint: null,
                     }],

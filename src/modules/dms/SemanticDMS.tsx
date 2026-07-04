@@ -19,18 +19,8 @@ import { FirmarModal } from './firma/FirmarModal';
 import { DocumentVersionsModal } from './DocumentVersionsModal';
 import { ExpiryDateModal } from './ExpiryDateModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
-import { getSignedDocumentUrl } from '../../lib/storageUrls';
 import { getLevelForRole } from '../../lib/accessLevels';
 import type { Document } from '../../types/communication';
-
-// Abre un documento del bucket privado firmando la ruta antes de window.open.
-const abrirDocumentoFirmado = async (input: string, documentId?: string) => {
-    const signed = await getSignedDocumentUrl(input);
-    if (signed) {
-        window.open(signed, '_blank');
-        if (documentId) logDocumentAccess(documentId, 'descargar');
-    }
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getFileIcon = (type: string, className = 'w-5 h-5') => {
@@ -618,7 +608,7 @@ export const SemanticDMS: React.FC = () => {
                                         : <Square className="w-4 h-4 text-brand-text/10 group-hover:text-brand-text/20" />}
                                 </div>
                                 <PDFPreviewHover url={doc.url} title={doc.title} documentId={doc.id}>
-                                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => abrirDocumentoFirmado(doc.url, doc.id)}>
+                                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => {}}>
                                         <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', getCategoryColor(doc.category))}>
                                             {getFileIcon(doc.type, 'w-4 h-4')}
                                         </div>

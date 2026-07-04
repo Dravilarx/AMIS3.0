@@ -28,7 +28,18 @@ export function extractDocumentPath(url: string): string | null {
     }
 }
 
-// Devuelve una URL firmada para un documento del bucket privado.
+// Resuelve `input` (ruta interna o URL heredada) a la ruta interna del bucket.
+// Devuelve null si no corresponde al bucket documents.
+function resolvePath(input: string): string | null {
+    if (!/^https?:\/\//i.test(input)) return input;
+    return extractDocumentPath(input);
+}
+
+// Devuelve una URL firmada para VER un documento inline (sin forzar
+// descarga — no se pasa la opción `download`, así el Content-Disposition
+// que decide el servidor de Storage es el de lectura/inline normal). Esta es
+// la URL a usar en visores (iframe, <img>, fetch para estampar), NUNCA para
+// el botón "Descargar" explícito.
 // `input` puede ser una ruta interna o una URL completa heredada.
 // Nunca lanza: retorna null y loguea con console.warn ante cualquier error.
 export async function getSignedDocumentUrl(
@@ -37,14 +48,10 @@ export async function getSignedDocumentUrl(
 ): Promise<string | null> {
     if (!input) return null;
 
-    let path = input;
-    if (/^https?:\/\//i.test(input)) {
-        const extracted = extractDocumentPath(input);
-        if (!extracted) {
-            console.warn('getSignedDocumentUrl: la URL no corresponde al bucket documents:', input);
-            return null;
-        }
-        path = extracted;
+    const path = resolvePath(input);
+    if (!path) {
+        console.warn('getSignedDocumentUrl: la URL no corresponde al bucket documents:', input);
+        return null;
     }
 
     try {
@@ -58,6 +65,38 @@ export async function getSignedDocumentUrl(
         return data.signedUrl;
     } catch (err) {
         console.warn('getSignedDocumentUrl: excepción firmando', path, err);
+        return null;
+    }
+}
+
+// Devuelve una URL firmada que SÍ fuerza la descarga (Content-Disposition:
+// attachment) vía la opción `download` de createSignedUrl. Uso exclusivo del
+// botón explícito "Descargar" — nunca para visores/iframes ni para el fetch
+// del flujo de firma.
+export async function getSignedDownloadUrl(
+    input: string,
+    filename?: string,
+    expiresIn = 900
+): Promise<string | null> {
+    if (!input) return null;
+
+    const path = resolvePath(input);
+    if (!path) {
+        console.warn('getSignedDownloadUrl: la URL no corresponde al bucket documents:', input);
+        return null;
+    }
+
+    try {
+        const { data, error } = await supabase.storage
+            .from(DOCUMENTS_BUCKET)
+            .createSignedUrl(path, expiresIn, { download: filename || true });
+        if (error || !data) {
+            console.warn('getSignedDownloadUrl: no se pudo firmar', path, error?.message);
+            return null;
+        }
+        return data.signedUrl;
+    } catch (err) {
+        console.warn('getSignedDownloadUrl: excepción firmando', path, err);
         return null;
     }
 }

@@ -6,6 +6,8 @@ import { obtenerRubricaDeUsuario } from './useRubrica';
 import { logDocumentAccess } from './useDocuments';
 import type { SolicitudRow, FirmanteRow, EstadoSolicitud } from '../types/firma';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ─── Helpers de mapeo ─────────────────────────────────────────────────────────
 const mapFirmante = (f: any, nombresPorId: Map<string, string>): FirmanteRow => ({
     id: f.id,
@@ -136,13 +138,15 @@ export const useFirma = () => {
 
     useEffect(() => { fetchTodo(); }, [fetchTodo]);
 
-    // Crea la solicitud + un firmante por recuadro posicionado.
+    // Crea la solicitud + un firmante por recuadro posicionado. Devuelve los
+    // ids reales de los firmantes creados (necesarios, por ejemplo, para que
+    // "Firmar ahora" pueda llamar a firmarDocumento sin un id vacío).
     const crearSolicitud = async (params: {
         documentId: string;
         mensaje?: string;
         plazo: string;
         firmantes: { userId: string; pagina: number; posX: number; posY: number; ancho: number; alto: number }[];
-    }): Promise<{ success: boolean; solicitudId?: string; error?: string }> => {
+    }): Promise<{ success: boolean; solicitudId?: string; firmantes?: { id: string; userId: string }[]; error?: string }> => {
         try {
             if (params.firmantes.length === 0) return { success: false, error: 'Agrega al menos un firmante' };
             const { data: { user } } = await supabase.auth.getUser();
@@ -165,11 +169,18 @@ export const useFirma = () => {
                 alto: f.alto,
                 estado: 'pendiente',
             }));
-            const { error: firErr } = await supabase.from('doc_firma_firmantes').insert(rows);
+            const { data: firmantesCreados, error: firErr } = await supabase
+                .from('doc_firma_firmantes')
+                .insert(rows)
+                .select('id, user_id');
             if (firErr) throw firErr;
 
             await fetchTodo();
-            return { success: true, solicitudId: sol.id };
+            return {
+                success: true,
+                solicitudId: sol.id,
+                firmantes: (firmantesCreados || []).map((f: any) => ({ id: f.id, userId: f.user_id })),
+            };
         } catch (err: any) {
             console.error('Error creando solicitud de firma:', err);
             return { success: false, error: err.message || 'No se pudo crear la solicitud' };
@@ -235,6 +246,19 @@ export const useFirma = () => {
         if (!puedeActualizarDocumento) {
             return { success: false, error: 'No tienes permisos para completar la firma de este documento (debes ser el autor, Jefatura+, o tener una firma pendiente en la solicitud). Pide a un administrador o al autor que lo firme.' };
         }
+
+        // Antes de tocar la BD: el id del firmante debe ser un uuid real. Nunca
+        // se manda '' a la BD (causaba "invalid input syntax for type uuid").
+        if (!miFirmante.id || !UUID_RE.test(miFirmante.id)) {
+            return { success: false, error: 'Identificador de firmante inválido (falta el id devuelto al crear la solicitud). No se puede firmar.' };
+        }
+
+        // El bucle SOLO reintenta cuando el UPDATE optimista de "documents" no
+        // afectó filas (carrera real: otro firmante cambió la url entre la
+        // lectura y la escritura). Cualquier otro error (RLS, red, PDF corrupto,
+        // etc.) aborta de inmediato — jamás se re-estampa el PDF por un error
+        // que no es de concurrencia.
+        let stamp: { newPath: string; esUltimo: boolean; auditId: string; now: Date; nombreMostrado: string } | null = null;
 
         for (let intento = 0; intento < 3; intento++) {
             try {
@@ -319,30 +343,45 @@ export const useFirma = () => {
                 if (updErr) throw updErr;
 
                 if (!updData || updData.length === 0) {
-                    // Carrera: otro firmante actualizó url primero. Reintentar.
+                    // Carrera real: otro firmante cambió la url entre la lectura y la
+                    // escritura. Es el ÚNICO caso que amerita reintentar desde (a).
+                    console.warn(`firmarDocumento: intento ${intento + 1}/3 — conflicto de concurrencia (la url cambió), reintentando...`);
                     continue;
                 }
 
-                // d. Marcar mi firmante como firmado.
-                const { error: firErr } = await supabase
-                    .from('doc_firma_firmantes')
-                    .update({ estado: 'firmado', firmado_at: now.toISOString(), fingerprint: auditId })
-                    .eq('id', miFirmante.id);
-                if (firErr) throw firErr;
-
-                // e. Log + refresh.
-                logDocumentAccess(solicitud.documentId, 'firmar');
-                await fetchTodo();
-                return { success: true };
+                stamp = { newPath, esUltimo, auditId, now, nombreMostrado };
+                break;
             } catch (err: any) {
-                console.error(`firmarDocumento: intento ${intento + 1}/3 falló:`, err);
-                if (intento === 2) {
-                    return { success: false, error: err.message || 'No se pudo firmar el documento' };
-                }
-                // reintentar (posible carrera con otro firmante actualizando documents.url)
+                // Cualquier error que no sea la carrera de arriba (RLS, red, PDF
+                // corrupto, etc.) aborta de inmediato: nunca se re-estampa por un
+                // error que no es de concurrencia.
+                console.error('firmarDocumento: fallo irrecuperable al estampar (no se reintenta):', err);
+                return { success: false, error: err.message || 'No se pudo firmar el documento' };
             }
         }
-        return { success: false, error: 'Conflicto al firmar (otro firmante estampó al mismo tiempo). Intenta de nuevo.' };
+
+        if (!stamp) {
+            return { success: false, error: 'No se pudo completar la firma: el documento cambió repetidamente mientras se procesaba (varios firmantes a la vez). Intenta de nuevo.' };
+        }
+
+        // El PDF YA quedó estampado y documents.url/signed ya se actualizaron.
+        // Un fallo desde aquí en adelante NUNCA debe volver a estampar: solo se
+        // reporta como un problema de registro posterior.
+        try {
+            const { error: firErr } = await supabase
+                .from('doc_firma_firmantes')
+                .update({ estado: 'firmado', firmado_at: stamp.now.toISOString(), fingerprint: stamp.auditId })
+                .eq('id', miFirmante.id);
+            if (firErr) throw firErr;
+
+            logDocumentAccess(solicitud.documentId, 'firmar');
+            await fetchTodo();
+            return { success: true };
+        } catch (err: any) {
+            console.error('firmarDocumento: el documento quedó firmado pero falló el registro del firmante:', err);
+            await fetchTodo();
+            return { success: false, error: `El documento se firmó correctamente, pero falló el registro de tu firma (${err.message || 'error desconocido'}). Contacta a soporte para regularizar el estado.` };
+        }
     };
 
     return {
