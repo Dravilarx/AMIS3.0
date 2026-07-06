@@ -46,7 +46,6 @@ const DashboardCuartoTurno   = lazy(() => import('./modules/dashboard-cuarto-tur
 const PortalInstitucionalAdmin = lazy(() => import('./modules/portal-institucional/PortalInstitucionalAdmin').then(m => ({ default: m.PortalInstitucionalAdmin })));
 const AsistenteDashboard     = lazy(() => import('./modules/asistente/AsistenteDashboard').then(m => ({ default: m.AsistenteDashboard })));
 const FolderPermissionsManager = lazy(() => import('./modules/dms/FolderPermissionsManager').then(m => ({ default: m.FolderPermissionsManager })));
-const ProyectosModule         = lazy(() => import('./modules/proyectos/ProyectosModule').then(m => ({ default: m.ProyectosModule })));
 
 // ─── Spinner de carga entre módulos ──────────────────────────────────────────
 const ModuleLoader = () => (
@@ -85,7 +84,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas' | 'proyectos_notion';
+    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas';
 
 // Vistas gateadas por permissions[modulo].read: exactamente las del menú lateral
 // (NAV_ITEMS ya es la fuente única que usa Layout.tsx para filtrar el sidebar).
@@ -222,10 +221,6 @@ function App() {
             case 'permisos_carpetas':
                 // Pantalla de permisos de carpetas: solo Dirección (nivel 1).
                 if (getLevelForRole(user?.role) <= 1) return <FolderPermissionsManager />;
-                return <DashboardModule />;
-            case 'proyectos_notion':
-                // Proyectos (Notion embebido): Jefatura+ (nivel <= 2), gateado por nivel.
-                if (getLevelForRole(user?.role) <= 2) return <ProyectosModule />;
                 return <DashboardModule />;
             case 'b2b_portal':          return <B2BPortal />;
             case 'wizard_competencias': return <WizardCompetencias />;
