@@ -103,9 +103,10 @@ export const GestionarNotionLinksModal: React.FC<GestionarNotionLinksModalProps>
                     <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-brand-bg border border-brand-border text-brand-text/60">
                         <Info className="w-4 h-4 shrink-0 mt-0.5 text-info" />
                         <p className="text-[11px] font-bold leading-relaxed">
-                            Para que una página de Notion se vea aquí dentro, en Notion debes abrirla → botón <span className="text-brand-text">Compartir</span> →
-                            activar <span className="text-brand-text">"Compartir en la web"</span> → copiar ese enlace y pegarlo aquí.
-                            Si no la compartes por web, solo funcionará el botón "Abrir en Notion".
+                            Cada tarjeta abre la página de Notion en una pestaña nueva (AMIS no la muestra adentro).
+                            Para que se vea bien al abrirla, en Notion la página debe estar compartida: botón <span className="text-brand-text">Compartir</span> →
+                            <span className="text-brand-text"> "Publicar en la web"</span>. Si la página tiene tablas o bases de datos adentro, cada una debe
+                            publicarse también por separado, o Notion pedirá acceso al abrirlas.
                         </p>
                     </div>
 
