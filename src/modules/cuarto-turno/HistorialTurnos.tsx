@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { History, Loader2, User, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -17,6 +17,9 @@ export interface TurnoHistRow {
 const fmtFecha = (iso?: string) =>
     iso ? new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
+type ColumnaOrden = 'fecha' | 'tecnologo';
+type Direccion = 'asc' | 'desc';
+
 // Historial de turnos con tecnólogo (cruce created_by → profiles).
 // Las filas son clicables → abren la vista de detalle del turno.
 export const HistorialTurnos: React.FC<{
@@ -24,7 +27,32 @@ export const HistorialTurnos: React.FC<{
     loading: boolean;
     resolveTecnologo: (id?: string) => string;
     onOpen: (id: string) => void;
-}> = ({ turnos, loading, resolveTecnologo, onOpen }) => (
+}> = ({ turnos, loading, resolveTecnologo, onOpen }) => {
+    // Por defecto: fecha descendente, igual al orden que ya trae la BD.
+    const [orden, setOrden] = useState<{ columna: ColumnaOrden; direccion: Direccion }>({ columna: 'fecha', direccion: 'desc' });
+
+    const toggleOrden = (columna: ColumnaOrden) => {
+        setOrden(prev => prev.columna === columna
+            ? { columna, direccion: prev.direccion === 'asc' ? 'desc' : 'asc' }
+            : { columna, direccion: 'desc' });
+    };
+
+    const turnosOrdenados = useMemo(() => {
+        const signo = orden.direccion === 'asc' ? 1 : -1;
+        const copia = [...turnos];
+        copia.sort((a, b) => {
+            if (orden.columna === 'fecha') {
+                return signo * (new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+            }
+            return signo * resolveTecnologo(a.createdBy).localeCompare(resolveTecnologo(b.createdBy), 'es');
+        });
+        return copia;
+    }, [turnos, orden, resolveTecnologo]);
+
+    const FlechaOrden = ({ columna }: { columna: ColumnaOrden }) =>
+        orden.columna === columna ? <span className="ml-1">{orden.direccion === 'asc' ? '▲' : '▼'}</span> : null;
+
+    return (
     <div className="rounded-2xl border border-brand-border overflow-hidden">
         <div className="px-4 py-3 border-b border-brand-border bg-brand-surface/50 flex items-center gap-2">
             <History className="w-4 h-4 text-brand-primary" />
@@ -37,12 +65,23 @@ export const HistorialTurnos: React.FC<{
         ) : (
             <table className="w-full text-left border-collapse">
                 <thead><tr className="bg-brand-surface/30 border-b border-brand-border">
-                    {['Fecha', 'Tipo', 'Horario', 'Tecnólogo', 'Recibidos', 'Entregados', 'Estado', ''].map(h => (
+                    <th onClick={() => toggleOrden('fecha')}
+                        className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap cursor-pointer select-none hover:text-brand-text/70 transition-colors">
+                        Fecha<FlechaOrden columna="fecha" />
+                    </th>
+                    {['Tipo', 'Horario'].map(h => (
+                        <th key={h} className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap">{h}</th>
+                    ))}
+                    <th onClick={() => toggleOrden('tecnologo')}
+                        className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap cursor-pointer select-none hover:text-brand-text/70 transition-colors">
+                        Tecnólogo<FlechaOrden columna="tecnologo" />
+                    </th>
+                    {['Recibidos', 'Entregados', 'Estado', ''].map(h => (
                         <th key={h} className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-brand-text/40 whitespace-nowrap">{h}</th>
                     ))}
                 </tr></thead>
                 <tbody className="divide-y divide-brand-border/30">
-                    {turnos.map(t => (
+                    {turnosOrdenados.map(t => (
                         <tr key={t.id} onClick={() => onOpen(t.id)}
                             className="hover:bg-brand-surface/40 transition-colors cursor-pointer group">
                             <td className="px-4 py-2.5 text-xs text-brand-text/70 whitespace-nowrap">{fmtFecha(t.fecha)}</td>
@@ -63,4 +102,5 @@ export const HistorialTurnos: React.FC<{
             </table>
         )}
     </div>
-);
+    );
+};
