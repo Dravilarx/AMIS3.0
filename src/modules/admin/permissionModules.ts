@@ -30,6 +30,7 @@ export const MODULES = [
     { id: 'b2b_portal',           name: 'Portal B2B' },
     { id: 'secretary_command',    name: 'Torre de Control' },
     { id: 'radiology_worklist',   name: 'Worklist Radiológica' },
+    { id: 'vital_medica',         name: 'Vital Médica' },
 ] as const;
 
 // Las cuatro acciones por módulo (mismas claves que profiles.permissions).

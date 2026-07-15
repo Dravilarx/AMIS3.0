@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck, FileSignature,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, CalendarClock,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -18,7 +18,7 @@ import { EnviarAFirmarModal } from './firma/EnviarAFirmarModal';
 import { FirmarModal } from './firma/FirmarModal';
 import { SeguimientoFirmaModal } from './firma/SeguimientoFirmaModal';
 import { DocumentVersionsModal } from './DocumentVersionsModal';
-import { ExpiryDateModal } from './ExpiryDateModal';
+import { DocumentEditModal } from './DocumentEditModal';
 import { PDFPreviewHover } from './PDFPreviewHover';
 import { getLevelForRole } from '../../lib/accessLevels';
 import type { Document } from '../../types/communication';
@@ -48,7 +48,7 @@ export const SemanticDMS: React.FC = () => {
     const {
         documents, archivedDocuments, loading, error,
         uploadDocument, createNativeDocument,
-        deleteDocument, archiveDocument, restoreDocument, updateExpiryDate,
+        deleteDocument, archiveDocument, restoreDocument, updateDocument,
         duplicateDocument, refresh,
     } = useDocuments();
 
@@ -79,8 +79,8 @@ export const SemanticDMS: React.FC = () => {
     const puedeArchivar = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
     // ¿Puede gestionar versiones (subir nueva / restaurar)? Jefatura+ o el propio autor.
     const puedeGestionarVersiones = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
-    // ¿Puede editar el vencimiento? Jefatura+ o el propio autor.
-    const puedeEditarVencimiento = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
+    // ¿Puede editar el documento (título/carpeta/categoría/visibilidad/vencimiento/notas)? Jefatura+ o el propio autor.
+    const puedeEditar = (doc: Document) => miNivel <= 2 || doc.createdBy === user?.id;
 
     const handleArchive = async (doc: Document) => {
         const res = await archiveDocument(doc.id);
@@ -109,7 +109,7 @@ export const SemanticDMS: React.FC = () => {
     const [seguimientoFirmaDoc, setSeguimientoFirmaDoc] = useState<Document | null>(null);
     const [confirmDelete,    setConfirmDelete]    = useState<Document | null>(null);
     const [versionsDoc,      setVersionsDoc]      = useState<Document | null>(null);
-    const [expiryDoc,        setExpiryDoc]        = useState<Document | null>(null);
+    const [editDoc,          setEditDoc]          = useState<Document | null>(null);
 
     // ── Filtros ───────────────────────────────────────────────────────────────
     const [searchTerm,       setSearchTerm]       = useState('');
@@ -132,7 +132,8 @@ export const SemanticDMS: React.FC = () => {
         const matchSearch  = !searchTerm ||
             d.title.toLowerCase().includes(s) ||
             (d.contentSummary || '').toLowerCase().includes(s) ||
-            (d.signerName || '').toLowerCase().includes(s);
+            (d.signerName || '').toLowerCase().includes(s) ||
+            (d.notas || '').toLowerCase().includes(s);
         const matchFolder  = !filterFolder  || (d as any).folderId === filterFolder;
         const matchType    = !filterType    || d.type === filterType;
         const matchSigned  = !filterSigned  ||
@@ -386,7 +387,7 @@ export const SemanticDMS: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-text/20" />
-                            <input placeholder="Buscar por nombre, contenido, firmante..."
+                            <input placeholder="Buscar por nombre, notas, firmante..."
                                 className="w-full bg-brand-surface border border-brand-border rounded-xl pl-9 pr-4 py-2 text-sm text-brand-text outline-none focus:border-info/50"
                                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                         </div>
@@ -501,7 +502,7 @@ export const SemanticDMS: React.FC = () => {
 
                                     {/* Info */}
                                     <h4 className="font-bold text-sm text-brand-text/90 leading-tight mb-1 line-clamp-2">{doc.title}</h4>
-                                    <p className="text-[10px] text-brand-text/30 line-clamp-2 italic mb-3">{doc.contentSummary}</p>
+                                    {doc.notas && <p className="text-[10px] text-brand-text/30 line-clamp-2 italic mb-3">{doc.notas}</p>}
 
                                     {/* Mover a carpeta */}
                                     <select
@@ -530,10 +531,10 @@ export const SemanticDMS: React.FC = () => {
                                                 className="p-1.5 rounded-lg text-brand-text/20 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors opacity-0 group-hover:opacity-100">
                                                 <History className="w-3.5 h-3.5" />
                                             </button>
-                                            {puedeEditarVencimiento(doc) && (
-                                                <button onClick={e => { e.stopPropagation(); setExpiryDoc(doc); }} title="Vencimiento"
+                                            {puedeEditar(doc) && (
+                                                <button onClick={e => { e.stopPropagation(); setEditDoc(doc); }} title="Editar"
                                                     className="p-1.5 rounded-lg text-brand-text/20 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors opacity-0 group-hover:opacity-100">
-                                                    <CalendarClock className="w-3.5 h-3.5" />
+                                                    <Pencil className="w-3.5 h-3.5" />
                                                 </button>
                                             )}
                                             {showArchived ? (
@@ -681,10 +682,10 @@ export const SemanticDMS: React.FC = () => {
                                         className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-brand-primary hover:border-brand-primary/20 transition-all">
                                         <History className="w-3 h-3" />
                                     </button>
-                                    {puedeEditarVencimiento(doc) && (
-                                        <button onClick={() => setExpiryDoc(doc)} title="Vencimiento"
+                                    {puedeEditar(doc) && (
+                                        <button onClick={() => setEditDoc(doc)} title="Editar"
                                             className="p-1.5 border border-brand-border text-brand-text/30 rounded-lg hover:text-brand-primary hover:border-brand-primary/20 transition-all">
-                                            <CalendarClock className="w-3 h-3" />
+                                            <Pencil className="w-3 h-3" />
                                         </button>
                                     )}
                                     {showArchived ? (
@@ -806,11 +807,12 @@ export const SemanticDMS: React.FC = () => {
                 />
             )}
 
-            {expiryDoc && (
-                <ExpiryDateModal
-                    doc={expiryDoc}
-                    onClose={() => setExpiryDoc(null)}
-                    onSave={updateExpiryDate}
+            {editDoc && (
+                <DocumentEditModal
+                    doc={editDoc}
+                    uploadableFolders={uploadableFolders}
+                    onClose={() => setEditDoc(null)}
+                    onSave={updateDocument}
                     notify={showToast}
                 />
             )}

@@ -84,6 +84,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 status: d.status as any,
                 requestedSigners: d.requested_signers,
                 folderId: d.folder_id,
+                notas: d.notas,
             }));
 
             setDocuments(mappedData);
@@ -145,7 +146,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     title: metadata.title || file.name,
                     type: metadata.type || (file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'pdf'),
                     category: metadata.category || 'other',
-                    content_summary: aiValidation?.observation || 'Procesando por Agrawall AI...',
+                    content_summary: aiValidation?.observation || null,
                     url: filePath,
                     signed: false,
                     visibility: metadata.visibility || 'interna',
@@ -258,19 +259,35 @@ export const useDocuments = (_options?: { limit?: number }) => {
         }
     };
 
-    // Actualiza (o quita, con null) la fecha de vencimiento de un documento existente.
-    const updateExpiryDate = async (id: string, expiryDate: string | null) => {
+    // Edición consolidada de un documento ya subido: título, categoría, visibilidad,
+    // carpeta, vencimiento y notas — un solo UPDATE con los campos que vengan definidos.
+    const updateDocument = async (id: string, updates: {
+        title?: string;
+        category?: Document['category'];
+        visibility?: Document['visibility'];
+        expiryDate?: string | null;
+        folderId?: string | null;
+        notas?: string | null;
+    }) => {
         try {
+            const payload: Record<string, any> = {};
+            if (updates.title !== undefined) payload.title = updates.title;
+            if (updates.category !== undefined) payload.category = updates.category;
+            if (updates.visibility !== undefined) payload.visibility = updates.visibility;
+            if (updates.expiryDate !== undefined) payload.expiry_date = updates.expiryDate;
+            if (updates.folderId !== undefined) payload.folder_id = updates.folderId;
+            if (updates.notas !== undefined) payload.notas = updates.notas;
+
             const { error: updateError } = await supabase
                 .from('documents')
-                .update({ expiry_date: expiryDate })
+                .update(payload)
                 .eq('id', id);
 
             if (updateError) throw updateError;
             await fetchDocuments();
             return { success: true };
         } catch (err: any) {
-            console.error('Error updating expiry date:', err);
+            console.error('Error updating document:', err);
             return { success: false, error: err.message, rls: isRlsError(err) };
         }
     };
@@ -360,7 +377,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
         createNativeDocument,
         archiveDocument,
         restoreDocument,
-        updateExpiryDate,
+        updateDocument,
         deleteDocument,
         duplicateDocument
     };

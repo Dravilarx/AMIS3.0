@@ -31,6 +31,7 @@ export interface UserPermissions {
     stat_multiris: ModulePermission;
     admin_access: boolean;
     secretary_command?: ModulePermission;
+    vital_medica?: ModulePermission;
 }
 
 interface User {

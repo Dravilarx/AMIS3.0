@@ -51,6 +51,7 @@ export interface Document {
     requestedSigners?: string[]; // Roles o UIDs permitidos para firmar
     folderId?: string | null;
     status?: 'draft' | 'pending' | 'signed' | 'rejected' | 'archived' | 'publicado';
+    notas?: string | null; // Notas manuales del usuario (documents.notas), se muestran en la tarjeta
 }
 
 export interface DocumentRequirement {
