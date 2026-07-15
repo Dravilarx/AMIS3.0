@@ -30,6 +30,7 @@ const ResumenCompetenciasAdmin = lazy(() => import('./modules/rrhh-clinico/Resum
 const AiAccessManager        = lazy(() => import('./modules/ai-access/AiAccessManager').then(m => ({ default: m.AiAccessManager })));
 const DispatchCenter         = lazy(() => import('./modules/dispatch/DispatchCenter').then(m => ({ default: m.DispatchCenter })));
 const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickViewBridge').then(m => ({ default: m.QuickViewBridge })));
+const BuzonPublicoPage       = lazy(() => import('./modules/buzon-externo/BuzonPublicoPage').then(m => ({ default: m.BuzonPublicoPage })));
 // Feature "dictado por micrófono móvil" retirado (descartado, no se construirá). MobileMicView.tsx
 // queda en el repo sin conectar, por si se reactiva de forma segura más adelante. No borrar el archivo.
 // const MobileMicView          = lazy(() => import('./modules/remote-mic/MobileMicView').then(m => ({ default: m.MobileMicView })));
@@ -181,6 +182,17 @@ function App() {
     // }
 
     // Ruta pública /mobile-mic/:token retirada junto con el feature de dictado remoto (ver nota arriba).
+
+    // Buzón de subida externa (/buzon/{token}) — SIN sesión, para terceros sin
+    // cuenta en AMIS. Debe evaluarse ANTES del gate de login: quien llega acá
+    // nunca tuvo ni tendrá una sesión de AMIS.
+    if (window.location.pathname.startsWith('/buzon/')) {
+        return (
+            <Suspense fallback={<ModuleLoader />}>
+                <BuzonPublicoPage />
+            </Suspense>
+        );
+    }
 
     if (!user) return <AuthView />;
 

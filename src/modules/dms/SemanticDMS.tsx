@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck, FileSignature,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, Pencil,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, Pencil, Mailbox,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useFolders } from '../../hooks/useFolders';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
+import { BuzonesAdminModal } from './BuzonesAdminModal';
 import { NativeDocumentEditor } from './NativeDocumentEditor';
 import { EnviarAFirmarModal } from './firma/EnviarAFirmarModal';
 import { FirmarModal } from './firma/FirmarModal';
@@ -103,6 +104,7 @@ export const SemanticDMS: React.FC = () => {
     const [selectedIds,      setSelectedIds]      = useState<Set<string>>(new Set());
     const [showUploadModal,  setShowUploadModal]  = useState(false);
     const [showConfigModal,  setShowConfigModal]  = useState(false);
+    const [showBuzonesModal, setShowBuzonesModal] = useState(false);
     const [showEditor,       setShowEditor]       = useState(false);
     const [enviarAFirmarDoc, setEnviarAFirmarDoc] = useState<Document | null>(null);
     const [firmarPendiente,  setFirmarPendiente]  = useState<(typeof pendientesParaMi)[number] | null>(null);
@@ -377,6 +379,12 @@ export const SemanticDMS: React.FC = () => {
                             <button onClick={() => setShowConfigModal(true)}
                                 className="flex items-center gap-2 px-3 py-2 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold uppercase text-brand-text hover:bg-brand-primary/10 transition-all">
                                 <Settings2 className="w-3.5 h-3.5 text-amber-400" /> Baterías
+                            </button>
+                        )}
+                        {miNivel <= 2 && (
+                            <button onClick={() => setShowBuzonesModal(true)}
+                                className="flex items-center gap-2 px-3 py-2 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold uppercase text-brand-text hover:bg-brand-primary/10 transition-all">
+                                <Mailbox className="w-3.5 h-3.5 text-info" /> Buzones
                             </button>
                         )}
                     </div>
@@ -728,6 +736,7 @@ export const SemanticDMS: React.FC = () => {
             {/* ── Modales ── */}
             {showUploadModal && <DocumentUploadModal onClose={() => setShowUploadModal(false)} onUpload={uploadDocument} />}
             {showConfigModal && <BatteryConfigModal onClose={() => setShowConfigModal(false)} />}
+            {showBuzonesModal && <BuzonesAdminModal folders={folders} onClose={() => setShowBuzonesModal(false)} notify={showToast} />}
             {showEditor && (
                 <NativeDocumentEditor onClose={() => setShowEditor(false)}
                     onSave={async (title, content) => createNativeDocument(title, content, { category: 'other' })} />
