@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, Mailbox, Plus, Ban, Copy, Loader2, AlertTriangle, Check, KeyRound } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { X, Mailbox, Plus, Ban, Copy, Loader2, AlertTriangle, Check, KeyRound, Trash2, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useUploadLinks } from '../../hooks/useUploadLinks';
+import { useUploadLinks, type UploadLink } from '../../hooks/useUploadLinks';
 import { timeAgo } from '../../lib/timeAgo';
 import type { DocumentFolder } from '../../hooks/useFolders';
 
@@ -12,12 +12,22 @@ interface BuzonesAdminModalProps {
 }
 
 const pinValido = (v: string) => /^\d{4,6}$/.test(v);
+const linkDe = (token: string) => `${window.location.origin}/buzon/${token}`;
 
-// Administración de "Buzones de subida externa": crear/listar/revocar links
-// secretos + PIN para que terceros sin cuenta suban archivos a una carpeta
-// puntual del Archivo Digital. Solo nivel <= 2 (verificado además por RLS).
+// Fila de un link con su URL y botón copiar (reutilizada al crear y al listar).
+const LinkBox: React.FC<{ url: string; onCopiar: (url: string) => void; copiado: boolean }> = ({ url, onCopiar, copiado }) => (
+    <div className="flex items-center gap-2">
+        <input readOnly value={url} onFocus={(e) => e.target.select()}
+            className="flex-1 min-w-0 bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs font-mono text-brand-text outline-none" />
+        <button onClick={() => onCopiar(url)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-brand-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest shrink-0">
+            {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copiado ? 'Copiado' : 'Copiar'}
+        </button>
+    </div>
+);
+
 export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, onClose, notify }) => {
-    const { links, loading, crearBuzon, revocarBuzon } = useUploadLinks();
+    const { links, loading, crearBuzon, revocarBuzon, obtenerToken, eliminarBuzon } = useUploadLinks();
 
     const [mostrarForm, setMostrarForm] = useState(false);
     const [etiqueta, setEtiqueta] = useState('');
@@ -25,15 +35,43 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
     const [pin, setPin] = useState('');
     const [pinConfirm, setPinConfirm] = useState('');
     const [creando, setCreando] = useState(false);
+
     const [linkCreado, setLinkCreado] = useState<{ etiqueta: string; url: string } | null>(null);
-    const [copiado, setCopiado] = useState(false);
-    const [revocandoId, setRevocandoId] = useState<string | null>(null);
+    // token recuperado por buzón (para mostrar el link de los activos, sin depender
+    // de haberlo copiado al crear). Se carga bajo demanda por fila.
+    const [tokensById, setTokensById] = useState<Record<string, string>>({});
+    const [cargandoToken, setCargandoToken] = useState<string | null>(null);
+    const [copiadoKey, setCopiadoKey] = useState<string | null>(null);
+    const [ocultarRevocados, setOcultarRevocados] = useState(true);
+    const [accionId, setAccionId] = useState<string | null>(null);
 
     const resetForm = () => {
         setEtiqueta('');
         setFolderId(folders[0]?.id || '');
         setPin('');
         setPinConfirm('');
+    };
+
+    const copiar = useCallback(async (url: string, key: string) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopiadoKey(key);
+            setTimeout(() => setCopiadoKey((k) => (k === key ? null : k)), 2000);
+        } catch {
+            notify('No se pudo copiar. Selecciona y copia el link manualmente.', false);
+        }
+    }, [notify]);
+
+    const verLink = async (l: UploadLink) => {
+        if (tokensById[l.id]) return; // ya cargado
+        setCargandoToken(l.id);
+        const res = await obtenerToken(l.id);
+        setCargandoToken(null);
+        if (res.success && res.token) {
+            setTokensById((prev) => ({ ...prev, [l.id]: res.token! }));
+        } else {
+            notify(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'No se pudo obtener el link'), false);
+        }
     };
 
     const handleCrear = async () => {
@@ -47,8 +85,7 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
         setCreando(false);
 
         if (res.success && res.token) {
-            const url = `${window.location.origin}/buzon/${res.token}`;
-            setLinkCreado({ etiqueta: etiqueta.trim(), url });
+            setLinkCreado({ etiqueta: etiqueta.trim(), url: linkDe(res.token) });
             resetForm();
             setMostrarForm(false);
         } else {
@@ -56,24 +93,26 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
         }
     };
 
-    const handleCopiar = async (url: string) => {
-        try {
-            await navigator.clipboard.writeText(url);
-            setCopiado(true);
-            setTimeout(() => setCopiado(false), 2000);
-        } catch {
-            notify('No se pudo copiar. Selecciona y copia el link manualmente.', false);
-        }
-    };
-
     const handleRevocar = async (id: string, etiqueta: string) => {
         if (!window.confirm(`¿Revocar el buzón "${etiqueta}"? El link deja de funcionar de inmediato — quien lo tenga ya no podrá subir nada.`)) return;
-        setRevocandoId(id);
+        setAccionId(id);
         const res = await revocarBuzon(id);
-        setRevocandoId(null);
+        setAccionId(null);
         if (res.success) notify('Buzón revocado', true);
         else notify(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'No se pudo revocar'), false);
     };
+
+    const handleEliminar = async (id: string, etiqueta: string) => {
+        if (!window.confirm(`¿Eliminar de la lista el buzón "${etiqueta}"? Se borra definitivamente. Los documentos ya recibidos NO se tocan.`)) return;
+        setAccionId(id);
+        const res = await eliminarBuzon(id);
+        setAccionId(null);
+        if (res.success) notify('Buzón eliminado', true);
+        else notify(res.rls ? 'No tienes permisos para esta acción' : (res.error || 'No se pudo eliminar'), false);
+    };
+
+    const visibles = ocultarRevocados ? links.filter((l) => l.activo) : links;
+    const hayRevocados = links.some((l) => !l.activo);
 
     return (
         <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
@@ -94,23 +133,16 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                    {/* Link recién creado */}
+                    {/* Link recién creado (persistente hasta cerrarlo) */}
                     {linkCreado && (
                         <div className="p-4 bg-success/5 border border-success/20 rounded-2xl space-y-3">
                             <p className="text-[11px] font-black uppercase tracking-widest text-success flex items-center gap-1.5">
                                 <Check className="w-3.5 h-3.5" /> Buzón "{linkCreado.etiqueta}" creado
                             </p>
-                            <div className="flex items-center gap-2">
-                                <input readOnly value={linkCreado.url} onFocus={(e) => e.target.select()}
-                                    className="flex-1 bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs font-mono text-brand-text outline-none" />
-                                <button onClick={() => handleCopiar(linkCreado.url)}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-brand-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest shrink-0">
-                                    {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copiado ? 'Copiado' : 'Copiar link'}
-                                </button>
-                            </div>
+                            <LinkBox url={linkCreado.url} onCopiar={(u) => copiar(u, 'creado')} copiado={copiadoKey === 'creado'} />
                             <p className="flex items-start gap-1.5 text-[10px] font-bold text-warning/90 leading-relaxed">
                                 <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                Guarda este link. La clave NO se puede recuperar después: si se te olvida, revoca el buzón y crea uno nuevo.
+                                La clave no se puede recuperar; guárdala ahora. El link sí puedes volver a verlo desde la lista.
                             </p>
                             <button onClick={() => setLinkCreado(null)} className="text-[10px] font-black uppercase text-brand-text/40 hover:text-brand-text transition-colors">
                                 Cerrar aviso
@@ -171,38 +203,69 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
 
                     {/* Listado */}
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Buzones existentes ({links.length})</p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Buzones ({visibles.length})</p>
+                            {hayRevocados && (
+                                <button onClick={() => setOcultarRevocados((v) => !v)}
+                                    className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-brand-text/40 hover:text-brand-text transition-colors">
+                                    {ocultarRevocados ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                    {ocultarRevocados ? 'Ver revocados' : 'Ocultar revocados'}
+                                </button>
+                            )}
+                        </div>
+
                         {loading ? (
                             <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 text-brand-primary animate-spin" /></div>
-                        ) : links.length === 0 ? (
-                            <p className="text-center text-brand-text/30 text-xs py-8 uppercase font-black tracking-widest">Sin buzones creados</p>
+                        ) : visibles.length === 0 ? (
+                            <p className="text-center text-brand-text/30 text-xs py-8 uppercase font-black tracking-widest">Sin buzones</p>
                         ) : (
                             <div className="space-y-2">
-                                {links.map(l => (
-                                    <div key={l.id} className="p-3 bg-brand-bg/50 border border-brand-border rounded-xl flex items-center gap-3">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-xs font-bold text-brand-text truncate">{l.etiqueta}</p>
-                                                <span className={cn(
-                                                    'text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0',
-                                                    l.activo ? 'bg-success/10 text-success' : 'bg-brand-text/10 text-brand-text/40'
-                                                )}>
-                                                    {l.activo ? 'Activo' : 'Revocado'}
-                                                </span>
+                                {visibles.map(l => (
+                                    <div key={l.id} className={cn('p-3 bg-brand-bg/50 border border-brand-border rounded-xl space-y-2', !l.activo && 'opacity-50')}>
+                                        <div className="flex items-center gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs font-bold text-brand-text truncate">{l.etiqueta}</p>
+                                                    <span className={cn(
+                                                        'text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0',
+                                                        l.activo ? 'bg-success/10 text-success' : 'bg-brand-text/10 text-brand-text/40'
+                                                    )}>
+                                                        {l.activo ? 'Activo' : 'Revocado'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-brand-text/40 truncate">
+                                                    {l.folderName} · {l.uploadsCount} archivo{l.uploadsCount === 1 ? '' : 's'} recibido{l.uploadsCount === 1 ? '' : 's'}
+                                                    {l.lastUsedAt && ` · último uso ${timeAgo(l.lastUsedAt)}`}
+                                                </p>
+                                                <p className="text-[9px] text-brand-text/25 truncate">
+                                                    Creado por {l.createdByName || '—'} · {timeAgo(l.createdAt)}
+                                                </p>
                                             </div>
-                                            <p className="text-[10px] text-brand-text/40 truncate">
-                                                {l.folderName} · {l.uploadsCount} archivo{l.uploadsCount === 1 ? '' : 's'} recibido{l.uploadsCount === 1 ? '' : 's'}
-                                                {l.lastUsedAt && ` · último uso ${timeAgo(l.lastUsedAt)}`}
-                                            </p>
-                                            <p className="text-[9px] text-brand-text/25 truncate">
-                                                Creado por {l.createdByName || '—'} · {timeAgo(l.createdAt)}
-                                            </p>
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                {l.activo ? (
+                                                    <button onClick={() => handleRevocar(l.id, l.etiqueta)} disabled={accionId === l.id} title="Revocar"
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50">
+                                                        {accionId === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />} Revocar
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={() => handleEliminar(l.id, l.etiqueta)} disabled={accionId === l.id} title="Eliminar de la lista"
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-brand-border text-brand-text/50 hover:text-danger hover:border-danger/30 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50">
+                                                        {accionId === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Eliminar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
+
+                                        {/* Link recuperable — solo para activos */}
                                         {l.activo && (
-                                            <button onClick={() => handleRevocar(l.id, l.etiqueta)} disabled={revocandoId === l.id} title="Revocar"
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-all text-[10px] font-black uppercase tracking-widest shrink-0 disabled:opacity-50">
-                                                {revocandoId === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />} Revocar
-                                            </button>
+                                            tokensById[l.id] ? (
+                                                <LinkBox url={linkDe(tokensById[l.id])} onCopiar={(u) => copiar(u, l.id)} copiado={copiadoKey === l.id} />
+                                            ) : (
+                                                <button onClick={() => verLink(l)} disabled={cargandoToken === l.id}
+                                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-brand-primary/70 hover:text-brand-primary transition-colors disabled:opacity-50">
+                                                    {cargandoToken === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />} Ver link
+                                                </button>
+                                            )
                                         )}
                                     </div>
                                 ))}

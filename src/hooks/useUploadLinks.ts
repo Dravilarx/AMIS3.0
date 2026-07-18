@@ -100,5 +100,31 @@ export const useUploadLinks = () => {
         }
     };
 
-    return { links, loading, refresh: fetchLinks, crearBuzon, revocarBuzon };
+    // El PIN sigue siendo irrecuperable (hasheado). Esto solo recupera el TOKEN
+    // para poder volver a mostrar el link — vía RPC (nivel<=2), no se lee el
+    // token por SELECT directo.
+    const obtenerToken = async (id: string): Promise<{ success: boolean; token?: string; error?: string; rls?: boolean }> => {
+        try {
+            const { data, error } = await supabase.rpc('fn_token_buzon', { p_id: id });
+            if (error) throw error;
+            return { success: true, token: data as string };
+        } catch (err: any) {
+            console.error('Error obteniendo token del buzón:', err);
+            return { success: false, error: err.message, rls: isRlsError(err) };
+        }
+    };
+
+    const eliminarBuzon = async (id: string): Promise<Resultado> => {
+        try {
+            const { error } = await supabase.rpc('fn_eliminar_buzon', { p_id: id });
+            if (error) throw error;
+            await fetchLinks();
+            return { success: true };
+        } catch (err: any) {
+            console.error('Error eliminando buzón:', err);
+            return { success: false, error: err.message, rls: isRlsError(err) };
+        }
+    };
+
+    return { links, loading, refresh: fetchLinks, crearBuzon, revocarBuzon, obtenerToken, eliminarBuzon };
 };

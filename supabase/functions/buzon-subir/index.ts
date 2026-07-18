@@ -1,40 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import bcrypt from 'npm:bcryptjs@2.4.3';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 📬 AMIS 3.0 — Buzón de subida externa (sin login)
-// ═══════════════════════════════════════════════════════════════════════════
-// Desplegar con --no-verify-jwt (el remitente NO tiene sesión de AMIS).
-// Usa SERVICE ROLE porque el llamador es anónimo: toda la autorización real
-// vive ACÁ (token + PIN + rate limiting), no en RLS de sesión.
-//
-// Dos acciones sobre el mismo endpoint, discriminadas por Content-Type:
-//   - JSON            { action: 'validar', token, pin }              → { ok, etiqueta? , motivo? }
-//   - multipart/form   action=subir, token, pin, nombre, nota, archivo → { ok, motivo? }
-//
-// Reglas de seguridad (aplicadas en AMBAS acciones, siempre server-side):
-//   1. token inexistente / activo=false / revoked_at != null → SIEMPRE el
-//      mismo mensaje genérico "Enlace no válido" (nunca se distingue el motivo).
-//   2. bloqueado_hasta > now() → "Demasiados intentos. Intenta más tarde."
-//   3. PIN se compara con bcrypt (pin_hash fue generado por fn_crear_buzon vía
-//      pgcrypto/crypt(), formato $2a$/$2b$ estándar — bcryptjs es 100%
-//      compatible con ese formato). Ver nota de decisión más abajo.
-//   4. PIN incorrecto → intentos_fallidos+1; al llegar a 5, bloquea 15 min y
-//      resetea el contador a 0 (para que al desbloquear tenga 5 intentos frescos).
-//   5. PIN correcto → resetea intentos_fallidos/bloqueado_hasta.
-//   6. Archivo: tamaño y mimetype se validan AQUÍ, nunca se confía en el navegador.
-//   7. Nunca se devuelven rutas, ids internos, listados, ni detalles de error.
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ─── Decisión: bcrypt en el runtime (Deno/JS), no crypt() en SQL ────────────
-// La tarea ofrecía dos caminos: comparar con crypt() vía una consulta SQL, o
-// con una librería bcrypt del runtime. Se eligió la librería porque comparar
-// con crypt() habría exigido crear una función SQL nueva (RPC) que reciba el
-// PIN y lo compare contra pin_hash — y las restricciones de esta tarea son
-// explícitas: no tocar SQL más allá de lo ya aplicado, no crear objetos
-// nuevos en la base. bcryptjs corre enteramente dentro de esta Edge Function
-// (proceso de servidor, con SERVICE ROLE, nunca expuesto al cliente), así que
-// la seguridad es equivalente: el PIN y el hash nunca salen del servidor.
+// AMIS 3.0 - Buzon de subida externa v2 (sin login, SUBIDA DIRECTA)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,12 +17,11 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
-const MAX_ARCHIVO_BYTES = 50 * 1024 * 1024; // 50MB, mismo límite que el bucket 'documents'
+const MAX_ARCHIVO_BYTES = 200 * 1024 * 1024;
+const MAX_ARCHIVOS_LOTE = 10;
 const PIN_REGEX = /^\d{4,6}$/;
+const BUCKET = 'documents';
 
-// Debe reflejar EXACTAMENTE el allowed_mime_types del bucket 'documents'
-// (ver ALLOWED_DOCUMENT_TYPES en src/hooks/useDocuments.ts). Si el bucket
-// cambia, actualizar ambos lugares.
 const MIME_A_EXTENSION: Record<string, string> = {
   'application/pdf': 'pdf',
   'application/msword': 'doc',
@@ -68,9 +34,6 @@ const MIME_A_EXTENSION: Record<string, string> = {
   'video/quicktime': 'mov',
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
-
-// Recorta, colapsa espacios y quita cualquier marcado HTML — texto plano puro.
 function sanitizarTexto(input: unknown, maxLen: number): string {
   if (typeof input !== 'string') return '';
   const sinHtml = input.replace(/<[^>]*>/g, '').replace(/[<>]/g, '');
@@ -80,7 +43,7 @@ function sanitizarTexto(input: unknown, maxLen: number): string {
 
 function slugify(s: string): string {
   const base = s
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -88,20 +51,18 @@ function slugify(s: string): string {
 }
 
 function tituloDesdeArchivo(filename: string): string {
-  const sinExtension = filename.replace(/\.[^./\\]+$/, '');
+  const sinExtension = String(filename || '').replace(/\.[^./\\]+$/, '');
   const limpio = sanitizarTexto(sinExtension, 120);
-  return limpio || 'Documento recibido por buzón';
+  return limpio || 'Documento recibido por buzon';
 }
 
+type BuzonInfo = { id: string; etiqueta: string; folderId: string; folderSlug: string; uploadsCount: number };
 type ResultadoPin =
-  | { estado: 'ok'; buzon: { id: string; etiqueta: string; folderId: string; folderSlug: string; uploadsCount: number } }
+  | { estado: 'ok'; buzon: BuzonInfo }
   | { estado: 'invalido' }
   | { estado: 'bloqueado' }
   | { estado: 'pin_incorrecto' };
 
-// Busca el buzón por token y valida el PIN, aplicando rate limiting. Se usa
-// idéntica en 'validar' y en 'subir' — cada llamada revalida todo desde cero,
-// no hay estado de sesión entre pasos (el frontend solo recuerda token+pin).
 async function verificarBuzonYPin(
   supabase: ReturnType<typeof createClient>,
   token: string,
@@ -117,7 +78,6 @@ async function verificarBuzonYPin(
     console.error('[buzon-subir] Error consultando upload_links:', error);
     return { estado: 'invalido' };
   }
-  // Mismo mensaje para "no existe", "inactivo" y "revocado": nunca se distingue.
   if (!buzon || !buzon.activo || buzon.revoked_at) {
     return { estado: 'invalido' };
   }
@@ -130,7 +90,7 @@ async function verificarBuzonYPin(
   try {
     pinValido = bcrypt.compareSync(pin, buzon.pin_hash as string);
   } catch (e) {
-    console.error('[buzon-subir] Error comparando PIN (hash con formato inesperado):', e);
+    console.error('[buzon-subir] Error comparando PIN:', e);
     return { estado: 'invalido' };
   }
 
@@ -145,7 +105,6 @@ async function verificarBuzonYPin(
     return { estado: 'pin_incorrecto' };
   }
 
-  // PIN correcto: limpiar cualquier rastro de intentos previos.
   if ((buzon.intentos_fallidos as number) > 0 || buzon.bloqueado_hasta) {
     await supabase.from('upload_links').update({ intentos_fallidos: 0, bloqueado_hasta: null }).eq('id', buzon.id as string);
   }
@@ -164,72 +123,119 @@ async function verificarBuzonYPin(
 }
 
 const MOTIVO_POR_ESTADO: Record<Exclude<ResultadoPin['estado'], 'ok'>, string> = {
-  invalido: 'Enlace no válido.',
-  bloqueado: 'Demasiados intentos. Intenta más tarde.',
+  invalido: 'Enlace no valido.',
+  bloqueado: 'Demasiados intentos. Intenta mas tarde.',
   pin_incorrecto: 'Clave incorrecta.',
 };
 
-// ─── Acción: validar ──────────────────────────────────────────────────────
 async function handleValidar(supabase: ReturnType<typeof createClient>, body: any) {
   const token = typeof body.token === 'string' ? body.token.trim() : '';
   const pin = typeof body.pin === 'string' ? body.pin.trim() : '';
+  if (!token || !PIN_REGEX.test(pin)) return json({ ok: false, motivo: MOTIVO_POR_ESTADO.invalido });
 
-  if (!token || !PIN_REGEX.test(pin)) {
-    return json({ ok: false, motivo: MOTIVO_POR_ESTADO.invalido });
-  }
-
-  const resultado = await verificarBuzonYPin(supabase, token, pin);
-  if (resultado.estado !== 'ok') {
-    return json({ ok: false, motivo: MOTIVO_POR_ESTADO[resultado.estado] });
-  }
-  return json({ ok: true, etiqueta: resultado.buzon.etiqueta });
+  const r = await verificarBuzonYPin(supabase, token, pin);
+  if (r.estado !== 'ok') return json({ ok: false, motivo: MOTIVO_POR_ESTADO[r.estado] });
+  return json({ ok: true, etiqueta: r.buzon.etiqueta });
 }
 
-// ─── Acción: subir ────────────────────────────────────────────────────────
-async function handleSubir(supabase: ReturnType<typeof createClient>, form: FormData) {
-  const token = typeof form.get('token') === 'string' ? (form.get('token') as string).trim() : '';
-  const pin = typeof form.get('pin') === 'string' ? (form.get('pin') as string).trim() : '';
-  const nombre = sanitizarTexto(form.get('nombre'), 120);
-  const nota = sanitizarTexto(form.get('nota'), 500);
-  const archivo = form.get('archivo');
+async function handlePreparar(supabase: ReturnType<typeof createClient>, body: any) {
+  const token = typeof body.token === 'string' ? body.token.trim() : '';
+  const pin = typeof body.pin === 'string' ? body.pin.trim() : '';
+  if (!token || !PIN_REGEX.test(pin)) return json({ ok: false, motivo: MOTIVO_POR_ESTADO.invalido });
+
+  const archivos = Array.isArray(body.archivos) ? body.archivos : null;
+  if (!archivos || archivos.length === 0) return json({ ok: false, motivo: 'No enviaste ningun archivo.' });
+  if (archivos.length > MAX_ARCHIVOS_LOTE) return json({ ok: false, motivo: `Maximo ${MAX_ARCHIVOS_LOTE} archivos por envio.` });
+
+  for (let i = 0; i < archivos.length; i++) {
+    const a = archivos[i] || {};
+    const nombre = sanitizarTexto(a.nombre_original, 200) || `archivo ${i + 1}`;
+    const mimetype = typeof a.mimetype === 'string' ? a.mimetype : '';
+    const tamano = Number(a.tamano);
+    if (!MIME_A_EXTENSION[mimetype]) {
+      return json({ ok: false, motivo: `"${nombre}" tiene un tipo de archivo no permitido.` });
+    }
+    if (!Number.isFinite(tamano) || tamano <= 0) {
+      return json({ ok: false, motivo: `"${nombre}" esta vacio o su tamano es invalido.` });
+    }
+    if (tamano > MAX_ARCHIVO_BYTES) {
+      return json({ ok: false, motivo: `"${nombre}" supera el limite de 200MB.` });
+    }
+  }
+
+  const r = await verificarBuzonYPin(supabase, token, pin);
+  if (r.estado !== 'ok') return json({ ok: false, motivo: MOTIVO_POR_ESTADO[r.estado] });
+  const buzon = r.buzon;
+
+  const subidas: { idx: number; ruta: string; signedUrl: string; token: string }[] = [];
+  for (let i = 0; i < archivos.length; i++) {
+    const extension = MIME_A_EXTENSION[archivos[i].mimetype];
+    const ruta = `${buzon.folderSlug}/buzon-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(ruta);
+    if (error || !data) {
+      console.error('[buzon-subir] Error creando signed upload URL:', error);
+      return json({ ok: false, motivo: 'No se pudo preparar la subida. Intenta nuevamente.' });
+    }
+    subidas.push({ idx: i, ruta: data.path, signedUrl: data.signedUrl, token: data.token });
+  }
+
+  return json({ ok: true, subidas });
+}
+
+async function handleConfirmar(supabase: ReturnType<typeof createClient>, body: any) {
+  const token = typeof body.token === 'string' ? body.token.trim() : '';
+  const pin = typeof body.pin === 'string' ? body.pin.trim() : '';
+  const nombre = sanitizarTexto(body.nombre, 120);
+  const nota = sanitizarTexto(body.nota, 500);
+  const envios = Array.isArray(body.envios) ? body.envios : null;
 
   if (!token || !PIN_REGEX.test(pin)) return json({ ok: false, motivo: MOTIVO_POR_ESTADO.invalido });
   if (!nombre) return json({ ok: false, motivo: 'Falta tu nombre.' });
-  if (!nota) return json({ ok: false, motivo: 'Falta la descripción del documento.' });
-  if (!(archivo instanceof File)) return json({ ok: false, motivo: 'Falta el archivo.' });
+  if (!nota) return json({ ok: false, motivo: 'Falta la descripcion del documento.' });
+  if (!envios || envios.length === 0) return json({ ok: false, motivo: 'No hay archivos para registrar.' });
+  if (envios.length > MAX_ARCHIVOS_LOTE) return json({ ok: false, motivo: `Maximo ${MAX_ARCHIVOS_LOTE} archivos por envio.` });
 
-  // 1) Token + PIN — se revalida por completo, no se confía en ningún estado previo.
-  const resultado = await verificarBuzonYPin(supabase, token, pin);
-  if (resultado.estado !== 'ok') {
-    return json({ ok: false, motivo: MOTIVO_POR_ESTADO[resultado.estado] });
-  }
-  const buzon = resultado.buzon;
+  const r = await verificarBuzonYPin(supabase, token, pin);
+  if (r.estado !== 'ok') return json({ ok: false, motivo: MOTIVO_POR_ESTADO[r.estado] });
+  const buzon = r.buzon;
 
-  // 2) Archivo — validado server-side, nunca se confía en lo que declaró el navegador.
-  if (archivo.size <= 0) return json({ ok: false, motivo: 'El archivo está vacío.' });
-  if (archivo.size > MAX_ARCHIVO_BYTES) return json({ ok: false, motivo: 'El archivo supera el límite de 50MB.' });
-  const extension = MIME_A_EXTENSION[archivo.type];
-  if (!extension) return json({ ok: false, motivo: 'Tipo de archivo no permitido.' });
+  const idsCreados: string[] = [];
 
-  // 3) Ruta segura — nunca el nombre original del archivo.
-  const rutaArchivo = `${buzon.folderSlug}/buzon-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
-
-  try {
-    const bytes = new Uint8Array(await archivo.arrayBuffer());
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(rutaArchivo, bytes, { contentType: archivo.type, upsert: false });
-    if (uploadError) {
-      console.error('[buzon-subir] Error subiendo a Storage:', uploadError);
-      return json({ ok: false, motivo: 'No se pudo subir el archivo. Intenta nuevamente.' });
+  for (const envio of envios) {
+    const ruta = typeof envio?.ruta === 'string' ? envio.ruta : '';
+    if (!ruta || !ruta.startsWith(`${buzon.folderSlug}/buzon-`) || ruta.includes('..')) {
+      console.error('[buzon-subir] Ruta fuera de patron esperado, se omite:', ruta);
+      continue;
     }
 
-    const tituloDocumento = tituloDesdeArchivo(archivo.name || 'documento');
-    const { data: doc, error: docError } = await supabase
+    const barra = ruta.lastIndexOf('/');
+    const prefijo = ruta.slice(0, barra);
+    const nombreObjeto = ruta.slice(barra + 1);
+
+    const { data: lista, error: listErr } = await supabase.storage
+      .from(BUCKET)
+      .list(prefijo, { search: nombreObjeto, limit: 1 });
+    if (listErr) {
+      console.error('[buzon-subir] Error verificando objeto en Storage:', listErr);
+      continue;
+    }
+    const obj = (lista || []).find((o: any) => o.name === nombreObjeto);
+    if (!obj) {
+      console.error('[buzon-subir] Objeto no encontrado en Storage, se omite:', ruta);
+      continue;
+    }
+    const tamanoReal = Number(obj.metadata?.size ?? 0);
+    if (tamanoReal <= 0 || tamanoReal > MAX_ARCHIVO_BYTES) {
+      console.error('[buzon-subir] Objeto con tamano invalido, se omite:', ruta, tamanoReal);
+      continue;
+    }
+
+    const titulo = tituloDesdeArchivo(envio.nombre_original || nombreObjeto);
+    const { data: doc, error: docErr } = await supabase
       .from('documents')
       .insert({
-        title: tituloDocumento,
-        url: rutaArchivo,
+        title: titulo,
+        url: ruta,
         folder_id: buzon.folderId,
         visibility: 'interna',
         created_by: null,
@@ -240,84 +246,59 @@ async function handleSubir(supabase: ReturnType<typeof createClient>, form: Form
       .select('id, title')
       .single();
 
-    if (docError || !doc) {
-      console.error('[buzon-subir] Error insertando documento:', docError);
-      // El archivo ya quedó en Storage pero sin fila en documents; se prioriza
-      // no dejar al remitente colgado. Un huérfano en Storage es tolerable
-      // (mismo compromiso que ya asume el resto de la app).
-      return json({ ok: false, motivo: 'No se pudo registrar el documento. Intenta nuevamente.' });
+    if (docErr || !doc) {
+      console.error('[buzon-subir] Error insertando documento:', docErr);
+      continue;
     }
+    idsCreados.push(doc.id as string);
 
-    // 4) Contador de uso del buzón (no crítico si falla).
-    const { error: contadorError } = await supabase
-      .from('upload_links')
-      .update({ uploads_count: buzon.uploadsCount + 1, last_used_at: new Date().toISOString() })
-      .eq('id', buzon.id);
-    if (contadorError) console.error('[buzon-subir] Error actualizando contador del buzón (no bloqueante):', contadorError);
-
-    // 5) Notificar a Jefatura+Dirección (nivel <= 2, activos). No bloqueante.
     try {
-      const { data: nivelesJefatura, error: nivelesError } = await supabase
-        .from('role_levels')
-        .select('role')
-        .lte('nivel', 2);
-      if (nivelesError) throw nivelesError;
-
-      const roles = (nivelesJefatura || []).map((r: any) => r.role);
+      const { data: niveles } = await supabase.from('role_levels').select('role').lte('nivel', 2);
+      const roles = (niveles || []).map((x: any) => x.role);
       if (roles.length > 0) {
-        const { data: destinatarios, error: destError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('is_deleted', false)
-          .in('role', roles);
-        if (destError) throw destError;
-
-        if (destinatarios && destinatarios.length > 0) {
-          const filas = destinatarios.map((p: any) => ({
+        const { data: dest } = await supabase.from('profiles').select('id').eq('is_deleted', false).in('role', roles);
+        if (dest && dest.length > 0) {
+          const filas = dest.map((p: any) => ({
             user_id: p.id,
             tipo: 'buzon_subida',
             titulo: `Documento recibido: ${doc.title}`,
-            cuerpo: `Enviado por ${nombre} vía buzón ${buzon.etiqueta}`,
+            cuerpo: `Enviado por ${nombre} via buzon ${buzon.etiqueta}`,
             modulo: 'archivo_digital',
             ref_id: doc.id,
           }));
-          const { error: notifError } = await supabase
-            .from('notificaciones')
-            .upsert(filas, { onConflict: 'user_id,tipo,ref_id', ignoreDuplicates: true });
-          if (notifError) throw notifError;
+          await supabase.from('notificaciones').upsert(filas, { onConflict: 'user_id,tipo,ref_id', ignoreDuplicates: true });
         }
       }
     } catch (notifErr) {
       console.error('[buzon-subir] Error creando notificaciones (no bloqueante):', notifErr);
     }
-
-    // Nunca se devuelven rutas, ids internos ni nada del documento.
-    return json({ ok: true });
-  } catch (e) {
-    console.error('[buzon-subir] Error no controlado en handleSubir:', e);
-    return json({ ok: false, motivo: 'Error interno. Intenta nuevamente.' });
   }
+
+  if (idsCreados.length > 0) {
+    const { error: contErr } = await supabase
+      .from('upload_links')
+      .update({ uploads_count: buzon.uploadsCount + idsCreados.length, last_used_at: new Date().toISOString() })
+      .eq('id', buzon.id);
+    if (contErr) console.error('[buzon-subir] Error actualizando contador (no bloqueante):', contErr);
+  }
+
+  return json({ ok: true, registrados: idsCreados.length });
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  if (req.method !== 'POST') return json({ ok: false, motivo: 'Método no permitido.' }, 405);
+  if (req.method !== 'POST') return json({ ok: false, motivo: 'Metodo no permitido.' }, 405);
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const contentType = req.headers.get('content-type') || '';
 
   try {
-    if (contentType.includes('multipart/form-data')) {
-      const form = await req.formData();
-      const action = String(form.get('action') || '');
-      if (action !== 'subir') return json({ ok: false, motivo: 'Solicitud inválida.' }, 400);
-      return await handleSubir(supabase, form);
-    }
-
     const body = await req.json().catch(() => ({}));
-    if (body.action !== 'validar') return json({ ok: false, motivo: 'Solicitud inválida.' }, 400);
-    return await handleValidar(supabase, body);
+    switch (body.action) {
+      case 'validar': return await handleValidar(supabase, body);
+      case 'preparar-subida': return await handlePreparar(supabase, body);
+      case 'confirmar': return await handleConfirmar(supabase, body);
+      default: return json({ ok: false, motivo: 'Solicitud invalida.' }, 400);
+    }
   } catch (e) {
     console.error('[buzon-subir] Error no controlado:', e);
     return json({ ok: false, motivo: 'Error interno. Intenta nuevamente.' }, 500);
