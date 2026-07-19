@@ -12,6 +12,11 @@ const abrirDocumentoFirmado = async (input: string) => {
     if (signed) window.open(signed, '_blank');
 };
 
+// Carpeta "RRHH" del Archivo Digital (document_folders). Los documentos
+// académicos del profesional se guardan aquí, pegados a la persona por
+// professional_id. Reemplaza la tabla aparte professional_academic_docs.
+const RRHH_FOLDER_ID = 'd64a61bb-0e8a-4370-bfe5-97aac2b45220';
+
 // ─── AcademicDocRow (movido aquí desde ProfessionalModal) ─────────────────────
 interface AcademicDocRowProps {
     docType:        string;
@@ -23,26 +28,32 @@ interface AcademicDocRowProps {
 
 const AcademicDocRow: React.FC<AcademicDocRowProps> = ({ docType, label, hint, required, professionalId }) => {
     const [uploading,   setUploading]   = useState(false);
+    const [docId,       setDocId]       = useState<string | null>(null);
     const [docUrl,      setDocUrl]      = useState<string | null>(null);
     const [fileName,    setFileName]    = useState<string | null>(null);
-    const [isPending,   setIsPending]   = useState(false);
+    const [docLocked,   setDocLocked]   = useState(false);
     const [loadingDoc,  setLoadingDoc]  = useState(false);
 
+    // El documento vive en documents (Archivo Digital), filtrado por la persona
+    // y el tipo (category = clave del catálogo). Si no hay fila → pendiente.
     useEffect(() => {
         if (!professionalId) return;
         const fetchDoc = async () => {
             setLoadingDoc(true);
             try {
                 const { data } = await supabase
-                    .from('professional_academic_docs')
-                    .select('file_url, file_name, is_pending')
+                    .from('documents')
+                    .select('id, url, title, is_locked')
                     .eq('professional_id', professionalId)
-                    .eq('doc_type', docType)
+                    .eq('category', docType)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
                     .maybeSingle();
                 if (data) {
-                    setDocUrl(data.file_url);
-                    setFileName(data.file_name);
-                    setIsPending(data.is_pending);
+                    setDocId(data.id);
+                    setDocUrl(data.url || null);
+                    setFileName(data.title || null);
+                    setDocLocked(!!data.is_locked);
                 }
             } catch (err) {
                 console.error(err);
@@ -62,13 +73,34 @@ const AcademicDocRow: React.FC<AcademicDocRowProps> = ({ docType, label, hint, r
             const filePath = `academic/${professionalId}/${docType}-${Date.now()}.${ext}`;
             const { error: storageError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
             if (storageError) throw storageError;
+
             // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
-            await supabase.from('professional_academic_docs').upsert({
-                professional_id: professionalId, doc_type: docType,
-                file_name: file.name, file_url: filePath,
-                is_pending: false, uploaded_at: new Date().toISOString(),
-            }, { onConflict: 'professional_id,doc_type' });
-            setDocUrl(filePath); setFileName(file.name); setIsPending(false);
+            const { data: { user } } = await supabase.auth.getUser();
+            const tipoArchivo = file.type.includes('image') ? 'image' : file.type.includes('video') ? 'video' : 'pdf';
+
+            if (docId) {
+                // Reemplazo: se actualiza la fila existente (una por tipo/persona).
+                const { error } = await supabase.from('documents')
+                    .update({ url: filePath, title: file.name, type: tipoArchivo })
+                    .eq('id', docId);
+                if (error) throw error;
+            } else {
+                const { data, error } = await supabase.from('documents').insert({
+                    title: file.name,
+                    type: tipoArchivo,
+                    category: docType,               // clave del catálogo: titulo, especialidad, sis, ...
+                    url: filePath,                   // RUTA en el bucket documents
+                    folder_id: RRHH_FOLDER_ID,       // carpeta RRHH
+                    professional_id: professionalId, // pegado a la persona
+                    visibility: 'interna',
+                    signed: false,
+                    created_by: user?.id,
+                    status: 'draft',
+                }).select('id').single();
+                if (error) throw error;
+                setDocId(data.id);
+            }
+            setDocUrl(filePath); setFileName(file.name);
         } catch (err: any) {
             console.error(`Error subiendo ${docType}:`, err.message);
         } finally {
@@ -76,76 +108,62 @@ const AcademicDocRow: React.FC<AcademicDocRowProps> = ({ docType, label, hint, r
         }
     };
 
-    const handleMarkPending = async () => {
-        if (!professionalId) return;
-        await supabase.from('professional_academic_docs').upsert({
-            professional_id: professionalId, doc_type: docType,
-            file_name: 'pendiente', file_url: '', is_pending: true,
-            uploaded_at: new Date().toISOString(),
-        }, { onConflict: 'professional_id,doc_type' });
-        setIsPending(true); setDocUrl(null); setFileName(null);
-    };
-
+    // Quita el documento (la fila vuelve a pendiente/ámbar). No hay "marcar
+    // pendiente" a mano: pendiente = simplemente no tener documento. Respeta
+    // isLocked (documentos bloqueados por Auditoría no se borran) y pide
+    // confirmación, como en Expediente.
     const handleRemove = async () => {
-        if (!professionalId) return;
-        await supabase.from('professional_academic_docs').delete()
-            .eq('professional_id', professionalId).eq('doc_type', docType);
-        setDocUrl(null); setFileName(null); setIsPending(false);
+        if (!docId || docLocked) return;
+        if (!window.confirm(`¿Eliminar el documento de "${label}"? Esta acción no se puede deshacer.`)) return;
+        const { error } = await supabase.from('documents').delete().eq('id', docId);
+        if (error) { console.error(`Error eliminando ${docType}:`, error.message); return; }
+        setDocId(null); setDocUrl(null); setFileName(null); setDocLocked(false);
     };
 
     return (
         <div className={cn(
             'flex items-center gap-3 p-3 rounded-xl border transition-all',
-            docUrl && !isPending ? 'bg-emerald-500/5 border-emerald-500/20'
-                : isPending ? 'bg-amber-500/5 border-amber-500/20'
-                : required ? 'bg-red-500/5 border-red-500/20'
-                : 'bg-brand-bg border-brand-border'
+            docUrl ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'
         )}>
             <div className="flex-shrink-0">
                 {loadingDoc ? <Loader2 className="w-5 h-5 text-brand-text/20 animate-spin" />
-                    : docUrl && !isPending ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    : <AlertCircle className={cn('w-5 h-5', isPending ? 'text-amber-400' : required ? 'text-red-400' : 'text-brand-text/20')} />
+                    : docUrl ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    : <AlertCircle className="w-5 h-5 text-amber-400" />
                 }
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-brand-text/90 truncate">{label}</p>
                     {required && <span className="text-[8px] font-black text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">Obligatorio</span>}
-                    {isPending && <span className="text-[8px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">Pendiente</span>}
+                    {!docUrl && !loadingDoc && <span className="text-[8px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">Pendiente</span>}
                 </div>
-                <p className="text-[10px] text-brand-text/30 truncate">{fileName && !isPending ? fileName : hint}</p>
+                <p className="text-[10px] text-brand-text/30 truncate">{fileName || hint}</p>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
-                {docUrl && !isPending && (
+                {docUrl && (
                     <button type="button" onClick={() => abrirDocumentoFirmado(docUrl)}
                         className="px-2.5 py-1 bg-brand-surface border border-brand-border rounded-lg text-[10px] font-bold uppercase text-brand-text hover:bg-brand-primary/10 transition-all">
                         Ver
                     </button>
                 )}
-                {(docUrl || isPending) && (
-                    <button type="button" onClick={handleRemove}
-                        className="p-1.5 rounded-lg text-brand-text/20 hover:bg-red-500/10 hover:text-red-400 transition-all">
+                {docUrl && (
+                    <button type="button" onClick={handleRemove} disabled={docLocked}
+                        title={docLocked ? 'Bloqueado por Auditoría' : 'Eliminar'}
+                        className={cn('p-1.5 rounded-lg transition-all',
+                            docLocked ? 'text-brand-text/10 cursor-not-allowed' : 'text-brand-text/20 hover:bg-red-500/10 hover:text-red-400')}>
                         <Trash className="w-3.5 h-3.5" />
                     </button>
                 )}
-                {!isPending && (
-                    <label className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase cursor-pointer transition-all',
-                        uploading ? 'bg-brand-surface text-brand-text/30 cursor-not-allowed'
-                            : 'bg-info/10 border border-info/20 text-info hover:bg-info/20'
-                    )}>
-                        {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
-                        {docUrl ? 'Reemplazar' : 'Subir'}
-                        <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden"
-                            disabled={uploading || !professionalId} onChange={handleUpload} />
-                    </label>
-                )}
-                {!docUrl && !isPending && professionalId && (
-                    <button type="button" onClick={handleMarkPending}
-                        className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[10px] font-bold uppercase hover:bg-amber-500/20 transition-all">
-                        Pendiente
-                    </button>
-                )}
+                <label className={cn(
+                    'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase cursor-pointer transition-all',
+                    uploading ? 'bg-brand-surface text-brand-text/30 cursor-not-allowed'
+                        : 'bg-info/10 border border-info/20 text-info hover:bg-info/20'
+                )}>
+                    {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
+                    {docUrl ? 'Reemplazar' : 'Subir'}
+                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden"
+                        disabled={uploading || !professionalId} onChange={handleUpload} />
+                </label>
             </div>
         </div>
     );

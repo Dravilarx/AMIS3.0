@@ -3,7 +3,7 @@ import {
     FileText, CheckSquare, PenTool, AlertTriangle, LayoutGrid,
     LayoutList, Search, Sparkles, FileDown, ShieldCheck, FileSignature,
     Loader2, Copy, Trash2, ImageIcon, Video, BarChart, AlertCircle,
-    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, Pencil, Mailbox,
+    Settings2, Square, Plus, FolderOpen, Filter, Clock, Archive, RotateCcw, History, Pencil, Mailbox, UserRound,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -11,6 +11,7 @@ import { useDocuments, logDocumentAccess } from '../../hooks/useDocuments';
 import { useFirma } from '../../hooks/useFirma';
 import { useAuth } from '../../hooks/useAuth';
 import { useFolders } from '../../hooks/useFolders';
+import { useProfessionalsLite } from '../../hooks/useProfessionalsLite';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { BatteryConfigModal } from './BatteryConfigModal';
 import { BuzonesAdminModal } from './BuzonesAdminModal';
@@ -56,6 +57,9 @@ export const SemanticDMS: React.FC = () => {
     const { solicitudesPorDocumento, pendientesParaMi, refresh: refreshFirma } = useFirma();
     const { canPerform, user }                     = useAuth();
     const { folders, addFolder, deleteFolder, moveDocument } = useFolders();
+    const { profesionales } = useProfessionalsLite();
+    // Resolución rápida id → nombre del profesional vinculado.
+    const profNameById = useMemo(() => new Map(profesionales.map(p => [p.id, p.nombre])), [profesionales]);
 
     // Nivel de acceso del usuario (menor = más acceso). ADMIN ya no existe.
     const miNivel = getLevelForRole(user?.role);
@@ -119,6 +123,7 @@ export const SemanticDMS: React.FC = () => {
     const [filterType,       setFilterType]       = useState('');
     const [filterSigned,     setFilterSigned]     = useState('');
     const [filterDateFrom,   setFilterDateFrom]   = useState('');
+    const [filterProfesional, setFilterProfesional] = useState('');
     const [showFilters,      setShowFilters]      = useState(false);
 
     // ── Nueva carpeta ─────────────────────────────────────────────────────────
@@ -142,8 +147,9 @@ export const SemanticDMS: React.FC = () => {
             (filterSigned === 'signed'   && d.signed) ||
             (filterSigned === 'unsigned' && !d.signed);
         const matchDate    = !filterDateFrom || d.createdAt >= filterDateFrom;
-        return matchSearch && matchFolder && matchType && matchSigned && matchDate;
-    }), [baseDocs, searchTerm, filterFolder, filterType, filterSigned, filterDateFrom]);
+        const matchProf    = !filterProfesional || (d as any).professionalId === filterProfesional;
+        return matchSearch && matchFolder && matchType && matchSigned && matchDate && matchProf;
+    }), [baseDocs, searchTerm, filterFolder, filterType, filterSigned, filterDateFrom, filterProfesional]);
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
     const kpis = useMemo(() => ({
@@ -402,15 +408,15 @@ export const SemanticDMS: React.FC = () => {
                         <button onClick={() => setShowFilters(v => !v)}
                             className={cn(
                                 'flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold uppercase transition-all',
-                                showFilters || filterType || filterSigned || filterDateFrom
+                                showFilters || filterType || filterSigned || filterDateFrom || filterProfesional
                                     ? 'bg-info/10 border-info/20 text-info'
                                     : 'bg-brand-surface border-brand-border text-brand-text/50 hover:bg-brand-primary/10'
                             )}>
                             <Filter className="w-3.5 h-3.5" />
                             Filtros
-                            {(filterType || filterSigned || filterDateFrom) && (
+                            {(filterType || filterSigned || filterDateFrom || filterProfesional) && (
                                 <span className="w-4 h-4 bg-info text-white text-[8px] font-black rounded-full flex items-center justify-center">
-                                    {[filterType, filterSigned, filterDateFrom].filter(Boolean).length}
+                                    {[filterType, filterSigned, filterDateFrom, filterProfesional].filter(Boolean).length}
                                 </span>
                             )}
                         </button>
@@ -437,8 +443,15 @@ export const SemanticDMS: React.FC = () => {
                                 <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
                                     className="bg-brand-bg border border-brand-border rounded-lg px-3 py-1.5 text-xs text-brand-text outline-none" />
                             </div>
-                            {(filterType || filterSigned || filterDateFrom) && (
-                                <button onClick={() => { setFilterType(''); setFilterSigned(''); setFilterDateFrom(''); }}
+                            <select value={filterProfesional} onChange={e => setFilterProfesional(e.target.value)}
+                                className="bg-brand-bg border border-brand-border rounded-lg px-3 py-1.5 text-xs text-brand-text outline-none appearance-none max-w-[13rem] truncate">
+                                <option value="">Todas las personas</option>
+                                {profesionales.map(p => (
+                                    <option key={p.id} value={p.id}>{p.nombre}{p.activo ? '' : ' (inactivo)'}</option>
+                                ))}
+                            </select>
+                            {(filterType || filterSigned || filterDateFrom || filterProfesional) && (
+                                <button onClick={() => { setFilterType(''); setFilterSigned(''); setFilterDateFrom(''); setFilterProfesional(''); }}
                                     className="text-[10px] font-black uppercase text-danger hover:bg-danger/10 px-2 py-1 rounded-lg transition-colors">
                                     Limpiar
                                 </button>
@@ -510,6 +523,11 @@ export const SemanticDMS: React.FC = () => {
 
                                     {/* Info */}
                                     <h4 className="font-bold text-sm text-brand-text/90 leading-tight mb-1 line-clamp-2">{doc.title}</h4>
+                                    {(doc as any).professionalId && profNameById.get((doc as any).professionalId) && (
+                                        <p className="text-[10px] font-bold text-info/80 flex items-center gap-1 mb-1 truncate">
+                                            <UserRound className="w-3 h-3 shrink-0" /> {profNameById.get((doc as any).professionalId)}
+                                        </p>
+                                    )}
                                     {doc.notas && <p className="text-[10px] text-brand-text/30 line-clamp-2 italic mb-3">{doc.notas}</p>}
 
                                     {/* Mover a carpeta */}
@@ -629,6 +647,11 @@ export const SemanticDMS: React.FC = () => {
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-bold text-brand-text group-hover:text-info transition-colors truncate">{doc.title}</p>
+                                            {(doc as any).professionalId && profNameById.get((doc as any).professionalId) && (
+                                                <p className="text-[9px] font-bold text-info/70 flex items-center gap-1 truncate">
+                                                    <UserRound className="w-2.5 h-2.5 shrink-0" /> {profNameById.get((doc as any).professionalId)}
+                                                </p>
+                                            )}
                                             {doc.signerName && <p className="text-[9px] text-brand-text/20 truncate">{doc.signerName}</p>}
                                         </div>
                                     </div>

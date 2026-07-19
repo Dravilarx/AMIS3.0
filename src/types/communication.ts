@@ -42,6 +42,7 @@ export interface Document {
     targetId?: string; // UID del usuario o ID del perfil
     projectId?: string;
     taskId?: string;
+    professionalId?: string | null; // Profesional vinculado (professionals.id) — "casillero de persona"
     requirementId?: string; // ID del requerimiento de la batería que satisface
     /** Campos para Control de Inducción y Auditoría */
     isLocked?: boolean; // Si es true, el usuario no puede borrarlo

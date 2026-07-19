@@ -1,9 +1,13 @@
 import React from 'react';
 import { ShieldCheck, BookOpen, UserCheck, BellRing, CheckCircle2, Save, Sparkles, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { cn } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
 import { getSignedDocumentUrl } from '../../../lib/storageUrls';
+
+// Carpeta "RRHH" del Archivo Digital (document_folders).
+const RRHH_FOLDER_ID = 'd64a61bb-0e8a-4370-bfe5-97aac2b45220';
 
 // Abre un documento del bucket privado firmando la ruta (o URL heredada).
 const abrirDocumentoFirmado = async (input: string) => {
@@ -49,44 +53,109 @@ const CertificadoGenerator: React.FC<{ professionalId: string; professionalName:
     const [docUrl,      setDocUrl]     = useState<string | null>(null);
 
     useEffect(() => {
+        // Vínculo persona por la columna limpia professional_id (no target_id).
         supabase.from('documents').select('id, url')
-            .eq('target_id', professionalId).eq('category', 'induction').maybeSingle()
+            .eq('professional_id', professionalId).eq('category', 'induction').maybeSingle()
             .then(({ data }) => { if (data) { setDocUrl(data.url); setDone(true); } });
     }, [professionalId]);
+
+    // Genera el certificado como PDF (jsPDF, misma librería que el resto de la app).
+    // Ya no se sube HTML al bucket (que lo rechaza). Contenido equivalente al anterior.
+    const generarCertificadoPdf = (fecha: string, fingerprint: string): ArrayBuffer => {
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const marginX = 48;
+        const contentW = doc.internal.pageSize.getWidth() - marginX * 2;
+        const labelW = 170;
+        let y = 64;
+
+        // Título
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(20, 20, 20);
+        doc.text('Certificado de Inducción — AMIS 3.0', marginX, y);
+        y += 10;
+        doc.setDrawColor(249, 115, 22); doc.setLineWidth(1.5);
+        doc.line(marginX, y, marginX + contentW, y);
+        y += 26;
+
+        // Intro
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+        const intro = 'El presente documento certifica que el profesional indicado ha leído y aceptado el material de bienvenida de SOCIEDAD DE RADIÓLOGOS DEL NORTE SpA.';
+        doc.splitTextToSize(intro, contentW).forEach((line: string) => { doc.text(line, marginX, y); y += 16; });
+        y += 14;
+
+        const section = (t: string) => {
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(85, 85, 85);
+            doc.text(t.toUpperCase(), marginX, y); y += 18;
+        };
+        const row = (label: string, value: string) => {
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(60, 60, 60);
+            doc.text(`${label}:`, marginX, y);
+            doc.setFont('helvetica', 'normal'); doc.setTextColor(40, 40, 40);
+            const lines = doc.splitTextToSize(value, contentW - labelW);
+            doc.text(lines[0] || '', marginX + labelW, y); y += 16;
+            for (let i = 1; i < lines.length; i++) { doc.text(lines[i], marginX + labelW, y); y += 16; }
+        };
+
+        section('Datos del Profesional');
+        row('Nombre', professionalName);
+        row('Fecha de aceptación', fecha);
+        row('Audit ID', fingerprint);
+        y += 12;
+
+        section('Material revisado');
+        ['Administración', 'Operatividad', 'Calidad', 'Pacto de Integridad (Ley 19.886)']
+            .forEach(m => row(m, 'Leído y aceptado'));
+        y += 12;
+
+        // Declaración
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(30, 100, 55);
+        doc.text('Declaración:', marginX, y); y += 15;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(40, 40, 40);
+        const dec = 'Declaro haber leído la información entregada por AMIS correspondiente a Administración, Operatividad, Calidad y el Pacto de Integridad.';
+        doc.splitTextToSize(dec, contentW).forEach((line: string) => { doc.text(line, marginX, y); y += 15; });
+        y += 34;
+
+        // Firma
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(59, 130, 246);
+        doc.text(professionalName, marginX, y); y += 10;
+        doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.5);
+        doc.line(marginX, y, marginX + 220, y); y += 16;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(30, 30, 30);
+        doc.text(professionalName, marginX, y); y += 14;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+        doc.text('Firmado electrónicamente vía AMIS 3.0', marginX, y); y += 16;
+        doc.setFontSize(8); doc.setTextColor(160, 160, 160);
+        doc.text(`Audit ID: ${fingerprint}  |  ${fecha}  |  AMIS Care — Holding Portezuelo`, marginX, y);
+
+        return doc.output('arraybuffer');
+    };
 
     const handleGenerate = async () => {
         setGenerating(true);
         try {
             const fecha = new Date(acceptedAt).toLocaleString('es-CL', { dateStyle: 'full', timeStyle: 'short' });
             const fingerprint = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
-            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#1a1a1a;line-height:1.6}h1{font-size:20px;border-bottom:2px solid #f97316;padding-bottom:8px;color:#f97316}h2{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-top:28px}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:6px 8px;border:1px solid #eee}td:first-child{font-weight:bold;background:#f9f9f9;width:35%}.dec{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;margin:24px 0}.firma{margin-top:40px;border-top:1px solid #eee;padding-top:20px}.fn{font-family:'Dancing Script',cursive;font-size:32px;color:#3b82f6}.audit{font-size:9px;color:#aaa;margin-top:8px}</style></head><body>
-<h1>Certificado de Inducción — AMIS 3.0</h1>
-<p>El presente documento certifica que el profesional indicado ha leído y aceptado el material de bienvenida de <strong>SOCIEDAD DE RADIÓLOGOS DEL NORTE SpA</strong>.</p>
-<h2>Datos del Profesional</h2>
-<table><tr><td>Nombre</td><td>${professionalName}</td></tr><tr><td>Fecha de aceptación</td><td>${fecha}</td></tr><tr><td>Audit ID</td><td style="font-family:monospace">${fingerprint}</td></tr></table>
-<h2>Material revisado</h2>
-<table><tr><td>Administración</td><td>✓ Leído y aceptado</td></tr><tr><td>Operatividad</td><td>✓ Leído y aceptado</td></tr><tr><td>Calidad</td><td>✓ Leído y aceptado</td></tr><tr><td>Pacto de Integridad (Ley 19.886)</td><td>✓ Leído y aceptado</td></tr></table>
-<div class="dec"><strong>Declaración:</strong> Declaro haber leído la información entregada por AMIS correspondiente a Administración, Operatividad, Calidad y el Pacto de Integridad.</div>
-<div class="firma"><div class="fn">${professionalName}</div><div style="height:1px;width:220px;background:#eee;margin:10px 0"></div><p style="font-size:13px;font-weight:bold;margin:0">${professionalName}</p><p style="font-size:11px;color:#888;margin:2px 0">Firmado electrónicamente vía AMIS 3.0</p><div class="audit">Audit ID: ${fingerprint} | ${fecha} | AMIS Care — Holding Portezuelo</div></div>
-</body></html>`;
 
-            const { data: insertData, error } = await supabase.from('documents').insert([{
-                title: `Inducción — ${professionalName}`, type: 'pdf', category: 'induction',
-                content_summary: `Certificado de inducción. Audit ID: ${fingerprint}`,
-                url: '', signed: true, signer_name: professionalName,
-                signature_fingerprint: fingerprint, signed_at: acceptedAt,
-                visibility: 'community', target_id: professionalId, is_locked: true, is_validated: true,
-            }]).select('id').single();
+            const pdfBytes = generarCertificadoPdf(fecha, fingerprint);
 
-            if (error) throw error;
-
-            const filePath = `expedientes/induction-${professionalId}-${Date.now()}.html`;
+            // Subir el PDF al bucket privado (application/pdf, aceptado por el bucket).
+            const filePath = `expedientes/induction-${professionalId}-${Date.now()}.pdf`;
             const { error: storageError } = await supabase.storage.from('documents')
-                .upload(filePath, new Blob([html], { type: 'text/html' }), { contentType: 'text/html', upsert: true });
+                .upload(filePath, new Blob([pdfBytes], { type: 'application/pdf' }), { contentType: 'application/pdf', upsert: true });
             if (storageError) throw storageError;
 
-            // Bucket privado: se guarda la RUTA; la URL firmada se resuelve al abrir.
-            await supabase.from('documents').update({ url: filePath }).eq('id', insertData.id);
+            // Se guarda la RUTA (bucket privado); la URL firmada se resuelve al abrir.
+            const { error } = await supabase.from('documents').insert([{
+                title: `Inducción — ${professionalName}`, type: 'pdf', category: 'induction',
+                content_summary: `Certificado de inducción. Audit ID: ${fingerprint}`,
+                url: filePath, signed: true, signer_name: professionalName,
+                signature_fingerprint: fingerprint, signed_at: acceptedAt,
+                visibility: 'interna',                 // reemplaza el obsoleto 'community'
+                professional_id: professionalId,       // vínculo limpio (no target_id)
+                folder_id: RRHH_FOLDER_ID,             // carpeta RRHH
+                is_locked: true, is_validated: true,
+            }]);
+            if (error) throw error;
+
             setDocUrl(filePath); setDone(true);
         } catch (err: any) {
             console.error('Error generando certificado:', err.message);

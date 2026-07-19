@@ -1,8 +1,15 @@
 import React from 'react';
 import { CheckCircle2, AlertCircle, FolderSearch, UploadCloud, Sparkles, Trash } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { getSignedDocumentUrl } from '../../../lib/storageUrls';
 import type { TabProps } from './types';
 import type { Document } from '../../../types/communication';
+
+// Abre un documento del bucket privado firmando la ruta (o URL heredada).
+const abrirDocumentoFirmado = async (input: string) => {
+    const signed = await getSignedDocumentUrl(input);
+    if (signed) window.open(signed, '_blank');
+};
 
 interface Battery {
     id: string;
@@ -22,11 +29,12 @@ interface TabExpedienteProps extends TabProps {
     professionalDocuments: Document[];
     batteryProgress:       number;
     onRequirementUpload:   (req: any) => void;
+    onRequirementDelete:   (doc: Document) => void | Promise<void>;
 }
 
 export const TabExpediente: React.FC<TabExpedienteProps> = ({
     batteries, selectedBatteryId, setSelectedBatteryId,
-    professionalDocuments, batteryProgress, onRequirementUpload,
+    professionalDocuments, batteryProgress, onRequirementUpload, onRequirementDelete,
 }) => {
     const selectedBattery = batteries.find(b => b.id === selectedBatteryId);
 
@@ -93,12 +101,18 @@ export const TabExpediente: React.FC<TabExpedienteProps> = ({
                                 <div className="flex items-center gap-2">
                                     {doc ? (
                                         <div className="flex items-center gap-1">
-                                            <button type="button" onClick={() => window.open(doc.url, '_blank')}
+                                            <button type="button" onClick={() => abrirDocumentoFirmado(doc.url)}
                                                 className="px-3 py-1.5 bg-brand-surface rounded-lg text-[10px] font-bold uppercase hover:bg-brand-primary/10 transition-all text-brand-text">
                                                 Ver
                                             </button>
                                             <button type="button" title={doc.isLocked ? 'Bloqueado por Auditoría' : 'Eliminar'}
                                                 disabled={doc.isLocked}
+                                                onClick={() => {
+                                                    if (doc.isLocked) return;
+                                                    if (window.confirm(`¿Eliminar el documento de "${req.label}"? Esta acción no se puede deshacer.`)) {
+                                                        onRequirementDelete(doc);
+                                                    }
+                                                }}
                                                 className={cn('p-1.5 rounded-lg transition-colors',
                                                     doc.isLocked ? 'text-brand-text/10 cursor-not-allowed' : 'text-brand-text/20 hover:bg-danger/10 hover:text-danger')}>
                                                 <Trash className="w-3.5 h-3.5" />

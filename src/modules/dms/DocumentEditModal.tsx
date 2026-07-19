@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Pencil, Loader2, Trash2, Globe, Users, Lock, User, CalendarClock, FolderOpen } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { SmartCombobox } from '../../components/ui/SmartCombobox';
+import { useProfessionalsLite } from '../../hooks/useProfessionalsLite';
 import type { Document } from '../../types/communication';
 import type { DocumentFolder } from '../../hooks/useFolders';
 
@@ -16,6 +17,7 @@ interface DocumentEditModalProps {
         expiryDate?: string | null;
         folderId?: string | null;
         notas?: string | null;
+        professionalId?: string | null;
     }) => Promise<{ success: boolean; error?: string; rls?: boolean }>;
     notify: (msg: string, ok: boolean) => void;
 }
@@ -44,7 +46,11 @@ export const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ doc, uploa
     const [folderId, setFolderId] = useState(doc.folderId || '');
     const [expiryDate, setExpiryDate] = useState(doc.expiryDate || '');
     const [notas, setNotas] = useState(doc.notas || '');
+    const [professionalId, setProfessionalId] = useState(doc.professionalId || '');
     const [saving, setSaving] = useState(false);
+
+    // Lista liviana de profesionales (activos e inactivos) para el vínculo a persona.
+    const { profesionales } = useProfessionalsLite();
 
     const handleSave = async () => {
         if (!title.trim()) { notify('El título no puede quedar vacío', false); return; }
@@ -56,6 +62,7 @@ export const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ doc, uploa
             folderId: folderId || null,
             expiryDate: expiryDate || null,
             notas: notas.trim() || null,
+            professionalId: professionalId || null,
         });
         setSaving(false);
         if (res.success) {
@@ -125,6 +132,24 @@ export const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ doc, uploa
                                 className="!py-2.5 !border !border-brand-border !rounded-xl"
                             />
                         </div>
+                    </div>
+
+                    {/* Vínculo a persona (professionals.id) — opcional, buscable por nombre */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1 flex items-center gap-1">
+                            <User className="w-3 h-3" /> Vincular a Persona
+                        </label>
+                        <SmartCombobox
+                            options={[
+                                { id: '', label: 'Sin persona' },
+                                ...profesionales.map(p => ({ id: p.id, label: p.nombre, sublabel: p.activo ? undefined : 'Inactivo' })),
+                            ]}
+                            value={professionalId}
+                            onChange={setProfessionalId}
+                            placeholder="Buscar profesional por nombre..."
+                            storageKey="dms.recentProfessionals"
+                            className="!py-2.5 !border !border-brand-border !rounded-xl"
+                        />
                     </div>
 
                     <div className="space-y-1.5">

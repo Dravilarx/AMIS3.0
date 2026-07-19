@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, GraduationCap, Layers, Loader2, FolderSearch, AlertOctagon, Trash2, UploadCloud, NotebookPen } from 'lucide-react';
+import { X, GraduationCap, Layers, Loader2, FolderSearch, Archive, UploadCloud, NotebookPen } from 'lucide-react';
 import { useBatteries } from '../dms/useBatteries';
 import { useDocuments } from '../../hooks/useDocuments';
 import { DocumentUploadModal } from '../dms/DocumentUploadModal';
@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import type { Professional } from '../../types/core';
+import type { Document } from '../../types/communication';
 
 // ─── Tabs extraídos ───────────────────────────────────────────────────────────
 import { TabPersonal }    from './tabs/TabPersonal';
@@ -64,7 +65,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
 
     const { managers }                          = useHRManagers();
     const { batteries }                         = useBatteries();
-    const { documents: allDocuments, uploadDocument } = useDocuments();
+    const { documents: allDocuments, uploadDocument, deleteDocument } = useDocuments();
 
     // Precargar datos
     useEffect(() => {
@@ -143,8 +144,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
     };
 
     // ── Expediente ────────────────────────────────────────────────────────────
+    // Vínculo persona por la columna limpia professional_id (FK a professionals),
+    // no por el genérico target_id. El matching por requirement_id y el % de
+    // cumplimiento quedan idénticos.
     const selectedBattery    = batteries.find(b => b.id === selectedBatteryId);
-    const professionalDocs   = allDocuments.filter(d => d.targetId === initialData?.id);
+    const professionalDocs   = allDocuments.filter(d => d.professionalId === initialData?.id);
     const batteryProgress    = selectedBattery
         ? Math.round(
             (selectedBattery.requirements.filter(r => professionalDocs.find(d => d.requirementId === r.id)).length
@@ -153,6 +157,14 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
         : 0;
 
     const handleRequirementUpload = (req: any) => setUploadingReq(req);
+
+    // Borra la fila de documents de un requerimiento (Expediente). Respeta isLocked
+    // y RLS (si el borrado falla, se loguea sin romper la UI).
+    const handleRequirementDelete = async (doc: Document) => {
+        if (doc.isLocked) return;
+        const res = await deleteDocument(doc.id, doc.url);
+        if (!res.success) console.error('No se pudo eliminar el documento del expediente:', res.error);
+    };
 
     // ── Tabs config ───────────────────────────────────────────────────────────
     const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -254,6 +266,7 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                                 professionalDocuments={professionalDocs}
                                 batteryProgress={batteryProgress}
                                 onRequirementUpload={handleRequirementUpload}
+                                onRequirementDelete={handleRequirementDelete}
                             />
                         )}
 
@@ -265,17 +278,17 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                     {/* Footer */}
                     <div className="px-6 py-4 border-t border-brand-border space-y-3 flex-shrink-0">
 
-                        {/* Confirmación de eliminación */}
+                        {/* Confirmación de archivado (reversible, no borra nada) */}
                         {showDeleteConfirm && (
-                            <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-                                <AlertOctagon className="w-5 h-5 text-red-400 flex-shrink-0" />
-                                <p className="text-xs text-red-300 flex-1">
-                                    ¿Eliminar permanentemente a <strong>{initialData?.name} {initialData?.lastName}</strong>?
+                            <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <Archive className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                                <p className="text-xs text-amber-200 flex-1">
+                                    ¿Archivar a <strong>{initialData?.name} {initialData?.lastName}</strong>? Dejará de aparecer en la lista activa, pero podrás restaurarlo después.
                                 </p>
                                 <div className="flex gap-2">
                                     <button type="button" onClick={() => setShowDeleteConfirm(false)}
                                         className="px-3 py-1.5 text-xs font-bold border border-brand-border rounded-lg hover:bg-brand-surface transition-all text-brand-text">
-                                        No
+                                        Cancelar
                                     </button>
                                     <button type="button" disabled={isDeleting}
                                         onClick={async () => {
@@ -284,10 +297,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                                             const result = await onDelete(initialData.id);
                                             setIsDeleting(false);
                                             if (result.success) { setShowDeleteConfirm(false); onClose(); }
-                                            else alert('Error al eliminar: ' + result.error);
+                                            else alert('Error al archivar: ' + result.error);
                                         }}
-                                        className="px-3 py-1.5 text-xs font-black bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50 flex items-center gap-1.5">
-                                        {isDeleting ? <><Loader2 className="w-3 h-3 animate-spin" /> Eliminando...</> : <><Trash2 className="w-3 h-3" /> Sí, Eliminar</>}
+                                        className="px-3 py-1.5 text-xs font-black bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all disabled:opacity-50 flex items-center gap-1.5">
+                                        {isDeleting ? <><Loader2 className="w-3 h-3 animate-spin" /> Archivando...</> : <><Archive className="w-3 h-3" /> Sí, archivar</>}
                                     </button>
                                 </div>
                             </div>
@@ -300,8 +313,9 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                         <div className="flex items-center justify-between gap-3">
                             {isEditing && onDelete ? (
                                 <button type="button" onClick={() => setShowDeleteConfirm(true)}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-sm font-black text-red-400 hover:bg-red-500/20 transition-all">
-                                    <Trash2 className="w-4 h-4" /> Eliminar
+                                    title="Archivar (reversible): deja de aparecer en la lista activa"
+                                    className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-brand-text/40 hover:text-amber-400 transition-colors">
+                                    <Archive className="w-3.5 h-3.5" /> Archivar profesional
                                 </button>
                             ) : <div />}
 
@@ -329,6 +343,8 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                     onClose={() => setUploadingReq(null)}
                     prefill={{
                         targetId: initialData.id,
+                        professionalId: initialData.id,
+                        folderId: 'd64a61bb-0e8a-4370-bfe5-97aac2b45220', // carpeta RRHH
                         requirementId: uploadingReq.id,
                         category: uploadingReq.category,
                         title: uploadingReq.label

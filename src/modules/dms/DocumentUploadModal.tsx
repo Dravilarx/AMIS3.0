@@ -18,6 +18,7 @@ import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import type { Document } from '../../types/communication';
 import { SmartCombobox } from '../../components/ui/SmartCombobox';
+import { useProfessionalsLite } from '../../hooks/useProfessionalsLite';
 
 interface DocumentUploadModalProps {
     onClose: () => void;
@@ -28,6 +29,8 @@ interface DocumentUploadModalProps {
         category?: Document['category'];
         requirementId?: string;
         title?: string;
+        professionalId?: string; // Vínculo a persona (professionals.id), p.ej. desde la ficha del profesional
+        folderId?: string;       // Carpeta destino (document_folders.id), p.ej. RRHH para el Expediente
     };
 }
 
@@ -40,9 +43,13 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
     const [targetId] = useState(prefill?.targetId || '');
     const [projectId, setProjectId] = useState('');
     const [taskId, setTaskId] = useState('');
+    const [professionalId, setProfessionalId] = useState(prefill?.professionalId || '');
     const [requirementId] = useState(prefill?.requirementId || '');
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Lista liviana de profesionales (activos e inactivos) para el vínculo a persona.
+    const { profesionales } = useProfessionalsLite();
 
     // Listas para selectores
     const [projects, setProjects] = useState<{ id: string, name: string }[]>([]);
@@ -95,6 +102,8 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
             targetId: targetId || undefined,
             projectId: projectId || undefined,
             taskId: taskId || undefined,
+            professionalId: professionalId || null,
+            folderId: prefill?.folderId || undefined,
             requirementId: requirementId || undefined,
             type: file.type.includes('image') ? 'image' :
                 file.type.includes('video') ? 'video' :
@@ -277,6 +286,24 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
 
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Vínculo a persona (professionals.id) — opcional, buscable por nombre */}
+                            <div className="space-y-1.5 pt-2">
+                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest flex items-center gap-1 ml-1">
+                                    <User className="w-3 h-3" /> Vincular a Persona
+                                </label>
+                                <SmartCombobox
+                                    options={[
+                                        { id: '', label: 'Ninguna (Opcional)' },
+                                        ...profesionales.map(p => ({ id: p.id, label: p.nombre, sublabel: p.activo ? undefined : 'Inactivo' })),
+                                    ]}
+                                    value={professionalId}
+                                    onChange={setProfessionalId}
+                                    placeholder="Buscar profesional por nombre..."
+                                    storageKey="dms.recentProfessionals"
+                                    className="!py-2.5 !border !border-brand-border !rounded-xl"
+                                />
                             </div>
                         </div>
                     </div>

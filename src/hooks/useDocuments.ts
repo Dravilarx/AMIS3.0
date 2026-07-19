@@ -76,6 +76,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                 targetId: d.target_id,
                 projectId: d.project_id,
                 taskId: d.task_id,
+                professionalId: d.professional_id,
                 requirementId: d.requirement_id,
                 isLocked: d.is_locked,
                 isValidated: d.is_validated,
@@ -154,6 +155,9 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     target_id: metadata.targetId,
                     project_id: metadata.projectId,
                     task_id: metadata.taskId,
+                    professional_id: metadata.professionalId || null,
+                    // folder_id opcional: si no viene, queda null (idéntico a hoy).
+                    folder_id: metadata.folderId || null,
                     requirement_id: metadata.requirementId,
                     is_locked: !!metadata.requirementId, // Bloqueo automático para acreditación
                     is_validated: aiValidation?.isValid || false,
@@ -268,6 +272,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
         expiryDate?: string | null;
         folderId?: string | null;
         notas?: string | null;
+        professionalId?: string | null;
     }) => {
         try {
             const payload: Record<string, any> = {};
@@ -277,6 +282,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
             if (updates.expiryDate !== undefined) payload.expiry_date = updates.expiryDate;
             if (updates.folderId !== undefined) payload.folder_id = updates.folderId;
             if (updates.notas !== undefined) payload.notas = updates.notas;
+            if (updates.professionalId !== undefined) payload.professional_id = updates.professionalId;
 
             const { error: updateError } = await supabase
                 .from('documents')
@@ -347,6 +353,7 @@ export const useDocuments = (_options?: { limit?: number }) => {
                     target_id: doc.targetId,
                     project_id: doc.projectId,
                     task_id: doc.taskId,
+                    professional_id: doc.professionalId || null,
                     status: 'draft',
                     requested_signers: doc.requestedSigners
                 }]);
