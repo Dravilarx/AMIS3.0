@@ -31,6 +31,7 @@ export const MODULES = [
     { id: 'secretary_command',    name: 'Torre de Control' },
     { id: 'radiology_worklist',   name: 'Worklist Radiológica' },
     { id: 'vital_medica',         name: 'Vital Médica' },
+    { id: 'rrhh_hoja_vida',       name: 'Hoja de Vida (RRHH)' },
 ] as const;
 
 // Las cuatro acciones por módulo (mismas claves que profiles.permissions).

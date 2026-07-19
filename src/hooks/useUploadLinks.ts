@@ -69,12 +69,16 @@ export const useUploadLinks = () => {
 
     // Único camino de creación: el RPC valida nivel<=2, formato del PIN (4-6
     // dígitos) y lo hashea con bcrypt server-side. Devuelve el token del link.
-    const crearBuzon = async (etiqueta: string, folderId: string, pin: string): Promise<Resultado & { token?: string }> => {
+    // remitente opcional → se guarda en upload_links.remitente_fijo. Pasamos
+    // SIEMPRE los 4 params nombrados para resolver el overload de 4 argumentos
+    // (existe también uno de 3; PostgREST desambigua por el set de argumentos).
+    const crearBuzon = async (etiqueta: string, folderId: string, pin: string, remitente?: string): Promise<Resultado & { token?: string }> => {
         try {
             const { data, error } = await supabase.rpc('fn_crear_buzon', {
                 p_etiqueta: etiqueta.trim(),
                 p_folder_id: folderId,
                 p_pin: pin,
+                p_remitente: remitente?.trim() || null,
             });
             if (error) throw error;
             await fetchLinks();

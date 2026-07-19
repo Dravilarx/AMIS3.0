@@ -32,6 +32,7 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
     const [mostrarForm, setMostrarForm] = useState(false);
     const [etiqueta, setEtiqueta] = useState('');
     const [folderId, setFolderId] = useState(folders[0]?.id || '');
+    const [remitente, setRemitente] = useState('');
     const [pin, setPin] = useState('');
     const [pinConfirm, setPinConfirm] = useState('');
     const [creando, setCreando] = useState(false);
@@ -48,6 +49,7 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
     const resetForm = () => {
         setEtiqueta('');
         setFolderId(folders[0]?.id || '');
+        setRemitente('');
         setPin('');
         setPinConfirm('');
     };
@@ -81,7 +83,7 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
         if (pin !== pinConfirm) { notify('Las claves no coinciden', false); return; }
 
         setCreando(true);
-        const res = await crearBuzon(etiqueta, folderId, pin);
+        const res = await crearBuzon(etiqueta, folderId, pin, remitente);
         setCreando(false);
 
         if (res.success && res.token) {
@@ -166,6 +168,12 @@ export const BuzonesAdminModal: React.FC<BuzonesAdminModalProps> = ({ folders, o
                                     {folders.length === 0 && <option value="">Sin carpetas disponibles</option>}
                                     {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                                 </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Nombre del remitente (opcional)</label>
+                                <input value={remitente} onChange={(e) => setRemitente(e.target.value)} maxLength={120} placeholder="Ej: Estudio Jurídico Pérez"
+                                    className="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-brand-text outline-none focus:border-brand-primary/40" />
+                                <p className="text-[9px] text-brand-text/30 font-bold ml-1">Si lo dejas vacío, se le pedirá el nombre a quien suba.</p>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">

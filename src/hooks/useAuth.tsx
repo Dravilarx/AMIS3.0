@@ -32,6 +32,7 @@ export interface UserPermissions {
     admin_access: boolean;
     secretary_command?: ModulePermission;
     vital_medica?: ModulePermission;
+    rrhh_hoja_vida?: ModulePermission;
 }
 
 interface User {

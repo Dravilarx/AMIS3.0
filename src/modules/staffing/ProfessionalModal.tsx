@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, GraduationCap, Layers, Loader2, FolderSearch, AlertOctagon, Trash2, UploadCloud } from 'lucide-react';
+import { X, GraduationCap, Layers, Loader2, FolderSearch, AlertOctagon, Trash2, UploadCloud, NotebookPen } from 'lucide-react';
 import { useBatteries } from '../dms/useBatteries';
 import { useDocuments } from '../../hooks/useDocuments';
 import { DocumentUploadModal } from '../dms/DocumentUploadModal';
 import { useHRManagers } from '../../hooks/useHRManagers';
+import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import type { Professional } from '../../types/core';
@@ -14,6 +15,7 @@ import { TabAcademico }   from './tabs/TabAcademico';
 import { TabContratos }   from './tabs/TabContratos';
 import { TabInduccion }   from './tabs/TabInduccion';
 import { TabExpediente }  from './tabs/TabExpediente';
+import { HojaVidaPanel }  from '../rrhh-hoja-vida/HojaVidaPanel';
 import type { TabId }     from './tabs/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -43,6 +45,11 @@ const emptyForm = (): Omit<Professional, 'id'> => ({
 export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
     isOpen, onClose, onSave, onDelete, initialData, existingProfessionals,
 }) => {
+    const { canPerform } = useAuth();
+    // Hoja de Vida (RRHH): solo con permiso rrhh_hoja_vida.read (SUPER_ADMIN lo cubre
+    // canPerform) y solo para profesionales ya existentes (persona_id = professionals.id).
+    const puedeVerHojaVida = canPerform('rrhh_hoja_vida' as any, 'read');
+
     const [formData, setFormData]               = useState<Omit<Professional, 'id'>>(emptyForm());
     const [activeTab, setActiveTab]             = useState<TabId>('info');
     const [isSubmitting, setIsSubmitting]       = useState(false);
@@ -154,6 +161,11 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
         { id: 'contracts',  label: 'Contratos',  icon: <Layers className="w-3.5 h-3.5" /> },
         { id: 'induction',  label: 'Inducción',  icon: <span className="text-xs">🛡️</span> },
         { id: 'expediente', label: 'Expediente', icon: <FolderSearch className="w-3.5 h-3.5" /> },
+        // Solo para profesionales existentes y con permiso: la hoja de vida es
+        // sobre alguien ya creado (necesita professionals.id).
+        ...(initialData?.id && puedeVerHojaVida
+            ? [{ id: 'hoja_vida' as TabId, label: 'Hoja de Vida', icon: <NotebookPen className="w-3.5 h-3.5" /> }]
+            : []),
     ];
 
     if (!isOpen) return null;
@@ -243,6 +255,10 @@ export const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
                                 batteryProgress={batteryProgress}
                                 onRequirementUpload={handleRequirementUpload}
                             />
+                        )}
+
+                        {activeTab === 'hoja_vida' && initialData?.id && puedeVerHojaVida && (
+                            <HojaVidaPanel personaId={initialData.id} />
                         )}
                     </div>
 

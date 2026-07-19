@@ -85,6 +85,8 @@ export const BuzonPublicoPage: React.FC = () => {
     const [paso, setPaso] = useState<Paso>('pin');
     const [pin, setPin] = useState('');
     const [etiqueta, setEtiqueta] = useState('');
+    // Si el buzón define un remitente fijo, no se pide "Tu nombre": se usa este.
+    const [remitenteFijo, setRemitenteFijo] = useState<string | null>(null);
     const [validando, setValidando] = useState(false);
     const [errorPin, setErrorPin] = useState<string | null>(null);
 
@@ -114,8 +116,11 @@ export const BuzonPublicoPage: React.FC = () => {
                 body: JSON.stringify({ action: 'validar', token, pin }),
             });
             const data = await res.json().catch(() => ({ ok: false, motivo: 'No se pudo validar la clave.' }));
-            if (data.ok) { setEtiqueta(data.etiqueta || ''); setPaso('form'); }
-            else setErrorPin(data.motivo || 'Clave incorrecta.');
+            if (data.ok) {
+                setEtiqueta(data.etiqueta || '');
+                setRemitenteFijo(typeof data.remitenteFijo === 'string' && data.remitenteFijo.trim() ? data.remitenteFijo.trim() : null);
+                setPaso('form');
+            } else setErrorPin(data.motivo || 'Clave incorrecta.');
         } catch {
             setErrorPin('No se pudo conectar. Revisa tu conexión e intenta de nuevo.');
         } finally {
@@ -163,9 +168,12 @@ export const BuzonPublicoPage: React.FC = () => {
         return okList;
     };
 
+    // Nombre efectivo: el fijo del buzón (si existe) o el que escribió el remitente.
+    const nombreEfectivo = (remitenteFijo || nombre).trim();
+
     const handleEnviar = async () => {
-        if (!nombre.trim()) { setErrorEnvio('Ingresa tu nombre.'); return; }
-        if (!nota.trim()) { setErrorEnvio('Describe brevemente los documentos.'); return; }
+        if (!nombreEfectivo) { setErrorEnvio('Ingresa tu nombre.'); return; }
+        // La descripción es OPCIONAL: puede ir vacía.
 
         // Lote = todo lo que aún no está 'ok'. Al reintentar desde el resumen se
         // vuelve al formulario con los fallidos en estado 'error', y esta misma
@@ -201,7 +209,7 @@ export const BuzonPublicoPage: React.FC = () => {
                 const conf = await fetch(EDGE_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-                    body: JSON.stringify({ action: 'confirmar', token, pin, envios: enviosConfirmar, nombre: nombre.trim(), nota: nota.trim() }),
+                    body: JSON.stringify({ action: 'confirmar', token, pin, envios: enviosConfirmar, nombre: nombreEfectivo, nota: nota.trim() }),
                 });
                 const confData = await conf.json().catch(() => ({ ok: false }));
                 const registrados = confData.ok ? (confData.registrados || 0) : 0;
@@ -267,16 +275,19 @@ export const BuzonPublicoPage: React.FC = () => {
                                 {etiqueta && <p className="text-xs text-brand-text/40">{etiqueta}</p>}
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Tu nombre</label>
-                                <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={120}
-                                    placeholder="Ej: Juan Pérez"
-                                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text outline-none focus:border-brand-primary/50" />
-                            </div>
+                            {/* "Tu nombre" solo si el buzón no trae un remitente fijo. */}
+                            {!remitenteFijo && (
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest ml-1">Tu nombre</label>
+                                    <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={120}
+                                        placeholder="Ej: Juan Pérez"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-sm text-brand-text outline-none focus:border-brand-primary/50" />
+                                </div>
+                            )}
 
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between ml-1">
-                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Descripción breve</label>
+                                    <label className="text-[10px] text-brand-text/40 uppercase font-black tracking-widest">Descripción breve (opcional)</label>
                                     <span className="text-[9px] text-brand-text/20">{nota.length}/500</span>
                                 </div>
                                 <textarea value={nota} onChange={(e) => setNota(e.target.value.slice(0, 500))} rows={2}
@@ -303,7 +314,7 @@ export const BuzonPublicoPage: React.FC = () => {
                                         <input ref={fileInputRef} type="file" multiple accept={ACCEPT_ATTR} className="hidden"
                                             onChange={(e) => { if (e.target.files?.length) agregarArchivos(e.target.files); e.target.value = ''; }} />
                                         <p className="text-xs font-bold text-brand-text/50">Toca para elegir o arrastra aquí</p>
-                                        <p className="text-[10px] text-brand-text/25">PDF, Word, Excel, fotos o videos · máx. 200MB c/u</p>
+                                        <p className="text-[10px] text-brand-text/25">Puedes enviar hasta {MAX_ARCHIVOS} archivos · PDF, Word, Excel, fotos o videos · máx. 200MB cada uno</p>
                                     </div>
                                 )}
 

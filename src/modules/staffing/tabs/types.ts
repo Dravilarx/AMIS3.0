@@ -1,6 +1,6 @@
 import type { Professional, HoldingCompany } from '../../../types/core';
 
-export type TabId = 'info' | 'academic' | 'contracts' | 'expediente' | 'induction';
+export type TabId = 'info' | 'academic' | 'contracts' | 'expediente' | 'induction' | 'hoja_vida';
 
 export const EMPLOYMENT_RELATIONSHIPS = [
     'Contrato indefinido',

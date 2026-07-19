@@ -56,7 +56,7 @@ function tituloDesdeArchivo(filename: string): string {
   return limpio || 'Documento recibido por buzon';
 }
 
-type BuzonInfo = { id: string; etiqueta: string; folderId: string; folderSlug: string; uploadsCount: number };
+type BuzonInfo = { id: string; etiqueta: string; folderId: string; folderSlug: string; uploadsCount: number; remitenteFijo: string | null };
 type ResultadoPin =
   | { estado: 'ok'; buzon: BuzonInfo }
   | { estado: 'invalido' }
@@ -70,7 +70,7 @@ async function verificarBuzonYPin(
 ): Promise<ResultadoPin> {
   const { data: buzon, error } = await supabase
     .from('upload_links')
-    .select('id, etiqueta, folder_id, pin_hash, activo, intentos_fallidos, bloqueado_hasta, revoked_at, uploads_count, document_folders(name)')
+    .select('id, etiqueta, folder_id, pin_hash, activo, intentos_fallidos, bloqueado_hasta, revoked_at, uploads_count, remitente_fijo, document_folders(name)')
     .eq('token', token)
     .maybeSingle();
 
@@ -118,6 +118,7 @@ async function verificarBuzonYPin(
       folderId: buzon.folder_id as string,
       folderSlug: slugify(folderNombre || 'buzon'),
       uploadsCount: (buzon.uploads_count as number) || 0,
+      remitenteFijo: (buzon.remitente_fijo as string | null) || null,
     },
   };
 }
@@ -135,7 +136,7 @@ async function handleValidar(supabase: ReturnType<typeof createClient>, body: an
 
   const r = await verificarBuzonYPin(supabase, token, pin);
   if (r.estado !== 'ok') return json({ ok: false, motivo: MOTIVO_POR_ESTADO[r.estado] });
-  return json({ ok: true, etiqueta: r.buzon.etiqueta });
+  return json({ ok: true, etiqueta: r.buzon.etiqueta, remitenteFijo: r.buzon.remitenteFijo });
 }
 
 async function handlePreparar(supabase: ReturnType<typeof createClient>, body: any) {
@@ -191,7 +192,7 @@ async function handleConfirmar(supabase: ReturnType<typeof createClient>, body: 
 
   if (!token || !PIN_REGEX.test(pin)) return json({ ok: false, motivo: MOTIVO_POR_ESTADO.invalido });
   if (!nombre) return json({ ok: false, motivo: 'Falta tu nombre.' });
-  if (!nota) return json({ ok: false, motivo: 'Falta la descripcion del documento.' });
+  // La descripcion (nota) es OPCIONAL: puede venir vacia.
   if (!envios || envios.length === 0) return json({ ok: false, motivo: 'No hay archivos para registrar.' });
   if (envios.length > MAX_ARCHIVOS_LOTE) return json({ ok: false, motivo: `Maximo ${MAX_ARCHIVOS_LOTE} archivos por envio.` });
 
@@ -231,6 +232,8 @@ async function handleConfirmar(supabase: ReturnType<typeof createClient>, body: 
     }
 
     const titulo = tituloDesdeArchivo(envio.nombre_original || nombreObjeto);
+    // Nota opcional: si viene vacia, solo "Enviado por {nombre}" (sin el "· ").
+    const notasDoc = nota ? `Enviado por ${nombre} · ${nota}` : `Enviado por ${nombre}`;
     const { data: doc, error: docErr } = await supabase
       .from('documents')
       .insert({
@@ -239,7 +242,7 @@ async function handleConfirmar(supabase: ReturnType<typeof createClient>, body: 
         folder_id: buzon.folderId,
         visibility: 'interna',
         created_by: null,
-        notas: `Enviado por ${nombre} · ${nota}`,
+        notas: notasDoc,
         category: 'other',
         status: 'draft',
       })
