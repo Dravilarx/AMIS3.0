@@ -9,6 +9,7 @@ import { ProcedureHomologation } from './ProcedureHomologation';
 import { CriticalPathologies } from './CriticalPathologies';
 import { CreateInternalUserModal } from './CreateInternalUserModal';
 import { CargosManager } from './CargosManager';
+import { BulkOnboardPanel } from './BulkOnboardPanel';
 import { MODULES } from './permissionModules';
 
 // Etiquetas de roles de aplicación no jerárquicos. Los 5 roles con nivel se
@@ -26,9 +27,10 @@ const roleLabel = (role?: string | null): string =>
 
 export const AdminModule: React.FC = () => {
     const { profiles, updateProfile, deleteProfile, createProfile } = useAdminProfiles();
-    const { user: _currentUser } = useAuth();
+    const { user: _currentUser, isSuperAdmin } = useAuth();
+    const puedeAltaMasiva = isSuperAdmin();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'internal' | 'cargos' | 'b2b' | 'homologation' | 'alertas'>('internal');
+    const [activeTab, setActiveTab] = useState<'internal' | 'cargos' | 'b2b' | 'homologation' | 'alertas' | 'bulk'>('internal');
 
     const [showB2BModal, setShowB2BModal] = useState(false);
     const [showInternalModal, setShowInternalModal] = useState(false);
@@ -182,6 +184,14 @@ export const AdminModule: React.FC = () => {
                 >
                     Matriz de Alertas Rojas
                 </button>
+                {puedeAltaMasiva && (
+                  <button
+                    onClick={() => setActiveTab('bulk')}
+                    className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'bulk' ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80')}
+                  >
+                    Alta Masiva de Cuentas
+                  </button>
+                )}
             </div>
 
             {activeTab === 'internal' ? (
@@ -397,6 +407,8 @@ export const AdminModule: React.FC = () => {
                 <ClinicOnboarding isAddModalOpen={showB2BModal} onCloseModal={() => setShowB2BModal(false)} />
             ) : activeTab === 'homologation' ? (
                 <ProcedureHomologation />
+            ) : activeTab === 'bulk' ? (
+                puedeAltaMasiva ? <BulkOnboardPanel /> : <CriticalPathologies />
             ) : (
                 <CriticalPathologies />
             )}
