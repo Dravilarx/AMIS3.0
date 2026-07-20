@@ -33,6 +33,7 @@ const DispatchCenter         = lazy(() => import('./modules/dispatch/DispatchCen
 const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickViewBridge').then(m => ({ default: m.QuickViewBridge })));
 const BuzonPublicoPage       = lazy(() => import('./modules/buzon-externo/BuzonPublicoPage').then(m => ({ default: m.BuzonPublicoPage })));
 const AsistenteMedicoPage    = lazy(() => import('./modules/asistente-medico/AsistenteMedicoPage').then(m => ({ default: m.AsistenteMedicoPage })));
+const ValidadoresPanel       = lazy(() => import('./modules/validadores/ValidadoresPanel').then(m => ({ default: m.ValidadoresPanel })));
 // Feature "dictado por micrófono móvil" retirado (descartado, no se construirá). MobileMicView.tsx
 // queda en el repo sin conectar, por si se reactiva de forma segura más adelante. No borrar el archivo.
 // const MobileMicView          = lazy(() => import('./modules/remote-mic/MobileMicView').then(m => ({ default: m.MobileMicView })));
@@ -88,7 +89,7 @@ type CurrentView =
     | 'admin' | 'institutions' | 'news' | 'stat_multiris' | 'stat_multiris_html'
     | 'ai_knowledge' | 'ai_access' | 'dispatch' | 'b2b_portal' | 'secretary_command'
     | 'radiology_worklist' | 'wizard_competencias' | 'resumen_competencias' | 'auditoria_rrhh'
-    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas' | 'vital_medica';
+    | 'portal_medicos_admin' | 'cuarto_turno' | 'dashboard_cuarto_turno' | 'solicitudes' | 'protocolos' | 'portal_institucional' | 'asistente' | 'permisos_carpetas' | 'vital_medica' | 'validadores';
 
 // Vistas gateadas por permissions[modulo].read: exactamente las del menú lateral
 // (NAV_ITEMS ya es la fuente única que usa Layout.tsx para filtrar el sidebar).
@@ -226,7 +227,7 @@ function App() {
         switch (currentView) {
             case 'dashboard':           return <DashboardModule />;
             case 'tenders':             return <TenderDashboard />;
-            case 'staffing':            return <ProfessionalMatrix />;
+            case 'staffing':            return <ProfessionalMatrix onNavigate={setCurrentView} />;
             case 'logistics':           return <ExpenseTracker />;
             case 'clinical':            return <ClinicalWorkflowView />;
             case 'audit':               return <AuditorDashboard />;
@@ -254,6 +255,10 @@ function App() {
             case 'permisos_carpetas':
                 // Pantalla de permisos de carpetas: solo Dirección (nivel 1).
                 if (getLevelForRole(user?.role) <= 1) return <FolderPermissionsManager />;
+                return <DashboardModule />;
+            case 'validadores':
+                // Gestión de radiólogos validadores: solo Dirección (nivel 1).
+                if (getLevelForRole(user?.role) <= 1) return <ValidadoresPanel onNavigate={setCurrentView} />;
                 return <DashboardModule />;
             case 'b2b_portal':          return <B2BPortal />;
             case 'wizard_competencias': return <WizardCompetencias />;

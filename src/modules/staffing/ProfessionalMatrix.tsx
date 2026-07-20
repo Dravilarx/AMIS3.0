@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2, ArchiveRestore, Archive } from 'lucide-react';
+import { MapPin, Briefcase, GraduationCap, Search, Plus, Filter, LayoutGrid, List, Loader2, Upload, Users, ChevronDown, ChevronUp, X, CheckSquare, Square, ToggleLeft, ToggleRight, Trash2, ArrowUpDown, CheckCircle2, ArchiveRestore, Archive, BadgeCheck } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCapacityPlanning } from './useCapacityPlanning';
 import { useProfessionals, validateRUT } from '../../hooks/useProfessionals';
+import { useAuth } from '../../hooks/useAuth';
+import { getLevelForRole } from '../../lib/accessLevels';
 import type { Professional } from '../../types/core';
 
 import { useTenders } from '../../hooks/useTenders';
@@ -15,7 +17,14 @@ const CURRENT_SEDE_CITY = 'Santiago';
 type SortField = 'name' | 'lastName' | 'role' | 'team' | 'city' | 'status';
 type SortDir = 'asc' | 'desc';
 
-export const ProfessionalMatrix: React.FC = () => {
+interface ProfessionalMatrixProps {
+    // Navegación a sub-vistas de RR.HH. (ej. panel de Radiólogos Validadores).
+    onNavigate?: (view: 'validadores') => void;
+}
+
+export const ProfessionalMatrix: React.FC<ProfessionalMatrixProps> = ({ onNavigate }) => {
+    const { user } = useAuth();
+    const esDireccion = getLevelForRole(user?.role) <= 1; // solo Dirección marca validadores
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -330,6 +339,16 @@ export const ProfessionalMatrix: React.FC = () => {
                                 </span>
                             )}
                         </button>
+                        {esDireccion && onNavigate && (
+                            <button
+                                onClick={() => onNavigate('validadores')}
+                                title="Marcar qué radiólogos son validadores"
+                                className="flex items-center gap-2 px-4 py-2 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/15 rounded-lg transition-all font-medium text-sm"
+                            >
+                                <BadgeCheck className="w-4 h-4" />
+                                <span>Radiólogos Validadores</span>
+                            </button>
+                        )}
                         <button
                             onClick={() => setIsBulkOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-brand-surface border border-brand-border hover:border-brand-text/20 rounded-lg transition-all font-medium text-sm text-brand-text/60"
