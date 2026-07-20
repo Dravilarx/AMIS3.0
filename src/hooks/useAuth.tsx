@@ -46,6 +46,7 @@ interface User {
     clinical_role?: string;
     last_name?: string;
     supervisor_id?: string;
+    mustChangePassword?: boolean; // profiles.must_change_password — fuerza cambio de clave al primer ingreso
 }
 
 interface AuthContextType {
@@ -57,6 +58,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     isRecoveringPassword: boolean;
     setRecoveringPassword: (value: boolean) => void;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -125,7 +127,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 permissions: profilePerms,
                 clinical_role: profile?.clinical_role,
                 last_name: profile?.last_name,
-                supervisor_id: profile?.supervisor_id
+                supervisor_id: profile?.supervisor_id,
+                mustChangePassword: profile?.must_change_password === true,
             });
         } catch (err) {
             console.error('Error fetching profile:', err);
@@ -176,8 +179,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    // Re-lee el perfil del usuario actual (p.ej. tras cambiar la clave, para que
+    // must_change_password pase a false y se levante el candado).
+    const refreshProfile = async () => {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) await fetchUserProfile(authUser);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, hasModuleAccess, canPerform, isSuperAdmin, signOut, isRecoveringPassword, setRecoveringPassword }}>
+        <AuthContext.Provider value={{ user, loading, hasModuleAccess, canPerform, isSuperAdmin, signOut, isRecoveringPassword, setRecoveringPassword, refreshProfile }}>
             {!loading && children}
         </AuthContext.Provider>
     );

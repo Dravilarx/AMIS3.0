@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Layout, NAV_ITEMS } from './components/Layout'
 import { AuthView } from './components/AuthView'
+import { ForcePasswordChange } from './components/ForcePasswordChange'
 import { useAuth } from './hooks/useAuth'
 import { getLevelForRole } from './lib/accessLevels'
 
@@ -195,6 +196,12 @@ function App() {
     }
 
     if (!user) return <AuthView />;
+
+    // Candado de primer ingreso: cuentas nuevas (must_change_password=true) deben
+    // cambiar su clave ANTES de usar la app. Bloquea todo (menú, navegación, URLs
+    // de módulo) hasta lograrlo o cerrar sesión. Las cuentas existentes (marca en
+    // false) no la ven y entran normal.
+    if (user.mustChangePassword) return <ForcePasswordChange />;
 
     const renderView = () => {
         // Guard genérico: antes de renderizar, verifica hasModuleAccess(currentView)

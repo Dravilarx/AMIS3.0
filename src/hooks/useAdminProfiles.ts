@@ -158,6 +158,7 @@ export const useAdminProfiles = () => {
                 full_name:  fullName,
                 role,
                 is_deleted: false,
+                must_change_password: true, // Alta NUEVA: se fuerza el cambio de clave al primer ingreso.
             };
             if (permissions) baseProfile.permissions = permissions;
 
