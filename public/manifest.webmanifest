@@ -1,0 +1,26 @@
+{
+  "name": "Asistente AMIS",
+  "short_name": "Asistente AMIS",
+  "description": "Consultas al centro para médicos e instituciones — AMIS 3.0",
+  "id": "/m/",
+  "scope": "/m/",
+  "start_url": "/m/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f9f8",
+  "theme_color": "#3db3a0",
+  "icons": [
+    {
+      "src": "/amis-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/amis-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

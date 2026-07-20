@@ -32,6 +32,7 @@ const AiAccessManager        = lazy(() => import('./modules/ai-access/AiAccessMa
 const DispatchCenter         = lazy(() => import('./modules/dispatch/DispatchCenter').then(m => ({ default: m.DispatchCenter })));
 const QuickViewBridge        = lazy(() => import('./modules/quick-view/QuickViewBridge').then(m => ({ default: m.QuickViewBridge })));
 const BuzonPublicoPage       = lazy(() => import('./modules/buzon-externo/BuzonPublicoPage').then(m => ({ default: m.BuzonPublicoPage })));
+const AsistenteMedicoPage    = lazy(() => import('./modules/asistente-medico/AsistenteMedicoPage').then(m => ({ default: m.AsistenteMedicoPage })));
 // Feature "dictado por micrófono móvil" retirado (descartado, no se construirá). MobileMicView.tsx
 // queda en el repo sin conectar, por si se reactiva de forma segura más adelante. No borrar el archivo.
 // const MobileMicView          = lazy(() => import('./modules/remote-mic/MobileMicView').then(m => ({ default: m.MobileMicView })));
@@ -191,6 +192,17 @@ function App() {
         return (
             <Suspense fallback={<ModuleLoader />}>
                 <BuzonPublicoPage />
+            </Suspense>
+        );
+    }
+
+    // Asistente AMIS (/m/:token) — PWA del médico/institución externa, SIN sesión
+    // de AMIS. Igual que el Buzón, se evalúa ANTES del gate de login: la usan
+    // externos que nunca tuvieron una cuenta de AMIS.
+    if (window.location.pathname.startsWith('/m/')) {
+        return (
+            <Suspense fallback={<ModuleLoader />}>
+                <AsistenteMedicoPage />
             </Suspense>
         );
     }

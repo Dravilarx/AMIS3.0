@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Asistente AMIS">
+  <!-- Fondo full-bleed (compatible maskable): color de marca AMIS -->
+  <rect width="512" height="512" fill="#3db3a0"/>
+  <!-- Contenido dentro de la zona segura (centro ~80%) -->
+  <g fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Letra A estilizada -->
+    <path d="M176 356 L256 156 L336 356"/>
+    <path d="M206 296 L306 296"/>
+  </g>
+  <!-- Punto acento cobre -->
+  <circle cx="256" cy="392" r="20" fill="#d98850"/>
+</svg>
