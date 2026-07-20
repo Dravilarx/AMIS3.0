@@ -16,6 +16,23 @@ export const ForcePasswordChange: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Traduce el error crudo de updateUser a un mensaje accionable en español.
+    // Supabase rechaza claves débiles/filtradas (leaked password protection) con
+    // textos en inglés que confunden ("weak", "pwned", "compromised"...).
+    const mensajeErrorClave = (err: any): string => {
+        const raw = (err?.message || '').toLowerCase();
+        const esDebil =
+            raw.includes('weak') ||
+            raw.includes('pwned') ||
+            raw.includes('compromised') ||
+            raw.includes('leaked') ||
+            (raw.includes('password') && (raw.includes('easy') || raw.includes('common') || raw.includes('short')));
+        if (esDebil) {
+            return 'Esa contraseña es demasiado débil o común y el sistema la rechazó. Prueba con una más difícil de adivinar: combina mayúsculas, minúsculas y números, y evita palabras o secuencias obvias.';
+        }
+        return 'No se pudo actualizar la contraseña. Inténtalo de nuevo; si el problema sigue, avisa a soporte.';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (nueva.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
@@ -24,9 +41,14 @@ export const ForcePasswordChange: React.FC = () => {
         setSaving(true);
         setError(null);
         try {
-            // (a) cambiar la clave
+            // (a) cambiar la clave. Aquí es donde Supabase rechaza claves débiles.
             const { error: updErr } = await supabase.auth.updateUser({ password: nueva });
-            if (updErr) throw updErr;
+            if (updErr) {
+                console.error('Error en cambio forzado de contraseña (updateUser):', updErr);
+                setError(mensajeErrorClave(updErr));
+                setSaving(false); // libera el botón para reintentar con otra clave
+                return;           // el candado se mantiene (no se llamó al rpc)
+            }
 
             // (b) apagar la marca (RPC SECURITY DEFINER sobre el usuario actual)
             const { error: rpcErr } = await supabase.rpc('marcar_clave_cambiada');
@@ -38,7 +60,7 @@ export const ForcePasswordChange: React.FC = () => {
             await refreshProfile();
         } catch (err: any) {
             console.error('Error en cambio forzado de contraseña:', err);
-            setError(err?.message || 'No se pudo cambiar la contraseña. Intenta nuevamente.');
+            setError('No se pudo actualizar la contraseña. Inténtalo de nuevo; si el problema sigue, avisa a soporte.');
             setSaving(false);
         }
     };
@@ -63,6 +85,10 @@ export const ForcePasswordChange: React.FC = () => {
                             </p>
                         </div>
                     </div>
+
+                    <p className="text-[11px] leading-relaxed text-brand-text/50 bg-brand-bg/60 border border-brand-border rounded-xl px-3 py-2.5">
+                        Elige una contraseña nueva que recuerdes: mínimo 8 caracteres, mezcla letras y números. Evita claves obvias o fáciles de adivinar (como 12345678 o tu nombre), porque el sistema las rechaza por seguridad.
+                    </p>
 
                     <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-brand-text/40 uppercase tracking-widest ml-1">Nueva contraseña</label>
