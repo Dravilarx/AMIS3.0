@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Send, Inbox, UserPlus } from 'lucide-react';
+import { Send, Inbox, UserPlus, Stethoscope } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAsistente } from './useAsistente';
 import { useBandeja } from './useBandeja';
+import { useMiBandeja } from './useMiBandeja';
 import { BandejaPanel } from './BandejaPanel';
+import { MiBandejaPanel } from './MiBandejaPanel';
 import { InvitacionesPanel } from './InvitacionesPanel';
 
-type Tab = 'bandeja' | 'invitaciones';
+type Tab = 'bandeja' | 'mi_bandeja' | 'invitaciones';
 
 export const AsistenteDashboard: React.FC = () => {
     const [tab, setTab] = useState<Tab>('bandeja');
@@ -16,10 +18,20 @@ export const AsistenteDashboard: React.FC = () => {
     const { institutions } = useAsistente();
     const { mensajes, loading, error, tomarMensaje, responderMensaje, cerrarMensaje, reabrirMensaje } = useBandeja();
 
+    // "Mi bandeja" (radiólogo): vista FILTRADA. Solo elegible si el perfil tiene
+    // professional_id. No altera la bandeja de secretaria (torre de control).
+    const miBandeja = useMiBandeja();
+
     // Cuenta 'nuevo' + 'reabierto': ambos se comportan como pendientes de atención.
     const nuevosCount = useMemo(
         () => mensajes.filter(m => m.estado === 'nuevo' || m.estado === 'reabierto').length,
         [mensajes]
+    );
+
+    // Contador de "Asignados a mí" pendientes (nuevo/tomado/reabierto).
+    const misPendientesCount = useMemo(
+        () => miBandeja.asignados.filter(m => m.estado === 'nuevo' || m.estado === 'tomado' || m.estado === 'reabierto').length,
+        [miBandeja.asignados]
     );
 
     return (
@@ -53,6 +65,23 @@ export const AsistenteDashboard: React.FC = () => {
                         </span>
                     )}
                 </button>
+                {/* Mi bandeja (radiólogo): solo si el perfil tiene ficha profesional vinculada. */}
+                {miBandeja.elegible && (
+                    <button
+                        onClick={() => setTab('mi_bandeja')}
+                        className={cn(
+                            'flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                            tab === 'mi_bandeja' ? 'bg-brand-bg text-brand-text shadow-sm' : 'text-brand-text/40 hover:text-brand-text/80'
+                        )}
+                    >
+                        <Stethoscope className="w-3.5 h-3.5" /> Mi bandeja
+                        {misPendientesCount > 0 && (
+                            <span className="flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 bg-danger text-white text-[9px] font-black rounded-full">
+                                {misPendientesCount > 99 ? '99+' : misPendientesCount}
+                            </span>
+                        )}
+                    </button>
+                )}
                 <button
                     onClick={() => setTab('invitaciones')}
                     className={cn(
@@ -74,6 +103,17 @@ export const AsistenteDashboard: React.FC = () => {
                     onResponder={responderMensaje}
                     onCerrar={cerrarMensaje}
                     onReabrir={reabrirMensaje}
+                />
+            ) : tab === 'mi_bandeja' ? (
+                <MiBandejaPanel
+                    asignados={miBandeja.asignados}
+                    filaGeneral={miBandeja.filaGeneral}
+                    loading={miBandeja.loading}
+                    error={miBandeja.error}
+                    onTomar={miBandeja.tomarCaso}
+                    onResponder={miBandeja.responderCaso}
+                    onCerrar={miBandeja.cerrarCaso}
+                    onReabrir={miBandeja.reabrirCaso}
                 />
             ) : (
                 <InvitacionesPanel />
