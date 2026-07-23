@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Inbox, AlertTriangle, Stethoscope, Building2, Hash, Loader2, Send,
     CheckCircle2, RotateCcw, UserCheck, MessageSquare, X, Layers, Users,
@@ -12,6 +12,7 @@ interface MiBandejaPanelProps {
     filaGeneral: MensajeRow[];
     loading: boolean;
     error: string | null;
+    initialCasoId?: string | null; // caso a preseleccionar (llega desde la campana / ref_id)
     onTomar: (id: string) => Promise<{ success: boolean; otroUsuario?: boolean; error?: string }>;
     onResponder: (id: string, texto: string) => Promise<{ success: boolean; error?: string }>;
     onCerrar: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -80,10 +81,16 @@ const CasoCard: React.FC<{ m: MensajeRow; selected: boolean; onClick: () => void
 );
 
 export const MiBandejaPanel: React.FC<MiBandejaPanelProps> = ({
-    asignados, filaGeneral, loading, error, onTomar, onResponder, onCerrar, onReabrir,
+    asignados, filaGeneral, loading, error, initialCasoId, onTomar, onResponder, onCerrar, onReabrir,
 }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [respuestaTexto, setRespuestaTexto] = useState('');
+
+    // Preselección desde la campana (ref_id de la notificación). Se aplica cuando
+    // cambia initialCasoId; el caso aparecerá al cargar "Asignados a mí".
+    useEffect(() => {
+        if (initialCasoId) { setSelectedId(initialCasoId); setRespuestaTexto(''); }
+    }, [initialCasoId]);
     const [actionLoading, setActionLoading] = useState(false);
     const [notice, setNotice] = useState<{ msg: string; ok: boolean } | null>(null);
 

@@ -23,6 +23,14 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onNavigate }
     const handleClickNotif = async (n: Notificacion) => {
         if (!n.leida) await markAsRead(n.id);
         setOpen(false);
+        // Solo para el módulo Asistente: deja una "intención" para que el dashboard
+        // abra la pestaña "Mi bandeja" (y, si puede, el caso de ref_id). No altera
+        // el comportamiento para el resto de módulos (siguen con onNavigate(modulo)).
+        if (n.modulo === 'asistente') {
+            const intent = { tab: 'mi_bandeja', casoId: n.refId };
+            try { sessionStorage.setItem('asistente:intent', JSON.stringify(intent)); } catch { /* noop */ }
+            window.dispatchEvent(new CustomEvent('asistente:intent', { detail: intent }));
+        }
         if (n.modulo) onNavigate(n.modulo);
     };
 
