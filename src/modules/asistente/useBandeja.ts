@@ -24,6 +24,7 @@ export interface MensajeRow {
     tipo: TipoMensaje;
     referenciaPaciente: string | null;
     radiologoCaso: string | null;
+    radiologoSugerido: string | null;
     dirigidoA: string | null;
     urgente: boolean;
     texto: string;
@@ -87,7 +88,7 @@ export const useBandeja = () => {
                 .from('comm_mensajes')
                 .select(`
                     id, tenant_id, institution_id, origen, direccion, external_doctor_id, tipo,
-                    referencia_paciente, radiologo_caso, dirigido_a, urgente, texto, estado,
+                    referencia_paciente, radiologo_caso, radiologo_sugerido, dirigido_a, urgente, texto, estado,
                     tomado_por, tomado_at, creado_at, actualizado_at,
                     medico:external_doctors(name, last_name, specialty, hospital_name),
                     centro:institutions(legal_name, commercial_name),
@@ -125,6 +126,7 @@ export const useBandeja = () => {
                 tipo: r.tipo,
                 referenciaPaciente: r.referencia_paciente,
                 radiologoCaso: r.radiologo_caso,
+                radiologoSugerido: r.radiologo_sugerido,
                 dirigidoA: r.dirigido_a,
                 urgente: r.urgente,
                 texto: r.texto,
@@ -296,6 +298,54 @@ export const useBandeja = () => {
     const cerrarMensaje = (id: string) => cambiarEstado(id, 'cerrado', 'mensaje_cerrado');
     const reabrirMensaje = (id: string) => cambiarEstado(id, 'reabierto', 'mensaje_reabierto');
 
+    // ── Asignación de radiólogo (torre de control de la secretaria) ────────────
+    // Helper genérico: escribe un campo de asignación, registra evento y refresca.
+    // NUNCA toca el estado del caso: la secretaria conserva el control y puede
+    // seguir respondiendo aunque haya "pasado la pelota".
+    const asignarCampo = async (
+        id: string,
+        campo: 'radiologo_caso' | 'radiologo_sugerido',
+        radiologoId: string | null,
+        tipoEvento: string,
+    ) => {
+        try {
+            const { data: msg, error: updErr } = await supabase
+                .from('comm_mensajes')
+                .update({ [campo]: radiologoId, actualizado_at: new Date().toISOString() })
+                .eq('id', id)
+                .select('tenant_id')
+                .single();
+            if (updErr) throw updErr;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.from('comm_eventos').insert({
+                tenant_id: msg.tenant_id,
+                mensaje_id: id,
+                tipo: tipoEvento,
+                actor: user?.id ?? null,
+                payload: { campo, radiologo: radiologoId },
+            });
+
+            await fetchMensajes();
+            return { success: true };
+        } catch (err: any) {
+            console.error(`Error en asignación (${tipoEvento}):`, err);
+            return { success: false, error: err.message || 'No se pudo actualizar la asignación' };
+        }
+    };
+
+    // Sugerir un radiólogo como referencia (la secretaria sigue a cargo).
+    const sugerirRadiologo = (id: string, radiologoId: string) =>
+        asignarCampo(id, 'radiologo_sugerido', radiologoId, 'radiologo_sugerido');
+    // Pasar la pelota: el radiólogo queda como responsable (aparece en su bandeja).
+    const pasarPelota = (id: string, radiologoId: string) =>
+        asignarCampo(id, 'radiologo_caso', radiologoId, 'pelota_pasada');
+    // Quitar sugerido / responsable (vuelve a la secretaria).
+    const quitarSugerido = (id: string) =>
+        asignarCampo(id, 'radiologo_sugerido', null, 'asignacion_quitada');
+    const quitarResponsable = (id: string) =>
+        asignarCampo(id, 'radiologo_caso', null, 'asignacion_quitada');
+
     return {
         mensajes,
         loading,
@@ -304,6 +354,10 @@ export const useBandeja = () => {
         responderMensaje,
         cerrarMensaje,
         reabrirMensaje,
+        sugerirRadiologo,
+        pasarPelota,
+        quitarSugerido,
+        quitarResponsable,
         refresh: fetchMensajes,
     };
 };

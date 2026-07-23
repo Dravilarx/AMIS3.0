@@ -16,7 +16,10 @@ export const AsistenteDashboard: React.FC = () => {
     // Se levantan una sola vez acá y se pasan a los paneles como props, para
     // no duplicar fetch/realtime/polling al cambiar de tab.
     const { institutions } = useAsistente();
-    const { mensajes, loading, error, tomarMensaje, responderMensaje, cerrarMensaje, reabrirMensaje } = useBandeja();
+    const {
+        mensajes, loading, error, tomarMensaje, responderMensaje, cerrarMensaje, reabrirMensaje,
+        sugerirRadiologo, pasarPelota, quitarSugerido, quitarResponsable,
+    } = useBandeja();
 
     // "Mi bandeja" (radiólogo): vista FILTRADA. Solo elegible si el perfil tiene
     // professional_id. No altera la bandeja de secretaria (torre de control).
@@ -103,6 +106,10 @@ export const AsistenteDashboard: React.FC = () => {
                     onResponder={responderMensaje}
                     onCerrar={cerrarMensaje}
                     onReabrir={reabrirMensaje}
+                    onSugerir={sugerirRadiologo}
+                    onPasarPelota={pasarPelota}
+                    onQuitarSugerido={quitarSugerido}
+                    onQuitarResponsable={quitarResponsable}
                 />
             ) : tab === 'mi_bandeja' ? (
                 <MiBandejaPanel

@@ -2,12 +2,16 @@ import React, { useState, useMemo } from 'react';
 import {
     Inbox, AlertTriangle, Stethoscope, Building2, Hash, Loader2, Send,
     CheckCircle2, RotateCcw, UserCheck, MessageSquare, Filter, X,
+    Search, Crosshair, Lightbulb, Trash2,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
+import { useValidadoresLite, type ValidadorLite } from '../../hooks/useValidadoresLite';
 import { timeAgo } from '../../lib/timeAgo';
 import type { MensajeRow, EstadoMensaje } from './useBandeja';
 import type { AsistenteInstitution } from './useAsistente';
+
+type AccionAsignacion = { success: boolean; error?: string };
 
 interface BandejaPanelProps {
     mensajes: MensajeRow[];
@@ -18,7 +22,58 @@ interface BandejaPanelProps {
     onResponder: (id: string, texto: string) => Promise<{ success: boolean; error?: string }>;
     onCerrar: (id: string) => Promise<{ success: boolean; error?: string }>;
     onReabrir: (id: string) => Promise<{ success: boolean; error?: string }>;
+    onSugerir: (id: string, radiologoId: string) => Promise<AccionAsignacion>;
+    onPasarPelota: (id: string, radiologoId: string) => Promise<AccionAsignacion>;
+    onQuitarSugerido: (id: string) => Promise<AccionAsignacion>;
+    onQuitarResponsable: (id: string) => Promise<AccionAsignacion>;
 }
+
+// Selector de radiólogo validador con buscador (pueden ser ~31). Controlado:
+// el padre mantiene el id elegido; aquí solo se filtra y se elige.
+const ValidadorSelector: React.FC<{
+    validadores: ValidadorLite[];
+    valor: string | null;
+    onChange: (id: string | null) => void;
+    disabled?: boolean;
+}> = ({ validadores, valor, onChange, disabled }) => {
+    const [q, setQ] = useState('');
+    const elegido = validadores.find(v => v.id === valor) || null;
+    const filtrados = useMemo(() => {
+        const t = q.trim().toLowerCase();
+        return t ? validadores.filter(v => v.nombre.toLowerCase().includes(t)) : validadores;
+    }, [validadores, q]);
+
+    return (
+        <div className={cn('space-y-2', disabled && 'opacity-50 pointer-events-none')}>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-text/20" />
+                <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder={elegido ? elegido.nombre : 'Buscar radiólogo validador...'}
+                    className="w-full bg-brand-bg border border-brand-border rounded-xl pl-9 pr-3 py-2 text-xs text-brand-text outline-none focus:border-brand-primary/50"
+                />
+            </div>
+            <div className="max-h-40 overflow-y-auto rounded-xl border border-brand-border divide-y divide-brand-border">
+                {filtrados.length === 0 ? (
+                    <p className="px-3 py-3 text-[11px] text-brand-text/30 text-center">Sin coincidencias</p>
+                ) : filtrados.map(v => (
+                    <button
+                        key={v.id}
+                        onClick={() => onChange(v.id)}
+                        className={cn(
+                            'w-full text-left px-3 py-2 transition-colors hover:bg-brand-bg/60',
+                            valor === v.id && 'bg-brand-primary/10'
+                        )}
+                    >
+                        <p className="text-xs font-bold text-brand-text truncate">{v.nombre}</p>
+                        {v.specialty && <p className="text-[10px] text-brand-text/40 truncate">{v.specialty}</p>}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const ESTADO_META: Record<EstadoMensaje, { label: string; cls: string }> = {
     nuevo:      { label: 'Nuevo',      cls: 'text-brand-primary bg-brand-primary/10 border-brand-primary/30' },
@@ -52,8 +107,19 @@ const fmtFechaHoraCompleta = (iso?: string | null) => {
 
 export const BandejaPanel: React.FC<BandejaPanelProps> = ({
     mensajes, loading, error, institutions, onTomar, onResponder, onCerrar, onReabrir,
+    onSugerir, onPasarPelota, onQuitarSugerido, onQuitarResponsable,
 }) => {
     const { user } = useAuth();
+    const { validadores } = useValidadoresLite();
+
+    // Mapa id → nombre para resolver Sugerido/Responsable (torre de control).
+    const nombreValidador = useMemo(() => {
+        const m = new Map<string, string>();
+        validadores.forEach(v => m.set(v.id, v.nombre));
+        return m;
+    }, [validadores]);
+    const resolverRadiologo = (id: string | null) =>
+        id ? (nombreValidador.get(id) || 'Radiólogo') : null;
 
     const [filterEstado, setFilterEstado] = useState<'todos' | EstadoMensaje>('todos');
     const [filterCentro, setFilterCentro] = useState('');
@@ -61,6 +127,8 @@ export const BandejaPanel: React.FC<BandejaPanelProps> = ({
     const [respuestaTexto, setRespuestaTexto] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [notice, setNotice] = useState<{ msg: string; ok: boolean } | null>(null);
+    // Radiólogo elegido en el selector de asignación (por caso seleccionado).
+    const [radiologoElegido, setRadiologoElegido] = useState<string | null>(null);
 
     const showNotice = (msg: string, ok: boolean) => {
         setNotice({ msg, ok });
@@ -79,6 +147,7 @@ export const BandejaPanel: React.FC<BandejaPanelProps> = ({
     const seleccionarMensaje = (id: string) => {
         setSelectedId(id);
         setRespuestaTexto('');
+        setRadiologoElegido(null);
     };
 
     const centroNombre = (m: MensajeRow) => m.centro ? (m.centro.commercialName || m.centro.legalName) : '—';
@@ -114,6 +183,45 @@ export const BandejaPanel: React.FC<BandejaPanelProps> = ({
         setActionLoading(false);
         if (res.success) showNotice('Mensaje reabierto', true);
         else showNotice(res.error || 'No se pudo reabrir', false);
+    };
+
+    // ── Asignación de radiólogo ──
+    const handleSugerir = async (m: MensajeRow) => {
+        if (!radiologoElegido) return;
+        setActionLoading(true);
+        const res = await onSugerir(m.id, radiologoElegido);
+        setActionLoading(false);
+        if (res.success) showNotice('Radiólogo sugerido', true);
+        else showNotice(res.error || 'No se pudo sugerir', false);
+    };
+    const handlePasarPelota = async (m: MensajeRow) => {
+        if (!radiologoElegido) return;
+        setActionLoading(true);
+        const res = await onPasarPelota(m.id, radiologoElegido);
+        setActionLoading(false);
+        if (res.success) showNotice('Pelota pasada al radiólogo', true);
+        else showNotice(res.error || 'No se pudo pasar la pelota', false);
+    };
+    const handleQuitarSugerido = async (m: MensajeRow) => {
+        setActionLoading(true);
+        const res = await onQuitarSugerido(m.id);
+        setActionLoading(false);
+        if (res.success) showNotice('Sugerencia quitada', true);
+        else showNotice(res.error || 'No se pudo quitar', false);
+    };
+    const handleQuitarResponsable = async (m: MensajeRow) => {
+        setActionLoading(true);
+        const res = await onQuitarResponsable(m.id);
+        setActionLoading(false);
+        if (res.success) showNotice('Pelota devuelta a la secretaría', true);
+        else showNotice(res.error || 'No se pudo quitar', false);
+    };
+
+    // Etiqueta discreta de en quién está la pelota (para la lista/torre de control).
+    const etiquetaAsignacion = (m: MensajeRow): { texto: string; cls: string } => {
+        if (m.radiologoCaso) return { texto: `Con ${resolverRadiologo(m.radiologoCaso)}`, cls: 'text-info bg-info/10 border-info/20' };
+        if (m.radiologoSugerido) return { texto: `Sugerido: ${resolverRadiologo(m.radiologoSugerido)}`, cls: 'text-warning bg-warning/10 border-warning/20' };
+        return { texto: 'Sin asignar', cls: 'text-brand-text/40 bg-brand-bg border-brand-border' };
     };
 
     // Reglas de acciones. 'reabierto' se trata igual que 'nuevo' (Tomar/Responder
@@ -216,6 +324,9 @@ export const BandejaPanel: React.FC<BandejaPanelProps> = ({
                                         {m.medico ? `${m.medico.name} ${m.medico.lastName}` : 'Médico externo'}
                                     </p>
                                     <p className="text-[10px] text-brand-text/40 truncate mb-1.5">{centroNombre(m)}</p>
+                                    <span className={cn('inline-block mb-1.5 px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest', etiquetaAsignacion(m).cls)}>
+                                        {etiquetaAsignacion(m).texto}
+                                    </span>
                                     {m.referenciaPaciente && (
                                         <p className="text-[10px] text-brand-primary/70 font-bold mb-1">Episodio: {m.referenciaPaciente}</p>
                                     )}
@@ -294,6 +405,70 @@ export const BandejaPanel: React.FC<BandejaPanelProps> = ({
                             <div className="p-4 bg-brand-bg border border-brand-border rounded-2xl">
                                 <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">{selected.texto}</p>
                                 <p className="text-[9px] text-brand-text/30 font-mono mt-2">{fmtFechaLarga(selected.creadoAt)}</p>
+                            </div>
+
+                            {/* ── Asignación de radiólogo (torre de control) ── */}
+                            <div className="p-4 bg-brand-surface border border-brand-border rounded-2xl space-y-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-text/40">Asignación</p>
+
+                                {/* Estado actual */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <Lightbulb className="w-3.5 h-3.5 text-warning shrink-0" />
+                                        <span className="text-[11px] text-brand-text/50">Sugerido:</span>
+                                        <span className="text-[11px] font-bold text-brand-text">{resolverRadiologo(selected.radiologoSugerido) || '—'}</span>
+                                        {selected.radiologoSugerido && (
+                                            <button
+                                                onClick={() => handleQuitarSugerido(selected)}
+                                                disabled={actionLoading}
+                                                className="ml-auto flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-brand-text/30 hover:text-danger transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-3 h-3" /> Quitar
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Crosshair className="w-3.5 h-3.5 text-info shrink-0" />
+                                        <span className="text-[11px] text-brand-text/50">Responsable (con la pelota):</span>
+                                        <span className="text-[11px] font-bold text-brand-text">{resolverRadiologo(selected.radiologoCaso) || '—'}</span>
+                                        {selected.radiologoCaso && (
+                                            <button
+                                                onClick={() => handleQuitarResponsable(selected)}
+                                                disabled={actionLoading}
+                                                className="ml-auto flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-brand-text/30 hover:text-danger transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-3 h-3" /> Quitar
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Selector + acciones */}
+                                <ValidadorSelector
+                                    validadores={validadores}
+                                    valor={radiologoElegido}
+                                    onChange={setRadiologoElegido}
+                                    disabled={actionLoading}
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => handleSugerir(selected)}
+                                        disabled={actionLoading || !radiologoElegido}
+                                        className="flex items-center gap-2 px-3.5 py-2 bg-warning/10 border border-warning/20 text-warning rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-warning/20 transition-all disabled:opacity-40"
+                                    >
+                                        <Lightbulb className="w-3.5 h-3.5" /> Sugerir
+                                    </button>
+                                    <button
+                                        onClick={() => handlePasarPelota(selected)}
+                                        disabled={actionLoading || !radiologoElegido}
+                                        className="flex items-center gap-2 px-3.5 py-2 bg-info/10 border border-info/20 text-info rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-info/20 transition-all disabled:opacity-40"
+                                    >
+                                        <Crosshair className="w-3.5 h-3.5" /> Pasar la pelota
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-brand-text/30 leading-relaxed">
+                                    Sugerir no cambia al responsable ni saca el caso de tu bandeja. Pasar la pelota lo deja a cargo del radiólogo, pero sigues viéndolo y puedes responder por urgencia.
+                                </p>
                             </div>
 
                             {/* Hilo de respuestas */}

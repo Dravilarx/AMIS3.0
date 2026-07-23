@@ -18,7 +18,7 @@ const ESTADOS_ASIGNADOS: EstadoMensaje[] = ['nuevo', 'tomado', 'respondido', 're
 
 const SELECT_CASO = `
     id, tenant_id, institution_id, origen, direccion, external_doctor_id, tipo,
-    referencia_paciente, radiologo_caso, dirigido_a, urgente, texto, estado,
+    referencia_paciente, radiologo_caso, radiologo_sugerido, dirigido_a, urgente, texto, estado,
     tomado_por, tomado_at, creado_at, actualizado_at,
     medico:external_doctors(name, last_name, specialty, hospital_name),
     centro:institutions(legal_name, commercial_name),
@@ -36,6 +36,7 @@ const mapRow = (r: any, nombresPorId: Map<string, string>): MensajeRow => ({
     tipo: r.tipo,
     referenciaPaciente: r.referencia_paciente,
     radiologoCaso: r.radiologo_caso,
+    radiologoSugerido: r.radiologo_sugerido,
     dirigidoA: r.dirigido_a,
     urgente: r.urgente,
     texto: r.texto,
